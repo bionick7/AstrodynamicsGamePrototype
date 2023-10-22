@@ -11,12 +11,13 @@ typedef struct Planet {
     double mu;
     double radius;
     Orbit orbit;
-    Vector2 position;
-    Vector2 velocity;
-    Vector2 orbit_draw_buffer[ORBIT_BUFFER_SIZE];
+    OrbitPos position;
+
+    int id;
 } Planet;
 
-
+double PlanetGetDVFromExcessVelocity(Planet* planet, Vector2 vel);
+void PlanetUpdate(Planet* planet);
 void PlanetDraw(Planet* planet, const DrawCamera* camera);
 void PlanetDrawUI(Planet* planet, const DrawCamera* camera);
 

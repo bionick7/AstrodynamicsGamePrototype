@@ -1,6 +1,8 @@
 #include "camera.h"
+#include "global_state.h"
+#include "ui.h"
 
-void MakeCamera(DrawCamera* cam){
+void CameraMake(DrawCamera* cam){
     cam->space_scale = 1e-6;
     cam->time_scale = 2048;
     cam->paused = true;
@@ -24,6 +26,10 @@ Vector2 CameraInvTransformV(const DrawCamera* cam, Vector2 p) {
 
 double CameraTransformS(const DrawCamera* cam, double p) {
     return p * cam->space_scale;
+}
+
+double CameraInvTransformS(const DrawCamera* cam, double p) {
+    return p / cam->space_scale;
 }
 
 void CameraTransformBuffer(const DrawCamera* cam, Vector2* buffer, int buffer_size) {
@@ -55,9 +61,14 @@ void CameraHandleInput(DrawCamera* cam, double delta_t) {
 void CameraDrawUI(const DrawCamera* cam) {
     const char* text = TextFormat("II Time x %.1f", cam->time_scale);
     if (!cam->paused) text += 3;
-    DrawText(text, SCREEN_WIDTH - MeasureText(text, 20) - 10, 10, 20, WHITE);
+    Vector2 pos = (Vector2) { SCREEN_WIDTH - MeasureText(text, 20) - 10, 10 };
+    DrawTextEx(GetCustomDefaultFont(), text, pos, 20, 1, WHITE);
 }
 
-Vector2 GetMousePositionInWorld(const DrawCamera* cam) {
-    return CameraInvTransformV(cam, GetMousePosition());
+Vector2 GetMousePositionInWorld() {
+    return CameraInvTransformV(&GlobalGetState()->camera, GetMousePosition());
+}
+
+DrawCamera* GetMainCamera() {
+    return &GlobalGetState()->camera;
 }

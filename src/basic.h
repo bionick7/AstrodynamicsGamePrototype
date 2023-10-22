@@ -21,10 +21,16 @@ typedef double time_type;
 
 #define NOT_IMPLEMENTED printf("Not Implemented %s:%d:1\n", __FILE__, __LINE__); exit(1);
 #define FAIL(msg) printf("Runtime Error %s:%d:1 :: %s\n", __FILE__, __LINE__, msg); exit(1);
+#define FAIL_FORMAT(msg, ...) {\
+    char error_msg[1024]; \
+    snprintf(error_msg, 1024, msg, __VA_ARGS__); \
+    printf("Runtime Error %s:%d:1 :: %s\n", __FILE__, __LINE__, error_msg); \
+    exit(1);}
 
 #define SHOW_F(var) printf("%s:%d :: %s = %f\n", __FILE__, __LINE__, #var, var);
 #define SHOW_I(var) printf("%s:%d :: %s = %d\n", __FILE__, __LINE__, #var, var);
+#define SHOW_V2(var) printf("%s:%d :: %s = (%f, %f)\n", __FILE__, __LINE__, #var, (var).x, (var).y);
 
-void swap(void* lhs, void* rhs);
+void ForamtTime(char* buffer, int buffer_len, time_type time);
 
 #endif // BASIC_H

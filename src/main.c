@@ -2,22 +2,23 @@
 #include "global_state.h"
 
 int main() {
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "geam");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Window title");
     SetTargetFPS(60);
+    BasicInit();
 
-    MakeGlobalState(GetGlobalState(), 0uL);
-    LoadGlobalState(GetGlobalState(), "irrelevant for now");
+    GlobalStateMake(GlobalGetState(), 0uL);
+    LoadGlobalState(GlobalGetState(), "irrelevant for now");
 
     while (!WindowShouldClose()) {  
-        UpdateState(GetGlobalState(), 1./60.);
+        UpdateState(GlobalGetState(), 1./60.);
 
         BeginDrawing();
         ClearBackground(BLACK);
-        DrawState(GetGlobalState());
+        DrawState(GlobalGetState());
         EndDrawing();
     }
 
-    DestroyGlobalState(GetGlobalState());
+    DestroyGlobalState(GlobalGetState());
     CloseWindow();                  // Close window and OpenGL context
 
     return 0;

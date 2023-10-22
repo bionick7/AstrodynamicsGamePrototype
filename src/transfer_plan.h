@@ -10,31 +10,44 @@ typedef enum TransferPlanUIState {
     TPUISTATE_MOD_ARRIVAL,
 } TransferPlanUIState;
 
+
 typedef struct TransferPlan {
     // Inputs
-    const Planet* from;
-    const Planet* to;
+    int departure_planet;
+    int arrival_planet;
     time_type departure_time;
     time_type arrival_time;
 
     // Outputs
-    Orbit transfer_orbit[4];
     int num_solutions;
-    Vector2 v1;
-    Vector2 v2;
-
-    // UI
-    TransferPlanUIState state;
-    Vector2 departure_handle_pos;
-    Vector2 arrival_handle_pos;
-
-    // Cached
-    Vector2 orbit_buffer[ORBIT_BUFFER_SIZE];
+    int primary_solution;
+    Orbit transfer_orbit[2];
+    Vector2 departure_dvs[2];
+    Vector2 arrival_dvs[2];
+    double dv1[2];
+    double dv2[2];
 } TransferPlan;
 
+typedef struct TransferPlanUI {
+    TransferPlan plan;
+    int ship;
+    bool is_valid;
+
+    // UI
+    bool is_dragging_departure;
+    bool is_dragging_arrival;
+    Vector2 departure_handle_pos;
+    Vector2 arrival_handle_pos;
+    bool redraw_queued;
+} TransferPlanUI;
+
 void TransferPlanSolve(TransferPlan* tp);
-void TransferPlanUpdate(TransferPlan* tp);
-void TransferPlanDraw(TransferPlan* tp, const DrawCamera* cam);
-void TransferPlanAddPlanet(TransferPlan* tp, const Planet* planet);
+
+void TransferPlanUIMake(TransferPlanUI* ui);
+void TransferPlanUIUpdate(TransferPlanUI* ui);
+void TransferPlanUIDraw(TransferPlanUI* ui, const DrawCamera* cam);
+
+void TransferPlanUISetShip(TransferPlanUI* ui, int ship);
+void TransferPlanUISetDestination(TransferPlanUI* ui, int planet);
 
 #endif  // TRANSFER_PLAN_H

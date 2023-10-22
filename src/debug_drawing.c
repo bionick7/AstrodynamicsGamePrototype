@@ -1,9 +1,10 @@
 #include "debug_drawing.h"
 #include "global_state.h"
 #include "camera.h"
+#include "ui.h"
 
 void DebugDrawLine(Vector2 from, Vector2 to) {
-    const DrawCamera* cam = &GetGlobalState()->camera;
+    const DrawCamera* cam = &GlobalGetState()->camera;
     DrawLineV(
         CameraTransformV(cam, from),
         CameraTransformV(cam, to),
@@ -14,7 +15,7 @@ void DebugDrawLine(Vector2 from, Vector2 to) {
 Vector2 point_buffer[64];
 
 void DebugDrawConic(Vector2 focus, Vector2 ecc_vector, double a) {
-    const DrawCamera* cam = &GetGlobalState()->camera;
+    const DrawCamera* cam = &GlobalGetState()->camera;
     Vector2 x = Vector2Normalize(ecc_vector);
     Vector2 y = Vector2Rotate(x, PI/2);
     double e = Vector2Length(ecc_vector);
@@ -39,18 +40,14 @@ void DebugDrawConic(Vector2 focus, Vector2 ecc_vector, double a) {
     DrawLineStrip(&point_buffer[0], 64, GREEN);
 }
 
-const int text_margin_x = 5;
-const int text_margin_y = 5;
-const int text_size = 12;
-
-int text_counter = 0;
+TextBox debug_textbox;
 
 void DebugClearText() {
-    text_counter = 0;
+    debug_textbox = TextBoxMake(5, 35, 16, GREEN);
 }
 
 void DebugPrintText(const char* text) {
-    DrawText(text, 5, (text_size + text_margin_y) * text_counter++ + 30, text_size, GREEN);
+    TextBoxWrite(&debug_textbox, text);
 }
 
 void DebugPrintVarF(const char* var_name, float var) {

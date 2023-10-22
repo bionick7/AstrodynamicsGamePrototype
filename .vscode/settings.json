@@ -25,6 +25,8 @@
         "istream": "c",
         "limits": "c",
         "valarray": "c",
-        "functional": "c"
+        "functional": "c",
+        "ctime": "c",
+        "ephemerides.h": "c"
     }
 }

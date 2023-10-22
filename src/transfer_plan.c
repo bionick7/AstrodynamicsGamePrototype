@@ -1,8 +1,11 @@
 #include "transfer_plan.h"
+#include "planet.h"
 #include "global_state.h"
 #include "debug_drawing.h"
+#include "utils.h"
+#include "ui.h"
 
-double _sqr(double x) {return x*x;}
+#include <time.h>
 
 double _lambert(double x, double K, int solution) {
     // x² = a_min/a
@@ -15,38 +18,6 @@ double _lambert(double x, double K, int solution) {
     case 2: return (α - sin(α) + β - sin(β)) / (x*x*x);             // F1
     case 3: return (2*PI - (α - sin(α)) + β - sin(β)) / (x*x*x);    // F2
     }
-}
-
-/*double _lambert_derivative(double x, double K, int solution) {
-    // x² = a_min/a
-    // y = t_f * sqrt(mu / (a_min*a_min*a_min))
-    double α = 2 * asin(x);
-    double β = 2 * asin(K * x);
-    double dαdx = 2 / sqrt(1 - x*x);
-    double dβdx = 2*K / sqrt(1 - x*x*K*K);
-    switch (solution) {
-    case 0: return (dαdx*(1 - cos(α)) - dβdx*(1 - cos(β)))* x - 6 * (α - sin(α) - β + sin(β));
-    case 2: return (dαdx*(1 - cos(α)) + dβdx*(1 - cos(β)))* x - 6 * (α - sin(α) - β + sin(β));
-
-
-    dαdx = 2 / sqrt(1 - x²)
-    dβdx = 2 K / sqrt(1 - x²K²)
-    dαdx (1 - cos(α)) - dβdx (1 - cos(β))
-    d²αdx² (1 - cos(α)) + dαdx (1 + sin(α)) - dβdx (1 - cos(β))
-
-    2(1 - cos(α)) / sqrt(1 - x²) - 2 K (1 - cos(β)) / sqrt(1 - x²K²)
-    }
-}*/
-
-double _lerp_from_array(double t, double array[], int array_len) {
-    int index_left = floorf(t * array_len);
-    if (index_left < 0) index_left = 0;
-    if (index_left >= array_len - 1) index_left = array_len - 2;
-    int index_right = index_left + 1;
-    double t_local = (t * array_len - index_left) / (index_right - index_left);
-    if (t_local < 0.0) t_local = 0.0;
-    if (t_local > 1.0) t_local = 1.0;
-    return array[index_left] * t_local + array[index_right] * (1.0 - t_local);
 }
 
 double _solve_lambert_between_bounds(double y, double K, double xl, double xr, int solution) {
@@ -68,13 +39,15 @@ double _solve_lambert_between_bounds(double y, double K, double xl, double xr, i
 }
 
 void TransferPlanSolve(TransferPlan* tp) {
-    ASSERT_ALOMST_EQUAL(tp->from->orbit.mu, tp->to->orbit.mu)
-    double mu = tp->from->orbit.mu;
+    const Planet* from = GetPlanet(tp->departure_planet);
+    const Planet* to = GetPlanet(tp->arrival_planet);
+    ASSERT_ALOMST_EQUAL(from->orbit.mu, to->orbit.mu)
+    double mu = from->orbit.mu;
 
     double t1 = tp->departure_time;
     double t2 = tp->arrival_time;
-    OrbitPos pos1 = OrbitGetPosition(&tp->from->orbit, t1);
-    OrbitPos pos2 = OrbitGetPosition(&tp->to->orbit, t2);
+    OrbitPos pos1 = OrbitGetPosition(&from->orbit, t1);
+    OrbitPos pos2 = OrbitGetPosition(&to->orbit, t2);
 
     double c = Vector2Distance(pos1.cartesian, pos2.cartesian);
     double r_sum = pos1.r + pos2.r;
@@ -82,8 +55,8 @@ void TransferPlanSolve(TransferPlan* tp) {
     double K = sqrt((r_sum - c) / (r_sum + c));
     double y = (t2 - t1) * sqrt(mu / (a_min*a_min*a_min));
 
-    //double curve1_min_x = _lerp_from_array(K, simplified_lambert_minimum_tabulation_case_0, SIMPLIFIED_LAMBERT_MINIMUM_TABULATION_SIZE);
-    //double curve2_min_x = _lerp_from_array(K, simplified_lambert_minimum_tabulation_case_2, SIMPLIFIED_LAMBERT_MINIMUM_TABULATION_SIZE);
+    //double curve1_min_x = LerpFromArray(K, simplified_lambert_minimum_tabulation_case_0, SIMPLIFIED_LAMBERT_MINIMUM_TABULATION_SIZE);
+    //double curve2_min_x = LerpFromArray(K, simplified_lambert_minimum_tabulation_case_2, SIMPLIFIED_LAMBERT_MINIMUM_TABULATION_SIZE);
     double curve_min[2] = { _lambert(1e-3, K, 0), _lambert(1e-3, K, 2) };
     bool first_solution[2] = { y < _lambert(1, K, 0), y < _lambert(1, K, 2) };
 
@@ -100,19 +73,6 @@ void TransferPlanSolve(TransferPlan* tp) {
             aa[i] = 0;
         }
     }
-    // SHOW_F(aa[0]) SHOW_F(aa[1]) SHOW_F(aa[2]) SHOW_F(aa[3])
-
-    // double α = 2 * asin(x);
-    // double β = 2 * asin(K * x);
-    // y = sqrt(α - sin(α) - β + sin(β)) / (x*x*x)
-    // x = sqrt(a_min/a)
-    // y = t_f * sqrt(µ / a_min³)
-
-    // t_f * sqrt(µ / a_min³) = sqrt(α - sin(α) - β + sin(β)) / sqrt(a_min/a)³
-    // t_f = = sqrt(α - sin(α) - β + sin(β)) * sqrt(a_min³ / µ) / sqrt(a_min/a)³
-    // t_f = = sqrt(α - sin(α) - β + sin(β)) * sqrt(a³ / µ)
-
-    //tp->num_solutions = 1;
 
     for (int i=0; i < tp->num_solutions; i++) {
         double α = 2 * asin(sqrt(a_min / aa[i]));
@@ -128,129 +88,249 @@ void TransferPlanSolve(TransferPlan* tp) {
         }
         double t_f = sqrt(aa[i]*aa[i]*aa[i] / mu) * t_f_annomaly;
         ASSERT_ALOMST_EQUAL(t_f, (t2 - t1))
-
-        /*double x = sqrt(a_min / aa[i]);
-        double t_f_2 = (
-            first_solution[i] ? 
-            α - sin(α) - β + sin(β) :
-            2*PI - α + sin(α) - β + sin(β)
-        ) / (x*x*x) / sqrt(mu / (a_min*a_min*a_min));
-
-        double diff_real = fabs(t_f - (t2 - t1)) / t_f;
-        double y_calc = _lambert(sqrt(a_min / aa[i]), K, lambert_case);
-        double diff_normalized = fabs(y_calc - y) / y_calc;
-        DEBUG_SHOW_F(diff_real)
-        DEBUG_SHOW_F(diff_normalized)
-        DEBUG_SHOW_F(t_f)
-        DEBUG_SHOW_F(t_f_2)
-        DEBUG_SHOW_F(y_calc / sqrt(mu / (a_min*a_min*a_min)))*/
     }
 
+    double departure_dvs[2] = {0, 0};
+    double arrival_dvs[2] = {0, 0};
+
     for (int i=0; i < tp->num_solutions; i++) {
-        double r1_r2_outer_prod = pos1.cartesian.x * pos2.cartesian.y - pos1.cartesian.y * pos2.cartesian.x;
-        // direct orbit is retrograde
-        DEBUG_SHOW_F(r1_r2_outer_prod)
-        DEBUG_SHOW_I(first_solution[i])
+        double r1_r2_outer_prod = Determinant(pos1.cartesian, pos2.cartesian);
+        // Direct orbit is retrograde
+        //DEBUG_SHOW_F(r1_r2_outer_prod)
+        //DEBUG_SHOW_I(first_solution[i])
         bool direct_solution = (t2 - t1) < PI * sqrt(aa[i]*aa[i]*aa[i] / mu);
         bool is_prograde = direct_solution ^ (i == 1);
         tp->transfer_orbit[i] = OrbitFrom2PointsAndSMA(pos1, pos2, t1, aa[i], mu, is_prograde, i == 1);
 
-        OrbitPos pos1_ = OrbitGetPosition(&tp->transfer_orbit[i], t1);
-        OrbitPos pos2_ = OrbitGetPosition(&tp->transfer_orbit[i], t2);
+        OrbitPos pos1_tf = OrbitGetPosition(&tp->transfer_orbit[i], t1);
+        OrbitPos pos2_tf = OrbitGetPosition(&tp->transfer_orbit[i], t2);
 
+        //SHOW_V2(OrbitGetVelocity(&tp->transfer_orbit[i], pos1_tf))
+        //SHOW_V2(OrbitGetVelocity(&tp->from->orbit, pos1))
+        tp->departure_dvs[i] = Vector2Subtract(OrbitGetVelocity(&tp->transfer_orbit[i], pos1_tf), OrbitGetVelocity(&from->orbit, pos1));
+        tp->arrival_dvs[i] = Vector2Subtract(OrbitGetVelocity(&to->orbit, pos2), OrbitGetVelocity(&tp->transfer_orbit[i], pos2_tf));
+
+        tp->dv1[i] = PlanetGetDVFromExcessVelocity(from, tp->departure_dvs[i]);
+        tp->dv2[i] = PlanetGetDVFromExcessVelocity(to, tp->arrival_dvs[i]);
         //ASSERT_ALOMST_EQUAL(pos1_.r, pos1.r)
         //ASSERT_ALOMST_EQUAL(pos2_.r, pos2.r)
     }
 
-    // TODO: find dvs of solutions and rank them
 
-
-    //OrbitPrint(&tp->transfer_orbit);
-    //printf("\n");
+    if (tp->num_solutions == 1) {
+        tp->primary_solution = 0;
+    } else if (tp->num_solutions == 2) {
+        tp->primary_solution = (tp->dv1[0] + tp->dv2[0]) < (tp->dv1[1] + tp->dv2[1]) ? 0 : 1;
+    }
 }
 
-void TransferPlanUpdate(TransferPlan* tp) {
+void TransferPlanUIMake(TransferPlanUI* ui) {
+    ui->plan.departure_planet = -1;
+    ui->plan.arrival_planet = -1;
+    ui->plan.num_solutions = 0;
+    ui->is_dragging_departure = false;
+    ui->is_dragging_arrival = false;
+    ui->departure_handle_pos = (Vector2) {0};
+    ui->arrival_handle_pos = (Vector2) {0};
+    ui->redraw_queued = false;
+}
+
+void TransferPlanUIUpdate(TransferPlanUI* ui) {
     if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
-        tp->from = NULL;
-        tp->to = NULL;
+        ui->plan.departure_planet = -1;
+        ui->plan.arrival_planet = -1;
     }
 
-    if (tp->from != NULL && tp->to != NULL) {
-        TransferPlanSolve(tp);
+    if (ui->plan.departure_planet >= 0 && ui->plan.arrival_planet >= 0 && ui->redraw_queued) {
+        TransferPlanSolve(&ui->plan);
+        double total_dv = ui->plan.dv1[ui->plan.primary_solution] + ui->plan.dv1[ui->plan.primary_solution];
+        ui->is_valid = ui->plan.num_solutions > 0 && total_dv <= GetShip(ui->ship)->max_dv;
+        ui->is_valid = ui->is_valid && ui->plan.departure_time > GetTime();
+
+        ui->redraw_queued = false;
     }
 
+    if (IsKeyPressed(KEY_ENTER) && ui->is_valid) {
+        ShipAssignTransfer(GetShip(ui->ship), ui->plan);
+        TransferPlanUIMake(ui);
+    }
+}
+
+void _TransferPlanInitialize(TransferPlan* tp, time_type now) {
+    const Planet* from = GetPlanet(tp->departure_planet);
+    const Planet* to = GetPlanet(tp->arrival_planet);
+    // Sets departure and arrival time to the dv-cheapest values (assuming hohmann transfer)
+    ASSERT(tp->departure_dvs >= 0)
+    ASSERT(tp->arrival_planet >= 0)
+    double mu = from->orbit.mu;
+    double hohmann_a = (from->orbit.sma + to->orbit.sma) * 0.5;
+    double hohmann_flight_time = sqrt(hohmann_a*hohmann_a*hohmann_a / mu) * PI;
+    double p1_mean_motion = OrbitGetMeanMotion(&from->orbit);
+    double p2_mean_motion = OrbitGetMeanMotion(&to->orbit);
+    double relative_mean_motion = p2_mean_motion - p1_mean_motion;
+    double current_relative_annomaly = OrbitGetPosition(&to->orbit, now).longuitude - OrbitGetPosition(&from->orbit, now).longuitude;
+    double target_relative_anomaly = PosMod(PI - p2_mean_motion * hohmann_flight_time, 2*PI);
+    double departure_wait_time = (target_relative_anomaly - current_relative_annomaly) / relative_mean_motion;
+    double relative_period = fabs(2 * PI / relative_mean_motion);
+    departure_wait_time = PosMod(departure_wait_time, relative_period);
+    tp->departure_time = now + departure_wait_time;
+    tp->arrival_time = now + departure_wait_time + hohmann_flight_time;
+}
+
+void _DrawSweep(const Orbit* orbit, time_t from, time_t to, Color color) {
+    OrbitPos from_pos = OrbitGetPosition(orbit, from);
+    OrbitPos to_pos = OrbitGetPosition(orbit, to);
+
+    Vector2 buffer[64];
+    int full_orbits = floor((to - from) / OrbitGetPeriod(orbit));
+    double offset = CameraInvTransformS(GetMainCamera(), 4);
+    for (int i=0; i < full_orbits; i++) {
+        DrawOrbitWithOffset(orbit, offset * i, color);
+    }
+    DrawOrbitBounded(orbit, from_pos, to_pos, color);
+}
+
+void _DrawTransferOrbit(TransferPlanUI* ui, int solution, bool is_secondary) {
+    TransferPlan* tp = &ui->plan;
+    const Planet* from = GetPlanet(tp->departure_planet);
+    const Planet* to = GetPlanet(tp->arrival_planet);
+    Color velocity_color = YELLOW;
+    Color orbit_color = RED;
+    if (is_secondary) {
+        velocity_color = ColorTint(velocity_color, GRAY);
+        orbit_color = ColorTint(orbit_color, GRAY);
+    }
+    time_type now = GlobalGetState()->time;
+    OrbitPos pos1 = OrbitGetPosition(&tp->transfer_orbit[solution], tp->departure_time);
+    OrbitPos pos2 = OrbitGetPosition(&tp->transfer_orbit[solution], tp->arrival_time);
+    _DrawSweep(&from->orbit, now, tp->departure_time, orbit_color);
+    _DrawSweep(&to->orbit,   now, tp->arrival_time,   orbit_color);
+    DrawLineV(
+        ui->departure_handle_pos,
+        Vector2Add(ui->departure_handle_pos, Vector2Scale(tp->departure_dvs[solution], 0.01)),
+        velocity_color
+    );
+    DrawLineV(
+        ui->arrival_handle_pos,
+        Vector2Add(ui->arrival_handle_pos, Vector2Scale(tp->arrival_dvs[solution], 0.01)),
+        velocity_color
+    );
+    DrawOrbitBounded(&tp->transfer_orbit[solution], pos1, pos2, orbit_color);
+}
+
+
+time_type _DrawHandle(DrawCamera* cam, Vector2 pos, const Orbit* orbit, time_type current, bool* is_dragging) {
     Vector2 mouse_pos = GetMousePosition();
-    Vector2 mouse_pos_world = GetMousePositionInWorld(&GetGlobalState()->camera);
 
-    double longuitude = atan2(mouse_pos_world.y, mouse_pos_world.x);
+    Vector2 radial_dir = Vector2Normalize(CameraInvTransformV(cam, pos));
+    radial_dir.y = -radial_dir.y;
+    Vector2 tangent_dir = Vector2Rotate(radial_dir, PI/2);
 
-    switch (tp->state) {
-    case TPUISTATE_NONE: {
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && tp->from != NULL && tp->to != NULL){
-            if (Vector2DistanceSqr(tp->departure_handle_pos, mouse_pos) < 20*20) {
-                tp->state = TPUISTATE_MOD_DEPARTURE;
-            }
-            if (Vector2DistanceSqr(tp->arrival_handle_pos, mouse_pos) < 20*20) {
-                tp->state = TPUISTATE_MOD_ARRIVAL;
-            }
+    Vector2 node_pos = Vector2Add(pos, Vector2Scale(radial_dir, 20));
+    Vector2 plus_pos = Vector2Add(node_pos, Vector2Scale(tangent_dir, -23));
+    Vector2 minus_pos = Vector2Add(node_pos, Vector2Scale(tangent_dir, 23));
+    time_type period = OrbitGetPeriod(orbit);
+    if (DrawTriangleButton(pos, Vector2Scale(radial_dir, 20), 10, RED) & BUTTON_JUST_PRESSED) {
+        *is_dragging = true;
+    }
+    if (DrawCircleButton(plus_pos, 10, RED) & BUTTON_JUST_PRESSED) {
+        current += period;
+    }
+    if (DrawCircleButton(minus_pos, 10, RED) & BUTTON_JUST_PRESSED) {
+        current -= period;
+    }
+    if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+        *is_dragging = false;
+    }
+    if (*is_dragging) {
+        time_type now = GlobalGetState()->time;
+        int full_orbits = floor((current - now) / period);
+        time_type t0 = full_orbits * period;
+
+        Vector2 mouse_pos_world = GetMousePositionInWorld();
+        double longuitude = atan2(mouse_pos_world.y, mouse_pos_world.x);
+        double θ = longuitude - orbit->lop;
+        current = OrbitGetTimeUntilFocalAnomaly(orbit, θ, t0);
+    }
+    return current;
+}
+
+void _TransferPlanUIDrawText(const TransferPlan* tp) {
+    TextBox textbox = TextBoxMake(SCREEN_WIDTH - 40*16, 30, 16, RED);
+    char departure_time_outpstr[30];
+    char arrival_time_outpstr[30];
+    char departure_time_str[40] = "Departs @ ";
+    char arrival_time_str[40] = "Arrives @ ";
+    char dv1_str[40];
+    char dv2_str[40];
+    char dvtot_str[40];
+
+    ForamtTime(departure_time_outpstr, 30, tp->departure_time);
+    ForamtTime(arrival_time_outpstr, 30, tp->arrival_time);
+    sprintf(dv1_str,   "DV 1      %5.3f km/s", tp->dv1[tp->primary_solution]/1000.0);
+    sprintf(dv2_str,   "DV 1      %5.3f km/s", tp->dv2[tp->primary_solution]/1000.0);
+    sprintf(dvtot_str, "DV Tot    %5.3f km/s", (tp->dv1[tp->primary_solution] + tp->dv2[tp->primary_solution])/1000.0);
+
+    TextBoxWrite(&textbox, strcat(departure_time_str, departure_time_outpstr));
+    TextBoxWrite(&textbox, strcat(arrival_time_str, arrival_time_outpstr));
+    TextBoxWrite(&textbox, "=====================");
+    TextBoxWrite(&textbox, dv1_str);
+    TextBoxWrite(&textbox, dv2_str);
+    TextBoxWrite(&textbox, dvtot_str);
+}
+
+void TransferPlanUIDraw(TransferPlanUI* ui, const DrawCamera* cam) {
+    TransferPlan* tp = &ui->plan;
+    if (tp->departure_planet < 0 || tp->arrival_planet < 0) {
+        return;
+    }
+    const Planet* from = GetPlanet(tp->departure_planet);
+    const Planet* to = GetPlanet(tp->arrival_planet);
+
+    ui->departure_handle_pos = CameraTransformV(cam, OrbitGetPosition(&from->orbit, tp->departure_time).cartesian);
+    ui->arrival_handle_pos = CameraTransformV(cam, OrbitGetPosition(&to->orbit, tp->arrival_time).cartesian);
+
+    time_type now = GlobalGetState()->time;
+    time_t new_departure_time = _DrawHandle(cam, ui->departure_handle_pos, &from->orbit, tp->departure_time, &ui->is_dragging_departure);
+    time_t new_arrival_time = _DrawHandle(cam, ui->arrival_handle_pos, &to->orbit, tp->arrival_time, &ui->is_dragging_arrival);
+    if (new_departure_time >= now && new_departure_time < tp->arrival_time){
+        tp->departure_time = new_departure_time;
+        ui->redraw_queued = true;
+    }
+    if (new_arrival_time >= tp->departure_time){
+        tp->arrival_time = new_arrival_time;
+        ui->redraw_queued = true;
+    }
+
+    if (ui->is_valid) {
+        if (tp->num_solutions == 1) {
+            _DrawTransferOrbit(tp, tp->primary_solution, false);
+        } else if (tp->num_solutions == 2) {
+            _DrawTransferOrbit(tp, tp->primary_solution, false);
+            //_DrawTransferOrbit(tp, cam, 1 - tp->primary_solution, true);
         }
-        break;
-    }
-    case TPUISTATE_MOD_DEPARTURE:{
-        double θ = longuitude - tp->from->orbit.lop;
-        tp->departure_time = OrbitGetTimeUntilFocalAnomaly(&tp->from->orbit, θ, GetGlobalState()->time);
-        break;
-    }
-    case TPUISTATE_MOD_ARRIVAL:{
-        double θ = longuitude - tp->to->orbit.lop;
-        tp->arrival_time = OrbitGetTimeUntilFocalAnomaly(&tp->to->orbit, θ, GetGlobalState()->time);
-        break;
-    }
     }
 
-    if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)){
-        tp->state = TPUISTATE_NONE;
+    _TransferPlanUIDrawText(tp);
+
+}
+
+void TransferPlanUISetShip(TransferPlanUI* ui, int ship) {
+    if (ui->is_dragging_departure || ui->is_dragging_arrival) {
+        return;
+    }
+    ui->plan.departure_planet = GetShip(ship)->parent_planet;
+    if (ui->plan.departure_planet >= 0 && ui->plan.arrival_planet >= 0) {
+        _TransferPlanInitialize(ui, GlobalGetState()->time);
     }
 }
 
-void TransferPlanDraw(TransferPlan* tp, const DrawCamera* cam) {
-    if (tp->from == NULL || tp->to == NULL) {
+void TransferPlanUISetDestination(TransferPlanUI* ui, int planet) {
+    if (ui->is_dragging_departure || ui->is_dragging_arrival) {
         return;
     }
-    Color colors[] = {
-        RED,
-        GREEN,
-        BLUE,
-        YELLOW
-    };
-    for (int i=0; i < tp->num_solutions; i++) {
-        OrbitPos pos1 = OrbitGetPosition(&tp->transfer_orbit[i], tp->departure_time);
-        OrbitPos pos2 = OrbitGetPosition(&tp->transfer_orbit[i], tp->arrival_time);
-        SampleOrbitBounded(&tp->transfer_orbit[i], pos1, pos2, &tp->orbit_buffer[0], ORBIT_BUFFER_SIZE);
-        //SampleOrbit(&tp->transfer_orbit[i], &tp->orbit_buffer[0], ORBIT_BUFFER_SIZE);
-        CameraTransformBuffer(cam, &(tp->orbit_buffer)[0], ORBIT_BUFFER_SIZE);
-        int solution = i*2 + !tp->transfer_orbit[i].prograde;
-        DrawLineStrip(&tp->orbit_buffer[0], ORBIT_BUFFER_SIZE, colors[solution]);
-    }
-
-    tp->departure_handle_pos = CameraTransformV(cam, OrbitGetPosition(&tp->from->orbit, tp->departure_time).cartesian);
-    tp->arrival_handle_pos = CameraTransformV(cam, OrbitGetPosition(&tp->to->orbit, tp->arrival_time).cartesian);
-
-    DrawCircleV(tp->departure_handle_pos, 10, RED);
-    DrawCircleV(tp->arrival_handle_pos, 10, RED);
-}
-
-void TransferPlanAddPlanet(TransferPlan* tp, const Planet* planet) {
-    if (tp->state != TPUISTATE_NONE) {
-        return;
-    }
-    if (tp->from == NULL) tp->from = planet;
-    else {
-        tp->to = planet;
-        tp->departure_time = GetGlobalState()->time;
-        double transfer_sma = (tp->from->orbit.sma + tp->to->orbit.sma) * .5;
-        double hohmann_travel_time = tp->departure_time + sqrt(transfer_sma*transfer_sma*transfer_sma / planet->orbit.mu);
-        tp->arrival_time = GetGlobalState()->time + hohmann_travel_time;
-        TransferPlanSolve(tp);
+    ui->plan.arrival_planet = planet;
+    if (ui->plan.departure_planet >= 0 && ui->plan.arrival_planet >= 0) {
+        _TransferPlanInitialize(ui, GlobalGetState()->time);
     }
 }

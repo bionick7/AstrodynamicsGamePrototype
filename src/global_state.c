@@ -4,8 +4,28 @@
 
 GlobalState global_state = {0};
 
-GlobalState* GetGlobalState() {
+GlobalState* GlobalGetState() {
     return &global_state;
+}
+
+time_type GlobalGetNow() {
+    return global_state.time;
+}
+
+
+Ship* GetShip(int id) {
+    if (id < 0 || id >= global_state.ship_count) {
+        FAIL("Invalid ship id")
+    }
+    return &global_state.ships[id];
+}
+
+Planet* _GetPlanet(int id, const char* file, int line) {
+    if (id < 0 || id >= global_state.planet_count) {
+        //FAIL_FORMAT("Invalid planet id (%d)", id)
+        FAIL_FORMAT("Invalid planet id (%d) : %s:%d", id, file, line)
+    }
+    return &global_state.planets[id];
 }
 
 void _InspectState(GlobalState* gs) {
@@ -17,9 +37,7 @@ void _InspectState(GlobalState* gs) {
         printf("\n");
     }
     for (int i=0; i < gs->ship_count; i++) {
-        Ship* s = &gs->ships[i];
-        OrbitPrint(&gs->ships[i].orbit);
-        printf("\n");
+        ShipInspect(&gs->ships[i]);
     }
 }
 
@@ -34,16 +52,30 @@ void _AddPlanet(
     planet->mu = mu;
     planet->orbit = OrbitFromElements(sma, ecc, lop, mu_parent, gs->time -ann / sqrt(mu_parent / (sma*sma*sma)), is_prograde);
     planet->radius = radius;
-    UpdateOrbit(&planet->orbit, gs->time, &planet->position, &planet->velocity);
+    planet->id = gs->planet_count;
+    PlanetUpdate(planet);
     gs->planet_count++;
 }
 
+void _AddShip(GlobalState* gs, const char* name, double dv, int origin_planet) {
+    gs->ships[gs->ship_count] = (Ship) {0};
+    Ship* ship = &gs->ships[gs->ship_count];
+    ship->name = name;
+    ship->dv = dv;
+    ship->max_dv = dv;
+    ship->parent_planet = origin_planet;
+    ship->current_state = SHIP_STATE_REST;
+    ship->id = gs->ship_count;
+    ShipUpdate(ship);
+    gs->ship_count++;
+}
+
 // Lifecycle
-void MakeGlobalState(GlobalState* gs, time_type time) {
+void GlobalStateMake(GlobalState* gs, time_type time) {
     gs->planet_count = 0;
     gs->ship_count = 0;
-    gs->camera = (DrawCamera){0};
-    MakeCamera(&gs->camera);
+    TransferPlanUIMake(&gs->active_transfer_plan);
+    CameraMake(&gs->camera);
 }
 
 void LoadGlobalState(GlobalState* gs, const char* file_path) {
@@ -54,6 +86,9 @@ void LoadGlobalState(GlobalState* gs, const char* file_path) {
             planet_params[i*6+4], planet_params[i*6+5]
         );
     }
+    _AddShip(gs, "Ship1", 10000, 2);
+    _AddShip(gs, "Ship2", 20000, 2);
+    _AddShip(gs, "Ship3", 20000, 4);
     _InspectState(gs);
 }
 
@@ -66,15 +101,13 @@ void UpdateState(GlobalState* gs, double delta_t) {
     DebugClearText();
 
     CameraHandleInput(&gs->camera, delta_t);
-    TransferPlanUpdate(&gs->active_transfer_plan);
+    TransferPlanUIUpdate(&gs->active_transfer_plan);
     gs->time = CameraAdvanceTime(&gs->camera, gs->time, delta_t);
     for (int i=0; i < gs->planet_count; i++) {
-        Planet* p = &gs->planets[i];
-        UpdateOrbit(&p->orbit, gs->time, &p->position, &p->velocity);
+        PlanetUpdate(&gs->planets[i]);
     }
     for (int i=0; i < gs->ship_count; i++) {
-        Ship* s = &gs->ships[i];
-        UpdateOrbit(&s->orbit, gs->time, &s->position, &s->velocity);
+        ShipUpdate(&gs->ships[i]);
     }
 }
 
@@ -82,20 +115,27 @@ void UpdateState(GlobalState* gs, double delta_t) {
 void DrawState(GlobalState* gs) {
     DrawCamera* cam = &gs->camera;
 
-    //DrawCircle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, CameraTransformS(cam, radius_parent), WHITE);
+    DrawCircle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, CameraTransformS(cam, radius_parent), WHITE);
     for (int i=0; i < gs->planet_count; i++) {
         PlanetDraw(&gs->planets[i], cam);
     }
+    int ships_per_planet[MAX_PLANETS] = {0};
     for (int i=0; i < gs->ship_count; i++) {
-        Ship* s = &gs->ships[i];
-        DrawCircleV(CameraTransformV(cam, s->position), 10, RED);
+        if (gs->ships[i].parent_planet >= 0) {
+            ShipDraw(
+                &gs->ships[i], cam, 
+                ships_per_planet[gs->ships[i].parent_planet]++
+            );
+        } else {
+            ShipDraw(&gs->ships[i], cam, 0);
+        }
     }
-    TransferPlanDraw(&gs->active_transfer_plan, cam);
 
     // UI
     for (int i=0; i < gs->planet_count; i++) {
         PlanetDrawUI(&gs->planets[i], cam);
     }
+    TransferPlanUIDraw(&gs->active_transfer_plan, cam);
     DrawFPS(0, 0);
     CameraDrawUI(cam);
 }

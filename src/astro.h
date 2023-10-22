@@ -26,9 +26,17 @@ Orbit OrbitFrom2PointsAndSMA(OrbitPos pos1, OrbitPos pos2, time_type time_at_pos
 OrbitPos OrbitGetPosition(const Orbit* orbit, time_type time);
 Vector2 OrbitGetVelocity(const Orbit* orbit, OrbitPos pos);
 time_type OrbitGetTimeUntilFocalAnomaly(const Orbit* orbit, double θ, time_type start_time);
+double OrbitGetMeanMotion(const Orbit* orbit);
+time_type OrbitGetPeriod(const Orbit* orbit);
 void OrbitPrint(const Orbit* orbit);
 void UpdateOrbit(const Orbit* orbit, time_type time, Vector2* position, Vector2* velocity);
+
 void SampleOrbit(const Orbit* orbit, Vector2* buffer, int buffer_size);
+void SampleOrbitWithOffset(const Orbit* orbit, Vector2* buffer, int buffer_size, double offset);
 void SampleOrbitBounded(const Orbit* orbit, OrbitPos bound1, OrbitPos bound2, Vector2* buffer, int buffer_size);
+
+void DrawOrbit(const Orbit* orbit, Color color);
+void DrawOrbitWithOffset(const Orbit* orbit, double offset, Color color);
+void DrawOrbitBounded(const Orbit* orbit, OrbitPos bound1, OrbitPos bound2, Color color);
 
 #endif // ASTRO_H
