@@ -6,7 +6,7 @@ int main() {
     SetTargetFPS(60);
     BasicInit();
 
-    GlobalStateMake(GlobalGetState(), 0uL);
+    GlobalStateMake(GlobalGetState(), 1e6);
     LoadGlobalState(GlobalGetState(), "irrelevant for now");
 
     while (!WindowShouldClose()) {  

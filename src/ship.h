@@ -11,7 +11,7 @@ typedef enum ShipState {
 } ShipState;
 
 typedef struct Ship {
-    const char* name;
+    char name[100];
     double dv;
     double max_dv;
 
@@ -19,14 +19,18 @@ typedef struct Ship {
     OrbitPos position;
 
     int parent_planet;
+    int index_on_planet;
     TransferPlan next_plan;
+    Vector2 draw_pos;
 
+    bool mouse_hover;
     int id;
 } Ship;
 
+bool ShipHasMouseHover(const Ship* ship, double* min_distance);
 void ShipAssignTransfer(Ship* ship, TransferPlan tp);
 void ShipUpdate(Ship* ship);
-void ShipDraw(Ship* ship, const DrawCamera* camera, int index_on_planet);
+void ShipDraw(Ship* ship, const DrawCamera* camera);
 void ShipInspect(const Ship* ship);
 
 #endif  // SHIP_H

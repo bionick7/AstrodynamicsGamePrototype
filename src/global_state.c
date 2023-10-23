@@ -48,7 +48,7 @@ void _AddPlanet(
     ) {
     gs->planets[gs->planet_count] = (Planet) {0};
     Planet* planet = &gs->planets[gs->planet_count];
-    planet->name = name;
+    strcpy(planet->name, name);
     planet->mu = mu;
     planet->orbit = OrbitFromElements(sma, ecc, lop, mu_parent, gs->time -ann / sqrt(mu_parent / (sma*sma*sma)), is_prograde);
     planet->radius = radius;
@@ -60,7 +60,7 @@ void _AddPlanet(
 void _AddShip(GlobalState* gs, const char* name, double dv, int origin_planet) {
     gs->ships[gs->ship_count] = (Ship) {0};
     Ship* ship = &gs->ships[gs->ship_count];
-    ship->name = name;
+    strcpy(ship->name, name);
     ship->dv = dv;
     ship->max_dv = dv;
     ship->parent_planet = origin_planet;
@@ -74,6 +74,7 @@ void _AddShip(GlobalState* gs, const char* name, double dv, int origin_planet) {
 void GlobalStateMake(GlobalState* gs, time_type time) {
     gs->planet_count = 0;
     gs->ship_count = 0;
+    gs->time = time;
     TransferPlanUIMake(&gs->active_transfer_plan);
     CameraMake(&gs->camera);
 }
@@ -86,9 +87,11 @@ void LoadGlobalState(GlobalState* gs, const char* file_path) {
             planet_params[i*6+4], planet_params[i*6+5]
         );
     }
-    _AddShip(gs, "Ship1", 10000, 2);
-    _AddShip(gs, "Ship2", 20000, 2);
-    _AddShip(gs, "Ship3", 20000, 4);
+    char name[] = "Ship 0";
+    for(int i=0; i < 10; i++) {
+        _AddShip(gs, name, 10000, 2);
+        name[5]++;
+    }
     _InspectState(gs);
 }
 
@@ -103,11 +106,32 @@ void UpdateState(GlobalState* gs, double delta_t) {
     CameraHandleInput(&gs->camera, delta_t);
     TransferPlanUIUpdate(&gs->active_transfer_plan);
     gs->time = CameraAdvanceTime(&gs->camera, gs->time, delta_t);
+
+    Clickable hover = {TYPE_NONE, -1};
+    double min_distance = INFINITY;
+
+    int ships_per_planet[MAX_PLANETS] = {0};
+
     for (int i=0; i < gs->planet_count; i++) {
         PlanetUpdate(&gs->planets[i]);
+        gs->planets[i].mouse_hover = false;
+        if (PlanetHasMouseHover(&gs->planets[i], &min_distance)) {
+            hover = (Clickable) {TYPE_PLANET, i};
+        }
     }
     for (int i=0; i < gs->ship_count; i++) {
         ShipUpdate(&gs->ships[i]);
+        if (gs->ships[i].parent_planet >= 0) {
+            gs->ships[i].index_on_planet = ships_per_planet[gs->ships[i].parent_planet]++;
+        }
+        gs->ships[i].mouse_hover = false;
+        if (ShipHasMouseHover(&gs->ships[i], &min_distance)) {
+            hover = (Clickable) {TYPE_SHIP, i};
+        }
+    }
+    switch (hover.type) {
+    case TYPE_PLANET: GetPlanet(hover.id)->mouse_hover = true; break;
+    case TYPE_SHIP: GetShip(hover.id)->mouse_hover = true; break;
     }
 }
 
@@ -115,20 +139,12 @@ void UpdateState(GlobalState* gs, double delta_t) {
 void DrawState(GlobalState* gs) {
     DrawCamera* cam = &gs->camera;
 
-    DrawCircle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, CameraTransformS(cam, radius_parent), WHITE);
+    DrawCircleV(CameraTransformV(cam, (Vector2){0}), CameraTransformS(cam, radius_parent), WHITE);
     for (int i=0; i < gs->planet_count; i++) {
         PlanetDraw(&gs->planets[i], cam);
     }
-    int ships_per_planet[MAX_PLANETS] = {0};
     for (int i=0; i < gs->ship_count; i++) {
-        if (gs->ships[i].parent_planet >= 0) {
-            ShipDraw(
-                &gs->ships[i], cam, 
-                ships_per_planet[gs->ships[i].parent_planet]++
-            );
-        } else {
-            ShipDraw(&gs->ships[i], cam, 0);
-        }
+        ShipDraw(&gs->ships[i], cam);
     }
 
     // UI

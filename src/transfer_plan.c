@@ -55,8 +55,6 @@ void TransferPlanSolve(TransferPlan* tp) {
     double K = sqrt((r_sum - c) / (r_sum + c));
     double y = (t2 - t1) * sqrt(mu / (a_min*a_min*a_min));
 
-    //double curve1_min_x = LerpFromArray(K, simplified_lambert_minimum_tabulation_case_0, SIMPLIFIED_LAMBERT_MINIMUM_TABULATION_SIZE);
-    //double curve2_min_x = LerpFromArray(K, simplified_lambert_minimum_tabulation_case_2, SIMPLIFIED_LAMBERT_MINIMUM_TABULATION_SIZE);
     double curve_min[2] = { _lambert(1e-3, K, 0), _lambert(1e-3, K, 2) };
     bool first_solution[2] = { y < _lambert(1, K, 0), y < _lambert(1, K, 2) };
 
@@ -73,6 +71,8 @@ void TransferPlanSolve(TransferPlan* tp) {
             aa[i] = 0;
         }
     }
+
+    // ASSERT
 
     for (int i=0; i < tp->num_solutions; i++) {
         double α = 2 * asin(sqrt(a_min / aa[i]));
@@ -127,6 +127,7 @@ void TransferPlanSolve(TransferPlan* tp) {
 void TransferPlanUIMake(TransferPlanUI* ui) {
     ui->plan.departure_planet = -1;
     ui->plan.arrival_planet = -1;
+    ui->ship = -1;
     ui->plan.num_solutions = 0;
     ui->is_dragging_departure = false;
     ui->is_dragging_arrival = false;
@@ -137,13 +138,12 @@ void TransferPlanUIMake(TransferPlanUI* ui) {
 
 void TransferPlanUIUpdate(TransferPlanUI* ui) {
     if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
-        ui->plan.departure_planet = -1;
-        ui->plan.arrival_planet = -1;
+        TransferPlanUIMake(ui);
     }
 
     if (ui->plan.departure_planet >= 0 && ui->plan.arrival_planet >= 0 && ui->redraw_queued) {
         TransferPlanSolve(&ui->plan);
-        double total_dv = ui->plan.dv1[ui->plan.primary_solution] + ui->plan.dv1[ui->plan.primary_solution];
+        double total_dv = ui->plan.dv1[ui->plan.primary_solution] + ui->plan.dv2[ui->plan.primary_solution];
         ui->is_valid = ui->plan.num_solutions > 0 && total_dv <= GetShip(ui->ship)->max_dv;
         ui->is_valid = ui->is_valid && ui->plan.departure_time > GetTime();
 
@@ -243,14 +243,15 @@ time_type _DrawHandle(DrawCamera* cam, Vector2 pos, const Orbit* orbit, time_typ
         *is_dragging = false;
     }
     if (*is_dragging) {
-        time_type now = GlobalGetState()->time;
+        time_type now = GlobalGetNow();
         int full_orbits = floor((current - now) / period);
-        time_type t0 = full_orbits * period;
+        time_type t0 = now + full_orbits * period;
 
         Vector2 mouse_pos_world = GetMousePositionInWorld();
         double longuitude = atan2(mouse_pos_world.y, mouse_pos_world.x);
         double θ = longuitude - orbit->lop;
         current = OrbitGetTimeUntilFocalAnomaly(orbit, θ, t0);
+        ASSERT(current > now);
     }
     return current;
 }
@@ -268,7 +269,7 @@ void _TransferPlanUIDrawText(const TransferPlan* tp) {
     ForamtTime(departure_time_outpstr, 30, tp->departure_time);
     ForamtTime(arrival_time_outpstr, 30, tp->arrival_time);
     sprintf(dv1_str,   "DV 1      %5.3f km/s", tp->dv1[tp->primary_solution]/1000.0);
-    sprintf(dv2_str,   "DV 1      %5.3f km/s", tp->dv2[tp->primary_solution]/1000.0);
+    sprintf(dv2_str,   "DV 2      %5.3f km/s", tp->dv2[tp->primary_solution]/1000.0);
     sprintf(dvtot_str, "DV Tot    %5.3f km/s", (tp->dv1[tp->primary_solution] + tp->dv2[tp->primary_solution])/1000.0);
 
     TextBoxWrite(&textbox, strcat(departure_time_str, departure_time_outpstr));
@@ -302,23 +303,31 @@ void TransferPlanUIDraw(TransferPlanUI* ui, const DrawCamera* cam) {
         ui->redraw_queued = true;
     }
 
-    if (ui->is_valid) {
-        if (tp->num_solutions == 1) {
-            _DrawTransferOrbit(tp, tp->primary_solution, false);
-        } else if (tp->num_solutions == 2) {
-            _DrawTransferOrbit(tp, tp->primary_solution, false);
-            //_DrawTransferOrbit(tp, cam, 1 - tp->primary_solution, true);
-        }
+    if (tp->num_solutions == 1) {
+        _DrawTransferOrbit(tp, tp->primary_solution, false);
+    } else if (tp->num_solutions == 2) {
+        _DrawTransferOrbit(tp, tp->primary_solution, false);
+        _DrawTransferOrbit(tp, 1 - tp->primary_solution, true);
     }
-
-    _TransferPlanUIDrawText(tp);
-
+    if (ui->is_valid) {
+        _TransferPlanUIDrawText(tp);
+    }
+    else if (sin(GetTime() * 6.0) > 0.0) {
+        TextBox textbox = TextBoxMake(SCREEN_WIDTH - 40*16, 30, 16, RED);
+        char transfer_str[100];
+        sprintf(transfer_str, "INVALID TRANSFER: %5.3f > %5.3f km/s", 
+            (ui->plan.dv1[ui->plan.primary_solution] + ui->plan.dv2[ui->plan.primary_solution]) / 1000,
+            GetShip(ui->ship)->max_dv / 1000
+        );
+        TextBoxWrite(&textbox, transfer_str);
+    }
 }
 
 void TransferPlanUISetShip(TransferPlanUI* ui, int ship) {
     if (ui->is_dragging_departure || ui->is_dragging_arrival) {
         return;
     }
+    ui->ship = ship;
     ui->plan.departure_planet = GetShip(ship)->parent_planet;
     if (ui->plan.departure_planet >= 0 && ui->plan.arrival_planet >= 0) {
         _TransferPlanInitialize(ui, GlobalGetState()->time);

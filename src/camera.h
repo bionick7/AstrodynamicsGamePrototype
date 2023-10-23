@@ -7,6 +7,7 @@ typedef struct DrawCamera {
     float space_scale;
     float time_scale;
     bool paused;
+    Vector2 focus;
 } DrawCamera;
 
 void CameraMake(DrawCamera* cam);
