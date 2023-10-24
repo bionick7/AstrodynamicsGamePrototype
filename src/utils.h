@@ -3,6 +3,7 @@
 
 #include "basic.h"
 
+int ClampInt(int x, int min, int max);
 double LerpFromArray(double t, double array[], int array_len);
 double Sign(double in);
 Vector2 FromPolar(double radius, double phase);

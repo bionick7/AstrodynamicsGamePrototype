@@ -1,6 +1,17 @@
 #include "planet.h"
 #include "global_state.h"
+#include "ui.h"
+#include "utils.h"
 
+
+void PlanetMake(Planet* planet, const char* name, double mu, double radius) {
+    strcpy(planet->name, name);
+    planet->mu = mu;
+    planet->radius = radius;
+    for (int i=0; i < RESOURCE_MAX; i++) {
+        planet->resource_stock[i] = 1000;
+    }
+}
 
 void _PlanetClicked(Planet* planet) {
     if (GlobalGetState()->active_transfer_plan.plan.arrival_planet == -1) {
@@ -14,8 +25,35 @@ double PlanetScreenRadius(const Planet* planet) {
     return fmax(CameraTransformS(GetMainCamera(), planet->radius), 4);
 }
 
-double PlanetGetDVFromExcessVelocity(Planet* planet, Vector2 vel) {
+double PlanetGetDVFromExcessVelocity(const Planet* planet, Vector2 vel) {
     return sqrt(planet->mu / (2*planet->radius) + Vector2LengthSqr(vel));
+}
+
+resource_count_t PlanetDrawResource(Planet* planet, int resource, resource_count_t quantity) {
+    // Returns how much of the resource the planet was able to give
+    if (resource < 0 || resource >= RESOURCE_MAX) {
+        return 0;
+    }
+    
+    resource_count_t transferred_resources = ClampInt(quantity, 0, planet->resource_stock[resource]);
+    planet->resource_stock[resource] -= transferred_resources;
+
+    return transferred_resources;
+}
+
+resource_count_t PlanetGiveResource(Planet* planet, int resource, resource_count_t quantity) {
+    // Returns how much of the resource the planet was able to take
+    if (resource < 0 || resource >= RESOURCE_MAX) {
+        return 0;
+    }
+
+    resource_count_t transferred_resources = quantity;
+    if (transferred_resources < 0) transferred_resources = 0;
+    if (transferred_resources > UINT32_MAX - planet->resource_stock[resource] - 1) 
+        transferred_resources = UINT32_MAX - planet->resource_stock[resource] - 1;
+    planet->resource_stock[resource] += transferred_resources;
+
+    return transferred_resources;
 }
 
 bool PlanetHasMouseHover(const Planet* planet, double* min_distance) {
@@ -42,6 +80,19 @@ void PlanetDraw(Planet* planet, const DrawCamera* cam) {
     DrawOrbit(&planet->orbit, WHITE);
 }
 
+void _PlanetDrawResourceUI(Planet* planet, const DrawCamera* cam) {
+    TextBox tb = TextBoxMake(20, 20, 16, WHITE);
+    TextBoxWrite(&tb, planet->name);
+    TextBoxWrite(&tb, "================");
+    for (int i=0; i < RESOURCE_MAX; i++) {
+        int qtt = planet->resource_stock[i];
+        char buffer[50];
+        strcpy(buffer, resources_names[i]);
+        sprintf(buffer, "%10s %5d", resources_names[i], qtt);
+        TextBoxWrite(&tb, buffer);
+    }
+}
+
 void PlanetDrawUI(Planet* planet, const DrawCamera* cam) {
     Vector2 screen_pos = CameraTransformV(cam, planet->position.cartesian);
     int screen_x = (int)screen_pos.x, screen_y = (int)screen_pos.y;
@@ -53,6 +104,7 @@ void PlanetDrawUI(Planet* planet, const DrawCamera* cam) {
     if (planet->mouse_hover) {
         // Hover
         DrawCircleLines(screen_x, screen_y, 10, RED);
+        _PlanetDrawResourceUI(planet, cam);
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             _PlanetClicked(planet);

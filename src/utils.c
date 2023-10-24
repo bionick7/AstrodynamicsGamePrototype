@@ -1,5 +1,10 @@
 #include "utils.h"
 
+int ClampInt(int x, int min, int max) {
+    if (x < min) return min;
+    if (x > max) return max;
+    return x;
+}
 
 double Sign(double in) {
     //return ((unsigned long)((void*) &in) << 63 == 1) ? 1 : -1;

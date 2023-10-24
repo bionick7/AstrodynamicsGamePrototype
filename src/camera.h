@@ -3,12 +3,12 @@
 
 #include "basic.h"
 
-typedef struct DrawCamera {
+STRUCT_DECL(DrawCamera) {
     float space_scale;
     float time_scale;
     bool paused;
     Vector2 focus;
-} DrawCamera;
+};
 
 void CameraMake(DrawCamera* cam);
 Vector2 CameraTransformV(const DrawCamera* cam, Vector2 p);

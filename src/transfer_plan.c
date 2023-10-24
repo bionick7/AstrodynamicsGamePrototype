@@ -118,9 +118,14 @@ void TransferPlanSolve(TransferPlan* tp) {
 
 
     if (tp->num_solutions == 1) {
+        tp->tot_dv = tp->dv1[0] + tp->dv2[0];
+        tp->tot_dv_sec = 0;
         tp->primary_solution = 0;
     } else if (tp->num_solutions == 2) {
-        tp->primary_solution = (tp->dv1[0] + tp->dv2[0]) < (tp->dv1[1] + tp->dv2[1]) ? 0 : 1;
+        tp->tot_dv = tp->dv1[0] + tp->dv2[0];
+        tp->tot_dv_sec = tp->dv1[1] + tp->dv2[1];
+        tp->primary_solution = tp->tot_dv < tp->tot_dv_sec ? 0 : 1;
+        if(tp->tot_dv_sec < tp->tot_dv) Swap(&tp->tot_dv, &tp->tot_dv_sec);
     }
 }
 
@@ -143,8 +148,7 @@ void TransferPlanUIUpdate(TransferPlanUI* ui) {
 
     if (ui->plan.departure_planet >= 0 && ui->plan.arrival_planet >= 0 && ui->redraw_queued) {
         TransferPlanSolve(&ui->plan);
-        double total_dv = ui->plan.dv1[ui->plan.primary_solution] + ui->plan.dv2[ui->plan.primary_solution];
-        ui->is_valid = ui->plan.num_solutions > 0 && total_dv <= GetShip(ui->ship)->max_dv;
+        ui->is_valid = ui->plan.num_solutions > 0 && ui->plan.tot_dv <= GetShip(ui->ship)->max_dv;
         ui->is_valid = ui->is_valid && ui->plan.departure_time > GetTime();
 
         ui->redraw_queued = false;
@@ -219,7 +223,7 @@ void _DrawTransferOrbit(TransferPlanUI* ui, int solution, bool is_secondary) {
 }
 
 
-time_type _DrawHandle(DrawCamera* cam, Vector2 pos, const Orbit* orbit, time_type current, bool* is_dragging) {
+time_type _DrawHandle(const DrawCamera* cam, Vector2 pos, const Orbit* orbit, time_type current, bool* is_dragging) {
     Vector2 mouse_pos = GetMousePosition();
 
     Vector2 radial_dir = Vector2Normalize(CameraInvTransformV(cam, pos));
@@ -256,7 +260,7 @@ time_type _DrawHandle(DrawCamera* cam, Vector2 pos, const Orbit* orbit, time_typ
     return current;
 }
 
-void _TransferPlanUIDrawText(const TransferPlan* tp) {
+void _TransferPlanUIDrawText(const TransferPlan* tp, const Ship* ship) {
     TextBox textbox = TextBoxMake(SCREEN_WIDTH - 40*16, 30, 16, RED);
     char departure_time_outpstr[30];
     char arrival_time_outpstr[30];
@@ -265,12 +269,15 @@ void _TransferPlanUIDrawText(const TransferPlan* tp) {
     char dv1_str[40];
     char dv2_str[40];
     char dvtot_str[40];
+    char payload_str[40];
 
+    double total_dv = tp->dv1[tp->primary_solution] + tp->dv2[tp->primary_solution];
     ForamtTime(departure_time_outpstr, 30, tp->departure_time);
     ForamtTime(arrival_time_outpstr, 30, tp->arrival_time);
     sprintf(dv1_str,   "DV 1      %5.3f km/s", tp->dv1[tp->primary_solution]/1000.0);
     sprintf(dv2_str,   "DV 2      %5.3f km/s", tp->dv2[tp->primary_solution]/1000.0);
-    sprintf(dvtot_str, "DV Tot    %5.3f km/s", (tp->dv1[tp->primary_solution] + tp->dv2[tp->primary_solution])/1000.0);
+    sprintf(dvtot_str, "DV Tot    %5.3f km/s", total_dv/1000.0);
+    sprintf(payload_str, "Payload fraction  %3.1f %%", ShipGetPayloadCapacity(ship, total_dv) / ship->max_capacity * 100);
 
     TextBoxWrite(&textbox, strcat(departure_time_str, departure_time_outpstr));
     TextBoxWrite(&textbox, strcat(arrival_time_str, arrival_time_outpstr));
@@ -278,6 +285,8 @@ void _TransferPlanUIDrawText(const TransferPlan* tp) {
     TextBoxWrite(&textbox, dv1_str);
     TextBoxWrite(&textbox, dv2_str);
     TextBoxWrite(&textbox, dvtot_str);
+    TextBoxWrite(&textbox, "=====================");
+    TextBoxWrite(&textbox, payload_str);
 }
 
 void TransferPlanUIDraw(TransferPlanUI* ui, const DrawCamera* cam) {
@@ -304,13 +313,13 @@ void TransferPlanUIDraw(TransferPlanUI* ui, const DrawCamera* cam) {
     }
 
     if (tp->num_solutions == 1) {
-        _DrawTransferOrbit(tp, tp->primary_solution, false);
+        _DrawTransferOrbit(ui, tp->primary_solution, false);
     } else if (tp->num_solutions == 2) {
-        _DrawTransferOrbit(tp, tp->primary_solution, false);
-        _DrawTransferOrbit(tp, 1 - tp->primary_solution, true);
+        _DrawTransferOrbit(ui, tp->primary_solution, false);
+        _DrawTransferOrbit(ui, 1 - tp->primary_solution, true);
     }
     if (ui->is_valid) {
-        _TransferPlanUIDrawText(tp);
+        _TransferPlanUIDrawText(tp, GetShip(ui->ship));
     }
     else if (sin(GetTime() * 6.0) > 0.0) {
         TextBox textbox = TextBoxMake(SCREEN_WIDTH - 40*16, 30, 16, RED);
@@ -330,7 +339,7 @@ void TransferPlanUISetShip(TransferPlanUI* ui, int ship) {
     ui->ship = ship;
     ui->plan.departure_planet = GetShip(ship)->parent_planet;
     if (ui->plan.departure_planet >= 0 && ui->plan.arrival_planet >= 0) {
-        _TransferPlanInitialize(ui, GlobalGetState()->time);
+        _TransferPlanInitialize(&ui->plan, GlobalGetState()->time);
     }
 }
 
@@ -340,6 +349,6 @@ void TransferPlanUISetDestination(TransferPlanUI* ui, int planet) {
     }
     ui->plan.arrival_planet = planet;
     if (ui->plan.departure_planet >= 0 && ui->plan.arrival_planet >= 0) {
-        _TransferPlanInitialize(ui, GlobalGetState()->time);
+        _TransferPlanInitialize(&ui->plan, GlobalGetState()->time);
     }
 }

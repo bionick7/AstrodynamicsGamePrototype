@@ -48,21 +48,17 @@ void _AddPlanet(
     ) {
     gs->planets[gs->planet_count] = (Planet) {0};
     Planet* planet = &gs->planets[gs->planet_count];
-    strcpy(planet->name, name);
-    planet->mu = mu;
+    PlanetMake(planet, name, mu, radius);
     planet->orbit = OrbitFromElements(sma, ecc, lop, mu_parent, gs->time -ann / sqrt(mu_parent / (sma*sma*sma)), is_prograde);
-    planet->radius = radius;
     planet->id = gs->planet_count;
     PlanetUpdate(planet);
     gs->planet_count++;
 }
 
-void _AddShip(GlobalState* gs, const char* name, double dv, int origin_planet) {
+void _AddShip(GlobalState* gs, const char* name, int origin_planet) {
     gs->ships[gs->ship_count] = (Ship) {0};
     Ship* ship = &gs->ships[gs->ship_count];
-    strcpy(ship->name, name);
-    ship->dv = dv;
-    ship->max_dv = dv;
+    ShipMake(ship, name);
     ship->parent_planet = origin_planet;
     ship->current_state = SHIP_STATE_REST;
     ship->id = gs->ship_count;
@@ -89,7 +85,7 @@ void LoadGlobalState(GlobalState* gs, const char* file_path) {
     }
     char name[] = "Ship 0";
     for(int i=0; i < 10; i++) {
-        _AddShip(gs, name, 10000, 2);
+        _AddShip(gs, name, 2);
         name[5]++;
     }
     _InspectState(gs);

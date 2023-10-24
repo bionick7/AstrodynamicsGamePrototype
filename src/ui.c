@@ -2,7 +2,7 @@
 
 Font default_font;
 
-void BasicInit() {
+void UIInit() {
     default_font = LoadFontEx("resources/fonts/OCRAEXT.TTF", 32, NULL, 256);
     //default_font = LoadFontEx("resources/fonts/GOTHIC.TTF", 16, NULL, 256);
 }

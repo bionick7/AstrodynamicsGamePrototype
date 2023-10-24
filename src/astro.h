@@ -3,21 +3,21 @@
 
 #include "basic.h"
 
-typedef struct Orbit {
+STRUCT_DECL(Orbit) {
     double mu;
     double sma, ecc, lop;
     time_type period;
     bool prograde;
-} Orbit;
+};
 
-typedef struct OrbitPos {
+STRUCT_DECL(OrbitPos) {
     time_type time;
     Vector2 cartesian;
     double M;
     double θ;
     double r;
     double longuitude;
-} OrbitPos;
+};
 
 
 Orbit OrbitFromElements(double semi_major_axis, double eccenetricity, double longuitude_of_periapsis, double mu, time_type period, bool is_prograde);

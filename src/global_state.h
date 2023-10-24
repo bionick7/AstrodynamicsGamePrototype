@@ -10,18 +10,18 @@
 #define MAX_SHIPS 32
 #define MAX_CLICKABLE_OBJECTS 32
 
-typedef enum AgentType{
+ENUM_DECL(AgentType) {
     TYPE_NONE,
     TYPE_SHIP,
     TYPE_PLANET,
-} AgentType;
+};
 
-typedef struct Clickable {
+STRUCT_DECL(Clickable) {
     AgentType type;
     int id;
-} Clickable;
+};
 
-typedef struct GlobalState {
+STRUCT_DECL(GlobalState) {
     time_type time;
     DrawCamera camera;
 
@@ -32,7 +32,7 @@ typedef struct GlobalState {
     int clickable_count;
 
     TransferPlanUI active_transfer_plan;
-} GlobalState;
+};
 
 GlobalState* GlobalGetState();
 time_type GlobalGetNow();

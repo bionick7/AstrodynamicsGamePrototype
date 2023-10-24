@@ -67,7 +67,7 @@ void DebugPrintVarI(const char* var_name, int var) {
         return;
     }
     char res[256];
-    strcpy(&res, var_name);
+    strcpy(res, var_name);
     sprintf(&res[varname_len], "%10d", var);
-    DebugPrintText(&res);
+    DebugPrintText(res);
 }

@@ -10,6 +10,30 @@ void _ShipClicked(Ship* ship) {
     }
 }
 
+void ShipMake(Ship *ship, const char *name) {
+    strcpy(ship->name, name);
+    ship->max_dv = 10000;
+    ship->v_e = 10000;
+    ship->max_capacity = 100000;
+    ship->respource_type = -1;
+    ship->respource_qtt = 0;
+}
+
+double ShipGetPayloadCapacity(const Ship *ship, double dv)
+{
+    // dv = v_e * ln(1 + m_fuel/m_dry)
+    // fuel_ratio = (exp(dv/v_e) - 1) / (exp(dv_max/v_e) - 1)
+    // MOTM * fuel_ratio - OEM
+
+    // v_e
+    // dv_max
+    // m_fuel_max = cargo_cap
+    // OEM = cargo_cap/(exp(dv_max/v_e) -1)
+    //double oem = ship->max_capacity/max_fuel_ratio;
+    double fuel_ratio = (exp(dv/ship->v_e) - 1) / (exp(ship->max_dv/ship->v_e) - 1);
+    return (1 - fuel_ratio) * ship->max_capacity;
+}
+
 bool ShipHasMouseHover(const Ship* ship, double* min_distance) {
     double dist = Vector2Distance(GetMousePosition(), ship->draw_pos);
     if (dist <= 10 && dist < *min_distance) {
@@ -24,6 +48,8 @@ void ShipAssignTransfer(Ship* ship, TransferPlan tp) {
     printf("Assigning transfer plan %f to ship %s\n", tp.arrival_time, ship->name);
     double dv_tot = tp.dv1[tp.primary_solution] + tp.dv2[tp.primary_solution];
     if (dv_tot < ship->max_dv) {
+        ship->respource_type = 0;
+        ship->respource_qtt = ShipGetPayloadCapacity(ship, dv_tot);
         ship->next_plan = tp;
         ship->current_state = SHIP_STATE_PREPARE_TRANSFER;
     } else {
@@ -41,8 +67,23 @@ void ShipUpdate(Ship* ship) {
     }
     case SHIP_STATE_PREPARE_TRANSFER: {
         if (tp.departure_time <= now) {
+
+            ship->respource_type = 0;
+            ship->respource_qtt = PlanetDrawResource(GetPlanet(tp.departure_planet), 0, ShipGetPayloadCapacity(ship, tp.tot_dv));
+
+            char date_buffer[30];
+            ForamtTime(date_buffer, 30, tp.departure_time);
+            printf(":: On %s, \"%s\" picked up %d kg of %s on %s\n", 
+                date_buffer,
+                ship->name,
+                ship->respource_qtt,
+                resources_names[ship->respource_type],
+                GetPlanet(ship->parent_planet)->name
+            );
+
             ship->parent_planet = -1;
             ship->current_state = SHIP_STATE_IN_TRANSFER;
+
             // Deliberate fall through
         } else {
             ship->position = GetPlanet(ship->parent_planet)->position;
@@ -54,6 +95,22 @@ void ShipUpdate(Ship* ship) {
             ship->parent_planet = tp.arrival_planet;
             ship->current_state = SHIP_STATE_REST;
             ship->position = GetPlanet(ship->parent_planet)->position;
+
+            resource_count_t delivered = PlanetGiveResource(GetPlanet(tp.arrival_planet), ship->respource_type, ship->respource_qtt);  // Ignore how much actually arrives (for now)
+
+            char date_buffer[30];
+            ForamtTime(date_buffer, 30, tp.arrival_time);
+            printf(":: On %s, \"%s\" delivered %d kg of %s to %s\n", 
+                date_buffer,
+                ship->name,
+                delivered,
+                resources_names[ship->respource_type],
+                GetPlanet(ship->parent_planet)->name
+            );
+
+            ship->respource_qtt = 0;
+            ship->respource_type = -1;
+
         } else {
             ship->position = OrbitGetPosition(&tp.transfer_orbit[tp.primary_solution], now);
         }
@@ -100,17 +157,16 @@ void ShipDraw(Ship* ship, const DrawCamera* cam) {
 }
 
 void ShipInspect(const Ship* ship) {
-
     switch (ship->current_state) {
     case SHIP_STATE_REST:
     case SHIP_STATE_PREPARE_TRANSFER: {
-        printf("%s : parked on %s, %f/%f m/s dv\n", ship->name, GetPlanet(ship->parent_planet)->name, ship->dv, ship->max_dv);
+        printf("%s : parked on %s, %f m/s dv\n", ship->name, GetPlanet(ship->parent_planet)->name, ship->max_dv);
         break;
     }
     case SHIP_STATE_IN_TRANSFER: {
         printf("%s : in transfer[", ship->name);
         OrbitPrint(&ship->next_plan.transfer_orbit[ship->next_plan.primary_solution]);
-        printf("] %f/%f m/s dv\n", ship->dv, ship->max_dv);
+        printf("] %f m/s dv\n", ship->max_dv);
         break;
     }}
 }

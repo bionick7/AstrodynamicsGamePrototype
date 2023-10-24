@@ -3,22 +3,22 @@
 
 #include "basic.h"
 
-typedef struct TextBox {
+STRUCT_DECL(TextBox) {
     int text_start_x;
     int text_start_y;
     int text_margin_x;
     int text_margin_y;
     int text_size;
     int text_counter;
-    Color text_color
-} TextBox;
+    Color text_color;
+};
 
-typedef enum ButtonState {
+ENUM_DECL(ButtonState) {
     BUTTON_NONE = 0x00,
     BUTTON_HOVER = 0x01,
     BUTTON_PRESSED = 0x02,
     BUTTON_JUST_PRESSED = 0x04,
-} ButtonState;
+};
 
 TextBox TextBoxMake(int x, int y, int text_size, Color color);
 void TextBoxWrite(TextBox* tb, const char* text);

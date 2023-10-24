@@ -8,11 +8,14 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdint.h>
 
 #define SCREEN_WIDTH 1600
 #define SCREEN_HEIGHT 900
 #define SCREEN_CENTER (Vector2) { SCREEN_WIDTH/2, SCREEN_HEIGHT/2 }
 
+#define STRUCT_DECL(name) typedef struct s_##name name;  struct s_##name 
+#define ENUM_DECL(name) typedef enum e_##name name;  enum e_##name 
 typedef double time_type;
 
 #define ASSERT(condition) if (!(condition)) { printf("%s:%d :: Assertion failed: (%s)\n", __FILE__, __LINE__, #condition); }

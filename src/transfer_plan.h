@@ -4,14 +4,8 @@
 #include "basic.h"
 #include "planet.h"
 
-typedef enum TransferPlanUIState {
-    TPUISTATE_NONE = 0,
-    TPUISTATE_MOD_DEPARTURE,
-    TPUISTATE_MOD_ARRIVAL,
-} TransferPlanUIState;
 
-
-typedef struct TransferPlan {
+STRUCT_DECL(TransferPlan) {
     // Inputs
     int departure_planet;
     int arrival_planet;
@@ -26,11 +20,14 @@ typedef struct TransferPlan {
     Vector2 arrival_dvs[2];
     double dv1[2];
     double dv2[2];
-} TransferPlan;
+    double tot_dv;
+    double tot_dv_sec;
+};
 
-typedef struct TransferPlanUI {
+STRUCT_DECL(TransferPlanUI) {
     TransferPlan plan;
     int ship;
+    int resource_type;
     bool is_valid;
 
     // UI
@@ -39,7 +36,7 @@ typedef struct TransferPlanUI {
     Vector2 departure_handle_pos;
     Vector2 arrival_handle_pos;
     bool redraw_queued;
-} TransferPlanUI;
+};
 
 void TransferPlanSolve(TransferPlan* tp);
 
