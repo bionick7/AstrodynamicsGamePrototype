@@ -1,5 +1,14 @@
 #include "utils.h"
 
+
+int MinInt(int a, int b) {
+    return a < b ? a : b;
+}
+
+int MaxInt(int a, int b) {
+    return a > b ? a : b;
+}
+
 int ClampInt(int x, int min, int max) {
     if (x < min) return min;
     if (x > max) return max;

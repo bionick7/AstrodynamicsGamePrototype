@@ -49,6 +49,6 @@ resource_count_t PlanetGiveResource(Planet* planet, int resource, resource_count
 bool PlanetHasMouseHover(const Planet* ship, double* distance);
 void PlanetUpdate(Planet* planet);
 void PlanetDraw(Planet* planet, const DrawCamera* camera);
-void PlanetDrawUI(Planet* planet, const DrawCamera* camera);
+void PlanetDrawUI(Planet* planet, const DrawCamera* cam, bool upper_quadrant);
 
 #endif  // PLANET_H

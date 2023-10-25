@@ -148,11 +148,24 @@ void DrawState(GlobalState* gs) {
         ShipDraw(&gs->ships[i], cam);
     }
 
-    // UI
-    for (int i=0; i < gs->planet_count; i++) {
-        PlanetDrawUI(&gs->planets[i], cam);
-    }
     TransferPlanUIDraw(&gs->active_transfer_plan, cam);
-    DrawFPS(0, 0);
+
+    // UI
     CameraDrawUI(cam);
+    for (int i=0; i < gs->planet_count; i++) {
+        Planet* planet = &gs->planets[i];
+        if (gs->active_transfer_plan.plan.departure_planet == i) {
+            PlanetDrawUI(planet, cam, true);
+        }
+        if (gs->active_transfer_plan.plan.arrival_planet == i) {
+            PlanetDrawUI(planet, cam, false);
+        }
+        if (gs->active_transfer_plan.plan.departure_planet < 0 && planet->mouse_hover) {
+            PlanetDrawUI(planet, cam, true);
+        }
+    }
+    for (int i=0; i < gs->ship_count; i++) {
+        ShipDrawUI(&gs->ships[i], cam);
+    }
+    //DrawFPS(0, 0);
 }

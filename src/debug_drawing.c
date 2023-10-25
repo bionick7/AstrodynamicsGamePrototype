@@ -43,7 +43,7 @@ void DebugDrawConic(Vector2 focus, Vector2 ecc_vector, double a) {
 TextBox debug_textbox;
 
 void DebugClearText() {
-    debug_textbox = TextBoxMake(5, 35, 16, GREEN);
+    debug_textbox = TextBoxMake(5, 35, 500, GetScreenHeight() - 40, 16, GREEN);
 }
 
 void DebugPrintText(const char* text) {

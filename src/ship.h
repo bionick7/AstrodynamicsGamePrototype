@@ -31,6 +31,7 @@ STRUCT_DECL(Ship) {
     // UI state
     Vector2 draw_pos;
     bool mouse_hover;
+    Color color;
 
     // Identifier
     int id;
@@ -42,6 +43,7 @@ bool ShipHasMouseHover(const Ship* ship, double* min_distance);
 void ShipAssignTransfer(Ship* ship, TransferPlan tp);
 void ShipUpdate(Ship* ship);
 void ShipDraw(Ship* ship, const DrawCamera* camera);
+void ShipDrawUI(Ship* ship, const DrawCamera* camera);
 void ShipInspect(const Ship* ship);
 
 #endif  // SHIP_H

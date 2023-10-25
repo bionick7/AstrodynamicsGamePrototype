@@ -11,23 +11,23 @@ Font GetCustomDefaultFont() {
     return default_font;
 }
 
-TextBox TextBoxMake(int x, int y, int size, Color color) {
+TextBox TextBoxMake(int x, int y, int w, int h, int text_size, Color color) {
     TextBox res = {0};
     res.text_start_x = x;
     res.text_start_y = y;
-    res.text_size = size;
+    res.text_size = text_size;
     res.text_counter = 0;
     res.text_color = color;
-    res.width = 0;
-    res.height = 0;
+    res.width = w;
+    res.height = h;
+    res.y_cursor = 0;
     return res;
 }
 
 void TextBoxWrite(TextBox* tb, const char* text) {
-    Vector2 pos = (Vector2) {tb->text_start_x, tb->text_start_y + tb->height + tb->text_margin_y};
+    Vector2 pos = (Vector2) {tb->text_start_x, tb->text_start_y + tb->y_cursor + tb->text_margin_y};
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, tb->text_size, 1);
-    tb->width = fmax(tb->width, size.x);
-    tb->height += size.y + tb->text_margin_y;
+    tb->y_cursor += size.y + tb->text_margin_y;
     DrawTextEx(GetCustomDefaultFont(), text, pos, tb->text_size, 1, tb->text_color);
 }
 
@@ -37,7 +37,7 @@ void TextBoxEnclose(TextBox* tb, int inset_x, int inset_y, Color background_colo
     rect.y = tb->text_start_y - inset_y;
     rect.width = tb->width + inset_x*2;
     rect.height = tb->height + inset_y*2;
-    int corner_radius = inset_x < inset_y ? inset_x : inset_y;
+    int corner_radius = 0;//inset_x < inset_y ? inset_x : inset_y;
     DrawRectangleRounded(rect, corner_radius, 16, background_color);
     DrawRectangleRoundedLines(rect, corner_radius, 16, 1, line_color);
 }

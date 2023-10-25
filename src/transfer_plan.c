@@ -260,12 +260,14 @@ time_type _DrawHandle(const DrawCamera* cam, Vector2 pos, const Orbit* orbit, ti
     return current;
 }
 
+TextBox textbox;
+
 void _TransferPlanUIDrawText(const TransferPlan* tp, const Ship* ship) {
-    TextBox textbox = TextBoxMake(GetScreenWidth() - 40*16, 30, 16, RED);
+    TextBoxEnclose(&textbox, 2, 2, BLACK, RED);
     char departure_time_outpstr[30];
     char arrival_time_outpstr[30];
     char departure_time_str[40] = "Departs @ ";
-    char arrival_time_str[40] = "Arrives @ ";
+    char arrival_time_str[40] =   "Duration  ";
     char dv1_str[40];
     char dv2_str[40];
     char dvtot_str[40];
@@ -273,23 +275,33 @@ void _TransferPlanUIDrawText(const TransferPlan* tp, const Ship* ship) {
 
     double total_dv = tp->dv1[tp->primary_solution] + tp->dv2[tp->primary_solution];
     ForamtTime(departure_time_outpstr, 30, tp->departure_time);
-    ForamtTime(arrival_time_outpstr, 30, tp->arrival_time);
+    ForamtTime(arrival_time_outpstr, 30, (tp->arrival_time - tp->departure_time));
     sprintf(dv1_str,   "DV 1      %5.3f km/s", tp->dv1[tp->primary_solution]/1000.0);
     sprintf(dv2_str,   "DV 2      %5.3f km/s", tp->dv2[tp->primary_solution]/1000.0);
     sprintf(dvtot_str, "DV Tot    %5.3f km/s", total_dv/1000.0);
-    sprintf(payload_str, "Payload fraction  %3.1f %%", ShipGetPayloadCapacity(ship, total_dv) / ship->max_capacity * 100);
+    double capacity = ShipGetPayloadCapacity(ship, total_dv);
+    sprintf(payload_str, "Payload cap.  %3.0f %% (%.0f / %.0f t)", 
+        capacity / ship->max_capacity * 100,
+        capacity / 1000.0,
+        ship->max_capacity / 1000.0
+    );
 
     TextBoxWrite(&textbox, strcat(departure_time_str, departure_time_outpstr));
     TextBoxWrite(&textbox, strcat(arrival_time_str, arrival_time_outpstr));
     TextBoxWrite(&textbox, "=====================");
-    TextBoxWrite(&textbox, dv1_str);
-    TextBoxWrite(&textbox, dv2_str);
+    //TextBoxWrite(&textbox, dv1_str);
+    //TextBoxWrite(&textbox, dv2_str);
     TextBoxWrite(&textbox, dvtot_str);
     TextBoxWrite(&textbox, "=====================");
     TextBoxWrite(&textbox, payload_str);
 }
 
 void TransferPlanUIDraw(TransferPlanUI* ui, const DrawCamera* cam) {
+    textbox = TextBoxMake(
+        GetScreenWidth() - 20*16 - 5, 5 + 20,
+        20*16, MinInt(200, GetScreenHeight()) - 2*5 - 20, 
+        16, RED
+    );
     TransferPlan* tp = &ui->plan;
     if (tp->departure_planet < 0 || tp->arrival_planet < 0) {
         return;
@@ -322,12 +334,17 @@ void TransferPlanUIDraw(TransferPlanUI* ui, const DrawCamera* cam) {
         _TransferPlanUIDrawText(tp, GetShip(ui->ship));
     }
     else if (sin(GetTime() * 6.0) > 0.0) {
-        TextBox textbox = TextBoxMake(GetScreenWidth() - 40*16, 30, 16, RED);
         char transfer_str[100];
-        sprintf(transfer_str, "INVALID TRANSFER: %5.3f > %5.3f km/s", 
-            (ui->plan.dv1[ui->plan.primary_solution] + ui->plan.dv2[ui->plan.primary_solution]) / 1000,
-            GetShip(ui->ship)->max_dv / 1000
-        );
+        if (ui->plan.tot_dv > GetShip(ui->ship)->max_dv) {
+            sprintf(transfer_str, "INVALID TRANSFER: %5.3f > %5.3f km/s", 
+                ui->plan.tot_dv / 1000,
+                GetShip(ui->ship)->max_dv / 1000
+            );
+        } else if (ui->plan.departure_time < now) {
+            strcpy(transfer_str, "INVALID TRANSFER: Departuring in the past");
+        }
+        textbox.height = 30;
+        TextBoxEnclose(&textbox, 2, 2, BLACK, RED);
         TextBoxWrite(&textbox, transfer_str);
     }
 }

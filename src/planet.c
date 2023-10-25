@@ -83,10 +83,29 @@ void PlanetDraw(Planet* planet, const DrawCamera* cam) {
     //DrawLineV(CameraTransformV(cam, (Vector2){0}), screen_pos, WHITE);
     
     DrawOrbit(&planet->orbit, WHITE);
+
+    int screen_x = (int)screen_pos.x, screen_y = (int)screen_pos.y;
+    int text_h = 16;
+    int text_w = MeasureText(planet->name, text_h);
+    DrawText(planet->name, screen_x - text_w / 2, screen_y - text_h - 5, text_h, WHITE);
+
+    if (planet->mouse_hover) {
+        // Hover
+        DrawCircleLines(screen_x, screen_y, 10, RED);
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            _PlanetClicked(planet);
+        }
+    }
 }
 
-void _PlanetDrawResourceUI(Planet* planet, const DrawCamera* cam) {
-    TextBox tb = TextBoxMake(20, 20, 16, WHITE);
+void PlanetDrawUI(Planet* planet, const DrawCamera* cam, bool upper_quadrant) {
+    TextBox tb;
+    if (upper_quadrant) {
+        tb = TextBoxMake(10, 10, 16*30, GetScreenHeight() / 2 - 20, 16, WHITE);
+    } else {
+        tb = TextBoxMake(10, GetScreenHeight() / 2 + 10, 16*30, GetScreenHeight() / 2 - 20, 16, WHITE);  // TODO
+    }
+    TextBoxEnclose(&tb, 2, 2, BLACK, WHITE);
     TextBoxWrite(&tb, planet->name);
     TextBoxWrite(&tb, "================");
     for (int i=0; i < RESOURCE_MAX; i++) {
@@ -95,25 +114,5 @@ void _PlanetDrawResourceUI(Planet* planet, const DrawCamera* cam) {
         strcpy(buffer, resources_names[i]);
         sprintf(buffer, "%10s %5d", resources_names[i], qtt);
         TextBoxWrite(&tb, buffer);
-    }
-    //TextBoxEnclose(&tb, 2, 2, BLACK, WHITE);
-}
-
-void PlanetDrawUI(Planet* planet, const DrawCamera* cam) {
-    Vector2 screen_pos = CameraTransformV(cam, planet->position.cartesian);
-    int screen_x = (int)screen_pos.x, screen_y = (int)screen_pos.y;
-    int text_h = 16;
-    int text_w = MeasureText(planet->name, text_h);
-    DrawText(planet->name, screen_x - text_w / 2, screen_y - text_h - 5, text_h, WHITE);
-
-    //float mouse_dist_sqr = Vector2DistanceSqr(GetMousePosition(), screen_pos);
-    if (planet->mouse_hover) {
-        // Hover
-        DrawCircleLines(screen_x, screen_y, 10, RED);
-        _PlanetDrawResourceUI(planet, cam);
-
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            _PlanetClicked(planet);
-        }
     }
 }

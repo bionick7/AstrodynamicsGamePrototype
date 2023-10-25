@@ -11,6 +11,7 @@ STRUCT_DECL(TextBox) {
     int text_size;
     int text_counter;
     int width, height;
+    int y_cursor;
     Color text_color;
 };
 
@@ -24,7 +25,7 @@ ENUM_DECL(ButtonState) {
 void UIInit();
 Font GetCustomDefaultFont();
 
-TextBox TextBoxMake(int x, int y, int text_size, Color text_color);
+TextBox TextBoxMake(int x, int y, int w, int h, int text_size, Color color);
 void TextBoxWrite(TextBox* tb, const char* text);
 void TextBoxEnclose(TextBox* tb, int inset_x, int inset_y, Color background_color, Color line_color);
 

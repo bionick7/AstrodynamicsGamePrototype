@@ -17,6 +17,13 @@ void ShipMake(Ship *ship, const char *name) {
     ship->max_capacity = 100000;
     ship->respource_type = -1;
     ship->respource_qtt = 0;
+
+    ship->color = (Color) {
+        GetRandomValue(0, 255),
+        GetRandomValue(0, 255),
+        GetRandomValue(0, 255),
+        255
+    };
 }
 
 double ShipGetPayloadCapacity(const Ship *ship, double dv)
@@ -126,33 +133,40 @@ void ShipUpdate(Ship* ship) {
 }
 
 void ShipDraw(Ship* ship, const DrawCamera* cam) {
-    SetRandomSeed(ship->id+1);
-    Color color = (Color) {
-        GetRandomValue(0, 255),
-        GetRandomValue(0, 255),
-        GetRandomValue(0, 255),
-        255
-    };
     //printf("Drawing ship %s (%d, %d, %d)\n", ship->name, color.r, color.g, color.b);
-    DrawRectangleV(Vector2SubtractValue(ship->draw_pos, 8/2), (Vector2) {8, 8}, color );
+    DrawRectangleV(Vector2SubtractValue(ship->draw_pos, 8/2), (Vector2) {8, 8}, ship->color );
 
     if (ship->current_state == SHIP_STATE_PREPARE_TRANSFER || ship->current_state == SHIP_STATE_IN_TRANSFER) {
         OrbitPos to_departure = OrbitGetPosition(&ship->next_plan.transfer_orbit[ship->next_plan.primary_solution], 
             fmax(ship->next_plan.departure_time, GlobalGetNow())
         );
         OrbitPos to_arrival = OrbitGetPosition(&ship->next_plan.transfer_orbit[ship->next_plan.primary_solution], ship->next_plan.arrival_time);
-        DrawOrbitBounded(&ship->next_plan.transfer_orbit[ship->next_plan.primary_solution], to_departure, to_arrival, color);
+        DrawOrbitBounded(&ship->next_plan.transfer_orbit[ship->next_plan.primary_solution], to_departure, to_arrival, ship->color);
     }
 
+}
+
+void ShipDrawUI(Ship* ship, const DrawCamera* cam) {
+    
     //float mouse_dist_sqr = Vector2DistanceSqr(GetMousePosition(), draw_pos);
     if (ship->mouse_hover) {
         // Hover
         DrawCircleLines(ship->draw_pos.x, ship->draw_pos.y, 10, RED);
-        DrawTextEx(GetCustomDefaultFont(), ship->name, Vector2Add(ship->draw_pos, (Vector2){5, 5}), 16, 1, color);
+        DrawTextEx(GetCustomDefaultFont(), ship->name, Vector2Add(ship->draw_pos, (Vector2){5, 5}), 16, 1, ship->color);
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             _ShipClicked(ship);
         }
+    }
+    if (ship->mouse_hover || GlobalGetState()->active_transfer_plan.ship == ship->id) {
+        TextBox tb = TextBoxMake(
+            GetScreenWidth() - 20*16 - 5, 5 + 200,
+            20*16, GetScreenHeight() - 200 - 2*5, 
+            16, WHITE
+        );
+
+        TextBoxEnclose(&tb, 2, 2, BLACK, ship->color);
+        TextBoxWrite(&tb, ship->name);
     }
 }
 

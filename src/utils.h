@@ -3,6 +3,8 @@
 
 #include "basic.h"
 
+int MinInt(int a, int b);
+int MaxInt(int a, int b);
 int ClampInt(int x, int min, int max);
 double LerpFromArray(double t, double array[], int array_len);
 double Sign(double in);
