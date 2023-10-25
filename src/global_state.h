@@ -23,6 +23,7 @@ STRUCT_DECL(Clickable) {
 
 STRUCT_DECL(GlobalState) {
     time_type time;
+    time_type prev_time;
     DrawCamera camera;
 
     int planet_count;
@@ -36,6 +37,7 @@ STRUCT_DECL(GlobalState) {
 
 GlobalState* GlobalGetState();
 time_type GlobalGetNow();
+time_type GlobalGetPreviousFrameTime();
 
 Ship* GetShip(int);
 

@@ -19,14 +19,14 @@ Vector2 CameraTransformV(const DrawCamera* cam, Vector2 p) {
         Vector2Scale(
         _FlipY(Vector2Subtract(p, cam->focus)),
         cam->space_scale),
-        SCREEN_CENTER
+        GetScreenCenter()
     );
 }
 
 Vector2 _CameraInvTransformV(double scale, Vector2 focus, Vector2 p) {
     return Vector2Add(_FlipY(
         Vector2Scale(
-        Vector2Subtract(p, SCREEN_CENTER),
+        Vector2Subtract(p, GetScreenCenter()),
         1 / scale)),
         focus
     );
@@ -96,7 +96,7 @@ void CameraHandleInput(DrawCamera* cam, double delta_t) {
 void CameraDrawUI(const DrawCamera* cam) {
     const char* text = TextFormat("II Time x %.1f", cam->time_scale);
     if (!cam->paused) text += 3;
-    Vector2 pos = (Vector2) { SCREEN_WIDTH - MeasureText(text, 20) - 10, 10 };
+    Vector2 pos = (Vector2) { GetScreenWidth() - MeasureText(text, 20) - 10, 10 };
     DrawTextEx(GetCustomDefaultFont(), text, pos, 20, 1, WHITE);
 }
 

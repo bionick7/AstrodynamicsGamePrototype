@@ -261,7 +261,7 @@ time_type _DrawHandle(const DrawCamera* cam, Vector2 pos, const Orbit* orbit, ti
 }
 
 void _TransferPlanUIDrawText(const TransferPlan* tp, const Ship* ship) {
-    TextBox textbox = TextBoxMake(SCREEN_WIDTH - 40*16, 30, 16, RED);
+    TextBox textbox = TextBoxMake(GetScreenWidth() - 40*16, 30, 16, RED);
     char departure_time_outpstr[30];
     char arrival_time_outpstr[30];
     char departure_time_str[40] = "Departs @ ";
@@ -322,7 +322,7 @@ void TransferPlanUIDraw(TransferPlanUI* ui, const DrawCamera* cam) {
         _TransferPlanUIDrawText(tp, GetShip(ui->ship));
     }
     else if (sin(GetTime() * 6.0) > 0.0) {
-        TextBox textbox = TextBoxMake(SCREEN_WIDTH - 40*16, 30, 16, RED);
+        TextBox textbox = TextBoxMake(GetScreenWidth() - 40*16, 30, 16, RED);
         char transfer_str[100];
         sprintf(transfer_str, "INVALID TRANSFER: %5.3f > %5.3f km/s", 
             (ui->plan.dv1[ui->plan.primary_solution] + ui->plan.dv2[ui->plan.primary_solution]) / 1000,

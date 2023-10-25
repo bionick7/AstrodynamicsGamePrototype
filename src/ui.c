@@ -7,6 +7,10 @@ void UIInit() {
     //default_font = LoadFontEx("resources/fonts/GOTHIC.TTF", 16, NULL, 256);
 }
 
+Font GetCustomDefaultFont() {
+    return default_font;
+}
+
 TextBox TextBoxMake(int x, int y, int size, Color color) {
     TextBox res = {0};
     res.text_start_x = x;
@@ -14,17 +18,30 @@ TextBox TextBoxMake(int x, int y, int size, Color color) {
     res.text_size = size;
     res.text_counter = 0;
     res.text_color = color;
+    res.width = 0;
+    res.height = 0;
     return res;
 }
 
 void TextBoxWrite(TextBox* tb, const char* text) {
-    Vector2 pos = (Vector2) {tb->text_start_x, (tb->text_size + tb->text_margin_y) * tb->text_counter++ + tb->text_start_y};
+    Vector2 pos = (Vector2) {tb->text_start_x, tb->text_start_y + tb->height + tb->text_margin_y};
+    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, tb->text_size, 1);
+    tb->width = fmax(tb->width, size.x);
+    tb->height += size.y + tb->text_margin_y;
     DrawTextEx(GetCustomDefaultFont(), text, pos, tb->text_size, 1, tb->text_color);
 }
 
-Font GetCustomDefaultFont() {
-    return default_font;
+void TextBoxEnclose(TextBox* tb, int inset_x, int inset_y, Color background_color, Color line_color) {
+    Rectangle rect;
+    rect.x = tb->text_start_x - inset_x;
+    rect.y = tb->text_start_y - inset_y;
+    rect.width = tb->width + inset_x*2;
+    rect.height = tb->height + inset_y*2;
+    int corner_radius = inset_x < inset_y ? inset_x : inset_y;
+    DrawRectangleRounded(rect, corner_radius, 16, background_color);
+    DrawRectangleRoundedLines(rect, corner_radius, 16, 1, line_color);
 }
+
 
 ButtonState DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color) {
     Vector2 base_pos = Vector2Add(point, base);

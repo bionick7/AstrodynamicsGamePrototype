@@ -73,7 +73,7 @@ void ShipUpdate(Ship* ship) {
 
             char date_buffer[30];
             ForamtTime(date_buffer, 30, tp.departure_time);
-            printf(":: On %s, \"%s\" picked up %d kg of %s on %s\n", 
+            printf(":: On %s, \"%s\" picked up %f kg of %s on %s\n", 
                 date_buffer,
                 ship->name,
                 ship->respource_qtt,
@@ -100,7 +100,7 @@ void ShipUpdate(Ship* ship) {
 
             char date_buffer[30];
             ForamtTime(date_buffer, 30, tp.arrival_time);
-            printf(":: On %s, \"%s\" delivered %d kg of %s to %s\n", 
+            printf(":: On %s, \"%s\" delivered %f kg of %s to %s\n", 
                 date_buffer,
                 ship->name,
                 delivered,

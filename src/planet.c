@@ -9,7 +9,9 @@ void PlanetMake(Planet* planet, const char* name, double mu, double radius) {
     planet->mu = mu;
     planet->radius = radius;
     for (int i=0; i < RESOURCE_MAX; i++) {
-        planet->resource_stock[i] = 1000;
+        planet->resource_stock[i] = 1e5;
+        planet->resource_delta[i] = 0;
+        planet->resource_capacity[i] = 1e6;
     }
 }
 
@@ -29,14 +31,14 @@ double PlanetGetDVFromExcessVelocity(const Planet* planet, Vector2 vel) {
     return sqrt(planet->mu / (2*planet->radius) + Vector2LengthSqr(vel));
 }
 
-resource_count_t PlanetDrawResource(Planet* planet, int resource, resource_count_t quantity) {
+resource_count_t PlanetDrawResource(Planet* planet, int resource_id, resource_count_t quantity) {
     // Returns how much of the resource the planet was able to give
-    if (resource < 0 || resource >= RESOURCE_MAX) {
+    if (resource_id < 0 || resource_id >= RESOURCE_MAX) {
         return 0;
     }
     
-    resource_count_t transferred_resources = ClampInt(quantity, 0, planet->resource_stock[resource]);
-    planet->resource_stock[resource] -= transferred_resources;
+    resource_count_t transferred_resources = ClampInt(quantity, 0, planet->resource_stock[resource_id]);
+    planet->resource_stock[resource_id] -= transferred_resources;
 
     return transferred_resources;
 }
@@ -47,10 +49,7 @@ resource_count_t PlanetGiveResource(Planet* planet, int resource, resource_count
         return 0;
     }
 
-    resource_count_t transferred_resources = quantity;
-    if (transferred_resources < 0) transferred_resources = 0;
-    if (transferred_resources > UINT32_MAX - planet->resource_stock[resource] - 1) 
-        transferred_resources = UINT32_MAX - planet->resource_stock[resource] - 1;
+    resource_count_t transferred_resources = Clamp(quantity, 0, planet->resource_capacity[resource]);
     planet->resource_stock[resource] += transferred_resources;
 
     return transferred_resources;
@@ -68,7 +67,13 @@ bool PlanetHasMouseHover(const Planet* planet, double* min_distance) {
 }
 
 void PlanetUpdate(Planet *planet) {
-    planet->position = OrbitGetPosition(&planet->orbit, GlobalGetNow());
+    time_type now = GlobalGetNow();
+    time_type prev = GlobalGetPreviousFrameTime();
+    planet->position = OrbitGetPosition(&planet->orbit, now);
+    double delta_T = (now - prev) / 86400;
+    for (int i=0; i < RESOURCE_MAX; i++) {
+        planet->resource_stock[i] = Clamp(planet->resource_stock[i] + planet->resource_delta[i] * delta_T, 0, planet->resource_capacity[i]);
+    }
 }
 
 void PlanetDraw(Planet* planet, const DrawCamera* cam) {
@@ -91,6 +96,7 @@ void _PlanetDrawResourceUI(Planet* planet, const DrawCamera* cam) {
         sprintf(buffer, "%10s %5d", resources_names[i], qtt);
         TextBoxWrite(&tb, buffer);
     }
+    //TextBoxEnclose(&tb, 2, 2, BLACK, WHITE);
 }
 
 void PlanetDrawUI(Planet* planet, const DrawCamera* cam) {

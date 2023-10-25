@@ -12,7 +12,7 @@
 
 #define SCREEN_WIDTH 1600
 #define SCREEN_HEIGHT 900
-#define SCREEN_CENTER (Vector2) { SCREEN_WIDTH/2, SCREEN_HEIGHT/2 }
+static inline Vector2 GetScreenCenter() { return (Vector2) {GetScreenWidth() / 2, GetScreenHeight() / 2}; }
 
 #define STRUCT_DECL(name) typedef struct s_##name name;  struct s_##name 
 #define ENUM_DECL(name) typedef enum e_##name name;  enum e_##name 

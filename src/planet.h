@@ -4,7 +4,8 @@
 #include "astro.h"
 #include "camera.h"
 
-typedef uint32_t resource_count_t;
+#define RESOURCE_CAP INT
+typedef double resource_count_t;
 
 static const char resources_names[2][30] = {
     "WATER",
@@ -29,7 +30,9 @@ STRUCT_DECL(Planet) {
     Orbit orbit;
     OrbitPos position;
 
-    int resource_stock[RESOURCE_MAX];
+    resource_count_t resource_stock[RESOURCE_MAX];
+    resource_count_t resource_capacity[RESOURCE_MAX];
+    resource_count_t resource_delta[RESOURCE_MAX];
 
     bool mouse_hover;
     int id;

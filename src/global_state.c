@@ -8,6 +8,10 @@ GlobalState* GlobalGetState() {
     return &global_state;
 }
 
+time_type GlobalGetPreviousFrameTime() {
+    return global_state.prev_time;
+}
+
 time_type GlobalGetNow() {
     return global_state.time;
 }
@@ -101,6 +105,7 @@ void UpdateState(GlobalState* gs, double delta_t) {
 
     CameraHandleInput(&gs->camera, delta_t);
     TransferPlanUIUpdate(&gs->active_transfer_plan);
+    gs->prev_time = gs->time;
     gs->time = CameraAdvanceTime(&gs->camera, gs->time, delta_t);
 
     Clickable hover = {TYPE_NONE, -1};
