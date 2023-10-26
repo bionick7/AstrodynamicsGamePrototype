@@ -11,7 +11,10 @@ STRUCT_DECL(TextBox) {
     int text_size;
     int text_counter;
     int width, height;
+    int x_cursor;
     int y_cursor;
+    int line_size_x;
+    int line_size_y;
     Color text_color;
 };
 
@@ -26,8 +29,13 @@ void UIInit();
 Font GetCustomDefaultFont();
 
 TextBox TextBoxMake(int x, int y, int w, int h, int text_size, Color color);
-void TextBoxWrite(TextBox* tb, const char* text);
+
+void TextBoxLineBreak(TextBox* tb);
+
 void TextBoxEnclose(TextBox* tb, int inset_x, int inset_y, Color background_color, Color line_color);
+void TextBoxWrite(TextBox* tb, const char* text);
+void TextBoxWriteLine(TextBox* tb, const char* text);
+ButtonState TextBoxWriteButton(TextBox* tb, const char* text, int inset);
 
 ButtonState DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color);
 ButtonState DrawCircleButton(Vector2 midpoint, double radius, Color color);

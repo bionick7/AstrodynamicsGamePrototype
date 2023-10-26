@@ -47,7 +47,7 @@ void DebugClearText() {
 }
 
 void DebugPrintText(const char* text) {
-    TextBoxWrite(&debug_textbox, text);
+    TextBoxWriteLine(&debug_textbox, text);
 }
 
 void DebugPrintVarF(const char* var_name, float var) {

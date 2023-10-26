@@ -14,7 +14,7 @@ int main() {
         UpdateState(GlobalGetState(), 1./60.);
 
         BeginDrawing();
-        ClearBackground(BLACK);
+        ClearBackground(BG_COLOR);
         DrawState(GlobalGetState());
         EndDrawing();
     }

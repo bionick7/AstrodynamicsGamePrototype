@@ -174,14 +174,16 @@ void SampleOrbitWithOffset(const Orbit* orbit, Vector2* buffer, int buffer_size,
     buffer[buffer_size - 1] = buffer[0];
 }
 
-void SampleOrbitBounded(const Orbit* orbit, OrbitPos bound1, OrbitPos bound2, Vector2* buffer, int buffer_size) {
+void SampleOrbitBounded(const Orbit* orbit, OrbitPos bound1, OrbitPos bound2, Vector2* buffer, int buffer_size, double offset) {
     if (orbit->prograde && bound2.θ < bound1.θ) bound2.θ += PI * 2.0;
     if (!orbit->prograde && bound2.θ > bound1.θ) bound2.θ -= PI * 2.0;
     double p = orbit->sma * (1 - orbit->ecc*orbit->ecc);
     for (int i=0; i < buffer_size; i++) {
         double θ = Lerp(bound1.θ, bound2.θ, (double) i / (double) (buffer_size - 1));
         double r = p / (1 + orbit->ecc*cos(θ));
-        buffer[i] = FromPolar(r, θ + orbit->lop);
+        double cot_ɣ = -orbit->ecc * sin(θ) / (1 + orbit->ecc * cos(θ));
+        Vector2 normal = Vector2Rotate(Vector2Normalize((Vector2) {1, -cot_ɣ}), θ + orbit->lop);
+        buffer[i] = Vector2Add(FromPolar(r, θ + orbit->lop), Vector2Scale(normal, offset));
     }
 }
 
@@ -202,8 +204,8 @@ void DrawOrbitWithOffset(const Orbit* orbit, double offset, Color color) {
     DrawLineStrip(&orbit_draw_buffer[0], ORBIT_BUFFER_SIZE, color);
 }
 
-void DrawOrbitBounded(const Orbit* orbit, OrbitPos bound1, OrbitPos bound2, Color color) {
-    SampleOrbitBounded(orbit, bound1, bound2, orbit_draw_buffer, ORBIT_BUFFER_SIZE);
+void DrawOrbitBounded(const Orbit* orbit, OrbitPos bound1, OrbitPos bound2, double offset, Color color) {
+    SampleOrbitBounded(orbit, bound1, bound2, orbit_draw_buffer, ORBIT_BUFFER_SIZE, offset);
     CameraTransformBuffer(GetMainCamera(), orbit_draw_buffer, ORBIT_BUFFER_SIZE);
     DrawLineStrip(&orbit_draw_buffer[0], ORBIT_BUFFER_SIZE, color);
 }

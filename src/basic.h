@@ -10,6 +10,20 @@
 #include <string.h>
 #include <stdint.h>
 
+/*
+#242D36
+#004B61
+#006D80
+#00908A
+#00B17C
+#00D056
+*/
+
+#define BG_COLOR          GetColor(0x1D2025FFu)
+#define PALETT_GREEN      GetColor(0x4Fc76CFFu)
+#define MAIN_UI_COLOR     GetColor(0xFFFFA0FFu)
+#define TRANSFER_UI_COLOR GetColor(0xFF5155FFu)
+
 #define SCREEN_WIDTH 1600
 #define SCREEN_HEIGHT 900
 static inline Vector2 GetScreenCenter() { return (Vector2) {GetScreenWidth() / 2, GetScreenHeight() / 2}; }

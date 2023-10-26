@@ -12,6 +12,13 @@ static const char resources_names[2][30] = {
     "FOOD "
 };
 
+STRUCT_DECL(ResourceTransfer) {
+    int resource_id;
+    resource_count_t quantity;
+};
+
+#define EMPTY_TRANSFER (ResourceTransfer) {-1, 0}
+
 ENUM_DECL(ResourceType) {
     RESOURCE_NONE = -1,
     RESOURCE_WATER = 0,
@@ -22,6 +29,8 @@ ENUM_DECL(ResourceType) {
     //RESOURCE_PEOPLE,
     RESOURCE_MAX,
 };
+
+ResourceTransfer ResourceTransferInvert(ResourceTransfer rt);
 
 STRUCT_DECL(Planet) {
     char name[100];
@@ -49,6 +58,6 @@ resource_count_t PlanetGiveResource(Planet* planet, int resource, resource_count
 bool PlanetHasMouseHover(const Planet* ship, double* distance);
 void PlanetUpdate(Planet* planet);
 void PlanetDraw(Planet* planet, const DrawCamera* camera);
-void PlanetDrawUI(Planet* planet, const DrawCamera* cam, bool upper_quadrant);
+void PlanetDrawUI(Planet* planet, const DrawCamera* cam, bool upper_quadrant, ResourceTransfer transfer);
 
 #endif  // PLANET_H

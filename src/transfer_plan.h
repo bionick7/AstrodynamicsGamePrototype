@@ -6,6 +6,8 @@
 
 
 STRUCT_DECL(TransferPlan) {
+    ResourceTransfer resource_transfer;
+
     // Inputs
     int departure_planet;
     int arrival_planet;
@@ -45,6 +47,9 @@ void TransferPlanUIUpdate(TransferPlanUI* ui);
 void TransferPlanUIDraw(TransferPlanUI* ui, const DrawCamera* cam);
 
 void TransferPlanUISetShip(TransferPlanUI* ui, int ship);
+void TransferPlanUISetResourceType(TransferPlanUI* ui, int resource_type);
+void TransferPlanUISetPayloadMass(TransferPlanUI* ui, resource_count_t payload);
 void TransferPlanUISetDestination(TransferPlanUI* ui, int planet);
+bool TransferPlanUIIsActive(TransferPlanUI* ui);
 
 #endif  // TRANSFER_PLAN_H

@@ -19,7 +19,7 @@ time_type GlobalGetNow() {
 
 Ship* GetShip(int id) {
     if (id < 0 || id >= global_state.ship_count) {
-        FAIL("Invalid ship id")
+        FAIL_FORMAT("Invalid ship id %d", id)
     }
     return &global_state.ships[id];
 }
@@ -140,7 +140,7 @@ void UpdateState(GlobalState* gs, double delta_t) {
 void DrawState(GlobalState* gs) {
     DrawCamera* cam = &gs->camera;
 
-    DrawCircleV(CameraTransformV(cam, (Vector2){0}), CameraTransformS(cam, radius_parent), WHITE);
+    DrawCircleV(CameraTransformV(cam, (Vector2){0}), CameraTransformS(cam, radius_parent), MAIN_UI_COLOR);
     for (int i=0; i < gs->planet_count; i++) {
         PlanetDraw(&gs->planets[i], cam);
     }
@@ -155,13 +155,13 @@ void DrawState(GlobalState* gs) {
     for (int i=0; i < gs->planet_count; i++) {
         Planet* planet = &gs->planets[i];
         if (gs->active_transfer_plan.plan.departure_planet == i) {
-            PlanetDrawUI(planet, cam, true);
+            PlanetDrawUI(planet, cam, true, ResourceTransferInvert(gs->active_transfer_plan.plan.resource_transfer));
         }
         if (gs->active_transfer_plan.plan.arrival_planet == i) {
-            PlanetDrawUI(planet, cam, false);
+            PlanetDrawUI(planet, cam, false, gs->active_transfer_plan.plan.resource_transfer);
         }
         if (gs->active_transfer_plan.plan.departure_planet < 0 && planet->mouse_hover) {
-            PlanetDrawUI(planet, cam, true);
+            PlanetDrawUI(planet, cam, true, EMPTY_TRANSFER);
         }
     }
     for (int i=0; i < gs->ship_count; i++) {

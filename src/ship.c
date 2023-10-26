@@ -18,12 +18,13 @@ void ShipMake(Ship *ship, const char *name) {
     ship->respource_type = -1;
     ship->respource_qtt = 0;
 
-    ship->color = (Color) {
+    /*ship->color = (Color) {
         GetRandomValue(0, 255),
         GetRandomValue(0, 255),
         GetRandomValue(0, 255),
         255
-    };
+    };*/
+    ship->color = PALETT_GREEN;
 }
 
 double ShipGetPayloadCapacity(const Ship *ship, double dv)
@@ -141,7 +142,7 @@ void ShipDraw(Ship* ship, const DrawCamera* cam) {
             fmax(ship->next_plan.departure_time, GlobalGetNow())
         );
         OrbitPos to_arrival = OrbitGetPosition(&ship->next_plan.transfer_orbit[ship->next_plan.primary_solution], ship->next_plan.arrival_time);
-        DrawOrbitBounded(&ship->next_plan.transfer_orbit[ship->next_plan.primary_solution], to_departure, to_arrival, ship->color);
+        DrawOrbitBounded(&ship->next_plan.transfer_orbit[ship->next_plan.primary_solution], to_departure, to_arrival, 0, ship->color);
     }
 
 }
@@ -162,11 +163,23 @@ void ShipDrawUI(Ship* ship, const DrawCamera* cam) {
         TextBox tb = TextBoxMake(
             GetScreenWidth() - 20*16 - 5, 5 + 200,
             20*16, GetScreenHeight() - 200 - 2*5, 
-            16, WHITE
+            16, MAIN_UI_COLOR
         );
 
-        TextBoxEnclose(&tb, 2, 2, BLACK, ship->color);
-        TextBoxWrite(&tb, ship->name);
+        TextBoxEnclose(&tb, 2, 2, BG_COLOR, ship->color);
+        TextBoxWriteLine(&tb, ship->name);
+
+        char max_cargo_str[40];
+        sprintf(max_cargo_str, "Cargo Cap. %.0f t", ship->max_capacity);
+        TextBoxWriteLine(&tb, max_cargo_str);
+
+        char specific_impulse_str[40];
+        sprintf(specific_impulse_str, "I_sp %.0f m/s", ship->v_e);
+        TextBoxWriteLine(&tb, specific_impulse_str);
+
+        char maxdv_str[40];
+        sprintf(maxdv_str, "dv %.0f m/s", ship->max_dv);
+        TextBoxWriteLine(&tb, maxdv_str);
     }
 }
 

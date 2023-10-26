@@ -97,7 +97,7 @@ void CameraDrawUI(const DrawCamera* cam) {
     const char* text = TextFormat("II Time x %.1f", cam->time_scale);
     if (!cam->paused) text += 3;
     Vector2 pos = (Vector2) { GetScreenWidth() - MeasureText(text, 20) - 10, 10 };
-    DrawTextEx(GetCustomDefaultFont(), text, pos, 20, 1, WHITE);
+    DrawTextEx(GetCustomDefaultFont(), text, pos, 20, 1, MAIN_UI_COLOR);
 }
 
 Vector2 GetMousePositionInWorld() {
