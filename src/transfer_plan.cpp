@@ -40,15 +40,15 @@ double _solve_lambert_between_bounds(double y, double K, double xl, double xr, i
 }
 
 void TransferPlanSolve(TransferPlan* tp) {
-    const Planet* from = GetPlanet(tp->departure_planet);
-    const Planet* to = GetPlanet(tp->arrival_planet);
-    ASSERT_ALOMST_EQUAL(from->orbit.mu, to->orbit.mu)
-    double mu = from->orbit.mu;
+    const Planet& from = GetPlanet(tp->departure_planet);
+    const Planet& to = GetPlanet(tp->arrival_planet);
+    ASSERT_ALOMST_EQUAL(from.orbit.mu, to.orbit.mu)
+    double mu = from.orbit.mu;
 
     double t1 = tp->departure_time;
     double t2 = tp->arrival_time;
-    OrbitPos pos1 = OrbitGetPosition(&from->orbit, t1);
-    OrbitPos pos2 = OrbitGetPosition(&to->orbit, t2);
+    OrbitPos pos1 = OrbitGetPosition(&from.orbit, t1);
+    OrbitPos pos2 = OrbitGetPosition(&to.orbit, t2);
 
     double c = Vector2Distance(pos1.cartesian, pos2.cartesian);
     double r_sum = pos1.r + pos2.r;
@@ -105,15 +105,14 @@ void TransferPlanSolve(TransferPlan* tp) {
 
         //SHOW_V2(OrbitGetVelocity(&tp->transfer_orbit[i], pos1_tf))
         //SHOW_V2(OrbitGetVelocity(&tp->from->orbit, pos1))
-        tp->departure_dvs[i] = Vector2Subtract(OrbitGetVelocity(&tp->transfer_orbit[i], pos1_tf), OrbitGetVelocity(&from->orbit, pos1));
-        tp->arrival_dvs[i] = Vector2Subtract(OrbitGetVelocity(&to->orbit, pos2), OrbitGetVelocity(&tp->transfer_orbit[i], pos2_tf));
+        tp->departure_dvs[i] = Vector2Subtract(OrbitGetVelocity(&tp->transfer_orbit[i], pos1_tf), OrbitGetVelocity(&from.orbit, pos1));
+        tp->arrival_dvs[i] = Vector2Subtract(OrbitGetVelocity(&to.orbit, pos2), OrbitGetVelocity(&tp->transfer_orbit[i], pos2_tf));
 
-        tp->dv1[i] = PlanetGetDVFromExcessVelocity(from, tp->departure_dvs[i]);
-        tp->dv2[i] = PlanetGetDVFromExcessVelocity(to, tp->arrival_dvs[i]);
+        tp->dv1[i] = from.GetDVFromExcessVelocity(tp->departure_dvs[i]);
+        tp->dv2[i] = to.GetDVFromExcessVelocity(tp->arrival_dvs[i]);
         //ASSERT_ALOMST_EQUAL(pos1_.r, pos1.r)
         //ASSERT_ALOMST_EQUAL(pos2_.r, pos2.r)
     }
-
 
     if (tp->num_solutions == 1) {
         tp->tot_dv = tp->dv1[0] + tp->dv2[0];
@@ -128,9 +127,9 @@ void TransferPlanSolve(TransferPlan* tp) {
 }
 
 void TransferPlanUIMake(TransferPlanUI* ui) {
-    ui->plan.departure_planet = -1;
-    ui->plan.arrival_planet = -1;
-    ui->ship = -1;
+    ui->plan.departure_planet = GetInvalidId();
+    ui->plan.arrival_planet = GetInvalidId();
+    ui->ship = GetInvalidId();
     ui->plan.num_solutions = 0;
     ui->plan.resource_transfer = EMPTY_TRANSFER;
     ui->is_dragging_departure = false;
@@ -149,39 +148,41 @@ void TransferPlanUIUpdate(TransferPlanUI* ui) {
         return;
     }
 
-    if (ui->plan.departure_planet >= 0 && ui->plan.arrival_planet >= 0 && ui->redraw_queued) {
+    Ship& ship = GetShip(ui->ship);
+
+    if (IsIdValid(ui->plan.departure_planet) && IsIdValid(ui->plan.arrival_planet) && ui->redraw_queued) {
         TransferPlanSolve(&ui->plan);
-        ui->is_valid = ui->plan.num_solutions > 0 && ui->plan.tot_dv <= GetShip(ui->ship)->max_dv;
+        ui->is_valid = ui->plan.num_solutions > 0 && ui->plan.tot_dv <= ship.max_dv;
         ui->is_valid = ui->is_valid && ui->plan.departure_time > GetTime();
 
         ui->redraw_queued = false;
     }
 
     if (ui->is_valid) {
-        TransferPlanUISetPayloadMass(ui, ShipGetPayloadCapacity(GetShip(ui->ship), ui->plan.tot_dv));
+        TransferPlanUISetPayloadMass(ui, ship.GetPayloadCapacity(ui->plan.tot_dv));
     } else {
         TransferPlanUISetPayloadMass(ui, 0);
     }
 
     if (IsKeyPressed(KEY_ENTER) && ui->is_valid) {
-        ShipAssignTransfer(GetShip(ui->ship), ui->plan);
+        ship.AssignTransfer(ui->plan);
         TransferPlanUIMake(ui);
     }
 }
 
 void _TransferPlanInitialize(TransferPlan* tp, time_type now) {
-    const Planet* from = GetPlanet(tp->departure_planet);
-    const Planet* to = GetPlanet(tp->arrival_planet);
     // Sets departure and arrival time to the dv-cheapest values (assuming hohmann transfer)
-    ASSERT(tp->departure_dvs >= 0)
-    ASSERT(tp->arrival_planet >= 0)
-    double mu = from->orbit.mu;
-    double hohmann_a = (from->orbit.sma + to->orbit.sma) * 0.5;
+    ASSERT(IsIdValid(tp->departure_planet))
+    ASSERT(IsIdValid(tp->arrival_planet))
+    const Planet& from = GetPlanet(tp->departure_planet);
+    const Planet& to = GetPlanet(tp->arrival_planet);
+    double mu = from.orbit.mu;
+    double hohmann_a = (from.orbit.sma + to.orbit.sma) * 0.5;
     double hohmann_flight_time = sqrt(hohmann_a*hohmann_a*hohmann_a / mu) * PI;
-    double p1_mean_motion = OrbitGetMeanMotion(&from->orbit);
-    double p2_mean_motion = OrbitGetMeanMotion(&to->orbit);
+    double p1_mean_motion = OrbitGetMeanMotion(&from.orbit);
+    double p2_mean_motion = OrbitGetMeanMotion(&to.orbit);
     double relative_mean_motion = p2_mean_motion - p1_mean_motion;
-    double current_relative_annomaly = OrbitGetPosition(&to->orbit, now).longuitude - OrbitGetPosition(&from->orbit, now).longuitude;
+    double current_relative_annomaly = OrbitGetPosition(&to.orbit, now).longuitude - OrbitGetPosition(&from.orbit, now).longuitude;
     double target_relative_anomaly = PosMod(PI - p2_mean_motion * hohmann_flight_time, 2*PI);
     double departure_wait_time = (target_relative_anomaly - current_relative_annomaly) / relative_mean_motion;
     double relative_period = fabs(2 * PI / relative_mean_motion);
@@ -204,8 +205,8 @@ void _DrawSweep(const Orbit* orbit, time_t from, time_t to, Color color) {
 
 void _DrawTransferOrbit(TransferPlanUI* ui, int solution, bool is_secondary) {
     TransferPlan* tp = &ui->plan;
-    const Planet* from = GetPlanet(tp->departure_planet);
-    const Planet* to = GetPlanet(tp->arrival_planet);
+    const Planet& from = GetPlanet(tp->departure_planet);
+    const Planet& to = GetPlanet(tp->arrival_planet);
     Color velocity_color = YELLOW;
     Color orbit_color = TRANSFER_UI_COLOR;
     if (is_secondary) {
@@ -215,8 +216,8 @@ void _DrawTransferOrbit(TransferPlanUI* ui, int solution, bool is_secondary) {
     time_type now = GlobalGetState()->time;
     OrbitPos pos1 = OrbitGetPosition(&tp->transfer_orbit[solution], tp->departure_time);
     OrbitPos pos2 = OrbitGetPosition(&tp->transfer_orbit[solution], tp->arrival_time);
-    _DrawSweep(&from->orbit, now, tp->departure_time, orbit_color);
-    _DrawSweep(&to->orbit,   now, tp->arrival_time,   orbit_color);
+    _DrawSweep(&from.orbit, now, tp->departure_time, orbit_color);
+    _DrawSweep(&to.orbit,   now, tp->arrival_time,   orbit_color);
     DrawLineV(
         ui->departure_handle_pos,
         Vector2Add(ui->departure_handle_pos, Vector2Scale(tp->departure_dvs[solution], 0.01)),
@@ -240,13 +241,13 @@ time_type _DrawHandle(const DrawCamera* cam, Vector2 pos, const Orbit* orbit, ti
     Vector2 plus_pos = Vector2Add(node_pos, Vector2Scale(tangent_dir, -23));
     Vector2 minus_pos = Vector2Add(node_pos, Vector2Scale(tangent_dir, 23));
     time_type period = OrbitGetPeriod(orbit);
-    if (DrawTriangleButton(pos, Vector2Scale(radial_dir, 20), 10, TRANSFER_UI_COLOR) & BUTTON_JUST_PRESSED) {
+    if (DrawTriangleButton(pos, Vector2Scale(radial_dir, 20), 10, TRANSFER_UI_COLOR) & BUTTON_STATE_FLAG_JUST_PRESSED) {
         *is_dragging = true;
     }
-    if (DrawCircleButton(plus_pos, 10, TRANSFER_UI_COLOR) & BUTTON_JUST_PRESSED) {
+    if (DrawCircleButton(plus_pos, 10, TRANSFER_UI_COLOR) & BUTTON_STATE_FLAG_JUST_PRESSED) {
         current += period;
     }
-    if (DrawCircleButton(minus_pos, 10, TRANSFER_UI_COLOR) & BUTTON_JUST_PRESSED) {
+    if (DrawCircleButton(minus_pos, 10, TRANSFER_UI_COLOR) & BUTTON_STATE_FLAG_JUST_PRESSED) {
         current -= period;
     }
     if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
@@ -268,7 +269,7 @@ time_type _DrawHandle(const DrawCamera* cam, Vector2 pos, const Orbit* orbit, ti
 
 TextBox textbox;
 
-void _TransferPlanUIDrawText(const TransferPlan* tp, const Ship* ship) {
+void _TransferPlanUIDrawText(const TransferPlan* tp, const Ship& ship) {
     TextBoxEnclose(&textbox, 2, 2, BG_COLOR, TRANSFER_UI_COLOR);
     char departure_time_outpstr[30];
     char arrival_time_outpstr[30];
@@ -285,11 +286,11 @@ void _TransferPlanUIDrawText(const TransferPlan* tp, const Ship* ship) {
     sprintf(dv1_str,   "DV 1      %5.3f km/s", tp->dv1[tp->primary_solution]/1000.0);
     sprintf(dv2_str,   "DV 2      %5.3f km/s", tp->dv2[tp->primary_solution]/1000.0);
     sprintf(dvtot_str, "DV Tot    %5.3f km/s", total_dv/1000.0);
-    double capacity = ShipGetPayloadCapacity(ship, total_dv);
+    double capacity = ship.GetPayloadCapacity(total_dv);
     sprintf(payload_str, "Payload cap.  %3.0f %% (%.0f / %.0f t)", 
-        capacity / ship->max_capacity * 100,
+        capacity / ship.max_capacity * 100,
         capacity / 1000.0,
-        ship->max_capacity / 1000.0
+        ship.max_capacity / 1000.0
     );
 
     TextBoxWriteLine(&textbox, strcat(departure_time_str, departure_time_outpstr));
@@ -307,8 +308,9 @@ void TransferPlanUIDraw(TransferPlanUI* ui, const DrawCamera* cam) {
     if (!TransferPlanUIIsActive(ui)) {
         return;
     }
-    const Planet* from = GetPlanet(tp->departure_planet);
-    const Planet* to = GetPlanet(tp->arrival_planet);
+    const Planet& from = GetPlanet(tp->departure_planet);
+    const Planet& to = GetPlanet(tp->arrival_planet);
+    const Ship& ship = GetShip(ui->ship);
 
     textbox = TextBoxMake(
         GetScreenWidth() - 20*16 - 5, 5 + 20,
@@ -316,12 +318,12 @@ void TransferPlanUIDraw(TransferPlanUI* ui, const DrawCamera* cam) {
         16, TRANSFER_UI_COLOR
     );
 
-    ui->departure_handle_pos = CameraTransformV(cam, OrbitGetPosition(&from->orbit, tp->departure_time).cartesian);
-    ui->arrival_handle_pos = CameraTransformV(cam, OrbitGetPosition(&to->orbit, tp->arrival_time).cartesian);
+    ui->departure_handle_pos = CameraTransformV(cam, OrbitGetPosition(&from.orbit, tp->departure_time).cartesian);
+    ui->arrival_handle_pos = CameraTransformV(cam, OrbitGetPosition(&to.orbit, tp->arrival_time).cartesian);
 
     time_type now = GlobalGetState()->time;
-    time_t new_departure_time = _DrawHandle(cam, ui->departure_handle_pos, &from->orbit, tp->departure_time, &ui->is_dragging_departure);
-    time_t new_arrival_time = _DrawHandle(cam, ui->arrival_handle_pos, &to->orbit, tp->arrival_time, &ui->is_dragging_arrival);
+    time_t new_departure_time = _DrawHandle(cam, ui->departure_handle_pos, &from.orbit, tp->departure_time, &ui->is_dragging_departure);
+    time_t new_arrival_time = _DrawHandle(cam, ui->arrival_handle_pos, &to.orbit, tp->arrival_time, &ui->is_dragging_arrival);
     if (new_departure_time >= now && new_departure_time < tp->arrival_time){
         tp->departure_time = new_departure_time;
         ui->redraw_queued = true;
@@ -338,14 +340,14 @@ void TransferPlanUIDraw(TransferPlanUI* ui, const DrawCamera* cam) {
         //_DrawTransferOrbit(ui, 1 - tp->primary_solution, true);
     }
     if (ui->is_valid) {
-        _TransferPlanUIDrawText(tp, GetShip(ui->ship));
+        _TransferPlanUIDrawText(tp, ship);
     }
     else if (sin(GetTime() * 6.0) > 0.0) {
         char transfer_str[100];
-        if (ui->plan.tot_dv > GetShip(ui->ship)->max_dv) {
+        if (ui->plan.tot_dv > ship.max_dv) {
             sprintf(transfer_str, "INVALID TRANSFER: %5.3f > %5.3f km/s", 
                 ui->plan.tot_dv / 1000,
-                GetShip(ui->ship)->max_dv / 1000
+                ship.max_dv / 1000
             );
         } else if (ui->plan.departure_time < now) {
             strcpy(transfer_str, "INVALID TRANSFER: Departuring in the past");
@@ -356,13 +358,13 @@ void TransferPlanUIDraw(TransferPlanUI* ui, const DrawCamera* cam) {
     }
 }
 
-void TransferPlanUISetShip(TransferPlanUI* ui, int ship) {
+void TransferPlanUISetShip(TransferPlanUI* ui, entity_id_t ship) {
     if (ui->is_dragging_departure || ui->is_dragging_arrival) {
         return;
     }
     ui->ship = ship;
-    ui->plan.departure_planet = GetShip(ship)->parent_planet;
-    if (ui->plan.departure_planet >= 0 && ui->plan.arrival_planet >= 0) {
+    ui->plan.departure_planet = GetShip(ship).parent_planet;
+    if (ui->plan.departure_planet != entt::null && ui->plan.arrival_planet != entt::null) {
         _TransferPlanInitialize(&ui->plan, GlobalGetState()->time);
     }
 }
@@ -376,19 +378,19 @@ void TransferPlanUISetPayloadMass(TransferPlanUI* ui, resource_count_t payload) 
     ui->plan.resource_transfer.quantity = payload;
 }
 
-void TransferPlanUISetDestination(TransferPlanUI* ui, int planet) {
+void TransferPlanUISetDestination(TransferPlanUI* ui, entity_id_t planet) {
     if (ui->is_dragging_departure || ui->is_dragging_arrival) {
         return;
     }
     ui->plan.arrival_planet = planet;
-    if (ui->plan.departure_planet >= 0 && ui->plan.arrival_planet >= 0) {
+    if (ui->plan.departure_planet != entt::null && ui->plan.arrival_planet != entt::null) {
         _TransferPlanInitialize(&ui->plan, GlobalGetState()->time);
     }
 }
 
 bool TransferPlanUIIsActive(TransferPlanUI* ui) {
-    if (ui->ship < 0) return false;
-    if (ui->plan.arrival_planet < 0) return false;
-    if (ui->plan.arrival_planet < 0) return false;
+    if (!IsIdValid(ui->ship)) return false;
+    if (!IsIdValid(ui->plan.arrival_planet)) return false;
+    if (!IsIdValid(ui->plan.arrival_planet)) return false;
     return true;
 }

@@ -16,19 +16,18 @@ int main() {
     SetTargetFPS(60);
     UIInit();
 
-    GlobalStateMake(GlobalGetState(), 1e6);
-    LoadGlobalState(GlobalGetState(), "irrelevant for now");
+    GlobalGetState()->Make(1e6);
+    GlobalGetState()->Load("irrelevant for now");
 
     while (!WindowShouldClose()) {  
-        UpdateState(GlobalGetState(), 1./60.);
+        GlobalGetState()->UpdateState(1./60.);
 
         BeginDrawing();
         ClearBackground(BG_COLOR);
-        DrawState(GlobalGetState());
+        GlobalGetState()->DrawState();
         EndDrawing();
     }
 
-    DestroyGlobalState(GlobalGetState());
     CloseWindow();                  // Close window and OpenGL context
 
     return 0;

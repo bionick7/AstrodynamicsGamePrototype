@@ -9,6 +9,9 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdint.h>
+#include "entt.hpp"
+
+typedef entt::entity entity_id_t;
 
 /*
 #242D36
@@ -26,10 +29,8 @@
 
 #define SCREEN_WIDTH 1600
 #define SCREEN_HEIGHT 900
-static inline Vector2 GetScreenCenter() { return (Vector2) {GetScreenWidth() / 2, GetScreenHeight() / 2}; }
+static inline Vector2 GetScreenCenter() { return (Vector2) {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f}; }
 
-#define STRUCT_DECL(name) typedef struct s_##name name;  struct s_##name 
-#define ENUM_DECL(name) typedef enum e_##name name;  enum e_##name 
 typedef double time_type;
 
 #define ASSERT(condition) if (!(condition)) { printf("%s:%d :: Assertion failed: (%s)\n", __FILE__, __LINE__, #condition); }

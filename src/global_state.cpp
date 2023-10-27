@@ -1,8 +1,15 @@
 #include "global_state.hpp"
 #include "ephemerides.hpp"
 #include "debug_drawing.hpp"
+#include <random>
 
-GlobalState global_state = {0};
+GlobalState global_state;
+
+bool IsIdValid(entity_id_t id) {
+    if (id == entt::null) return false;
+    if (!global_state.registry.valid(id)) return false;
+    return true;
+}
 
 GlobalState* GlobalGetState() {
     return &global_state;
@@ -16,69 +23,71 @@ time_type GlobalGetNow() {
     return global_state.time;
 }
 
-Ship* GetShip(int id) {
-    if (id < 0 || id >= global_state.ship_count) {
-        FAIL_FORMAT("Invalid ship id %d", id)
+Ship& GetShip(entity_id_t id) {
+    if ((!global_state.registry.valid(id))) {
+        FAIL("Invalid id")
     }
-    return &global_state.ships[id];
+    return global_state.registry.get<Ship>(id);
 }
 
-Planet* GetPlanet(int id) {
-    if (id < 0 || id >= global_state.planet_count) {
-        FAIL_FORMAT("Invalid planet id (%d)", id)
+Planet& GetPlanet(entity_id_t id) {
+    if ((!global_state.registry.valid(id))) {
+        FAIL("Invalid id")
     }
-    return &global_state.planets[id];
+    return global_state.registry.get<Planet>(id);
 }
 
-void _InspectState(GlobalState* gs) {
-    printf("%d planets, %d ships\n", gs->planet_count, gs->ship_count);
+void GlobalState::_InspectState() {
+    /*printf("%d planets, %d ships\n", planet_count, ship_count);
     printf("Orbits:\n");
-    for (int i=0; i < gs->planet_count; i++) {
-        OrbitPrint(&gs->planets[i].orbit);
+    for (int i=0; i < planet_count; i++) {
+        OrbitPrint(&planets[i].orbit);
         printf("\n");
     }
-    for (int i=0; i < gs->ship_count; i++) {
-        ShipInspect(&gs->ships[i]);
-    }
+    for (int i=0; i < ship_count; i++) {
+        ShipInspect(&ships[i]);
+    }*/
 }
 
-void _AddPlanet(
-        GlobalState* gs, const char* name, double mu_parent, 
+entity_id_t GlobalState::_AddPlanet(
+        const char* name, double mu_parent, 
         double sma, double ecc, double lop, double ann, bool is_prograde, 
         double radius, double mu
     ) {
-    gs->planets[gs->planet_count] = (Planet) {0};
-    Planet* planet = &gs->planets[gs->planet_count];
-    PlanetMake(planet, name, mu, radius);
-    planet->orbit = OrbitFromElements(sma, ecc, lop, mu_parent, gs->time -ann / sqrt(mu_parent / (sma*sma*sma)), is_prograde);
-    planet->id = gs->planet_count;
-    PlanetUpdate(planet);
-    gs->planet_count++;
+    auto planet_entity = registry.create();
+    //entity_map.insert({uuid, planet_entity});
+    Planet &planet = registry.emplace<Planet>(planet_entity);
+
+    planet.Make(name, mu, radius);
+    planet.orbit = OrbitFromElements(sma, ecc, lop, mu_parent, time -ann / sqrt(mu_parent / (sma*sma*sma)), is_prograde);
+    planet.id = planet_entity;
+    planet.Update();
 }
 
-void _AddShip(GlobalState* gs, const char* name, int origin_planet) {
-    gs->ships[gs->ship_count] = (Ship) {0};
-    Ship* ship = &gs->ships[gs->ship_count];
-    ShipMake(ship, name);
-    ship->parent_planet = origin_planet;
-    ship->current_state = SHIP_STATE_REST;
-    ship->id = gs->ship_count;
-    ShipUpdate(ship);
-    gs->ship_count++;
+entity_id_t GlobalState::_AddShip(const char* name, entity_id_t origin_planet) {
+    auto ship_entity = registry.create();
+    //entity_map.insert({uuid, ship_entity});
+    Ship &ship = registry.emplace<Ship>(ship_entity);
+
+    ship.Make(name);
+    ship.parent_planet = origin_planet;
+    ship.current_state = SHIP_STATE_REST;
+    ship.id = ship_entity;
+    ship.Update();
 }
 
-// Lifecycle
-void GlobalStateMake(GlobalState* gs, time_type time) {
-    gs->planet_count = 0;
-    gs->ship_count = 0;
-    gs->time = time;
-    TransferPlanUIMake(&gs->active_transfer_plan);
-    CameraMake(&gs->camera);
+void GlobalState::Make(time_type time) {
+    time = time;
+    TransferPlanUIMake(&active_transfer_plan);
+    CameraMake(&camera);
 }
 
-void LoadGlobalState(GlobalState* gs, const char* file_path) {
-    for(int i=0; i < sizeof(planet_params) / (sizeof(planet_params[0]) * 6); i++) {
-        _AddPlanet(gs,
+void GlobalState::Load(const char * file_path) {
+    entity_id_t planets[100];
+    int num_planets = sizeof(planet_params) / (sizeof(planet_params[0]) * 6);
+    if (num_planets > 100) num_planets = 100;
+    for(int i=0; i < num_planets; i++) {
+        planets[i] = _AddPlanet(
             planet_names[i], mu_parent,
             planet_params[i*6], planet_params[i*6+1], planet_params[i*6+2], planet_params[i*6+3], (planet_orbit_is_prograde >> i) % 2,
             planet_params[i*6+4], planet_params[i*6+5]
@@ -86,85 +95,87 @@ void LoadGlobalState(GlobalState* gs, const char* file_path) {
     }
     char name[] = "Ship 0";
     for(int i=0; i < 10; i++) {
-        _AddShip(gs, name, 2);
+        _AddShip(name, planets[2]);
         name[5]++;
     }
-    _InspectState(gs);
-}
-
-void DestroyGlobalState(GlobalState* gs) {
-
+    _InspectState();
 }
 
 // Update
-void UpdateState(GlobalState* gs, double delta_t) {
+void GlobalState::UpdateState(double delta_t) {
     DebugClearText();
 
-    CameraHandleInput(&gs->camera, delta_t);
-    TransferPlanUIUpdate(&gs->active_transfer_plan);
-    gs->prev_time = gs->time;
-    gs->time = CameraAdvanceTime(&gs->camera, gs->time, delta_t);
+    CameraHandleInput(&camera, delta_t);
+    TransferPlanUIUpdate(&active_transfer_plan);
+    prev_time = time;
+    time = CameraAdvanceTime(&camera, time, delta_t);
 
-    Clickable hover = {TYPE_NONE, -1};
+    Clickable hover = {TYPE_NONE, GetInvalidId()};
     double min_distance = INFINITY;
 
-    int ships_per_planet[MAX_PLANETS] = {0};
+    //int ships_per_planet[MAX_PLANETS] = {0};
 
-    for (int i=0; i < gs->planet_count; i++) {
-        PlanetUpdate(&gs->planets[i]);
-        gs->planets[i].mouse_hover = false;
-        if (PlanetHasMouseHover(&gs->planets[i], &min_distance)) {
-            hover = (Clickable) {TYPE_PLANET, i};
+    auto ship_view = registry.view<Ship>();
+    auto planet_view = registry.view<Planet>();
+
+    for (auto [_, planet] : planet_view.each()) {
+        planet.Update();
+        planet.mouse_hover = false;
+        if (planet.HasMouseHover(&min_distance)) {
+            hover = (Clickable) {TYPE_PLANET, planet.id};
         }
     }
-    for (int i=0; i < gs->ship_count; i++) {
-        ShipUpdate(&gs->ships[i]);
-        if (gs->ships[i].parent_planet >= 0) {
-            gs->ships[i].index_on_planet = ships_per_planet[gs->ships[i].parent_planet]++;
+    int total_ship_count = 0;
+    for (auto [_, ship] : ship_view.each()) {
+        ship.Update();
+        if (IsIdValid(ship.parent_planet)) {
+            ship.index_on_planet = total_ship_count++;
         }
-        gs->ships[i].mouse_hover = false;
-        if (ShipHasMouseHover(&gs->ships[i], &min_distance)) {
-            hover = (Clickable) {TYPE_SHIP, i};
+        ship.mouse_hover = false;
+        if (ship.HasMouseHover(&min_distance)) {
+            hover = (Clickable) {TYPE_SHIP, ship.id};
         }
     }
     switch (hover.type) {
-    case TYPE_PLANET: GetPlanet(hover.id)->mouse_hover = true; break;
-    case TYPE_SHIP: GetShip(hover.id)->mouse_hover = true; break;
+    case TYPE_PLANET: GetPlanet(hover.id).mouse_hover = true; break;
+    case TYPE_SHIP: GetShip(hover.id).mouse_hover = true; break;
     case TYPE_NONE:
     default: break;
     }
 }
 
 // Draw
-void DrawState(GlobalState* gs) {
-    DrawCamera* cam = &gs->camera;
+void GlobalState::DrawState() {
+    DrawCamera* cam = &camera;
+
+    auto planet_view = registry.view<Planet>();
+    auto ship_view = registry.view<Ship>();
 
     DrawCircleV(CameraTransformV(cam, (Vector2){0}), CameraTransformS(cam, radius_parent), MAIN_UI_COLOR);
-    for (int i=0; i < gs->planet_count; i++) {
-        PlanetDraw(&gs->planets[i], cam);
+    for (auto [_, planet] : planet_view.each()) {
+        planet.Draw(cam);
     }
-    for (int i=0; i < gs->ship_count; i++) {
-        ShipDraw(&gs->ships[i], cam);
+    for (auto [_, ship] : ship_view.each()) {
+        ship.Draw(cam);
     }
 
-    TransferPlanUIDraw(&gs->active_transfer_plan, cam);
+    TransferPlanUIDraw(&active_transfer_plan, cam);
 
     // UI
     CameraDrawUI(cam);
-    for (int i=0; i < gs->planet_count; i++) {
-        Planet* planet = &gs->planets[i];
-        if (gs->active_transfer_plan.plan.departure_planet == i) {
-            PlanetDrawUI(planet, cam, true, ResourceTransferInvert(gs->active_transfer_plan.plan.resource_transfer));
+    for (auto [_, planet] : planet_view.each()) {
+        if (active_transfer_plan.plan.departure_planet == planet.id) {
+            planet.DrawUI(cam, true, ResourceTransferInvert(active_transfer_plan.plan.resource_transfer));
         }
-        if (gs->active_transfer_plan.plan.arrival_planet == i) {
-            PlanetDrawUI(planet, cam, false, gs->active_transfer_plan.plan.resource_transfer);
+        if (active_transfer_plan.plan.arrival_planet == planet.id) {
+            planet.DrawUI(cam, false, active_transfer_plan.plan.resource_transfer);
         }
-        if (gs->active_transfer_plan.plan.departure_planet < 0 && planet->mouse_hover) {
-            PlanetDrawUI(planet, cam, true, EMPTY_TRANSFER);
+        if (!IsIdValid(active_transfer_plan.plan.departure_planet) < 0 && planet.mouse_hover) {
+            planet.DrawUI(cam, true, EMPTY_TRANSFER);
         }
     }
-    for (int i=0; i < gs->ship_count; i++) {
-        ShipDrawUI(&gs->ships[i], cam);
+    for (auto [_, ship] : ship_view.each()) {
+        ship.DrawUI(cam);
     }
     //DrawFPS(0, 0);
 }

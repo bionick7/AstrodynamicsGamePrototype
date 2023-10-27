@@ -6,52 +6,66 @@
 #include "transfer_plan.hpp"
 //#include "resource_allocator.hpp"
 #include "camera.hpp"
+#include <map>
 
 #define MAX_PLANETS 32
 #define MAX_SHIPS 32
 #define MAX_CLICKABLE_OBJECTS 32
 
-ENUM_DECL(AgentType) {
+enum AgentType {
     TYPE_NONE,
     TYPE_SHIP,
     TYPE_PLANET,
 };
 
-STRUCT_DECL(Clickable) {
+struct Clickable {
     AgentType type;
-    int id;
+    entity_id_t id;
 };
 
-STRUCT_DECL(GlobalState) {
+bool IsIdValid(entity_id_t id);
+static inline entity_id_t GetInvalidId() { return entt::null; }
+
+class GlobalState {
+public:
     time_type time;
     time_type prev_time;
     DrawCamera camera;
 
+/*
     int planet_count;
     Planet planets[MAX_PLANETS];
     int ship_count;
     Ship ships[MAX_SHIPS];
     int clickable_count;
-
+*/
     TransferPlanUI active_transfer_plan;
+
+
+    // Lifecycle
+    void Make(time_type time);
+    void Load(const char* file_path);
+    // Update
+    void UpdateState(double delta_t);
+    // Draw
+    void DrawState();
+
+    entt::registry registry;
+    entity_id_t _AddPlanet(
+        const char* name, double mu_parent, 
+        double sma, double ecc, double lop, double ann, bool is_prograde, 
+        double radius, double mu
+    );
+    entity_id_t _AddShip(const char* name, entity_id_t origin_planet);
+    void _InspectState();
 };
 
 GlobalState* GlobalGetState();
 time_type GlobalGetNow();
 time_type GlobalGetPreviousFrameTime();
 
-Ship* GetShip(int uuid);
-Planet* GetPlanet(int uuid);
 
-// Lifecycle
-void GlobalStateMake(GlobalState* gs, time_type time);
-void LoadGlobalState(GlobalState* gs, const char* file_path);
-void DestroyGlobalState(GlobalState* gs);
-
-// Update
-void UpdateState(GlobalState* gs, double delta_t);
-
-// Draw
-void DrawState(GlobalState* gs);
+Ship& GetShip(entity_id_t uuid);
+Planet& GetPlanet(entity_id_t uuid);
 
 #endif // GLOBAL_STATE_H

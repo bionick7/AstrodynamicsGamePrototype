@@ -4,13 +4,14 @@
 #include "planet.hpp"
 #include "transfer_plan.hpp"
 
-ENUM_DECL(ShipState) {
+enum ShipState {
     SHIP_STATE_REST,
     SHIP_STATE_PREPARE_TRANSFER,
     SHIP_STATE_IN_TRANSFER,
 };
 
-STRUCT_DECL(Ship) {
+class Ship {
+public:
     // Inherent properties
     char name[100];
     double max_dv;
@@ -20,7 +21,7 @@ STRUCT_DECL(Ship) {
     // Current state
     ShipState current_state;
     OrbitPos position;
-    int parent_planet;
+    entity_id_t parent_planet;
     int index_on_planet;
     TransferPlan next_plan;
 
@@ -34,16 +35,19 @@ STRUCT_DECL(Ship) {
     Color color;
 
     // Identifier
-    int id;
+    entity_id_t id;
+
+    void Make(const char* name);
+    double GetPayloadCapacity(double dv) const;
+    bool HasMouseHover(double* min_distance) const;
+    void AssignTransfer(TransferPlan tp);
+    void Update();
+    void Draw(const DrawCamera* camera) const;
+    void DrawUI(const DrawCamera* camera);
+    void Inspect();
+
+    void _OnClicked();
 };
 
-void ShipMake(Ship* ship, const char* name);
-double ShipGetPayloadCapacity(const Ship* ship, double dv);
-bool ShipHasMouseHover(const Ship* ship, double* min_distance);
-void ShipAssignTransfer(Ship* ship, TransferPlan tp);
-void ShipUpdate(Ship* ship);
-void ShipDraw(Ship* ship, const DrawCamera* camera);
-void ShipDrawUI(Ship* ship, const DrawCamera* camera);
-void ShipInspect(const Ship* ship);
 
 #endif  // SHIP_H

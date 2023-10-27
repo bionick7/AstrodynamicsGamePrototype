@@ -3,32 +3,31 @@
 #include "global_state.hpp"
 #include "ui.hpp"
 
-void _ShipClicked(Ship* ship) {
-    if (GlobalGetState()->active_transfer_plan.ship == -1) {
+void Ship::_OnClicked() {
+    if (!IsIdValid(GlobalGetState()->active_transfer_plan.ship)) {
         GetMainCamera()->paused = true;
-        TransferPlanUISetShip(&(GlobalGetState()->active_transfer_plan), ship->id);
+        TransferPlanUISetShip(&(GlobalGetState()->active_transfer_plan), id);
     }
 }
 
-void ShipMake(Ship *ship, const char *name) {
-    strcpy(ship->name, name);
-    ship->max_dv = 10000;
-    ship->v_e = 10000;
-    ship->max_capacity = 100000;
-    ship->respource_type = -1;
-    ship->respource_qtt = 0;
+void Ship::Make(const char *p_name) {
+    strcpy(name, p_name);
+    max_dv = 10000;
+    v_e = 10000;
+    max_capacity = 100000;
+    respource_type = -1;
+    respource_qtt = 0;
 
-    /*ship->color = (Color) {
+    /*color = (Color) {
         GetRandomValue(0, 255),
         GetRandomValue(0, 255),
         GetRandomValue(0, 255),
         255
     };*/
-    ship->color = PALETT_GREEN;
+    color = PALETT_GREEN;
 }
 
-double ShipGetPayloadCapacity(const Ship *ship, double dv)
-{
+double Ship::GetPayloadCapacity(double dv) const {
     // dv = v_e * ln(1 + m_fuel/m_dry)
     // fuel_ratio = (exp(dv/v_e) - 1) / (exp(dv_max/v_e) - 1)
     // MOTM * fuel_ratio - OEM
@@ -37,13 +36,13 @@ double ShipGetPayloadCapacity(const Ship *ship, double dv)
     // dv_max
     // m_fuel_max = cargo_cap
     // OEM = cargo_cap/(exp(dv_max/v_e) -1)
-    //double oem = ship->max_capacity/max_fuel_ratio;
-    double fuel_ratio = (exp(dv/ship->v_e) - 1) / (exp(ship->max_dv/ship->v_e) - 1);
-    return (1 - fuel_ratio) * ship->max_capacity;
+    //double oem = max_capacity/max_fuel_ratio;
+    double fuel_ratio = (exp(dv/v_e) - 1) / (exp(max_dv/v_e) - 1);
+    return (1 - fuel_ratio) * max_capacity;
 }
 
-bool ShipHasMouseHover(const Ship* ship, double* min_distance) {
-    double dist = Vector2Distance(GetMousePosition(), ship->draw_pos);
+bool Ship::HasMouseHover(double* min_distance) const {
+    double dist = Vector2Distance(GetMousePosition(), draw_pos);
     if (dist <= 10 && dist < *min_distance) {
         *min_distance = dist;
         return true;
@@ -52,148 +51,150 @@ bool ShipHasMouseHover(const Ship* ship, double* min_distance) {
     }
 }
 
-void ShipAssignTransfer(Ship* ship, TransferPlan tp) {
-    printf("Assigning transfer plan %f to ship %s\n", tp.arrival_time, ship->name);
+void Ship::AssignTransfer(TransferPlan tp) {
+    printf("Assigning transfer plan %f to ship %s\n", tp.arrival_time, name);
     double dv_tot = tp.dv1[tp.primary_solution] + tp.dv2[tp.primary_solution];
-    if (dv_tot < ship->max_dv) {
-        ship->respource_type = 0;
-        ship->respource_qtt = ShipGetPayloadCapacity(ship, dv_tot);
-        ship->next_plan = tp;
-        ship->current_state = SHIP_STATE_PREPARE_TRANSFER;
+    if (dv_tot < max_dv) {
+        respource_type = 0;
+        respource_qtt = GetPayloadCapacity(dv_tot);
+        next_plan = tp;
+        current_state = SHIP_STATE_PREPARE_TRANSFER;
     } else {
-        printf("Not enough DV %f > %f\n", dv_tot, ship->max_dv);
+        printf("Not enough DV %f > %f\n", dv_tot, max_dv);
     }
 }
 
-void ShipUpdate(Ship* ship) {
+void Ship::Update() {
     time_type now = GlobalGetNow();
-    TransferPlan tp = ship->next_plan;
-    switch (ship->current_state) {
+    TransferPlan tp = next_plan;
+
+    switch (current_state) {
     case SHIP_STATE_REST: {
-        ship->position = GetPlanet(ship->parent_planet)->position;
+        position = GetPlanet(parent_planet).position;
         break;
     }
     case SHIP_STATE_PREPARE_TRANSFER: {
         if (tp.departure_time <= now) {
 
-            ship->respource_type = 0;
-            ship->respource_qtt = PlanetDrawResource(GetPlanet(tp.departure_planet), 0, ShipGetPayloadCapacity(ship, tp.tot_dv));
+            respource_type = 0;
+            respource_qtt = GetPlanet(tp.departure_planet).DrawResource(0, GetPayloadCapacity(tp.tot_dv));
 
             char date_buffer[30];
             ForamtTime(date_buffer, 30, tp.departure_time);
             printf(":: On %s, \"%s\" picked up %f kg of %s on %s\n", 
                 date_buffer,
-                ship->name,
-                ship->respource_qtt,
-                resources_names[ship->respource_type],
-                GetPlanet(ship->parent_planet)->name
+                name,
+                respource_qtt,
+                resources_names[respource_type],
+                GetPlanet(parent_planet).name
             );
 
-            ship->parent_planet = -1;
-            ship->current_state = SHIP_STATE_IN_TRANSFER;
+            parent_planet = GetInvalidId();
+            current_state = SHIP_STATE_IN_TRANSFER;
 
             // Deliberate fall through
         } else {
-            ship->position = GetPlanet(ship->parent_planet)->position;
+            position = GetPlanet(parent_planet).position;
             break;
         }
     }
     case SHIP_STATE_IN_TRANSFER: {
         if (tp.arrival_time <= now) {
-            ship->parent_planet = tp.arrival_planet;
-            ship->current_state = SHIP_STATE_REST;
-            ship->position = GetPlanet(ship->parent_planet)->position;
+            parent_planet = tp.arrival_planet;
+            current_state = SHIP_STATE_REST;
+            position = GetPlanet(parent_planet).position;
 
-            resource_count_t delivered = PlanetGiveResource(GetPlanet(tp.arrival_planet), ship->respource_type, ship->respource_qtt);  // Ignore how much actually arrives (for now)
+            resource_count_t delivered = GetPlanet(tp.arrival_planet).GiveResource(respource_type, respource_qtt);  // Ignore how much actually arrives (for now)
 
             char date_buffer[30];
             ForamtTime(date_buffer, 30, tp.arrival_time);
             printf(":: On %s, \"%s\" delivered %f kg of %s to %s\n", 
                 date_buffer,
-                ship->name,
+                name,
                 delivered,
-                resources_names[ship->respource_type],
-                GetPlanet(ship->parent_planet)->name
+                resources_names[respource_type],
+                GetPlanet(parent_planet).name
             );
 
-            ship->respource_qtt = 0;
-            ship->respource_type = -1;
+            respource_qtt = 0;
+            respource_type = -1;
 
         } else {
-            ship->position = OrbitGetPosition(&tp.transfer_orbit[tp.primary_solution], now);
+            position = OrbitGetPosition(&tp.transfer_orbit[tp.primary_solution], now);
         }
         break;
     }
     }
-    ship->draw_pos = CameraTransformV(GetMainCamera(), ship->position.cartesian);
-    if (ship->current_state == SHIP_STATE_REST || ship->current_state == SHIP_STATE_PREPARE_TRANSFER) {
-        double rad = fmax(CameraTransformS(GetMainCamera(), GetPlanet(ship->parent_planet)->radius), 4) + 8.0;
-        double phase = 20.0 /  rad * ship->index_on_planet;
-        ship->draw_pos = Vector2Add(FromPolar(rad, phase), ship->draw_pos);
+    draw_pos = CameraTransformV(GetMainCamera(), position.cartesian);
+    if (current_state == SHIP_STATE_REST || current_state == SHIP_STATE_PREPARE_TRANSFER) {
+        double rad = fmax(CameraTransformS(GetMainCamera(), GetPlanet(parent_planet).radius), 4) + 8.0;
+        double phase = 20.0 /  rad * index_on_planet;
+        draw_pos = Vector2Add(FromPolar(rad, phase), draw_pos);
     }
 }
 
-void ShipDraw(Ship* ship, const DrawCamera* cam) {
-    //printf("Drawing ship %s (%d, %d, %d)\n", ship->name, color.r, color.g, color.b);
-    DrawRectangleV(Vector2SubtractValue(ship->draw_pos, 8/2), (Vector2) {8, 8}, ship->color );
+void Ship::Draw(const DrawCamera* cam) const {
+    //printf("Drawing ship %s (%d, %d, %d)\n", name, color.r, color.g, color.b);
+    //printf("draw_pos: %f, %f\n", draw_pos.x, draw_pos.y);
+    DrawRectangleV(Vector2SubtractValue(draw_pos, 4.0f), (Vector2) {8, 8}, color);
 
-    if (ship->current_state == SHIP_STATE_PREPARE_TRANSFER || ship->current_state == SHIP_STATE_IN_TRANSFER) {
-        OrbitPos to_departure = OrbitGetPosition(&ship->next_plan.transfer_orbit[ship->next_plan.primary_solution], 
-            fmax(ship->next_plan.departure_time, GlobalGetNow())
+    if (current_state == SHIP_STATE_PREPARE_TRANSFER || current_state == SHIP_STATE_IN_TRANSFER) {
+        OrbitPos to_departure = OrbitGetPosition(&next_plan.transfer_orbit[next_plan.primary_solution], 
+            fmax(next_plan.departure_time, GlobalGetNow())
         );
-        OrbitPos to_arrival = OrbitGetPosition(&ship->next_plan.transfer_orbit[ship->next_plan.primary_solution], ship->next_plan.arrival_time);
-        DrawOrbitBounded(&ship->next_plan.transfer_orbit[ship->next_plan.primary_solution], to_departure, to_arrival, 0, ship->color);
+        OrbitPos to_arrival = OrbitGetPosition(&next_plan.transfer_orbit[next_plan.primary_solution], next_plan.arrival_time);
+        DrawOrbitBounded(&next_plan.transfer_orbit[next_plan.primary_solution], to_departure, to_arrival, 0, color);
     }
 
 }
 
-void ShipDrawUI(Ship* ship, const DrawCamera* cam) {
+void Ship::DrawUI(const DrawCamera* cam) {
     
     //float mouse_dist_sqr = Vector2DistanceSqr(GetMousePosition(), draw_pos);
-    if (ship->mouse_hover) {
+    if (mouse_hover) {
         // Hover
-        DrawCircleLines(ship->draw_pos.x, ship->draw_pos.y, 10, RED);
-        DrawTextEx(GetCustomDefaultFont(), ship->name, Vector2Add(ship->draw_pos, (Vector2){5, 5}), 16, 1, ship->color);
+        DrawCircleLines(draw_pos.x, draw_pos.y, 10, RED);
+        DrawTextEx(GetCustomDefaultFont(), name, Vector2Add(draw_pos, (Vector2){5, 5}), 16, 1, color);
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            _ShipClicked(ship);
+            _OnClicked();
         }
     }
-    if (ship->mouse_hover || GlobalGetState()->active_transfer_plan.ship == ship->id) {
+    if (mouse_hover || GlobalGetState()->active_transfer_plan.ship == id) {
         TextBox tb = TextBoxMake(
             GetScreenWidth() - 20*16 - 5, 5 + 200,
             20*16, GetScreenHeight() - 200 - 2*5, 
             16, MAIN_UI_COLOR
         );
 
-        TextBoxEnclose(&tb, 2, 2, BG_COLOR, ship->color);
-        TextBoxWriteLine(&tb, ship->name);
+        TextBoxEnclose(&tb, 2, 2, BG_COLOR, color);
+        TextBoxWriteLine(&tb, name);
 
         char max_cargo_str[40];
-        sprintf(max_cargo_str, "Cargo Cap. %.0f t", ship->max_capacity);
+        sprintf(max_cargo_str, "Cargo Cap. %.0f t", max_capacity);
         TextBoxWriteLine(&tb, max_cargo_str);
 
         char specific_impulse_str[40];
-        sprintf(specific_impulse_str, "I_sp %.0f m/s", ship->v_e);
+        sprintf(specific_impulse_str, "I_sp %.0f m/s", v_e);
         TextBoxWriteLine(&tb, specific_impulse_str);
 
         char maxdv_str[40];
-        sprintf(maxdv_str, "dv %.0f m/s", ship->max_dv);
+        sprintf(maxdv_str, "dv %.0f m/s", max_dv);
         TextBoxWriteLine(&tb, maxdv_str);
     }
 }
 
-void ShipInspect(const Ship* ship) {
-    switch (ship->current_state) {
+void Ship::Inspect() {
+    switch (current_state) {
     case SHIP_STATE_REST:
     case SHIP_STATE_PREPARE_TRANSFER: {
-        printf("%s : parked on %s, %f m/s dv\n", ship->name, GetPlanet(ship->parent_planet)->name, ship->max_dv);
+        printf("%s : parked on %s, %f m/s dv\n", name, GetPlanet(parent_planet).name, max_dv);
         break;
     }
     case SHIP_STATE_IN_TRANSFER: {
-        printf("%s : in transfer[", ship->name);
-        OrbitPrint(&ship->next_plan.transfer_orbit[ship->next_plan.primary_solution]);
-        printf("] %f m/s dv\n", ship->max_dv);
+        printf("%s : in transfer[", name);
+        OrbitPrint(&next_plan.transfer_orbit[next_plan.primary_solution]);
+        printf("] %f m/s dv\n", max_dv);
         break;
     }}
 }

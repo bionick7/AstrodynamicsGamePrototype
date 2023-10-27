@@ -5,7 +5,7 @@ lib_dir = 'lib'
 
 # Define compiler and flags
 env = Environment(CPPPATH = src_dirs + include_dirs)
-env.Append(CCFLAGS = ['-Wall'])
+env.Append(CCFLAGS = ['-Wall', '-ggdb'])
 env.Append(LIBPATH = [lib_dir])
 env.Append(LIBS = [File('lib/libraylib.a'), 'm'])  # Add your libraries here
 
@@ -14,7 +14,7 @@ env.Append(LIBS = [File('lib/libraylib.a'), 'm'])  # Add your libraries here
 #c_files = [f for f in Glob(sdir + '/*.c') for sdir in src_dirs]  WHY the fuck does this not work?
 c_files = []
 for sdir in src_dirs:
-    for f in Glob(sdir + '/*.c'):
+    for f in Glob(sdir + '/*.cpp'):
         c_files.append(f)
 
 # Compile C files

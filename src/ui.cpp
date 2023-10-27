@@ -11,12 +11,12 @@ Font GetCustomDefaultFont() {
     return default_font;
 }
 
-ButtonState _GetButtonState(bool is_in_area) {
-    ButtonState res = 0;
+ButtonStateFlags _GetButtonState(bool is_in_area) {
+    ButtonStateFlags res = BUTTON_STATE_FLAG_NONE;
     if (is_in_area) {
-        res |= BUTTON_HOVER;
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) res |= BUTTON_PRESSED;
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) res |= BUTTON_JUST_PRESSED;
+        res |= BUTTON_STATE_FLAG_HOVER;
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) res |= BUTTON_STATE_FLAG_PRESSED;
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) res |= BUTTON_STATE_FLAG_JUST_PRESSED;
     }
     return res;
 }
@@ -77,7 +77,7 @@ void TextBoxWriteLine(TextBox* tb, const char* text) {
     TextBoxLineBreak(tb);
 }
 
-ButtonState TextBoxWriteButton(TextBox* tb, const char* text, int inset) {
+ButtonStateFlags TextBoxWriteButton(TextBox* tb, const char* text, int inset) {
     Vector2 pos = (Vector2) {tb->text_start_x + tb->x_cursor, tb->text_start_y + tb->y_cursor + tb->text_margin_y};
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, tb->text_size, 1);
     if (inset >= 0) {
@@ -94,7 +94,7 @@ ButtonState TextBoxWriteButton(TextBox* tb, const char* text, int inset) {
     return _GetButtonState(is_in_area);
 }
 
-ButtonState DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color) {
+ButtonStateFlags DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color) {
     Vector2 base_pos = Vector2Add(point, base);
     Vector2 tangent_dir = Vector2Rotate(Vector2Normalize(base), PI/2);
     Vector2 side_1 =  Vector2Add(base_pos, Vector2Scale(tangent_dir, -width));
@@ -108,7 +108,7 @@ ButtonState DrawTriangleButton(Vector2 point, Vector2 base, double width, Color 
     return _GetButtonState(is_in_area);
 }
 
-ButtonState DrawCircleButton(Vector2 midpoint, double radius, Color color) {
+ButtonStateFlags DrawCircleButton(Vector2 midpoint, double radius, Color color) {
     bool is_in_area = CheckCollisionPointCircle(GetMousePosition(), midpoint, radius);
     if (is_in_area) {
         DrawCircleV(midpoint, radius, color);

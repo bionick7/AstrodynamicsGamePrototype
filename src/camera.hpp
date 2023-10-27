@@ -3,7 +3,7 @@
 
 #include "basic.hpp"
 
-STRUCT_DECL(DrawCamera) {
+struct DrawCamera {
     float space_scale;
     float time_scale;
     bool paused;

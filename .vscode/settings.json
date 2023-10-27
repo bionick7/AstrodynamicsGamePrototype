@@ -76,6 +76,8 @@
         "resource_allocator.h": "c",
         "stdlib.h": "c",
         "ship.h": "c",
-        "transfer_plan.h": "c"
+        "transfer_plan.h": "c",
+        "list": "cpp",
+        "unordered_set": "cpp"
     }
 }

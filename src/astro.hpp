@@ -3,14 +3,14 @@
 
 #include "basic.hpp"
 
-STRUCT_DECL(Orbit) {
+struct Orbit {
     double mu;
     double sma, ecc, lop;
     time_type period;
     bool prograde;
 };
 
-STRUCT_DECL(OrbitPos) {
+struct OrbitPos {
     time_type time;
     Vector2 cartesian;
     double M;

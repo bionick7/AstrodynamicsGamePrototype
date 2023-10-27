@@ -5,12 +5,12 @@
 #include "planet.hpp"
 
 
-STRUCT_DECL(TransferPlan) {
+struct TransferPlan {
     ResourceTransfer resource_transfer;
 
     // Inputs
-    int departure_planet;
-    int arrival_planet;
+    entity_id_t departure_planet;
+    entity_id_t arrival_planet;
     time_type departure_time;
     time_type arrival_time;
 
@@ -26,9 +26,9 @@ STRUCT_DECL(TransferPlan) {
     double tot_dv_sec;
 };
 
-STRUCT_DECL(TransferPlanUI) {
+struct TransferPlanUI {
     TransferPlan plan;
-    int ship;
+    entity_id_t ship;
     int resource_type;
     bool is_valid;
 
@@ -46,10 +46,10 @@ void TransferPlanUIMake(TransferPlanUI* ui);
 void TransferPlanUIUpdate(TransferPlanUI* ui);
 void TransferPlanUIDraw(TransferPlanUI* ui, const DrawCamera* cam);
 
-void TransferPlanUISetShip(TransferPlanUI* ui, int ship);
+void TransferPlanUISetShip(TransferPlanUI* ui, entity_id_t ship);
 void TransferPlanUISetResourceType(TransferPlanUI* ui, int resource_type);
 void TransferPlanUISetPayloadMass(TransferPlanUI* ui, resource_count_t payload);
-void TransferPlanUISetDestination(TransferPlanUI* ui, int planet);
+void TransferPlanUISetDestination(TransferPlanUI* ui, entity_id_t planet);
 bool TransferPlanUIIsActive(TransferPlanUI* ui);
 
 #endif  // TRANSFER_PLAN_H
