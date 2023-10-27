@@ -1,8 +1,8 @@
 #ifndef PLANET_H
 #define PLANET_H
-#include "basic.h"
-#include "astro.h"
-#include "camera.h"
+#include "basic.hpp"
+#include "astro.hpp"
+#include "camera.hpp"
 
 #define RESOURCE_CAP INT
 typedef double resource_count_t;

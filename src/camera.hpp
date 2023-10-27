@@ -1,7 +1,7 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include "basic.h"
+#include "basic.hpp"
 
 STRUCT_DECL(DrawCamera) {
     float space_scale;

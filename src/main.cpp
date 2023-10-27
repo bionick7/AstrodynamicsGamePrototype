@@ -1,6 +1,15 @@
-//#define RAYMATH_IMPLEMENTATION
-#include "global_state.h"
-#include "ui.h"
+//#define RUN_TESTS
+
+#ifdef RUN_TESTS
+#include "resource_allocator.hpp"
+
+int main() {
+    int allocator_test_result = AllocatorTest();
+    if (!allocator_test_result) return allocator_test_result;
+}
+#else
+#include "global_state.hpp"
+#include "ui.hpp"
 
 int main() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Window title");
@@ -24,3 +33,4 @@ int main() {
 
     return 0;
 }
+#endif  // RUN_TESTS

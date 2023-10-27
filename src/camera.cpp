@@ -1,7 +1,7 @@
-#include "camera.h"
-#include "global_state.h"
-#include "ui.h"
-#include "debug_drawing.h"
+#include "camera.hpp"
+#include "global_state.hpp"
+#include "ui.hpp"
+#include "debug_drawing.hpp"
 
 void CameraMake(DrawCamera* cam){
     cam->space_scale = 1e-6;

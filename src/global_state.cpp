@@ -1,6 +1,6 @@
-#include "global_state.h"
-#include "ephemerides.h"
-#include "debug_drawing.h"
+#include "global_state.hpp"
+#include "ephemerides.hpp"
+#include "debug_drawing.hpp"
 
 GlobalState global_state = {0};
 
@@ -16,7 +16,6 @@ time_type GlobalGetNow() {
     return global_state.time;
 }
 
-
 Ship* GetShip(int id) {
     if (id < 0 || id >= global_state.ship_count) {
         FAIL_FORMAT("Invalid ship id %d", id)
@@ -24,10 +23,9 @@ Ship* GetShip(int id) {
     return &global_state.ships[id];
 }
 
-Planet* _GetPlanet(int id, const char* file, int line) {
+Planet* GetPlanet(int id) {
     if (id < 0 || id >= global_state.planet_count) {
-        //FAIL_FORMAT("Invalid planet id (%d)", id)
-        FAIL_FORMAT("Invalid planet id (%d) : %s:%d", id, file, line)
+        FAIL_FORMAT("Invalid planet id (%d)", id)
     }
     return &global_state.planets[id];
 }
@@ -36,7 +34,6 @@ void _InspectState(GlobalState* gs) {
     printf("%d planets, %d ships\n", gs->planet_count, gs->ship_count);
     printf("Orbits:\n");
     for (int i=0; i < gs->planet_count; i++) {
-        Planet* p = &gs->planets[i];
         OrbitPrint(&gs->planets[i].orbit);
         printf("\n");
     }
@@ -133,6 +130,8 @@ void UpdateState(GlobalState* gs, double delta_t) {
     switch (hover.type) {
     case TYPE_PLANET: GetPlanet(hover.id)->mouse_hover = true; break;
     case TYPE_SHIP: GetShip(hover.id)->mouse_hover = true; break;
+    case TYPE_NONE:
+    default: break;
     }
 }
 

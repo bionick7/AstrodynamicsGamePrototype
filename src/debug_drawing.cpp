@@ -1,7 +1,7 @@
-#include "debug_drawing.h"
-#include "global_state.h"
-#include "camera.h"
-#include "ui.h"
+#include "debug_drawing.hpp"
+#include "global_state.hpp"
+#include "camera.hpp"
+#include "ui.hpp"
 
 void DebugDrawLine(Vector2 from, Vector2 to) {
     const DrawCamera* cam = &GlobalGetState()->camera;

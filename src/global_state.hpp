@@ -1,10 +1,11 @@
 #ifndef GLOBAL_STATE_H
 #define GLOBAL_STATE_H
 
-#include "planet.h"
-#include "ship.h"
-#include "transfer_plan.h"
-#include "camera.h"
+#include "planet.hpp"
+#include "ship.hpp"
+#include "transfer_plan.hpp"
+//#include "resource_allocator.hpp"
+#include "camera.hpp"
 
 #define MAX_PLANETS 32
 #define MAX_SHIPS 32
@@ -39,10 +40,8 @@ GlobalState* GlobalGetState();
 time_type GlobalGetNow();
 time_type GlobalGetPreviousFrameTime();
 
-Ship* GetShip(int);
-
-#define GetPlanet(id) _GetPlanet(id, __FILE__, __LINE__)
-Planet* _GetPlanet(int id, const char* file, int line);
+Ship* GetShip(int uuid);
+Planet* GetPlanet(int uuid);
 
 // Lifecycle
 void GlobalStateMake(GlobalState* gs, time_type time);

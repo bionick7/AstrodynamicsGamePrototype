@@ -1,7 +1,7 @@
-#include "planet.h"
-#include "global_state.h"
-#include "ui.h"
-#include "utils.h"
+#include "planet.hpp"
+#include "global_state.hpp"
+#include "ui.hpp"
+#include "utils.hpp"
 
 ResourceTransfer ResourceTransferInvert(ResourceTransfer rt) {
     rt.quantity = -rt.quantity;
@@ -113,12 +113,10 @@ void PlanetDrawUI(Planet* planet, const DrawCamera* cam, bool upper_quadrant, Re
     TextBoxWriteLine(&tb, planet->name);
     TextBoxWriteLine(&tb, "================");
     for (int i=0; i < RESOURCE_MAX; i++) {
-        int cap = planet->resource_capacity[i];
-        int delta = planet->resource_delta[i];
         char buffer[50];
         strcpy(buffer, resources_names[i]);
         //sprintf(buffer, "%-10s %5d/%5d (%+3d)", resources_names[i], qtt, cap, delta);
-        sprintf(buffer, "%-10s %3.1fK (%+3d)", resources_names[i], planet->resource_stock[i] / 1000, delta);
+        sprintf(buffer, "%-10s %3.1fK (%+3d)", resources_names[i], planet->resource_stock[i] / 1000, (int)planet->resource_delta[i]);
         if (TransferPlanUIIsActive(&GlobalGetState()->active_transfer_plan)) {
             if (TextBoxWriteButton(&tb, transfer.resource_id == i ? "X" : " ", 2) & BUTTON_JUST_PRESSED) {
                 TransferPlanUISetResourceType(&GlobalGetState()->active_transfer_plan, i);

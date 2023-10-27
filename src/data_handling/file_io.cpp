@@ -1,6 +1,6 @@
-#include "file_io.h"
+#include "file_io.hpp"
 
-
+/*
 void LoadPlanets(GlobalState* gs, const char* filepath, const char* root_key) {
     yaml_parser_t parser;
     yaml_event_t event;
@@ -50,4 +50,4 @@ void LoadPlanets(GlobalState* gs, const char* filepath, const char* root_key) {
 
     yaml_parser_delete(&parser);
     fclose(input);
-}
+}*/

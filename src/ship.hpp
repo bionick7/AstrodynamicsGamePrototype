@@ -1,8 +1,8 @@
 #ifndef SHIP_H
 #define SHIP_H
 
-#include "planet.h"
-#include "transfer_plan.h"
+#include "planet.hpp"
+#include "transfer_plan.hpp"
 
 ENUM_DECL(ShipState) {
     SHIP_STATE_REST,

@@ -1,7 +1,7 @@
 #ifndef UI_H
 #define UI_H
 
-#include "basic.h"
+#include "basic.hpp"
 
 STRUCT_DECL(TextBox) {
     int text_start_x;

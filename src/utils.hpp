@@ -1,7 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include "basic.h"
+#include "basic.hpp"
 
 int MinInt(int a, int b);
 int MaxInt(int a, int b);

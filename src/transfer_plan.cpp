@@ -1,9 +1,9 @@
-#include "transfer_plan.h"
-#include "planet.h"
-#include "global_state.h"
-#include "debug_drawing.h"
-#include "utils.h"
-#include "ui.h"
+#include "transfer_plan.hpp"
+#include "planet.hpp"
+#include "global_state.hpp"
+#include "debug_drawing.hpp"
+#include "utils.hpp"
+#include "ui.hpp"
 
 #include <time.h>
 
@@ -18,6 +18,7 @@ double _lambert(double x, double K, int solution) {
     case 2: return (α - sin(α) + β - sin(β)) / (x*x*x);             // F1
     case 3: return (2*PI - (α - sin(α)) + β - sin(β)) / (x*x*x);    // F2
     }
+    FAIL("Solution provided to lambert solver must be 0, 1, 2 or 3")
 }
 
 double _solve_lambert_between_bounds(double y, double K, double xl, double xr, int solution) {
@@ -90,11 +91,8 @@ void TransferPlanSolve(TransferPlan* tp) {
         ASSERT_ALOMST_EQUAL(t_f, (t2 - t1))
     }
 
-    double departure_dvs[2] = {0, 0};
-    double arrival_dvs[2] = {0, 0};
-
     for (int i=0; i < tp->num_solutions; i++) {
-        double r1_r2_outer_prod = Determinant(pos1.cartesian, pos2.cartesian);
+        //double r1_r2_outer_prod = Determinant(pos1.cartesian, pos2.cartesian);
         // Direct orbit is retrograde
         //DEBUG_SHOW_F(r1_r2_outer_prod)
         //DEBUG_SHOW_I(first_solution[i])
@@ -196,7 +194,6 @@ void _DrawSweep(const Orbit* orbit, time_t from, time_t to, Color color) {
     OrbitPos from_pos = OrbitGetPosition(orbit, from);
     OrbitPos to_pos = OrbitGetPosition(orbit, to);
 
-    Vector2 buffer[64];
     int full_orbits = floor((to - from) / OrbitGetPeriod(orbit));
     double offset_per_pixel = CameraInvTransformS(GetMainCamera(), 1);
     for (int i=1; i < full_orbits; i++) {
@@ -235,8 +232,6 @@ void _DrawTransferOrbit(TransferPlanUI* ui, int solution, bool is_secondary) {
 
 
 time_type _DrawHandle(const DrawCamera* cam, Vector2 pos, const Orbit* orbit, time_type current, bool* is_dragging) {
-    Vector2 mouse_pos = GetMousePosition();
-
     Vector2 radial_dir = Vector2Normalize(CameraInvTransformV(cam, pos));
     radial_dir.y = -radial_dir.y;
     Vector2 tangent_dir = Vector2Rotate(radial_dir, PI/2);

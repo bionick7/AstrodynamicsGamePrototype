@@ -1,7 +1,7 @@
-#include "ship.h"
-#include "utils.h"
-#include "global_state.h"
-#include "ui.h"
+#include "ship.hpp"
+#include "utils.hpp"
+#include "global_state.hpp"
+#include "ui.hpp"
 
 void _ShipClicked(Ship* ship) {
     if (GlobalGetState()->active_transfer_plan.ship == -1) {

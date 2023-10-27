@@ -1,7 +1,7 @@
 #ifndef ASTRO_H
 #define ASTRO_H
 
-#include "basic.h"
+#include "basic.hpp"
 
 STRUCT_DECL(Orbit) {
     double mu;
@@ -18,7 +18,6 @@ STRUCT_DECL(OrbitPos) {
     double r;
     double longuitude;
 };
-
 
 Orbit OrbitFromElements(double semi_major_axis, double eccenetricity, double longuitude_of_periapsis, double mu, time_type period, bool is_prograde);
 Orbit OrbitFromCartesian(Vector2 pos, Vector2 vel, time_type t, double mu);

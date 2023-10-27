@@ -1,7 +1,7 @@
 #ifndef DEBUG_DRAWING_H
 #define DEBUG_DRAWING_H
 
-#include "basic.h"
+#include "basic.hpp"
 
 // Draws construction directly in astronomical coordinate system
 

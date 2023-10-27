@@ -1,4 +1,4 @@
-#include "ui.h"
+#include "ui.hpp"
 
 Font default_font;
 
@@ -99,7 +99,6 @@ ButtonState DrawTriangleButton(Vector2 point, Vector2 base, double width, Color 
     Vector2 tangent_dir = Vector2Rotate(Vector2Normalize(base), PI/2);
     Vector2 side_1 =  Vector2Add(base_pos, Vector2Scale(tangent_dir, -width));
     Vector2 side_2 =  Vector2Add(base_pos, Vector2Scale(tangent_dir, width));
-    ButtonState res = 0;
     bool is_in_area = CheckCollisionPointTriangle(GetMousePosition(), side_1, point, side_2);
     if (is_in_area) {
         DrawTriangle(side_1, point, side_2, color);
@@ -110,7 +109,6 @@ ButtonState DrawTriangleButton(Vector2 point, Vector2 base, double width, Color 
 }
 
 ButtonState DrawCircleButton(Vector2 midpoint, double radius, Color color) {
-    ButtonState res = 0;
     bool is_in_area = CheckCollisionPointCircle(GetMousePosition(), midpoint, radius);
     if (is_in_area) {
         DrawCircleV(midpoint, radius, color);

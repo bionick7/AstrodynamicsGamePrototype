@@ -1,8 +1,8 @@
 #ifndef TRANSFER_PLAN_H
 #define TRANSFER_PLAN_H
 
-#include "basic.h"
-#include "planet.h"
+#include "basic.hpp"
+#include "planet.hpp"
 
 
 STRUCT_DECL(TransferPlan) {

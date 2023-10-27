@@ -1,7 +1,7 @@
-#include "astro.h"
-#include "debug_drawing.h"
-#include "utils.h"
-#include "camera.h"
+#include "astro.hpp"
+#include "debug_drawing.hpp"
+#include "utils.hpp"
+#include "camera.hpp"
 
 double _True2Ecc(double θ, double e) {
     return atan(sqrt((1 - e) / (1 + e)) * tan(θ/2)) * 2;
