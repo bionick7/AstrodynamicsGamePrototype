@@ -14,6 +14,7 @@ Font GetCustomDefaultFont() {
 ButtonStateFlags _GetButtonState(bool is_in_area) {
     ButtonStateFlags res = BUTTON_STATE_FLAG_NONE;
     if (is_in_area) {
+        SetMouseCursor(MOUSE_CURSOR_CROSSHAIR);
         res |= BUTTON_STATE_FLAG_HOVER;
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) res |= BUTTON_STATE_FLAG_PRESSED;
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) res |= BUTTON_STATE_FLAG_JUST_PRESSED;
@@ -90,12 +91,12 @@ ButtonStateFlags TextBoxWriteButton(TextBox* tb, const char* text, int inset) {
     if (inset >= 0) {
         size.x += 2*inset;
         size.y += 2*inset;
-        DrawRectangleLines(pos.x, pos.y, size.x, size.y, tb->text_color);
+        DrawRectangleLines(pos.x, pos.y, size.x, size.y, PALETTE_BLUE);
         pos.x += inset;
         pos.y += inset;
     }
     tb->x_cursor += size.x + tb->text_margin_x;
-    DrawTextEx(GetCustomDefaultFont(), text, pos, tb->text_size, 1, tb->text_color);
+    DrawTextEx(GetCustomDefaultFont(), text, pos, tb->text_size, 1, PALETTE_BLUE);
     bool is_in_area = CheckCollisionPointRec(GetMousePosition(), (Rectangle) {pos.x, pos.y, size.x, size.y});
     _TextboxAdvance(tb, size);
     return _GetButtonState(is_in_area);
@@ -108,9 +109,9 @@ ButtonStateFlags DrawTriangleButton(Vector2 point, Vector2 base, double width, C
     Vector2 side_2 =  Vector2Add(base_pos, Vector2Scale(tangent_dir, width));
     bool is_in_area = CheckCollisionPointTriangle(GetMousePosition(), side_1, point, side_2);
     if (is_in_area) {
-        DrawTriangle(side_1, point, side_2, color);
+        DrawTriangle(side_1, point, side_2, PALETTE_BLUE);
     } else {
-        DrawTriangleLines(side_1, point, side_2, color);
+        DrawTriangleLines(side_1, point, side_2, PALETTE_BLUE);
     }
     return _GetButtonState(is_in_area);
 }
@@ -118,9 +119,9 @@ ButtonStateFlags DrawTriangleButton(Vector2 point, Vector2 base, double width, C
 ButtonStateFlags DrawCircleButton(Vector2 midpoint, double radius, Color color) {
     bool is_in_area = CheckCollisionPointCircle(GetMousePosition(), midpoint, radius);
     if (is_in_area) {
-        DrawCircleV(midpoint, radius, color);
+        DrawCircleV(midpoint, radius, PALETTE_BLUE);
     } else {
-        DrawCircleLines(midpoint.x, midpoint.y, radius, color);
+        DrawCircleLines(midpoint.x, midpoint.y, radius, PALETTE_BLUE);
     }
     return _GetButtonState(is_in_area);
 }

@@ -23,7 +23,8 @@ typedef entt::entity entity_id_t;
 */
 
 #define BG_COLOR          GetColor(0x1D2025FFu)
-#define PALETT_GREEN      GetColor(0x4Fc76CFFu)
+#define PALETTE_BLUE      GetColor(0x006D80FFu)
+#define PALETTE_GREEN     GetColor(0x4Fc76CFFu)
 #define MAIN_UI_COLOR     GetColor(0xFFFFA0FFu)
 #define TRANSFER_UI_COLOR GetColor(0xFF5155FFu)
 
@@ -49,6 +50,7 @@ typedef double time_type;
 #define SHOW_I(var) printf("%s:%d :: %s = %d\n", __FILE__, __LINE__, #var, var);
 #define SHOW_V2(var) printf("%s:%d :: %s = (%f, %f)\n", __FILE__, __LINE__, #var, (var).x, (var).y);
 
-void ForamtTime(char* buffer, int buffer_len, time_type time);
+void FormatTime(char* buffer, int buffer_len, time_type time);
+void FormatDate(char* buffer, int buffer_len, time_type time);
 
 #endif // BASIC_H

@@ -271,7 +271,7 @@ void _DrawTransferOrbit(TransferPlanUI* ui, int solution, bool is_secondary) {
     const Planet& from = GetPlanet(tp->departure_planet);
     const Planet& to = GetPlanet(tp->arrival_planet);
     Color velocity_color = YELLOW;
-    Color orbit_color = TRANSFER_UI_COLOR;
+    Color orbit_color = PALETTE_GREEN;
     if (is_secondary) {
         velocity_color = ColorTint(velocity_color, GRAY);
         orbit_color = ColorTint(orbit_color, GRAY);
@@ -281,7 +281,7 @@ void _DrawTransferOrbit(TransferPlanUI* ui, int solution, bool is_secondary) {
     OrbitPos pos2 = OrbitGetPosition(&tp->transfer_orbit[solution], tp->arrival_time);
     _DrawSweep(&from.orbit, now, tp->departure_time, orbit_color);
     _DrawSweep(&to.orbit,   now, tp->arrival_time,   orbit_color);
-    DrawLineV(
+    /*DrawLineV(
         ui->departure_handle_pos,
         Vector2Add(ui->departure_handle_pos, Vector2Scale(tp->departure_dvs[solution], 0.01)),
         velocity_color
@@ -290,7 +290,7 @@ void _DrawTransferOrbit(TransferPlanUI* ui, int solution, bool is_secondary) {
         ui->arrival_handle_pos,
         Vector2Add(ui->arrival_handle_pos, Vector2Scale(tp->arrival_dvs[solution], 0.01)),
         velocity_color
-    );
+    );*/
     DrawOrbitBounded(&tp->transfer_orbit[solution], pos1, pos2, 0, orbit_color);
 }
 
@@ -333,7 +333,7 @@ time_type _DrawHandle(const DrawCamera* cam, Vector2 pos, const Orbit* orbit, ti
 TextBox textbox;
 
 void _TransferPlanUIDrawText(const TransferPlan* tp, const Ship& ship) {
-    TextBoxEnclose(&textbox, 2, 2, BG_COLOR, TRANSFER_UI_COLOR);
+    TextBoxEnclose(&textbox, 2, 2, BG_COLOR, PALETTE_GREEN);
     char departure_time_outpstr[30];
     char arrival_time_outpstr[30];
     char departure_time_str[40] = "Departs in ";
@@ -344,8 +344,8 @@ void _TransferPlanUIDrawText(const TransferPlan* tp, const Ship& ship) {
     char payload_str[40];
 
     double total_dv = tp->dv1[tp->primary_solution] + tp->dv2[tp->primary_solution];
-    ForamtTime(departure_time_outpstr, 30, tp->departure_time - GlobalGetNow());
-    ForamtTime(arrival_time_outpstr, 30, tp->arrival_time - GlobalGetNow());
+    FormatTime(departure_time_outpstr, 30, tp->departure_time - GlobalGetNow());
+    FormatTime(arrival_time_outpstr, 30, tp->arrival_time - GlobalGetNow());
     sprintf(dv1_str,   "DV 1      %5.3f km/s", tp->dv1[tp->primary_solution]/1000.0);
     sprintf(dv2_str,   "DV 2      %5.3f km/s", tp->dv2[tp->primary_solution]/1000.0);
     sprintf(dvtot_str, "DV Tot    %5.3f km/s", total_dv/1000.0);
@@ -378,7 +378,7 @@ void TransferPlanUIDraw(TransferPlanUI* ui, const DrawCamera* cam) {
     textbox = TextBoxMake(
         GetScreenWidth() - 20*16 - 5, 5 + 20,
         20*16, MinInt(200, GetScreenHeight()) - 2*5 - 20, 
-        16, TRANSFER_UI_COLOR
+        16, PALETTE_GREEN
     );
 
     ui->departure_handle_pos = CameraTransformV(cam, OrbitGetPosition(&from.orbit, tp->departure_time).cartesian);
@@ -416,7 +416,7 @@ void TransferPlanUIDraw(TransferPlanUI* ui, const DrawCamera* cam) {
             strcpy(transfer_str, "INVALID TRANSFER: Departuring in the past");
         }
         textbox.height = 30;
-        TextBoxEnclose(&textbox, 2, 2, BG_COLOR, TRANSFER_UI_COLOR);
+        TextBoxEnclose(&textbox, 2, 2, BG_COLOR, PALETTE_GREEN);
         TextBoxWriteLine(&textbox, transfer_str);
     }
 }
@@ -431,7 +431,6 @@ void TransferPlanUISetShip(TransferPlanUI* ui, entity_id_t ship) {
         _TransferPlanInitialize(&ui->plan, GlobalGetState()->time);
     }
 }
-
 
 void TransferPlanUISetResourceType(TransferPlanUI* ui, int resource_type) {
     ui->plan.resource_transfer.resource_id = resource_type;

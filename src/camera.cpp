@@ -96,8 +96,12 @@ void CameraHandleInput(DrawCamera* cam, double delta_t) {
 void CameraDrawUI(const DrawCamera* cam) {
     const char* text = TextFormat("II Time x %.1f", cam->time_scale);
     if (!cam->paused) text += 3;
-    Vector2 pos = (Vector2) { GetScreenWidth() - MeasureText(text, 20) - 10, 10 };
+    Vector2 pos = (Vector2) { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(), text, 20, 1).x - 10, 10 };
     DrawTextEx(GetCustomDefaultFont(), text, pos, 20, 1, MAIN_UI_COLOR);
+    char text_date[100];
+    FormatDate(text_date, 100, GlobalGetNow());
+    pos = (Vector2) { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(), text_date, 20, 1).x - 10, 30 };
+    DrawTextEx(GetCustomDefaultFont(), text_date, pos, 20, 1, MAIN_UI_COLOR);
 }
 
 Vector2 GetMousePositionInWorld() {

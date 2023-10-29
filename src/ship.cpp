@@ -24,7 +24,7 @@ void Ship::Make(const char *p_name) {
         GetRandomValue(0, 255),
         255
     };*/
-    color = PALETT_GREEN;
+    color = PALETTE_GREEN;
 }
 
 double Ship::GetPayloadCapacity(double dv) const {
@@ -80,7 +80,7 @@ void Ship::Update() {
             respource_qtt = GetPlanet(tp.departure_planet).DrawResource(0, GetPayloadCapacity(tp.tot_dv));
 
             char date_buffer[30];
-            ForamtTime(date_buffer, 30, tp.departure_time);
+            FormatTime(date_buffer, 30, tp.departure_time);
             printf(":: On %s, \"%s\" picked up %f kg of %s on %s\n", 
                 date_buffer,
                 name,
@@ -107,7 +107,7 @@ void Ship::Update() {
             resource_count_t delivered = GetPlanet(tp.arrival_planet).GiveResource(respource_type, respource_qtt);  // Ignore how much actually arrives (for now)
 
             char date_buffer[30];
-            ForamtTime(date_buffer, 30, tp.arrival_time);
+            FormatTime(date_buffer, 30, tp.arrival_time);
             printf(":: On %s, \"%s\" delivered %f kg of %s to %s\n", 
                 date_buffer,
                 name,

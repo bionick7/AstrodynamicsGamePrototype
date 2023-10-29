@@ -103,6 +103,7 @@ void GlobalState::Load(const char * file_path) {
 
 // Update
 void GlobalState::UpdateState(double delta_t) {
+    SetMouseCursor(MOUSE_CURSOR_DEFAULT);
     CameraHandleInput(&camera, delta_t);
     TransferPlanUIUpdate(&active_transfer_plan);
     prev_time = time;
