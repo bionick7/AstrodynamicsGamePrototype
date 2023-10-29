@@ -1,3 +1,5 @@
+build_tests = False
+
 # Define variables
 src_dirs = ['src']
 include_dirs = ['include']
@@ -8,7 +10,10 @@ env = Environment(CPPPATH = src_dirs + include_dirs)
 env.Append(CCFLAGS = ['-Wall', '-ggdb'])
 env.Append(LIBPATH = [lib_dir])
 env.Append(LIBS = [File('lib/libraylib.a'), 'm'])  # Add your libraries here
-
+defines = []
+if build_tests:
+    defines.append('RUN_TESTS')
+env.Append(CPPDEFINES=defines)
 # Get a list of all C files in the source directories
 
 #c_files = [f for f in Glob(sdir + '/*.c') for sdir in src_dirs]  WHY the fuck does this not work?

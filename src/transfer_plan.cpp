@@ -10,33 +10,79 @@
 double _lambert(double x, double K, int solution) {
     // x² = a_min/a
     // y = t_f * sqrt(mu / (a_min*a_min*a_min))
-    double α = 2 * asin(x);
-    double β = 2 * asin(K * x);
+    double α, β;
+    if (solution < 4) {
+        α = 2 * asin(x);
+        β = 2 * asin(K * x);
+    } else {
+        α = 2 * asinh(x);
+        β = 2 * asinh(K * x);
+    }
     switch (solution) {
     case 0: return (α - sin(α) - β + sin(β)) / (x*x*x);             // no focus
     case 1: return (2*PI - (α - sin(α)) - β + sin(β)) / (x*x*x);    // F1 & F2
     case 2: return (α - sin(α) + β - sin(β)) / (x*x*x);             // F1
     case 3: return (2*PI - (α - sin(α)) + β - sin(β)) / (x*x*x);    // F2
+    case 4: return (sinh(α) - α - sinh(β) + β) / (x*x*x);
+    case 5: return (sinh(α) - α + sinh(β) - β) / (x*x*x);
     }
-    FAIL("Solution provided to lambert solver must be 0, 1, 2 or 3")
+    FAIL("Solution provided to lambert solver must be 0, 1, 2, 3, 4 or 5")
+}
+
+double _lambert_derivative(double x, double K, int solution) {
+    // x² = a_min/a
+    // y = t_f * sqrt(mu / (a_min*a_min*a_min))
+    double α = 2 * asinh(x);
+    double β = 2 * asinh(K * x);
+    double dαdx = 2 / sqrt(x*x + 1);
+    double dβdx = 2*K / sqrt(x*x*K*K + 1);
+    switch (solution) {
+    case 4: return (cosh(α)*dαdx - dαdx - cosh(β)*dβdx + dβdx) / (x*x*x) - (sinh(α) - α - sinh(β) + β) * 3 / (x*x*x*x);
+    case 5: return (cosh(α)*dαdx - dαdx + cosh(β)*dβdx - dβdx) / (x*x*x) - (sinh(α) - α + sinh(β) - β) * 3 / (x*x*x*x);
+    }
+    FAIL("Derivative only implemented for cases 4 and 5")
 }
 
 double _solve_lambert_between_bounds(double y, double K, double xl, double xr, int solution) {
     double yl = _lambert(xl, K, solution) - y;
     double yr = _lambert(xr, K, solution) - y;
-    //if (yl*yr > 0.0) {printf("yl = %f and yr = %f have the same sign (y = %f, xl = %f, xr = %f, K = %f, sol = %d\n)", yl, yr, y, xl, xr, K, solution);}
-    ASSERT(yl*yr < 0.0)
+    if (yl*yr > 0.0) {FAIL_FORMAT("yl = %f and yr = %f have the same sign (y = %f, xl = %f, xr = %f, K = %f, sol = %d\n)", yl, yr, y, xl, xr, K, solution);}
+    //ASSERT(yl*yr < 0.0)
+    int counter = 0;
     double xm, ym;
     do {
         xm = (xr + xl) / 2.0;
         ym = _lambert(xm, K, solution) - y;
         if (ym * yr < 0.0) xl = xm;
         else xr = xm;
+        if (counter++ > 1000) FAIL("Counter exceeded")
     } while (fabs(ym) > 1e-6 * y);
     
     double test_y = _lambert(xm, K, solution);
     ASSERT_ALOMST_EQUAL(test_y, y)
     return xm;
+}
+
+double _solve_lambert_by_newton(double y, double K, int solution) {
+    double xs;
+    switch (solution) {
+    case 4: xs = 2 * (K*K - 1) / y; break;
+    case 5: xs = -2 * (K*K + 1) / y; break;
+    default: FAIL("newtown's method only implemented for cases 4 and 5")
+    }
+
+    int counter = 0;
+    double ys, dydx_s;
+    do {
+        ys = _lambert(xs, K, solution) - y;
+        dydx_s = _lambert_derivative(xs, K, solution);
+        xs -= ys / dydx_s;
+        if (counter++ > 1000) FAIL_FORMAT("Counter exceeded y=%f K=%f, solution=%d, x settled at %f with dx %f ", y, K, solution, xs, ys / dydx_s)
+    } while (fabs(ys) > 1e-6);
+    
+    double test_y = _lambert(xs, K, solution);
+    ASSERT_ALOMST_EQUAL(test_y, y)
+    return xs;
 }
 
 void TransferPlanSolve(TransferPlan* tp) {
@@ -49,33 +95,40 @@ void TransferPlanSolve(TransferPlan* tp) {
     double t2 = tp->arrival_time;
     OrbitPos pos1 = OrbitGetPosition(&from.orbit, t1);
     OrbitPos pos2 = OrbitGetPosition(&to.orbit, t2);
-
+    
     double c = Vector2Distance(pos1.cartesian, pos2.cartesian);
     double r_sum = pos1.r + pos2.r;
     double a_min = 0.25 * (r_sum + c);
     double K = sqrt((r_sum - c) / (r_sum + c));
     double y = (t2 - t1) * sqrt(mu / (a_min*a_min*a_min));
 
-    double curve_min[2] = { _lambert(1e-3, K, 0), _lambert(1e-3, K, 2) };
+    bool is_ellipse[2] =  {y > _lambert(1e-3, K, 0), y > _lambert(1e-3, K, 2)};
     bool first_solution[2] = { y < _lambert(1, K, 0), y < _lambert(1, K, 2) };
 
     double aa[2];
 
-    tp->num_solutions = 0;
+    tp->num_solutions = 2;
     for (int i=0; i < 2; i++) {
-        if (y > curve_min[i]) {
+        if (is_ellipse[i]) {
             int lambert_case = (first_solution[i] ? 0 : 1) + i*2;
-            double x = _solve_lambert_between_bounds(y, K, 1e-3, 1.0, lambert_case);
+            double x = _solve_lambert_between_bounds(y, K, 1e-5, 1.0, lambert_case);
             aa[i] = a_min / (x*x);
-            tp->num_solutions++;
         } else {
-            aa[i] = 0;
+            int lambert_case = i + 4;
+            double x;
+            if (y > _lambert(-2, K, i + 4)) {
+                x = _solve_lambert_between_bounds(y, K, -2, 1e-5, lambert_case);
+            } else {
+                x = _solve_lambert_by_newton(y, K, lambert_case);
+            }
+            aa[i] = -a_min / (x*x);
         }
     }
 
-    // ASSERT
+    // Verify (for ellipses)
 
     for (int i=0; i < tp->num_solutions; i++) {
+        if (!is_ellipse[i]) continue;
         double α = 2 * asin(sqrt(a_min / aa[i]));
         double β = 2 * asin(K * sqrt(a_min / aa[i]));
 
@@ -96,9 +149,15 @@ void TransferPlanSolve(TransferPlan* tp) {
         // Direct orbit is retrograde
         //DEBUG_SHOW_F(r1_r2_outer_prod)
         //DEBUG_SHOW_I(first_solution[i])
-        bool direct_solution = (t2 - t1) < PI * sqrt(aa[i]*aa[i]*aa[i] / mu);
-        bool is_prograde = direct_solution ^ (i == 1);
+        bool is_prograde;
+        if (is_ellipse[i]) {
+            bool direct_solution = (t2 - t1) < PI * sqrt(fabs(aa[i])*aa[i]*aa[i] / mu);
+            is_prograde = direct_solution ^ (i == 1);
+        } else {
+            is_prograde = i == 1;
+        }
         tp->transfer_orbit[i] = OrbitFrom2PointsAndSMA(pos1, pos2, t1, aa[i], mu, is_prograde, i == 1);
+        //OrbitPrint(&tp->transfer_orbit[i]); printf("\n");
 
         OrbitPos pos1_tf = OrbitGetPosition(&tp->transfer_orbit[i], t1);
         OrbitPos pos2_tf = OrbitGetPosition(&tp->transfer_orbit[i], t2);
@@ -121,8 +180,12 @@ void TransferPlanSolve(TransferPlan* tp) {
     } else if (tp->num_solutions == 2) {
         tp->tot_dv = tp->dv1[0] + tp->dv2[0];
         tp->tot_dv_sec = tp->dv1[1] + tp->dv2[1];
-        tp->primary_solution = tp->tot_dv < tp->tot_dv_sec ? 0 : 1;
-        if(tp->tot_dv_sec < tp->tot_dv) Swap(&tp->tot_dv, &tp->tot_dv_sec);
+        if (tp->tot_dv < tp->tot_dv_sec) {
+            tp->primary_solution = 0;
+        } else {
+            tp->primary_solution = 1;
+            std::swap(tp->tot_dv, tp->tot_dv_sec);
+        }
     }
 }
 
@@ -197,7 +260,7 @@ void _DrawSweep(const Orbit* orbit, time_t from, time_t to, Color color) {
 
     int full_orbits = floor((to - from) / OrbitGetPeriod(orbit));
     double offset_per_pixel = CameraInvTransformS(GetMainCamera(), 1);
-    for (int i=1; i < full_orbits; i++) {
+    for (int i=1; i <= full_orbits; i++) {
         DrawOrbitWithOffset(orbit, offset_per_pixel * -3 * i, color);
     }
     DrawOrbitBounded(orbit, from_pos, to_pos, offset_per_pixel*3, color);
@@ -261,7 +324,7 @@ time_type _DrawHandle(const DrawCamera* cam, Vector2 pos, const Orbit* orbit, ti
         Vector2 mouse_pos_world = GetMousePositionInWorld();
         double longuitude = atan2(mouse_pos_world.y, mouse_pos_world.x);
         double θ = longuitude - orbit->lop;
-        current = OrbitGetTimeUntilFocalAnomaly(orbit, θ, t0);
+        current = t0 + OrbitGetTimeUntilFocalAnomaly(orbit, θ, t0);
         ASSERT(current > now);
     }
     return current;
@@ -337,7 +400,7 @@ void TransferPlanUIDraw(TransferPlanUI* ui, const DrawCamera* cam) {
         _DrawTransferOrbit(ui, tp->primary_solution, false);
     } else if (tp->num_solutions == 2) {
         _DrawTransferOrbit(ui, tp->primary_solution, false);
-        //_DrawTransferOrbit(ui, 1 - tp->primary_solution, true);
+        _DrawTransferOrbit(ui, 1 - tp->primary_solution, true);
     }
     if (ui->is_valid) {
         _TransferPlanUIDrawText(tp, ship);
@@ -379,7 +442,7 @@ void TransferPlanUISetPayloadMass(TransferPlanUI* ui, resource_count_t payload) 
 }
 
 void TransferPlanUISetDestination(TransferPlanUI* ui, entity_id_t planet) {
-    if (ui->is_dragging_departure || ui->is_dragging_arrival) {
+    if (ui->is_dragging_departure || ui->is_dragging_arrival || !IsIdValid(ui->ship) || !IsIdValid(ui->plan.departure_planet)) {
         return;
     }
     ui->plan.arrival_planet = planet;
@@ -393,4 +456,21 @@ bool TransferPlanUIIsActive(TransferPlanUI* ui) {
     if (!IsIdValid(ui->plan.arrival_planet)) return false;
     if (!IsIdValid(ui->plan.arrival_planet)) return false;
     return true;
+}
+
+int TransferPlanTests() {
+    const double epsilon = 1e-5;
+    for (double K = 0.0; K < 1.0; K += 0.2) {
+        for(double x = -5.0; x < -0.1; x += 0.1) {
+            for (int solution = 4; solution <= 5; solution++) {
+                double ddx = _lambert_derivative(x, K, solution);
+                double central_difference = (_lambert(x + epsilon, K, solution) - _lambert(x - epsilon, K, solution)) / (2*epsilon);
+                if (fabs(ddx - central_difference) > epsilon) {
+                    printf("Error for x=%f, K=%f, solution=%d d/dx expected to be %f, but is measured to be %f\n", x, K, solution, ddx, central_difference);
+                    return 1;
+                }
+            }
+        }
+    }
+    return 0;
 }

@@ -52,4 +52,6 @@ void TransferPlanUISetPayloadMass(TransferPlanUI* ui, resource_count_t payload);
 void TransferPlanUISetDestination(TransferPlanUI* ui, entity_id_t planet);
 bool TransferPlanUIIsActive(TransferPlanUI* ui);
 
+int TransferPlanTests();
+
 #endif  // TRANSFER_PLAN_H

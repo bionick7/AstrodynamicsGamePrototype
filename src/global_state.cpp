@@ -103,8 +103,6 @@ void GlobalState::Load(const char * file_path) {
 
 // Update
 void GlobalState::UpdateState(double delta_t) {
-    DebugClearText();
-
     CameraHandleInput(&camera, delta_t);
     TransferPlanUIUpdate(&active_transfer_plan);
     prev_time = time;
@@ -170,12 +168,14 @@ void GlobalState::DrawState() {
         if (active_transfer_plan.plan.arrival_planet == planet.id) {
             planet.DrawUI(cam, false, active_transfer_plan.plan.resource_transfer);
         }
-        if (!IsIdValid(active_transfer_plan.plan.departure_planet) < 0 && planet.mouse_hover) {
+        if (!TransferPlanUIIsActive(&active_transfer_plan) && planet.mouse_hover) {
             planet.DrawUI(cam, true, EMPTY_TRANSFER);
         }
     }
     for (auto [_, ship] : ship_view.each()) {
         ship.DrawUI(cam);
     }
+
+    DebugFlushText();
     //DrawFPS(0, 0);
 }

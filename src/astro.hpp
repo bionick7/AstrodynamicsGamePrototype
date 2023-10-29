@@ -32,7 +32,7 @@ void UpdateOrbit(const Orbit* orbit, time_type time, Vector2* position, Vector2*
 
 void SampleOrbit(const Orbit* orbit, Vector2* buffer, int buffer_size);
 void SampleOrbitWithOffset(const Orbit* orbit, Vector2* buffer, int buffer_size, double offset);
-void SampleOrbitBounded(const Orbit* orbit, OrbitPos bound1, OrbitPos bound2, Vector2* buffer, int buffer_size, double offset);
+void SampleOrbitBounded(const Orbit* orbit, double bound1, double bound2, Vector2* buffer, int buffer_size, double offset);
 
 void DrawOrbit(const Orbit* orbit, Color color);
 void DrawOrbitWithOffset(const Orbit* orbit, double offset, Color color);

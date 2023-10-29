@@ -10,8 +10,7 @@ enum ShipState {
     SHIP_STATE_IN_TRANSFER,
 };
 
-class Ship {
-public:
+struct Ship {
     // Inherent properties
     char name[100];
     double max_dv;

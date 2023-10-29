@@ -41,13 +41,22 @@ void DebugDrawConic(Vector2 focus, Vector2 ecc_vector, double a) {
 }
 
 TextBox debug_textbox;
+char lines[64][256];
+int lines_index = 0;
 
-void DebugClearText() {
+void DebugFlushText() {
     debug_textbox = TextBoxMake(5, 35, 500, GetScreenHeight() - 40, 16, GREEN);
+    debug_textbox.text_background = BLACK;
+    for (int i=0; i < lines_index; i++) {
+        TextBoxWriteLine(&debug_textbox, lines[i]);
+    }
+    lines_index = 0;
 }
 
 void DebugPrintText(const char* text) {
-    TextBoxWriteLine(&debug_textbox, text);
+    if (lines_index >= 63) return;
+    strcpy(lines[lines_index], text);
+    lines_index++;
 }
 
 void DebugPrintVarF(const char* var_name, float var) {

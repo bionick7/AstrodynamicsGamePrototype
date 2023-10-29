@@ -57,12 +57,12 @@ Vector2 Apply2DTransformInv(Vector2 origin, Vector2 x, Vector2 y, Vector2 inp) {
 double Determinant(Vector2 column1, Vector2 column2) {
     return column1.x * column2.y - column1.y * column2.x;
 }
-
+/*
 void Swap(void* lhs, void* rhs) {
     void* tmp = rhs;
     rhs = lhs;
     lhs = tmp;
-}
+}*/
 
 double PosMod(double x, double period) {
     double res = fmod(x, period);

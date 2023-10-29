@@ -26,8 +26,7 @@ struct Clickable {
 bool IsIdValid(entity_id_t id);
 static inline entity_id_t GetInvalidId() { return entt::null; }
 
-class GlobalState {
-public:
+struct GlobalState {
     time_type time;
     time_type prev_time;
     DrawCamera camera;

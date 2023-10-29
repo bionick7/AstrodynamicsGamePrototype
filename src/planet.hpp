@@ -32,8 +32,7 @@ enum ResourceType {
 
 ResourceTransfer ResourceTransferInvert(ResourceTransfer rt);
 
-class Planet {
-public:
+struct Planet {
     char name[100];
     double mu;
     double radius;

@@ -16,6 +16,7 @@ struct TextBox {
     int line_size_x;
     int line_size_y;
     Color text_color;
+    Color text_background;
 };
 
 typedef uint8_t ButtonStateFlags;

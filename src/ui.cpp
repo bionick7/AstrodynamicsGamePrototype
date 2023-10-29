@@ -36,6 +36,7 @@ TextBox TextBoxMake(int x, int y, int w, int h, int text_size, Color color) {
     res.y_cursor = 0;
     res.line_size_x = 0;
     res.line_size_y = 0;
+    res.text_background = BLANK;
     return res;
 }
 
@@ -65,6 +66,9 @@ void TextBoxEnclose(TextBox* tb, int inset_x, int inset_y, Color background_colo
 void TextBoxWrite(TextBox* tb, const char* text) {
     Vector2 pos = (Vector2) {tb->text_start_x + tb->x_cursor, tb->text_start_y + tb->y_cursor};
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, tb->text_size, 1);
+    if (tb->text_background.a != 0) {
+        DrawRectangleV(pos, size, tb->text_background);
+    }
     DrawTextEx(GetCustomDefaultFont(), text, pos, tb->text_size, 1, tb->text_color);
     _TextboxAdvance(tb, size);
 }
@@ -72,6 +76,9 @@ void TextBoxWrite(TextBox* tb, const char* text) {
 void TextBoxWriteLine(TextBox* tb, const char* text) {
     Vector2 pos = (Vector2) {tb->text_start_x + tb->x_cursor, tb->text_start_y + tb->y_cursor};
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, tb->text_size, 1);
+    if (tb->text_background.a != 0) {
+        DrawRectangleV(pos, size, tb->text_background);
+    }
     DrawTextEx(GetCustomDefaultFont(), text, pos, tb->text_size, 1, tb->text_color);
     _TextboxAdvance(tb, size);
     TextBoxLineBreak(tb);

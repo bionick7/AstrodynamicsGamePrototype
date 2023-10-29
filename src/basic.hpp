@@ -37,8 +37,8 @@ typedef double time_type;
 #define ASSERT_MSG(condition, msg) if (!(condition)) { printf("%s:%d :: Assertion failed: (%s) with message %s\n", __FILE__, __LINE__, #condition, msg); }
 #define ASSERT_ALOMST_EQUAL(v1, v2) if (fabs(v1 - v2) > v1 * 1e-5) { printf("%s:%d :: Assertion failed: %s (%f) != %s (%f)\n", __FILE__, __LINE__, #v1, v1, #v2, v2); }
 
-#define NOT_IMPLEMENTED printf("Not Implemented %s:%d:1\n", __FILE__, __LINE__); exit(1);
-#define FAIL(msg) printf("Runtime Error %s:%d:1 :: %s\n", __FILE__, __LINE__, msg); exit(1);
+#define NOT_IMPLEMENTED {printf("Not Implemented %s:%d:1\n", __FILE__, __LINE__); exit(1);}
+#define FAIL(msg) {printf("Runtime Error %s:%d:1 :: %s\n", __FILE__, __LINE__, msg); exit(1);}
 #define FAIL_FORMAT(msg, ...) {\
     char error_msg[1024]; \
     snprintf(error_msg, 1024, msg, __VA_ARGS__); \
