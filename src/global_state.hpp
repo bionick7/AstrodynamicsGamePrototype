@@ -61,6 +61,7 @@ time_type GlobalGetPreviousFrameTime();
 
 
 Ship& GetShip(entity_id_t uuid);
-Planet& GetPlanet(entity_id_t uuid);
+#define GetPlanet(uuid) _GetPlanet(uuid, __FILE__, __LINE__)
+Planet& _GetPlanet(entity_id_t uuid, const char* file, int line);
 
 #endif // GLOBAL_STATE_H

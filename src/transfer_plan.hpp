@@ -24,10 +24,15 @@ struct TransferPlan {
     double dv2[2];
     double tot_dv;
     double tot_dv_sec;
+
+    TransferPlan();
 };
 
+void TransferPlanSolve(TransferPlan* tp);
+int TransferPlanTests();
+
 struct TransferPlanUI {
-    TransferPlan plan;
+    TransferPlan* plan;
     entity_id_t ship;
     int resource_type;
     bool is_valid;
@@ -38,20 +43,19 @@ struct TransferPlanUI {
     Vector2 departure_handle_pos;
     Vector2 arrival_handle_pos;
     bool redraw_queued;
+
+    time_type reference_time;
+
+    TransferPlanUI() { Make(); }
+    void Make();
+    void Update();
+    void Draw(const CoordinateTransform* c_transf);
+    void SetShip(entity_id_t ship);
+    void SetResourceType(int resource_type);
+    void SetPayloadMass(resource_count_t payload);
+    void SetDestination(entity_id_t planet);
+    bool IsActive();
 };
 
-void TransferPlanSolve(TransferPlan* tp);
-
-void TransferPlanUIMake(TransferPlanUI* ui);
-void TransferPlanUIUpdate(TransferPlanUI* ui);
-void TransferPlanUIDraw(TransferPlanUI* ui, const CoordinateTransform* c_transf);
-
-void TransferPlanUISetShip(TransferPlanUI* ui, entity_id_t ship);
-void TransferPlanUISetResourceType(TransferPlanUI* ui, int resource_type);
-void TransferPlanUISetPayloadMass(TransferPlanUI* ui, resource_count_t payload);
-void TransferPlanUISetDestination(TransferPlanUI* ui, entity_id_t planet);
-bool TransferPlanUIIsActive(TransferPlanUI* ui);
-
-int TransferPlanTests();
 
 #endif  // TRANSFER_PLAN_H

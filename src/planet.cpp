@@ -21,8 +21,14 @@ void Planet::Make(const char* p_name, double p_mu, double p_radius) {
 }
 
 void Planet::_OnClicked() {
-    if (GlobalGetState()->active_transfer_plan.plan.arrival_planet == entt::null) {
-        TransferPlanUISetDestination(&(GlobalGetState()->active_transfer_plan), id);
+    TransferPlanUI& tp_ui = GlobalGetState()->active_transfer_plan;
+    if (
+        tp_ui.plan != NULL
+        && IsIdValid(tp_ui.ship)
+        && IsIdValid(tp_ui.plan->departure_planet)
+        && !IsIdValid(tp_ui.plan->arrival_planet)
+    ) {
+        tp_ui.SetDestination(id);
     } else {
         GetScreenTransform()->focus = position.cartesian;
     }
@@ -116,9 +122,9 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
         strcpy(buffer, resources_names[i]);
         //sprintf(buffer, "%-10s %5d/%5d (%+3d)", resources_names[i], qtt, cap, delta);
         sprintf(buffer, "%-10s %3.1fT (%+3d T/d)", resources_names[i], resource_stock[i] / 1e3, (int)(resource_delta[i]/1e3));
-        if (TransferPlanUIIsActive(&GlobalGetState()->active_transfer_plan)) {
+        if (GlobalGetState()->active_transfer_plan.IsActive()) {
             if (UIContextDirectButton(transfer.resource_id == i ? "X" : " ", 2) & BUTTON_STATE_FLAG_JUST_PRESSED) {
-                TransferPlanUISetResourceType(&GlobalGetState()->active_transfer_plan, i);
+                GlobalGetState()->active_transfer_plan.SetResourceType(i);
             }
         }
         UIContextWrite(buffer, false);

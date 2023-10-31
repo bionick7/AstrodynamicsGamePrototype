@@ -30,9 +30,9 @@ Ship& GetShip(entity_id_t id) {
     return global_state.registry.get<Ship>(id);
 }
 
-Planet& GetPlanet(entity_id_t id) {
+Planet& _GetPlanet(entity_id_t id, const char* file_name, int line) {
     if ((!global_state.registry.valid(id))) {
-        FAIL("Invalid id")
+        FAIL_FORMAT("Invalid id (called from %s:%d)", file_name, line)
     }
     return global_state.registry.get<Planet>(id);
 }
@@ -50,7 +50,7 @@ void GlobalState::_InspectState() {
 }
 
 entity_id_t GlobalState::_AddPlanet(int index) {
-    printf("Planet N°%d\n", index);
+    printf("Adding Planet N°%d\n", index);
     const char* name = PLANET_NAMES[index];
     double sma = PLANET_TABLE[index*6];
     double ecc = PLANET_TABLE[index*6+1];
@@ -76,7 +76,7 @@ entity_id_t GlobalState::_AddPlanet(int index) {
 }
 
 entity_id_t GlobalState::_AddShip(int index, entity_id_t origin_planet) {
-    printf("Ship N°%d\n", index);
+    printf("Adding Ship N°%d\n", index);
     const char* name = SHIP_NAMES[index];
 
     auto ship_entity = registry.create();
@@ -95,7 +95,7 @@ entity_id_t GlobalState::_AddShip(int index, entity_id_t origin_planet) {
 
 void GlobalState::Make(time_type time) {
     time = time;
-    TransferPlanUIMake(&active_transfer_plan);
+    active_transfer_plan.Make();
     c_transf.Make();
 }
 
@@ -117,7 +117,7 @@ void GlobalState::Load(const char * file_path) {
 void GlobalState::UpdateState(double delta_t) {
     SetMouseCursor(MOUSE_CURSOR_DEFAULT);
     c_transf.HandleInput(delta_t);
-    TransferPlanUIUpdate(&active_transfer_plan);
+    active_transfer_plan.Update();
     prev_time = time;
     time = c_transf.AdvanceTime(time, delta_t);
 
@@ -157,7 +157,6 @@ void GlobalState::UpdateState(double delta_t) {
 
 // Draw
 void GlobalState::DrawState() {
-
     auto planet_view = registry.view<Planet>();
     auto ship_view = registry.view<Ship>();
 
@@ -169,18 +168,20 @@ void GlobalState::DrawState() {
         ship.Draw(&c_transf);
     }
 
-    TransferPlanUIDraw(&active_transfer_plan, &c_transf);
+    active_transfer_plan.Draw(&c_transf);
 
     // UI
     c_transf.DrawUI();
     for (auto [_, planet] : planet_view.each()) {
-        if (active_transfer_plan.plan.departure_planet == planet.id) {
-            planet.DrawUI(&c_transf, true, ResourceTransferInvert(active_transfer_plan.plan.resource_transfer));
+        if (active_transfer_plan.IsActive()){
+            if (active_transfer_plan.plan->departure_planet == planet.id) {
+                planet.DrawUI(&c_transf, true, ResourceTransferInvert(active_transfer_plan.plan->resource_transfer));
+            }
+            if (active_transfer_plan.plan->arrival_planet == planet.id) {
+                planet.DrawUI(&c_transf, false, active_transfer_plan.plan->resource_transfer);
+            }
         }
-        if (active_transfer_plan.plan.arrival_planet == planet.id) {
-            planet.DrawUI(&c_transf, false, active_transfer_plan.plan.resource_transfer);
-        }
-        if (!TransferPlanUIIsActive(&active_transfer_plan) && planet.mouse_hover) {
+        else if (planet.mouse_hover) {
             planet.DrawUI(&c_transf, true, EMPTY_TRANSFER);
         }
     }

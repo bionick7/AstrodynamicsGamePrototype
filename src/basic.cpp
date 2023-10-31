@@ -6,9 +6,9 @@ void FormatTime(char* buffer, int buffer_len, time_type time){
     tm time_tm = *gmtime(&time_in_s);
     time_tm.tm_year -= 70;
     if (time_tm.tm_year > 0) {
-        snprintf(buffer, buffer_len, "%4dY %2dM %2dD %dH", time_tm.tm_year, time_tm.tm_mon, time_tm.tm_mday, time_tm.tm_hour);
+        snprintf(buffer, buffer_len, "%4dY %2dM %2dD %dH", time_tm.tm_year, time_tm.tm_mon, time_tm.tm_mday - 1, time_tm.tm_hour);
     } else {
-        snprintf(buffer, buffer_len, "%2dM %2dD %dH", time_tm.tm_mon, time_tm.tm_mday, time_tm.tm_hour);
+        snprintf(buffer, buffer_len, "%2dM %2dD %dH", time_tm.tm_mon, time_tm.tm_mday - 1, time_tm.tm_hour);
     }
 }
 

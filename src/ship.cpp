@@ -4,9 +4,10 @@
 #include "ui.hpp"
 
 void Ship::_OnClicked() {
-    if (!IsIdValid(GlobalGetState()->active_transfer_plan.ship)) {
+    TransferPlanUI& tp_ui = GlobalGetState()->active_transfer_plan;
+    if (!tp_ui.IsActive() && !IsIdValid(tp_ui.ship)) {
         GetScreenTransform()->paused = true;
-        TransferPlanUISetShip(&(GlobalGetState()->active_transfer_plan), id);
+        tp_ui.SetShip(id);
     }
 }
 
@@ -50,18 +51,37 @@ bool Ship::HasMouseHover(double* min_distance) const {
     }
 }
 
-void Ship::PushTransferPlan(TransferPlan tp) {
+
+TransferPlan* Ship::NewTransferPlan() {
+    ASSERT(prepared_plans_count != 0 || is_parked)
     if (prepared_plans_count >= SHIP_MAX_PREPARED_PLANS) {
         printf("Maximum transfer plan stack reached (ship %s)\n", name);
-        return;
+        return NULL;
     }
+    prepared_plans[prepared_plans_count] = TransferPlan();
+
+    if (prepared_plans_count == 0) {
+        prepared_plans[prepared_plans_count].departure_planet = parent_planet;
+    } else {
+        prepared_plans[prepared_plans_count].departure_planet = prepared_plans[prepared_plans_count - 1].arrival_planet;
+    }
+    prepared_plans_count++;
+    return GetEditedTransferPlan();
+}
+
+TransferPlan* Ship::GetEditedTransferPlan() {
+    return &prepared_plans[prepared_plans_count - 1];
+}
+
+void Ship::ConfirmEditedTransferPlan() {
     ASSERT(prepared_plans_count != 0 || is_parked)
     ASSERT(!is_parked || IsIdValid(parent_planet))
-    if (prepared_plans_count == 0 && parent_planet != tp.departure_planet) {
+    TransferPlan& tp = prepared_plans[prepared_plans_count - 1];
+    if (prepared_plans_count == 1 && parent_planet != tp.departure_planet) {
         printf("Inconsistent transfer plan pushed for ship %s (does not start at current planet)\n", name);
         return;
     }
-    else if (prepared_plans_count > 0 && prepared_plans[prepared_plans_count - 1].arrival_planet != tp.departure_planet) {
+    else if (prepared_plans_count > 1 && prepared_plans[prepared_plans_count - 2].arrival_planet != tp.departure_planet) {
         printf("Inconsistent transfer plan pushed for ship %s (does not start at planet last visited)\n", name);
         return;
     }
@@ -71,8 +91,11 @@ void Ship::PushTransferPlan(TransferPlan tp) {
         return;
     }
     printf("Assigning transfer plan %f to ship %s\n", tp.arrival_time, name);
-    prepared_plans[prepared_plans_count] = tp;
-    prepared_plans_count++;
+    confirmed_plans_count = prepared_plans_count;
+}
+
+void Ship::CloseEditedTransferPlan() {
+    PopTransferPlan(prepared_plans_count - 1);
 }
 
 void Ship::PopTransferPlan(int index) {
@@ -86,12 +109,15 @@ void Ship::PopTransferPlan(int index) {
         prepared_plans[i] = prepared_plans[i+1];
     }
     prepared_plans_count--;
+    if (index < confirmed_plans_count) {
+        confirmed_plans_count--;
+    }
 }
 
 void Ship::Update() {
     time_type now = GlobalGetNow();
 
-    if (prepared_plans_count == 0) {
+    if (confirmed_plans_count == 0) {
         position = GetPlanet(parent_planet).position;
     } else {
         const TransferPlan& tp = prepared_plans[0];
@@ -127,7 +153,7 @@ void Ship::Draw(const CoordinateTransform* c_transf) const {
     //printf("draw_pos: %f, %f\n", draw_pos.x, draw_pos.y);
     _DrawShipAt(draw_pos, color);
 
-    for (int i=0; i < prepared_plans_count; i++) {
+    for (int i=0; i < confirmed_plans_count; i++) {
         const TransferPlan& plan = prepared_plans[i];
         OrbitPos to_departure = OrbitGetPosition(
             &plan.transfer_orbit[plan.primary_solution], 
@@ -139,8 +165,8 @@ void Ship::Draw(const CoordinateTransform* c_transf) const {
         );
         DrawOrbitBounded(&plan.transfer_orbit[plan.primary_solution], to_departure, to_arrival, 0, ColorAlpha(color, i == 0 ? 1 : 0.5));
     }
-    if (prepared_plans_count > 0) {
-        const TransferPlan& last_tp = prepared_plans[prepared_plans_count - 1];
+    if (confirmed_plans_count > 0) {
+        const TransferPlan& last_tp = prepared_plans[confirmed_plans_count- 1];
         OrbitPos last_pos = OrbitGetPosition(
             &GetPlanet(last_tp.arrival_planet).orbit, 
             last_tp.arrival_time
@@ -151,7 +177,6 @@ void Ship::Draw(const CoordinateTransform* c_transf) const {
 }
 
 void Ship::DrawUI(const CoordinateTransform* c_transf) {
-    
     //float mouse_dist_sqr = Vector2DistanceSqr(GetMousePosition(), draw_pos);
     if (mouse_hover) {
         // Hover
@@ -185,25 +210,36 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
         sprintf(maxdv_str, "dv %.0f m/s", max_dv);
         UIContextWrite(maxdv_str);
 
-        time_t now = GlobalGetNow();
+        time_type now = GlobalGetNow();
         for (int i=0; i < prepared_plans_count; i++) {
             char tp_str[2][40];
             const char* resource_name;
+            const char* departure_planet_name;
+            const char* arrival_planet_name;
+
             if (prepared_plans[i].resource_transfer.resource_id < 0){
                 resource_name = "EMPTY";
             } else {
                 resource_name = resources_names[prepared_plans[i].resource_transfer.resource_id];
             }
+            if (IsIdValid(prepared_plans[i].departure_planet)) {
+                departure_planet_name = GetPlanet(prepared_plans[i].departure_planet).name;
+            } else {
+                departure_planet_name = "NOT SET";
+            }
+            if (IsIdValid(prepared_plans[i].arrival_planet)) {
+                arrival_planet_name = GetPlanet(prepared_plans[i].arrival_planet).name;
+            } else {
+                arrival_planet_name = "NOT SET";
+            }
+
             snprintf(tp_str[0], 40, "- %s (%3d D %2d H)",
                 resource_name,
-                (int)(prepared_plans[i].departure_time - now) / 86400,
-                ((int)(prepared_plans[i].departure_time - now) % 86400) / 3600
+                (int)(prepared_plans[i].arrival_time - now) / 86400,
+                ((int)(prepared_plans[i].arrival_time - now) % 86400) / 3600
             );
 
-            snprintf(tp_str[1], 40, "  %s >> %s", 
-                GetPlanet(prepared_plans[i].departure_planet).name,
-                GetPlanet(prepared_plans[i].arrival_planet).name
-            );
+            snprintf(tp_str[1], 40, "  %s >> %s", departure_planet_name, arrival_planet_name);
 
             UIContextPushInset(2, UIContextCurrent().GetLineHeight() * 2);
                 UIContextPushHSplit(0, -32);
@@ -211,7 +247,7 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
                     UIContextWrite(tp_str[0]);
                     UIContextWrite(tp_str[1]);
                     if (UIContextAsButton() & BUTTON_STATE_FLAG_JUST_PRESSED) {
-                        // TBD
+                        // TBD: edit previous transfer
                     }
                 UIContextPop();
                 UIContextPushHSplit(-32, -1);
@@ -219,7 +255,7 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
                     UIContextWrite("X");
                     UIContextEnclose(0, 0, BG_COLOR, PALETTE_BLUE);
                     if (UIContextAsButton() & BUTTON_STATE_FLAG_JUST_PRESSED) {
-                        // TBD
+                        PopTransferPlan(i);
                     }
                 UIContextPop();
             UIContextPop();
@@ -278,6 +314,7 @@ void Ship::_OnArrival(const TransferPlan& tp) {
 }
 
 void Ship::_EnsureContinuity() {
+    printf("Ensure Continuity\n");
     if (prepared_plans_count == 0) return;
     entity_id_t planet_tracker = parent_planet;
     int start_index = 0;

@@ -21,6 +21,7 @@ struct Ship {
     int index_on_planet;
 
     int prepared_plans_count;
+    int confirmed_plans_count;
     TransferPlan prepared_plans[SHIP_MAX_PREPARED_PLANS];
 
     // Payload
@@ -37,13 +38,18 @@ struct Ship {
 
     void Make(const char* name);
     double GetPayloadCapacity(double dv) const;
+    
     bool HasMouseHover(double* min_distance) const;
-    void PushTransferPlan(TransferPlan tp);
-    void PopTransferPlan(int index);
     void Update();
     void Draw(const CoordinateTransform* c_transf) const;
     void DrawUI(const CoordinateTransform* c_transf);
     void Inspect();
+
+    TransferPlan* NewTransferPlan();
+    TransferPlan* GetEditedTransferPlan();
+    void ConfirmEditedTransferPlan();
+    void CloseEditedTransferPlan();
+    void PopTransferPlan(int index);
 
 private:
     void _OnDeparture(const TransferPlan &tp);
