@@ -15,8 +15,9 @@ void Planet::Make(const char* p_name, double p_mu, double p_radius) {
     for (int i=0; i < RESOURCE_MAX; i++) {
         resource_stock[i] = 1e5;
         resource_delta[i] = 0;
-        resource_capacity[i] = 1e6;
+        resource_capacity[i] = 1e7;
     }
+    resource_delta[RESOURCE_FOOD] = -20;
 }
 
 void Planet::_OnClicked() {
@@ -116,7 +117,7 @@ void Planet::DrawUI(const DrawCamera* cam, bool upper_quadrant, ResourceTransfer
         char buffer[50];
         strcpy(buffer, resources_names[i]);
         //sprintf(buffer, "%-10s %5d/%5d (%+3d)", resources_names[i], qtt, cap, delta);
-        sprintf(buffer, "%-10s %3.1fK (%+3d)", resources_names[i], resource_stock[i] / 1000, (int)resource_delta[i]);
+        sprintf(buffer, "%-10s %3.1fT (%+3d T/d)", resources_names[i], resource_stock[i] / 1e3, (int)(resource_delta[i]/1e3));
         if (TransferPlanUIIsActive(&GlobalGetState()->active_transfer_plan)) {
             if (TextBoxWriteButton(&tb, transfer.resource_id == i ? "X" : " ", 2) & BUTTON_STATE_FLAG_JUST_PRESSED) {
                 TransferPlanUISetResourceType(&GlobalGetState()->active_transfer_plan, i);

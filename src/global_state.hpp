@@ -50,12 +50,8 @@ struct GlobalState {
     void DrawState();
 
     entt::registry registry;
-    entity_id_t _AddPlanet(
-        const char* name, double mu_parent, 
-        double sma, double ecc, double lop, double ann, bool is_prograde, 
-        double radius, double mu
-    );
-    entity_id_t _AddShip(const char* name, entity_id_t origin_planet);
+    entity_id_t _AddPlanet(int index);
+    entity_id_t _AddShip(int index, entity_id_t origin_planet);
     void _InspectState();
 };
 

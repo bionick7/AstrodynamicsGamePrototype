@@ -203,11 +203,11 @@ void TransferPlanUIMake(TransferPlanUI* ui) {
 }
 
 void TransferPlanUIUpdate(TransferPlanUI* ui) {
-    if (!TransferPlanUIIsActive(ui)) {
-        return;
-    }
     if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
         TransferPlanUIMake(ui);
+        return;
+    }
+    if (!TransferPlanUIIsActive(ui)) {
         return;
     }
 
@@ -228,7 +228,7 @@ void TransferPlanUIUpdate(TransferPlanUI* ui) {
     }
 
     if (IsKeyPressed(KEY_ENTER) && ui->is_valid) {
-        ship.AssignTransfer(ui->plan);
+        ship.PushTransferPlan(ui->plan);
         TransferPlanUIMake(ui);
     }
 }
@@ -376,7 +376,7 @@ void TransferPlanUIDraw(TransferPlanUI* ui, const DrawCamera* cam) {
     const Ship& ship = GetShip(ui->ship);
 
     textbox = TextBoxMake(
-        GetScreenWidth() - 20*16 - 5, 5 + 20,
+        GetScreenWidth() - 20*16 - 5, 5 + 50,
         20*16, MinInt(200, GetScreenHeight()) - 2*5 - 20, 
         16, PALETTE_GREEN
     );

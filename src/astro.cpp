@@ -270,6 +270,10 @@ void DrawOrbitWithOffset(const Orbit* orbit, double offset, Color color) {
 
 void DrawOrbitBounded(const Orbit* orbit, OrbitPos bound1, OrbitPos bound2, double offset, Color color) {
     SampleOrbitBounded(orbit, bound1.θ, bound2.θ, orbit_draw_buffer, ORBIT_BUFFER_SIZE, offset);
+    if (ORBIT_BUFFER_SIZE >= 2) {
+        orbit_draw_buffer[0] = bound1.cartesian;
+        orbit_draw_buffer[ORBIT_BUFFER_SIZE-1] = bound2.cartesian;
+    }
     CameraTransformBuffer(GetMainCamera(), orbit_draw_buffer, ORBIT_BUFFER_SIZE);
     DrawLineStrip(&orbit_draw_buffer[0], ORBIT_BUFFER_SIZE, color);
 }

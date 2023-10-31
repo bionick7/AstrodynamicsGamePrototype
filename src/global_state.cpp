@@ -49,31 +49,48 @@ void GlobalState::_InspectState() {
     }*/
 }
 
-entity_id_t GlobalState::_AddPlanet(
-        const char* name, double mu_parent, 
-        double sma, double ecc, double lop, double ann, bool is_prograde, 
-        double radius, double mu
-    ) {
+entity_id_t GlobalState::_AddPlanet(int index) {
+    printf("Planet N°%d\n", index);
+    const char* name = PLANET_NAMES[index];
+    double sma = PLANET_TABLE[index*6];
+    double ecc = PLANET_TABLE[index*6+1];
+    double lop = PLANET_TABLE[index*6+2];
+    double ann = PLANET_TABLE[index*6+3];
+    bool is_prograde = (PLANET_PROGRADE_FLAGS >> index) % 2;
+    double radius = PLANET_TABLE[index*6+4];
+    double mu = PLANET_TABLE[index*6+5];
+
     auto planet_entity = registry.create();
     //entity_map.insert({uuid, planet_entity});
     Planet &planet = registry.emplace<Planet>(planet_entity);
 
     planet.Make(name, mu, radius);
-    planet.orbit = OrbitFromElements(sma, ecc, lop, mu_parent, time -ann / sqrt(mu_parent / (sma*sma*sma)), is_prograde);
+    for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
+        planet.resource_stock[resource_index] = PLANET_RESOURCE_STOCK_TABLE[index * RESOURCE_MAX + resource_index] * 1000;
+        planet.resource_delta[resource_index] = PLANET_RESOURCE_DELTA_TABLE[index * RESOURCE_MAX + resource_index] * 1000;
+    }
+    planet.orbit = OrbitFromElements(sma, ecc, lop, PARENT_MU, time -ann / sqrt(PARENT_MU / (sma*sma*sma)), is_prograde);
     planet.id = planet_entity;
     planet.Update();
+    return planet_entity;
 }
 
-entity_id_t GlobalState::_AddShip(const char* name, entity_id_t origin_planet) {
+entity_id_t GlobalState::_AddShip(int index, entity_id_t origin_planet) {
+    printf("Ship N°%d\n", index);
+    const char* name = SHIP_NAMES[index];
+
     auto ship_entity = registry.create();
     //entity_map.insert({uuid, ship_entity});
     Ship &ship = registry.emplace<Ship>(ship_entity);
 
     ship.Make(name);
+    ship.max_capacity = SHIP_STAT_TABLE[index*3] * 1000;
+    ship.max_dv = SHIP_STAT_TABLE[index*3 + 1] * 1000;
+    ship.v_e = SHIP_STAT_TABLE[index*3 + 2] * 1000;
     ship.parent_planet = origin_planet;
-    ship.current_state = SHIP_STATE_REST;
     ship.id = ship_entity;
     ship.Update();
+    return ship_entity;
 }
 
 void GlobalState::Make(time_type time) {
@@ -84,19 +101,14 @@ void GlobalState::Make(time_type time) {
 
 void GlobalState::Load(const char * file_path) {
     entity_id_t planets[100];
-    int num_planets = sizeof(planet_params) / (sizeof(planet_params[0]) * 6);
+    int num_planets = sizeof(PLANET_NAMES) / (sizeof(PLANET_NAMES[0]));
+    int num_ships = sizeof(SHIP_NAMES) / (sizeof(SHIP_NAMES[0]));
     if (num_planets > 100) num_planets = 100;
     for(int i=0; i < num_planets; i++) {
-        planets[i] = _AddPlanet(
-            planet_names[i], mu_parent,
-            planet_params[i*6], planet_params[i*6+1], planet_params[i*6+2], planet_params[i*6+3], (planet_orbit_is_prograde >> i) % 2,
-            planet_params[i*6+4], planet_params[i*6+5]
-        );
+        planets[i] = _AddPlanet(i);
     }
-    char name[] = "Ship 0";
-    for(int i=0; i < 10; i++) {
-        _AddShip(name, planets[2]);
-        name[5]++;
+    for(int i=0; i < num_ships; i++) {
+        _AddShip(i, planets[2]);
     }
     _InspectState();
 }
@@ -150,7 +162,7 @@ void GlobalState::DrawState() {
     auto planet_view = registry.view<Planet>();
     auto ship_view = registry.view<Ship>();
 
-    DrawCircleV(CameraTransformV(cam, (Vector2){0}), CameraTransformS(cam, radius_parent), MAIN_UI_COLOR);
+    DrawCircleV(CameraTransformV(cam, (Vector2){0}), CameraTransformS(cam, PARENt_RADIUS), MAIN_UI_COLOR);
     for (auto [_, planet] : planet_view.each()) {
         planet.Draw(cam);
     }
