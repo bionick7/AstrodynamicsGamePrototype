@@ -5,7 +5,7 @@
 
 void Ship::_OnClicked() {
     if (!IsIdValid(GlobalGetState()->active_transfer_plan.ship)) {
-        GetMainCamera()->paused = true;
+        GetScreenTransform()->paused = true;
         TransferPlanUISetShip(&(GlobalGetState()->active_transfer_plan), id);
     }
 }
@@ -110,15 +110,15 @@ void Ship::Update() {
         }
     }
 
-    draw_pos = CameraTransformV(GetMainCamera(), position.cartesian);
+    draw_pos = GetScreenTransform()->TransformV(position.cartesian);
     if (is_parked) {
-        double rad = fmax(CameraTransformS(GetMainCamera(), GetPlanet(parent_planet).radius), 4) + 8.0;
+        double rad = fmax(GetScreenTransform()->TransformS(GetPlanet(parent_planet).radius), 4) + 8.0;
         double phase = 20.0 /  rad * index_on_planet;
         draw_pos = Vector2Add(FromPolar(rad, phase), draw_pos);
     }
 }
 
-void Ship::Draw(const DrawCamera* cam) const {
+void Ship::Draw(const CoordinateTransform* c_transf) const {
     //printf("Drawing ship %s (%d, %d, %d)\n", name, color.r, color.g, color.b);
     //printf("draw_pos: %f, %f\n", draw_pos.x, draw_pos.y);
     DrawRectangleV(Vector2SubtractValue(draw_pos, 4.0f), (Vector2) {8, 8}, color);
@@ -134,7 +134,7 @@ void Ship::Draw(const DrawCamera* cam) const {
 
 }
 
-void Ship::DrawUI(const DrawCamera* cam) {
+void Ship::DrawUI(const CoordinateTransform* c_transf) {
     
     //float mouse_dist_sqr = Vector2DistanceSqr(GetMousePosition(), draw_pos);
     if (mouse_hover) {

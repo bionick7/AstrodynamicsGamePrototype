@@ -1,7 +1,7 @@
 #include "astro.hpp"
 #include "debug_drawing.hpp"
 #include "utils.hpp"
-#include "camera.hpp"
+#include "coordinate_transform.hpp"
 
 double _True2Ecc(double θ, double e) {
     return atan(sqrt((1 - e) / (1 + e)) * tan(θ/2)) * 2;
@@ -258,13 +258,13 @@ static Vector2 orbit_draw_buffer[ORBIT_BUFFER_SIZE];
 
 void DrawOrbit(const Orbit* orbit, Color color) {
     SampleOrbit(orbit, orbit_draw_buffer, ORBIT_BUFFER_SIZE);
-    CameraTransformBuffer(GetMainCamera(), orbit_draw_buffer, ORBIT_BUFFER_SIZE);
+    GetScreenTransform()->TransformBuffer(orbit_draw_buffer, ORBIT_BUFFER_SIZE);
     DrawLineStrip(&orbit_draw_buffer[0], ORBIT_BUFFER_SIZE, color);
 }
 
 void DrawOrbitWithOffset(const Orbit* orbit, double offset, Color color) {
     SampleOrbitWithOffset(orbit, orbit_draw_buffer, ORBIT_BUFFER_SIZE, offset);
-    CameraTransformBuffer(GetMainCamera(), orbit_draw_buffer, ORBIT_BUFFER_SIZE);
+    GetScreenTransform()->TransformBuffer(orbit_draw_buffer, ORBIT_BUFFER_SIZE);
     DrawLineStrip(&orbit_draw_buffer[0], ORBIT_BUFFER_SIZE, color);
 }
 
@@ -274,6 +274,6 @@ void DrawOrbitBounded(const Orbit* orbit, OrbitPos bound1, OrbitPos bound2, doub
         orbit_draw_buffer[0] = bound1.cartesian;
         orbit_draw_buffer[ORBIT_BUFFER_SIZE-1] = bound2.cartesian;
     }
-    CameraTransformBuffer(GetMainCamera(), orbit_draw_buffer, ORBIT_BUFFER_SIZE);
+    GetScreenTransform()->TransformBuffer(orbit_draw_buffer, ORBIT_BUFFER_SIZE);
     DrawLineStrip(&orbit_draw_buffer[0], ORBIT_BUFFER_SIZE, color);
 }

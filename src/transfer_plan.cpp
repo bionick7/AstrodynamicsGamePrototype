@@ -259,7 +259,7 @@ void _DrawSweep(const Orbit* orbit, time_t from, time_t to, Color color) {
     OrbitPos to_pos = OrbitGetPosition(orbit, to);
 
     int full_orbits = floor((to - from) / OrbitGetPeriod(orbit));
-    double offset_per_pixel = CameraInvTransformS(GetMainCamera(), 1);
+    double offset_per_pixel = GetScreenTransform()->InvTransformS(1);
     for (int i=1; i <= full_orbits; i++) {
         DrawOrbitWithOffset(orbit, offset_per_pixel * -3 * i, color);
     }
@@ -295,8 +295,8 @@ void _DrawTransferOrbit(TransferPlanUI* ui, int solution, bool is_secondary) {
 }
 
 
-time_type _DrawHandle(const DrawCamera* cam, Vector2 pos, const Orbit* orbit, time_type current, bool* is_dragging) {
-    Vector2 radial_dir = Vector2Normalize(CameraInvTransformV(cam, pos));
+time_type _DrawHandle(const CoordinateTransform* c_transf, Vector2 pos, const Orbit* orbit, time_type current, bool* is_dragging) {
+    Vector2 radial_dir = Vector2Normalize(c_transf->InvTransformV(pos));
     radial_dir.y = -radial_dir.y;
     Vector2 tangent_dir = Vector2Rotate(radial_dir, PI/2);
 
@@ -366,7 +366,7 @@ void _TransferPlanUIDrawText(const TransferPlan* tp, const Ship& ship) {
     TextBoxWriteLine(&textbox, payload_str);
 }
 
-void TransferPlanUIDraw(TransferPlanUI* ui, const DrawCamera* cam) {
+void TransferPlanUIDraw(TransferPlanUI* ui, const CoordinateTransform* c_transf) {
     TransferPlan* tp = &ui->plan;
     if (!TransferPlanUIIsActive(ui)) {
         return;
@@ -381,12 +381,12 @@ void TransferPlanUIDraw(TransferPlanUI* ui, const DrawCamera* cam) {
         16, PALETTE_GREEN
     );
 
-    ui->departure_handle_pos = CameraTransformV(cam, OrbitGetPosition(&from.orbit, tp->departure_time).cartesian);
-    ui->arrival_handle_pos = CameraTransformV(cam, OrbitGetPosition(&to.orbit, tp->arrival_time).cartesian);
+    ui->departure_handle_pos = c_transf->TransformV(OrbitGetPosition(&from.orbit, tp->departure_time).cartesian);
+    ui->arrival_handle_pos = c_transf->TransformV(OrbitGetPosition(&to.orbit, tp->arrival_time).cartesian);
 
     time_type now = GlobalGetState()->time;
-    time_t new_departure_time = _DrawHandle(cam, ui->departure_handle_pos, &from.orbit, tp->departure_time, &ui->is_dragging_departure);
-    time_t new_arrival_time = _DrawHandle(cam, ui->arrival_handle_pos, &to.orbit, tp->arrival_time, &ui->is_dragging_arrival);
+    time_t new_departure_time = _DrawHandle(c_transf, ui->departure_handle_pos, &from.orbit, tp->departure_time, &ui->is_dragging_departure);
+    time_t new_arrival_time = _DrawHandle(c_transf, ui->arrival_handle_pos, &to.orbit, tp->arrival_time, &ui->is_dragging_arrival);
     if (new_departure_time >= now && new_departure_time < tp->arrival_time){
         tp->departure_time = new_departure_time;
         ui->redraw_queued = true;

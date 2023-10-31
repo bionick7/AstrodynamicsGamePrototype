@@ -96,7 +96,7 @@ entity_id_t GlobalState::_AddShip(int index, entity_id_t origin_planet) {
 void GlobalState::Make(time_type time) {
     time = time;
     TransferPlanUIMake(&active_transfer_plan);
-    CameraMake(&camera);
+    c_transf.Make();
 }
 
 void GlobalState::Load(const char * file_path) {
@@ -116,10 +116,10 @@ void GlobalState::Load(const char * file_path) {
 // Update
 void GlobalState::UpdateState(double delta_t) {
     SetMouseCursor(MOUSE_CURSOR_DEFAULT);
-    CameraHandleInput(&camera, delta_t);
+    c_transf.HandleInput(delta_t);
     TransferPlanUIUpdate(&active_transfer_plan);
     prev_time = time;
-    time = CameraAdvanceTime(&camera, time, delta_t);
+    time = c_transf.AdvanceTime(time, delta_t);
 
     Clickable hover = {TYPE_NONE, GetInvalidId()};
     double min_distance = INFINITY;
@@ -157,36 +157,35 @@ void GlobalState::UpdateState(double delta_t) {
 
 // Draw
 void GlobalState::DrawState() {
-    DrawCamera* cam = &camera;
 
     auto planet_view = registry.view<Planet>();
     auto ship_view = registry.view<Ship>();
 
-    DrawCircleV(CameraTransformV(cam, (Vector2){0}), CameraTransformS(cam, PARENt_RADIUS), MAIN_UI_COLOR);
+    DrawCircleV(c_transf.TransformV((Vector2){0}), c_transf.TransformS(PARENT_RADIUS), MAIN_UI_COLOR);
     for (auto [_, planet] : planet_view.each()) {
-        planet.Draw(cam);
+        planet.Draw(&c_transf);
     }
     for (auto [_, ship] : ship_view.each()) {
-        ship.Draw(cam);
+        ship.Draw(&c_transf);
     }
 
-    TransferPlanUIDraw(&active_transfer_plan, cam);
+    TransferPlanUIDraw(&active_transfer_plan, &c_transf);
 
     // UI
-    CameraDrawUI(cam);
+    c_transf.DrawUI();
     for (auto [_, planet] : planet_view.each()) {
         if (active_transfer_plan.plan.departure_planet == planet.id) {
-            planet.DrawUI(cam, true, ResourceTransferInvert(active_transfer_plan.plan.resource_transfer));
+            planet.DrawUI(&c_transf, true, ResourceTransferInvert(active_transfer_plan.plan.resource_transfer));
         }
         if (active_transfer_plan.plan.arrival_planet == planet.id) {
-            planet.DrawUI(cam, false, active_transfer_plan.plan.resource_transfer);
+            planet.DrawUI(&c_transf, false, active_transfer_plan.plan.resource_transfer);
         }
         if (!TransferPlanUIIsActive(&active_transfer_plan) && planet.mouse_hover) {
-            planet.DrawUI(cam, true, EMPTY_TRANSFER);
+            planet.DrawUI(&c_transf, true, EMPTY_TRANSFER);
         }
     }
     for (auto [_, ship] : ship_view.each()) {
-        ship.DrawUI(cam);
+        ship.DrawUI(&c_transf);
     }
 
     DebugFlushText();

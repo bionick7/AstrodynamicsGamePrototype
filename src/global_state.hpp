@@ -5,7 +5,7 @@
 #include "ship.hpp"
 #include "transfer_plan.hpp"
 //#include "resource_allocator.hpp"
-#include "camera.hpp"
+#include "coordinate_transform.hpp"
 #include <map>
 
 #define MAX_PLANETS 32
@@ -29,7 +29,7 @@ static inline entity_id_t GetInvalidId() { return entt::null; }
 struct GlobalState {
     time_type time;
     time_type prev_time;
-    DrawCamera camera;
+    CoordinateTransform c_transf;
 
 /*
     int planet_count;

@@ -41,8 +41,8 @@ struct Ship {
     void PushTransferPlan(TransferPlan tp);
     void PopTransferPlan(int index);
     void Update();
-    void Draw(const DrawCamera* camera) const;
-    void DrawUI(const DrawCamera* camera);
+    void Draw(const CoordinateTransform* c_transf) const;
+    void DrawUI(const CoordinateTransform* c_transf);
     void Inspect();
 
 private:

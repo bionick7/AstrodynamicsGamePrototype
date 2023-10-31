@@ -2,7 +2,7 @@
 #define PLANET_H
 #include "basic.hpp"
 #include "astro.hpp"
-#include "camera.hpp"
+#include "coordinate_transform.hpp"
 
 #define RESOURCE_CAP INT
 typedef double resource_count_t;
@@ -57,8 +57,8 @@ struct Planet {
 
     bool HasMouseHover(double* distance) const;
     void Update();
-    void Draw(const DrawCamera* camera);
-    void DrawUI(const DrawCamera* cam, bool upper_quadrant, ResourceTransfer transfer);
+    void Draw(const CoordinateTransform* c_transf);
+    void DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, ResourceTransfer transfer);
 };
 
 

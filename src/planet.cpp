@@ -24,12 +24,12 @@ void Planet::_OnClicked() {
     if (GlobalGetState()->active_transfer_plan.plan.arrival_planet == entt::null) {
         TransferPlanUISetDestination(&(GlobalGetState()->active_transfer_plan), id);
     } else {
-        GetMainCamera()->focus = position.cartesian;
+        GetScreenTransform()->focus = position.cartesian;
     }
 }
 
 double Planet::ScreenRadius() const {
-    return fmax(CameraTransformS(GetMainCamera(), radius), 4);
+    return fmax(GetScreenTransform()->TransformS(radius), 4);
 }
 
 double Planet::GetDVFromExcessVelocity(Vector2 vel) const {
@@ -61,7 +61,7 @@ resource_count_t Planet::GiveResource(int resource, resource_count_t quantity) {
 }
 
 bool Planet::HasMouseHover(double* min_distance) const {
-    Vector2 screen_pos = CameraTransformV(GetMainCamera(), position.cartesian);
+    Vector2 screen_pos = GetScreenTransform()->TransformV(position.cartesian);
     double dist = Vector2Distance(GetMousePosition(), screen_pos);
     if (dist <= ScreenRadius() * 1.2 && dist < *min_distance) {
         *min_distance = dist;
@@ -81,11 +81,10 @@ void Planet::Update() {
     }
 }
 
-void Planet::Draw(const DrawCamera* cam) {
+void Planet::Draw(const CoordinateTransform* c_transf) {
     //printf("%f : %f\n", position.x, position.y);
-    Vector2 screen_pos = CameraTransformV(cam, position.cartesian);
+    Vector2 screen_pos = c_transf->TransformV(position.cartesian);
     DrawCircleV(screen_pos, ScreenRadius(), MAIN_UI_COLOR);
-    //DrawLineV(CameraTransformV(cam, (Vector2){0}), screen_pos, MAIN_UI_COLOR);
     
     DrawOrbit(&orbit, MAIN_UI_COLOR);
 
@@ -103,7 +102,7 @@ void Planet::Draw(const DrawCamera* cam) {
     }
 }
 
-void Planet::DrawUI(const DrawCamera* cam, bool upper_quadrant, ResourceTransfer transfer) {
+void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, ResourceTransfer transfer) {
     TextBox tb;
     if (upper_quadrant) {
         tb = TextBoxMake(10, 10, 16*30, GetScreenHeight() / 2 - 20, 16, MAIN_UI_COLOR);

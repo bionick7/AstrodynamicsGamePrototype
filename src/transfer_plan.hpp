@@ -44,7 +44,7 @@ void TransferPlanSolve(TransferPlan* tp);
 
 void TransferPlanUIMake(TransferPlanUI* ui);
 void TransferPlanUIUpdate(TransferPlanUI* ui);
-void TransferPlanUIDraw(TransferPlanUI* ui, const DrawCamera* cam);
+void TransferPlanUIDraw(TransferPlanUI* ui, const CoordinateTransform* c_transf);
 
 void TransferPlanUISetShip(TransferPlanUI* ui, entity_id_t ship);
 void TransferPlanUISetResourceType(TransferPlanUI* ui, int resource_type);

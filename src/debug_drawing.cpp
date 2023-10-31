@@ -1,13 +1,13 @@
 #include "debug_drawing.hpp"
 #include "global_state.hpp"
-#include "camera.hpp"
+#include "coordinate_transform.hpp"
 #include "ui.hpp"
 
 void DebugDrawLine(Vector2 from, Vector2 to) {
-    const DrawCamera* cam = &GlobalGetState()->camera;
+    const CoordinateTransform* c_transf = GetScreenTransform();
     DrawLineV(
-        CameraTransformV(cam, from),
-        CameraTransformV(cam, to),
+        c_transf->TransformV(from),
+        c_transf->TransformV(to),
         GREEN
     );
 }
@@ -15,7 +15,7 @@ void DebugDrawLine(Vector2 from, Vector2 to) {
 Vector2 point_buffer[64];
 
 void DebugDrawConic(Vector2 focus, Vector2 ecc_vector, double a) {
-    const DrawCamera* cam = &GlobalGetState()->camera;
+    const CoordinateTransform* c_transf = GetScreenTransform();
     Vector2 x = Vector2Normalize(ecc_vector);
     Vector2 y = Vector2Rotate(x, PI/2);
     double e = Vector2Length(ecc_vector);
@@ -31,10 +31,10 @@ void DebugDrawConic(Vector2 focus, Vector2 ecc_vector, double a) {
             Vector2Scale(y, r*sin(theta))
         ));
     }
-    CameraTransformBuffer(cam, &point_buffer[0], 64);
+    c_transf->TransformBuffer(&point_buffer[0], 64);
     DrawLineV(
-        CameraTransformV(cam, focus),
-        CameraTransformV(cam, Vector2Add(focus, Vector2Scale(x, -2*a*e))),
+        c_transf->TransformV(focus),
+        c_transf->TransformV(Vector2Add(focus, Vector2Scale(x, -2*a*e))),
         GREEN
     );
     DrawLineStrip(&point_buffer[0], 64, GREEN);
