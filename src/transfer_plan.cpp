@@ -330,10 +330,8 @@ time_type _DrawHandle(const CoordinateTransform* c_transf, Vector2 pos, const Or
     return current;
 }
 
-TextBox textbox;
-
 void _TransferPlanUIDrawText(const TransferPlan* tp, const Ship& ship) {
-    TextBoxEnclose(&textbox, 2, 2, BG_COLOR, PALETTE_GREEN);
+    UIContextCurrent().Enclose(2, 2, BG_COLOR, PALETTE_GREEN);
     char departure_time_outpstr[30];
     char arrival_time_outpstr[30];
     char departure_time_str[40] = "Departs in ";
@@ -356,14 +354,14 @@ void _TransferPlanUIDrawText(const TransferPlan* tp, const Ship& ship) {
         ship.max_capacity / 1000.0
     );
 
-    TextBoxWriteLine(&textbox, strcat(departure_time_str, departure_time_outpstr));
-    TextBoxWriteLine(&textbox, strcat(arrival_time_str, arrival_time_outpstr));
-    TextBoxWriteLine(&textbox, "=====================");
-    //TextBoxWriteLine(&textbox, dv1_str);
-    //TextBoxWriteLine(&textbox, dv2_str);
-    TextBoxWriteLine(&textbox, dvtot_str);
-    TextBoxWriteLine(&textbox, "=====================");
-    TextBoxWriteLine(&textbox, payload_str);
+    UIContextWrite(strcat(departure_time_str, departure_time_outpstr));
+    UIContextWrite(strcat(arrival_time_str, arrival_time_outpstr));
+    UIContextWrite("=====================");
+    //UIContextWrite(dv1_str);
+    //UIContextWrite(dv2_str);
+    UIContextWrite(dvtot_str);
+    UIContextWrite("=====================");
+    UIContextWrite(payload_str);
 }
 
 void TransferPlanUIDraw(TransferPlanUI* ui, const CoordinateTransform* c_transf) {
@@ -375,7 +373,7 @@ void TransferPlanUIDraw(TransferPlanUI* ui, const CoordinateTransform* c_transf)
     const Planet& to = GetPlanet(tp->arrival_planet);
     const Ship& ship = GetShip(ui->ship);
 
-    textbox = TextBoxMake(
+    UIContextCreate(
         GetScreenWidth() - 20*16 - 5, 5 + 50,
         20*16, MinInt(200, GetScreenHeight()) - 2*5 - 20, 
         16, PALETTE_GREEN
@@ -415,9 +413,9 @@ void TransferPlanUIDraw(TransferPlanUI* ui, const CoordinateTransform* c_transf)
         } else if (ui->plan.departure_time < now) {
             strcpy(transfer_str, "INVALID TRANSFER: Departuring in the past");
         }
-        textbox.height = 30;
-        TextBoxEnclose(&textbox, 2, 2, BG_COLOR, PALETTE_GREEN);
-        TextBoxWriteLine(&textbox, transfer_str);
+        UIContextCurrent().height = 30;
+        UIContextCurrent().Enclose(2, 2, BG_COLOR, PALETTE_GREEN);
+        UIContextWrite(transfer_str);
     }
 }
 

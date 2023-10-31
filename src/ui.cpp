@@ -1,4 +1,5 @@
 #include "ui.hpp"
+#include <stack>
 
 Font default_font;
 
@@ -22,72 +23,85 @@ ButtonStateFlags _GetButtonState(bool is_in_area) {
     return res;
 }
 
-TextBox TextBoxMake(int x, int y, int w, int h, int text_size, Color color) {
-    TextBox res = {0};
-    res.text_start_x = x;
-    res.text_start_y = y;
-    res.text_margin_x = 2;
-    res.text_margin_y = 2;
-    res.text_size = text_size;
-    res.text_counter = 0;
-    res.text_color = color;
-    res.width = w;
-    res.height = h;
-    res.x_cursor = 0;
-    res.y_cursor = 0;
-    res.line_size_x = 0;
-    res.line_size_y = 0;
-    res.text_background = BLANK;
-    return res;
+TextBox::TextBox(int x, int y, int w, int h, int ptext_size, Color color) {
+    ASSERT(w > 0)
+    ASSERT(h > 0)
+    text_start_x = x;
+    text_start_y = y;
+    text_margin_x = 2;
+    text_margin_y = 2;
+    text_size = ptext_size;
+    text_counter = 0;
+    text_color = color;
+    width = w;
+    height = h;
+    x_cursor = 0;
+    y_cursor = 0;
+    line_size_x = 0;
+    line_size_y = 0;
+    text_background = BLANK;
 }
 
-void _TextboxAdvance(TextBox* tb, Vector2 size) {
-    if (size.y > tb->line_size_y) tb->line_size_y = size.y;
-    tb->x_cursor += size.x + tb->text_margin_x;
+void TextBox::_Advance(Vector2 size) {
+    if (size.y > line_size_y) line_size_y = size.y;
+    x_cursor += size.x + text_margin_x;
 }
 
-void TextBoxLineBreak(TextBox* tb) {
-    tb->x_cursor = 0;
-    tb->y_cursor += tb->line_size_y + tb->text_margin_y;
-    tb->line_size_x = 0;
-    tb->line_size_y = 0;
+void TextBox::LineBreak() {
+    x_cursor = 0;
+    y_cursor += line_size_y + text_margin_y;
+    line_size_x = 0;
+    line_size_y = 0;
 }
 
-void TextBoxEnclose(TextBox* tb, int inset_x, int inset_y, Color background_color, Color line_color) {
+void TextBox::EnsureLineBreak() {
+    if (x_cursor > 0) {
+        y_cursor += line_size_y + text_margin_y;
+        x_cursor = 0;
+    }
+    line_size_x = 0;
+    line_size_y = 0;
+}
+
+void TextBox::Enclose(int inset_x, int inset_y, Color background_color, Color line_color) {
     Rectangle rect;
-    rect.x = tb->text_start_x - inset_x;
-    rect.y = tb->text_start_y - inset_y;
-    rect.width = tb->width + inset_x*2;
-    rect.height = tb->height + inset_y*2;
+    rect.x = text_start_x - inset_x;
+    rect.y = text_start_y - inset_y;
+    rect.width = width + inset_x*2;
+    rect.height = height + inset_y*2;
     int corner_radius = 0;//inset_x < inset_y ? inset_x : inset_y;
     DrawRectangleRounded(rect, corner_radius, 16, background_color);
     DrawRectangleRoundedLines(rect, corner_radius, 16, 1, line_color);
 }
 
-void TextBoxWrite(TextBox* tb, const char* text) {
-    Vector2 pos = (Vector2) {tb->text_start_x + tb->x_cursor, tb->text_start_y + tb->y_cursor};
-    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, tb->text_size, 1);
-    if (tb->text_background.a != 0) {
-        DrawRectangleV(pos, size, tb->text_background);
-    }
-    DrawTextEx(GetCustomDefaultFont(), text, pos, tb->text_size, 1, tb->text_color);
-    _TextboxAdvance(tb, size);
+int TextBox::GetLineHeight() {
+    return text_size + text_margin_y;
 }
 
-void TextBoxWriteLine(TextBox* tb, const char* text) {
-    Vector2 pos = (Vector2) {tb->text_start_x + tb->x_cursor, tb->text_start_y + tb->y_cursor};
-    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, tb->text_size, 1);
-    if (tb->text_background.a != 0) {
-        DrawRectangleV(pos, size, tb->text_background);
+void TextBox::Write(const char* text) {
+    Vector2 pos = (Vector2) {text_start_x + x_cursor, text_start_y + y_cursor};
+    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
+    if (text_background.a != 0) {
+        DrawRectangleV(pos, size, text_background);
     }
-    DrawTextEx(GetCustomDefaultFont(), text, pos, tb->text_size, 1, tb->text_color);
-    _TextboxAdvance(tb, size);
-    TextBoxLineBreak(tb);
+    DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color);
+    _Advance(size);
 }
 
-ButtonStateFlags TextBoxWriteButton(TextBox* tb, const char* text, int inset) {
-    Vector2 pos = (Vector2) {tb->text_start_x + tb->x_cursor, tb->text_start_y + tb->y_cursor + tb->text_margin_y};
-    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, tb->text_size, 1);
+void TextBox::WriteLine(const char* text) {
+    Vector2 pos = (Vector2) {text_start_x + x_cursor, text_start_y + y_cursor};
+    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
+    if (text_background.a != 0) {
+        DrawRectangleV(pos, size, text_background);
+    }
+    DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color);
+    _Advance(size);
+    LineBreak();
+}
+
+ButtonStateFlags TextBox::WriteButton(const char* text, int inset) {
+    Vector2 pos = (Vector2) {text_start_x + x_cursor, text_start_y + y_cursor + text_margin_y};
+    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
     if (inset >= 0) {
         size.x += 2*inset;
         size.y += 2*inset;
@@ -95,11 +109,87 @@ ButtonStateFlags TextBoxWriteButton(TextBox* tb, const char* text, int inset) {
         pos.x += inset;
         pos.y += inset;
     }
-    tb->x_cursor += size.x + tb->text_margin_x;
-    DrawTextEx(GetCustomDefaultFont(), text, pos, tb->text_size, 1, PALETTE_BLUE);
+    x_cursor += size.x + text_margin_x;
+    DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, PALETTE_BLUE);
     bool is_in_area = CheckCollisionPointRec(GetMousePosition(), (Rectangle) {pos.x, pos.y, size.x, size.y});
-    _TextboxAdvance(tb, size);
+    _Advance(size);
     return _GetButtonState(is_in_area);
+}
+
+ButtonStateFlags TextBox::AsButton() {
+    bool is_in_area = CheckCollisionPointRec(GetMousePosition(), (Rectangle) {text_start_x, text_start_y, width, height});
+    return _GetButtonState(is_in_area);
+}
+
+std::stack<TextBox> text_box_stack = std::stack<TextBox>();
+
+void UIContextCreate(int x, int y, int w, int h, int text_size, Color color) {
+    while (text_box_stack.size() > 0) {
+        text_box_stack.pop();
+    }
+    TextBox new_text_box = TextBox(x, y, w, h, text_size, color);
+    text_box_stack.push(new_text_box);
+}
+
+void UIContextPushInset(int margin, int h) {
+    TextBox& tb = UIContextCurrent();
+    tb.EnsureLineBreak();
+    TextBox new_text_box = TextBox(
+        tb.text_start_x + tb.x_cursor + margin,
+        tb.text_start_y + tb.y_cursor + margin,
+        tb.width - tb.x_cursor - 2*margin,
+        fmin(tb.height - tb.y_cursor - 2*margin, h),
+        tb.text_size,
+        tb.text_color
+    );
+    tb.y_cursor += h + 2*margin;
+    text_box_stack.push(new_text_box);
+}
+
+void UIContextPushHSplit(int x_start, int x_end) {
+    TextBox& tb = UIContextCurrent();
+    if (x_start < 0) x_start += tb.width;
+    if (x_end < 0) x_end += tb.width;
+    TextBox new_text_box = TextBox(
+        tb.text_start_x + x_start,
+        tb.text_start_y,
+        x_end - x_start,
+        tb.height,
+        tb.text_size,
+        tb.text_color
+    );
+    text_box_stack.push(new_text_box);
+}
+
+ButtonStateFlags UIContextAsButton() {
+    return UIContextCurrent().AsButton();
+}
+
+void UIContextPop() {
+    text_box_stack.pop();
+}
+
+void UIContextEnclose(int inset_x, int inset_y, Color background_color, Color line_color) {
+    UIContextCurrent().Enclose(inset_x, inset_y, background_color, line_color);
+}
+
+void UIContextWrite(const char* text, bool linebreak) {
+    TextBox& tb = UIContextCurrent();
+    if (linebreak) {
+        tb.WriteLine(text);
+    } else {
+        tb.Write(text);
+    }
+}
+
+ButtonStateFlags UIContextDirectButton(const char* text, int inset) {
+    TextBox& tb = UIContextCurrent();
+    return tb.WriteButton(text, inset);
+}
+
+
+TextBox& UIContextCurrent() {
+    return text_box_stack.top();
 }
 
 ButtonStateFlags DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color) {

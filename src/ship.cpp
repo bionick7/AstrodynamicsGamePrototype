@@ -118,20 +118,36 @@ void Ship::Update() {
     }
 }
 
+void _DrawShipAt(Vector2 pos, Color color) {
+    DrawRectangleV(Vector2SubtractValue(pos, 4.0f), (Vector2) {8, 8}, color);
+}
+
 void Ship::Draw(const CoordinateTransform* c_transf) const {
     //printf("Drawing ship %s (%d, %d, %d)\n", name, color.r, color.g, color.b);
     //printf("draw_pos: %f, %f\n", draw_pos.x, draw_pos.y);
-    DrawRectangleV(Vector2SubtractValue(draw_pos, 4.0f), (Vector2) {8, 8}, color);
+    _DrawShipAt(draw_pos, color);
 
     for (int i=0; i < prepared_plans_count; i++) {
         const TransferPlan& plan = prepared_plans[i];
-        OrbitPos to_departure = OrbitGetPosition(&plan.transfer_orbit[plan.primary_solution], 
+        OrbitPos to_departure = OrbitGetPosition(
+            &plan.transfer_orbit[plan.primary_solution], 
             fmax(plan.departure_time, GlobalGetNow())
         );
-        OrbitPos to_arrival = OrbitGetPosition(&plan.transfer_orbit[plan.primary_solution], plan.arrival_time);
-        DrawOrbitBounded(&plan.transfer_orbit[plan.primary_solution], to_departure, to_arrival, 0, color);
+        OrbitPos to_arrival = OrbitGetPosition(
+            &plan.transfer_orbit[plan.primary_solution], 
+            plan.arrival_time
+        );
+        DrawOrbitBounded(&plan.transfer_orbit[plan.primary_solution], to_departure, to_arrival, 0, ColorAlpha(color, i == 0 ? 1 : 0.5));
     }
-
+    if (prepared_plans_count > 0) {
+        const TransferPlan& last_tp = prepared_plans[prepared_plans_count - 1];
+        OrbitPos last_pos = OrbitGetPosition(
+            &GetPlanet(last_tp.arrival_planet).orbit, 
+            last_tp.arrival_time
+        );
+        Vector2 last_draw_pos = c_transf->TransformV(last_pos.cartesian);
+        _DrawShipAt(last_draw_pos, ColorAlpha(color, 0.5));
+    }
 }
 
 void Ship::DrawUI(const CoordinateTransform* c_transf) {
@@ -147,32 +163,39 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
         }
     }
     if (mouse_hover || GlobalGetState()->active_transfer_plan.ship == id) {
-        TextBox tb = TextBoxMake(
-            GetScreenWidth() - 20*16 - 5, 5 + 200,
-            20*16, GetScreenHeight() - 200 - 2*5, 
-            16, MAIN_UI_COLOR
+        int text_size = 16;
+        UIContextCreate(
+            GetScreenWidth() - 20*text_size - 5, 5 + 200,
+            20*text_size, GetScreenHeight() - 200 - 2*5, 
+            text_size, MAIN_UI_COLOR
         );
 
-        TextBoxEnclose(&tb, 2, 2, BG_COLOR, color);
-        TextBoxWriteLine(&tb, name);
-
+        UIContextEnclose(2, 2, BG_COLOR, color);
+        UIContextWrite(name);
+        
         char max_cargo_str[40];
         sprintf(max_cargo_str, "Cargo Cap. %.0f t", max_capacity);
-        TextBoxWriteLine(&tb, max_cargo_str);
+        UIContextWrite(max_cargo_str);
 
         char specific_impulse_str[40];
         sprintf(specific_impulse_str, "I_sp %.0f m/s", v_e);
-        TextBoxWriteLine(&tb, specific_impulse_str);
+        UIContextWrite(specific_impulse_str);
 
         char maxdv_str[40];
         sprintf(maxdv_str, "dv %.0f m/s", max_dv);
-        TextBoxWriteLine(&tb, maxdv_str);
+        UIContextWrite(maxdv_str);
 
         time_t now = GlobalGetNow();
         for (int i=0; i < prepared_plans_count; i++) {
             char tp_str[2][40];
-            snprintf(tp_str[0], 40, "- %s (%3d D %2d H)", 
-                resources_names[prepared_plans[i].resource_transfer.resource_id],
+            const char* resource_name;
+            if (prepared_plans[i].resource_transfer.resource_id < 0){
+                resource_name = "EMPTY";
+            } else {
+                resource_name = resources_names[prepared_plans[i].resource_transfer.resource_id];
+            }
+            snprintf(tp_str[0], 40, "- %s (%3d D %2d H)",
+                resource_name,
                 (int)(prepared_plans[i].departure_time - now) / 86400,
                 ((int)(prepared_plans[i].departure_time - now) % 86400) / 3600
             );
@@ -181,8 +204,25 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
                 GetPlanet(prepared_plans[i].departure_planet).name,
                 GetPlanet(prepared_plans[i].arrival_planet).name
             );
-            TextBoxWriteLine(&tb, tp_str[0]);
-            TextBoxWriteLine(&tb, tp_str[1]);
+
+            UIContextPushInset(2, UIContextCurrent().GetLineHeight() * 2);
+                UIContextPushHSplit(0, -32);
+                    UIContextEnclose(0, 0, BG_COLOR, PALETTE_BLUE);
+                    UIContextWrite(tp_str[0]);
+                    UIContextWrite(tp_str[1]);
+                    if (UIContextAsButton() & BUTTON_STATE_FLAG_JUST_PRESSED) {
+                        // TBD
+                    }
+                UIContextPop();
+                UIContextPushHSplit(-32, -1);
+                    //UIContextCurrent().text_size = text_size*2;
+                    UIContextWrite("X");
+                    UIContextEnclose(0, 0, BG_COLOR, PALETTE_BLUE);
+                    if (UIContextAsButton() & BUTTON_STATE_FLAG_JUST_PRESSED) {
+                        // TBD
+                    }
+                UIContextPop();
+            UIContextPop();
         }
     }
 }

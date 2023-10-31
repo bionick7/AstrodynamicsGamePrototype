@@ -103,31 +103,30 @@ void Planet::Draw(const CoordinateTransform* c_transf) {
 }
 
 void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, ResourceTransfer transfer) {
-    TextBox tb;
     if (upper_quadrant) {
-        tb = TextBoxMake(10, 10, 16*30, GetScreenHeight() / 2 - 20, 16, MAIN_UI_COLOR);
+        UIContextCreate(10, 10, 16*30, GetScreenHeight() / 2 - 20, 16, MAIN_UI_COLOR);
     } else {
-        tb = TextBoxMake(10, GetScreenHeight() / 2 + 10, 16*30, GetScreenHeight() / 2 - 20, 16, MAIN_UI_COLOR);  // TODO
+        UIContextCreate(10, GetScreenHeight() / 2 + 10, 16*30, GetScreenHeight() / 2 - 20, 16, MAIN_UI_COLOR);
     }
-    TextBoxEnclose(&tb, 2, 2, BG_COLOR, MAIN_UI_COLOR);
-    TextBoxWriteLine(&tb, name);
-    TextBoxWriteLine(&tb, "================");
+    UIContextCurrent().Enclose(2, 2, BG_COLOR, MAIN_UI_COLOR);
+    UIContextWrite(name);
+    UIContextWrite("================");
     for (int i=0; i < RESOURCE_MAX; i++) {
         char buffer[50];
         strcpy(buffer, resources_names[i]);
         //sprintf(buffer, "%-10s %5d/%5d (%+3d)", resources_names[i], qtt, cap, delta);
         sprintf(buffer, "%-10s %3.1fT (%+3d T/d)", resources_names[i], resource_stock[i] / 1e3, (int)(resource_delta[i]/1e3));
         if (TransferPlanUIIsActive(&GlobalGetState()->active_transfer_plan)) {
-            if (TextBoxWriteButton(&tb, transfer.resource_id == i ? "X" : " ", 2) & BUTTON_STATE_FLAG_JUST_PRESSED) {
+            if (UIContextDirectButton(transfer.resource_id == i ? "X" : " ", 2) & BUTTON_STATE_FLAG_JUST_PRESSED) {
                 TransferPlanUISetResourceType(&GlobalGetState()->active_transfer_plan, i);
             }
         }
-        TextBoxWrite(&tb, buffer);
+        UIContextWrite(buffer, false);
         if (transfer.resource_id == i) {
             sprintf(buffer, "   %+3.1fK", transfer.quantity / 1000);
-            TextBoxWrite(&tb, buffer);
+            UIContextWrite(buffer, false);
         }
-        TextBoxWriteLine(&tb, "");
+        UIContextWrite("");
         //TextBoxLineBreak(&tb);
     }
 }

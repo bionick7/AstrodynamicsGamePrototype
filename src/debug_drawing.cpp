@@ -40,15 +40,14 @@ void DebugDrawConic(Vector2 focus, Vector2 ecc_vector, double a) {
     DrawLineStrip(&point_buffer[0], 64, GREEN);
 }
 
-TextBox debug_textbox;
 char lines[64][256];
 int lines_index = 0;
 
 void DebugFlushText() {
-    debug_textbox = TextBoxMake(5, 35, 500, GetScreenHeight() - 40, 16, GREEN);
+    TextBox debug_textbox = TextBox(5, 35, 500, GetScreenHeight() - 40, 16, GREEN);
     debug_textbox.text_background = BLACK;
     for (int i=0; i < lines_index; i++) {
-        TextBoxWriteLine(&debug_textbox, lines[i]);
+        debug_textbox.WriteLine(lines[i]);
     }
     lines_index = 0;
 }
