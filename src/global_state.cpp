@@ -50,7 +50,7 @@ void GlobalState::_InspectState() {
 }
 
 entity_id_t GlobalState::_AddPlanet(int index) {
-    printf("Adding Planet N°%d\n", index);
+    //printf("Adding Planet N°%d\n", index);
     const char* name = PLANET_NAMES[index];
     double sma = PLANET_TABLE[index*6];
     double ecc = PLANET_TABLE[index*6+1];
@@ -76,7 +76,7 @@ entity_id_t GlobalState::_AddPlanet(int index) {
 }
 
 entity_id_t GlobalState::_AddShip(int index, entity_id_t origin_planet) {
-    printf("Adding Ship N°%d\n", index);
+    //printf("Adding Ship N°%d\n", index);
     const char* name = SHIP_NAMES[index];
 
     auto ship_entity = registry.create();
@@ -97,6 +97,8 @@ void GlobalState::Make(time_type time) {
     time = time;
     active_transfer_plan.Make();
     c_transf.Make();
+    focused_planet = GetInvalidId();
+    focused_ship = GetInvalidId();
 }
 
 void GlobalState::Load(const char * file_path) {
@@ -117,6 +119,19 @@ void GlobalState::Load(const char * file_path) {
 void GlobalState::UpdateState(double delta_t) {
     SetMouseCursor(MOUSE_CURSOR_DEFAULT);
     c_transf.HandleInput(delta_t);
+
+    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) || IsKeyPressed(KEY_ESCAPE)) {
+        // Cancel out of next layer
+        if (active_transfer_plan.IsActive()) {
+            active_transfer_plan.Abort();
+        } else if (IsIdValid(focused_planet) || IsIdValid(focused_ship)) {
+            focused_planet = GetInvalidId();
+            focused_ship = GetInvalidId();
+        } else {
+            // Enter Pause menu
+        }
+    }
+
     active_transfer_plan.Update();
     prev_time = time;
     time = c_transf.AdvanceTime(time, delta_t);
@@ -181,7 +196,7 @@ void GlobalState::DrawState() {
                 planet.DrawUI(&c_transf, false, active_transfer_plan.plan->resource_transfer);
             }
         }
-        else if (planet.mouse_hover) {
+        else if (planet.mouse_hover || planet.id == focused_planet) {
             planet.DrawUI(&c_transf, true, EMPTY_TRANSFER);
         }
     }

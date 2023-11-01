@@ -3,6 +3,17 @@
 
 #include "basic.hpp"
 
+
+typedef uint8_t TextAlignment;
+const TextAlignment TEXT_ALIGNMENT_LEFT = 0x00;
+const TextAlignment TEXT_ALIGNMENT_HCENTER = 0x01;
+const TextAlignment TEXT_ALIGNMENT_RIGHT = 0x02;
+const TextAlignment TEXT_ALIGNMENT_TOP = 0x00;
+const TextAlignment TEXT_ALIGNMENT_VCENTER = 0x04;
+const TextAlignment TEXT_ALIGNMENT_BOTTOM = 0x08;
+
+void DrawTextAligned(const char* text, Vector2 pos, TextAlignment alignment, Color c);
+
 typedef uint8_t ButtonStateFlags;
 const ButtonStateFlags BUTTON_STATE_FLAG_NONE = 0x00;
 const ButtonStateFlags BUTTON_STATE_FLAG_HOVER = 0x01;

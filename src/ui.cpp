@@ -12,6 +12,26 @@ Font GetCustomDefaultFont() {
     return default_font;
 }
 
+void DrawTextAligned(const char* text, Vector2 pos, TextAlignment alignment, Color c) {
+    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, 16, 1);
+    if (alignment & TEXT_ALIGNMENT_HCENTER) {
+        pos.x -= size.x / 2;
+    } else if (alignment & TEXT_ALIGNMENT_RIGHT) {
+        pos.x -= size.x;
+    } else {  // left - aligned
+        // Do nothing
+    }
+    if (alignment & TEXT_ALIGNMENT_VCENTER) {
+        pos.x -= size.x / 2;
+    } else if (alignment & TEXT_ALIGNMENT_BOTTOM) {
+        pos.x -= size.x;
+    } else {  // left - aligned
+        // Do nothing
+    }
+    Vector2 bottom_left = Vector2Subtract(pos, Vector2Scale(size, 0.5));
+    DrawTextEx(GetCustomDefaultFont(), text, bottom_left, 16, 1, c);
+}
+
 ButtonStateFlags _GetButtonState(bool is_in_area) {
     ButtonStateFlags res = BUTTON_STATE_FLAG_NONE;
     if (is_in_area) {

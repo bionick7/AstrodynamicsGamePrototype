@@ -21,8 +21,9 @@ struct Ship {
     int index_on_planet;
 
     int prepared_plans_count;
-    int confirmed_plans_count;
     TransferPlan prepared_plans[SHIP_MAX_PREPARED_PLANS];
+    int plan_edit_index;
+    int highlighted_plan_index;
 
     // Payload
     int respource_type;
@@ -45,16 +46,18 @@ struct Ship {
     void DrawUI(const CoordinateTransform* c_transf);
     void Inspect();
 
-    TransferPlan* NewTransferPlan();
     TransferPlan* GetEditedTransferPlan();
     void ConfirmEditedTransferPlan();
     void CloseEditedTransferPlan();
     void PopTransferPlan(int index);
+    void StartEditingPlan(int index);
 
 private:
+    TransferPlan* _NewTransferPlan();
     void _OnDeparture(const TransferPlan &tp);
     void _OnArrival(const TransferPlan &tp);
     void _EnsureContinuity();
+    void _OnNewPlanClicked();
     void _OnClicked();
 };
 

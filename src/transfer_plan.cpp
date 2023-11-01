@@ -100,6 +100,7 @@ TransferPlan::TransferPlan() {
     departure_planet = GetInvalidId();
     arrival_planet = GetInvalidId();
     num_solutions = 0;
+    primary_solution = 0;
     resource_transfer = EMPTY_TRANSFER;
 }
 
@@ -234,17 +235,17 @@ int TransferPlanTests() {
     departure_handle_pos = (Vector2) {0};
     arrival_handle_pos = (Vector2) {0};
     redraw_queued = false;
-    reference_time = 0;
+    time_bounds[0] = 0;
 }
 
- void TransferPlanUI::Update() {
-    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
-        if (IsIdValid(ship)) {
-            GetShip(ship).CloseEditedTransferPlan();
-        }
-        Make();
-        return;
+void TransferPlanUI::Abort() {
+    if (IsIdValid(ship)) {
+        GetShip(ship).CloseEditedTransferPlan();
     }
+    Make();
+}
+
+void TransferPlanUI::Update() {
     if (!IsActive()) {
         return;
     }
@@ -334,28 +335,53 @@ time_type _DrawHandle(
     const CoordinateTransform* c_transf, Vector2 pos, const Orbit* orbit, 
     time_type current, time_type t0, bool* is_dragging
 ) {
+    Color c = PALETTE_BLUE;
+
     Vector2 radial_dir = Vector2Normalize(c_transf->InvTransformV(pos));
     radial_dir.y = -radial_dir.y;
     Vector2 tangent_dir = Vector2Rotate(radial_dir, PI/2);
 
     Vector2 node_pos = Vector2Add(pos, Vector2Scale(radial_dir, 20));
+    Vector2 text_pos = Vector2Add(pos, Vector2Scale(radial_dir, 30));
     Vector2 plus_pos = Vector2Add(node_pos, Vector2Scale(tangent_dir, -23));
     Vector2 minus_pos = Vector2Add(node_pos, Vector2Scale(tangent_dir, 23));
+
     time_type period = OrbitGetPeriod(orbit);
-    if (DrawTriangleButton(pos, Vector2Scale(radial_dir, 20), 10, TRANSFER_UI_COLOR) & BUTTON_STATE_FLAG_JUST_PRESSED) {
+    int full_orbits = floor((current - t0) / period);
+    if (full_orbits > 0) {
+        char text_content[4];
+        sprintf(text_content, "%+3d", full_orbits);
+        DrawTextAligned(text_content, text_pos, TEXT_ALIGNMENT_HCENTER | TEXT_ALIGNMENT_RIGHT, c);
+    }
+    if (DrawTriangleButton(pos, Vector2Scale(radial_dir, 20), 10, c) & BUTTON_STATE_FLAG_JUST_PRESSED) {
         *is_dragging = true;
     }
-    if (DrawCircleButton(plus_pos, 10, TRANSFER_UI_COLOR) & BUTTON_STATE_FLAG_JUST_PRESSED) {
+    const int extend = 5;
+    DrawLineV(
+        Vector2Subtract(minus_pos, (Vector2) {extend, 0}),
+        Vector2Add(minus_pos, (Vector2) {extend, 0}),
+        c
+    );
+    DrawLineV(
+        Vector2Subtract(plus_pos, (Vector2) {extend, 0}),
+        Vector2Add(plus_pos, (Vector2) {extend, 0}),
+        c
+    );
+    DrawLineV(
+        Vector2Subtract(plus_pos, (Vector2) {0, extend}),
+        Vector2Add(plus_pos, (Vector2) {0, extend}),
+        c
+    );
+    if (DrawCircleButton(plus_pos, 10, c) & BUTTON_STATE_FLAG_JUST_PRESSED) {
         current += period;
     }
-    if (DrawCircleButton(minus_pos, 10, TRANSFER_UI_COLOR) & BUTTON_STATE_FLAG_JUST_PRESSED) {
+    if (DrawCircleButton(minus_pos, 10, c) & BUTTON_STATE_FLAG_JUST_PRESSED) {
         current -= period;
     }
     if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
         *is_dragging = false;
     }
     if (*is_dragging) {
-        int full_orbits = floor((current - t0) / period);
         time_type t0_2 = t0 + full_orbits * period;
 
         Vector2 mouse_pos_world = GetMousePositionInWorld();
@@ -381,11 +407,11 @@ void _DrawText(const TransferPlan* tp, const Ship& ship, time_type t0) {
     double total_dv = tp->dv1[tp->primary_solution] + tp->dv2[tp->primary_solution];
     FormatTime(departure_time_outpstr, 30, tp->departure_time - t0);
     FormatTime(arrival_time_outpstr, 30, tp->arrival_time - t0);
-    sprintf(dv1_str,   "DV 1      %5.3f km/s", tp->dv1[tp->primary_solution]/1000.0);
-    sprintf(dv2_str,   "DV 2      %5.3f km/s", tp->dv2[tp->primary_solution]/1000.0);
-    sprintf(dvtot_str, "DV Tot    %5.3f km/s", total_dv/1000.0);
+    snprintf(dv1_str,   40, "DV 1      %5.3f km/s", tp->dv1[tp->primary_solution]/1000.0);
+    snprintf(dv2_str,   40, "DV 2      %5.3f km/s", tp->dv2[tp->primary_solution]/1000.0);
+    snprintf(dvtot_str, 40, "DV Tot    %5.3f km/s", total_dv/1000.0);
     double capacity = ship.GetPayloadCapacity(total_dv);
-    sprintf(payload_str, "Payload cap.  %3.0f %% (%.0f / %.0f t)", 
+    snprintf(payload_str, 40, "Payload cap.  %3.0f %% (%.0f / %.0f t)", 
         capacity / ship.max_capacity * 100,
         capacity / 1000.0,
         ship.max_capacity / 1000.0
@@ -418,9 +444,9 @@ void TransferPlanUI::Draw(const CoordinateTransform* c_transf) {
     departure_handle_pos = c_transf->TransformV(OrbitGetPosition(&from.orbit, plan->departure_time).cartesian);
     arrival_handle_pos = c_transf->TransformV(OrbitGetPosition(&to.orbit, plan->arrival_time).cartesian);
 
-    time_type new_departure_time = _DrawHandle(c_transf, departure_handle_pos, &from.orbit, plan->departure_time, reference_time, &is_dragging_departure);
-    time_type new_arrival_time = _DrawHandle(c_transf, arrival_handle_pos, &to.orbit, plan->arrival_time, reference_time, &is_dragging_arrival);
-    if (new_departure_time >= reference_time && new_departure_time < plan->arrival_time){
+    time_type new_departure_time = _DrawHandle(c_transf, departure_handle_pos, &from.orbit, plan->departure_time, time_bounds[0], &is_dragging_departure);
+    time_type new_arrival_time = _DrawHandle(c_transf, arrival_handle_pos, &to.orbit, plan->arrival_time, time_bounds[0], &is_dragging_arrival);
+    if (new_departure_time >= time_bounds[0] && new_departure_time < plan->arrival_time){
         plan->departure_time = new_departure_time;
         redraw_queued = true;
     }
@@ -430,13 +456,13 @@ void TransferPlanUI::Draw(const CoordinateTransform* c_transf) {
     }
 
     if (plan->num_solutions == 1) {
-        _DrawTransferOrbit(plan, plan->primary_solution, false, reference_time);
+        _DrawTransferOrbit(plan, plan->primary_solution, false, time_bounds[0]);
     } else if (plan->num_solutions == 2) {
-        _DrawTransferOrbit(plan, plan->primary_solution, false, reference_time);
-        _DrawTransferOrbit(plan, 1 - plan->primary_solution, true, reference_time);
+        _DrawTransferOrbit(plan, plan->primary_solution, false, time_bounds[0]);
+        _DrawTransferOrbit(plan, 1 - plan->primary_solution, true, time_bounds[0]);
     }
     if (is_valid) {
-        _DrawText(plan, ship_comp, reference_time);
+        _DrawText(plan, ship_comp, time_bounds[0]);
     }
     else if (sin(GetTime() * 6.0) > 0.0) {
         char transfer_str[100];
@@ -445,7 +471,7 @@ void TransferPlanUI::Draw(const CoordinateTransform* c_transf) {
                 plan->tot_dv / 1000,
                 ship_comp.max_dv / 1000
             );
-        } else if (plan->departure_time < reference_time) {
+        } else if (plan->departure_time < time_bounds[0]) {
             strcpy(transfer_str, "INVALID TRANSFER: Departuring in the past");
         }
         UIContextCurrent().height = 30;
@@ -454,25 +480,27 @@ void TransferPlanUI::Draw(const CoordinateTransform* c_transf) {
     }
 }
 
-void TransferPlanUI::SetShip(entity_id_t pship) {
+void TransferPlanUI::SetPlan(TransferPlan* pplan, entity_id_t pship, time_type pmin_time, time_type pmax_time) {
     if (is_dragging_departure || is_dragging_arrival) {
         return;
     }
     ship = pship;
-    Ship& ship_comp = GetShip(ship);
-    plan = ship_comp.NewTransferPlan();  // ship sets departure planet
+    plan = pplan;
     if (plan == NULL) {
         return;
     }
+    /*Ship& ship_comp = GetShip(ship);
     if (ship_comp.confirmed_plans_count > 0) {
-        reference_time = ship_comp.prepared_plans[ship_comp.confirmed_plans_count - 1].arrival_time;
+        time_bounds[0] = ship_comp.prepared_plans[ship_comp.confirmed_plans_count - 1].arrival_time;
         SHOW_F(ship_comp.prepared_plans[ship_comp.confirmed_plans_count - 1].departure_time)
         SHOW_F(ship_comp.prepared_plans[ship_comp.confirmed_plans_count - 1].arrival_time)
     } else {
-        reference_time = GlobalGetNow();
-    }
+        time_bounds[0] = GlobalGetNow();
+    }*/
+    time_bounds[0] = pmin_time;
+    time_bounds[1] = pmax_time;
     if (IsIdValid(plan->departure_planet) && IsIdValid(plan->arrival_planet)) {
-        _TransferPlanInitialize(plan, reference_time);
+        _TransferPlanInitialize(plan, time_bounds[0]);
     }
 }
 
@@ -492,7 +520,7 @@ void TransferPlanUI::SetShip(entity_id_t pship) {
     }
     plan->arrival_planet = planet;
     if (plan->departure_planet != entt::null && plan->arrival_planet != entt::null) {
-        _TransferPlanInitialize(plan, reference_time);
+        _TransferPlanInitialize(plan, time_bounds[0]);
     }
 }
 

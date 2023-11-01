@@ -4,11 +4,44 @@
 #include "ui.hpp"
 
 void Ship::_OnClicked() {
-    TransferPlanUI& tp_ui = GlobalGetState()->active_transfer_plan;
-    if (!tp_ui.IsActive() && !IsIdValid(tp_ui.ship)) {
-        GetScreenTransform()->paused = true;
-        tp_ui.SetShip(id);
+    if (GlobalGetState()->focused_ship == id) {
+        GetScreenTransform()->focus = position.cartesian;
+    } else {
+        GlobalGetState()->focused_ship = id;
     }
+}
+
+void Ship::_OnNewPlanClicked() {
+    TransferPlanUI& tp_ui = GlobalGetState()->active_transfer_plan;
+    if (tp_ui.IsActive() || IsIdValid(tp_ui.ship)) {
+        return;
+    }
+
+    GetScreenTransform()->paused = true;
+
+    // Append new plan
+
+    ASSERT(prepared_plans_count != 0 || is_parked)
+    if (prepared_plans_count >= SHIP_MAX_PREPARED_PLANS) {
+        printf("Maximum transfer plan stack reached (ship %s)\n", name);
+        return;
+    }
+
+    prepared_plans[prepared_plans_count] = TransferPlan();
+    plan_edit_index = prepared_plans_count;
+
+    time_type min_time = 0;
+    if (plan_edit_index == 0) {
+        prepared_plans[plan_edit_index].departure_planet = parent_planet;
+        min_time = GlobalGetNow();
+    } else {
+        prepared_plans[plan_edit_index].departure_planet = prepared_plans[plan_edit_index - 1].arrival_planet;
+        min_time = prepared_plans[plan_edit_index - 1].arrival_time;
+    }
+
+    tp_ui.Make();
+    tp_ui.SetPlan(&prepared_plans[plan_edit_index] ,id, min_time, 1e20);
+    prepared_plans_count++;
 }
 
 void Ship::Make(const char *p_name) {
@@ -18,6 +51,7 @@ void Ship::Make(const char *p_name) {
     max_capacity = 100000;
     is_parked = true;
     prepared_plans_count = 0;
+    plan_edit_index = -1;
     /*color = (Color) {
         GetRandomValue(0, 255),
         GetRandomValue(0, 255),
@@ -50,9 +84,8 @@ bool Ship::HasMouseHover(double* min_distance) const {
         return false;
     }
 }
-
-
-TransferPlan* Ship::NewTransferPlan() {
+/*
+TransferPlan* Ship::_NewTransferPlan() {
     ASSERT(prepared_plans_count != 0 || is_parked)
     if (prepared_plans_count >= SHIP_MAX_PREPARED_PLANS) {
         printf("Maximum transfer plan stack reached (ship %s)\n", name);
@@ -67,10 +100,11 @@ TransferPlan* Ship::NewTransferPlan() {
     }
     prepared_plans_count++;
     return GetEditedTransferPlan();
-}
+}*/
 
 TransferPlan* Ship::GetEditedTransferPlan() {
-    return &prepared_plans[prepared_plans_count - 1];
+    if (plan_edit_index < 0) return NULL;
+    return &prepared_plans[plan_edit_index];
 }
 
 void Ship::ConfirmEditedTransferPlan() {
@@ -91,7 +125,7 @@ void Ship::ConfirmEditedTransferPlan() {
         return;
     }
     printf("Assigning transfer plan %f to ship %s\n", tp.arrival_time, name);
-    confirmed_plans_count = prepared_plans_count;
+    plan_edit_index = -1;
 }
 
 void Ship::CloseEditedTransferPlan() {
@@ -109,15 +143,31 @@ void Ship::PopTransferPlan(int index) {
         prepared_plans[i] = prepared_plans[i+1];
     }
     prepared_plans_count--;
-    if (index < confirmed_plans_count) {
-        confirmed_plans_count--;
+    if (index == plan_edit_index) {
+        plan_edit_index = -1;
     }
+}
+
+void Ship::StartEditingPlan(int index) {
+    TransferPlanUI& tp_ui = GlobalGetState()->active_transfer_plan;
+    time_type min_time = 0;
+    if (prepared_plans_count == 0) {
+        prepared_plans[prepared_plans_count].departure_planet = parent_planet;
+        min_time = GlobalGetNow();
+    } else {
+        prepared_plans[prepared_plans_count].departure_planet = prepared_plans[prepared_plans_count - 1].arrival_planet;
+        min_time = prepared_plans[prepared_plans_count - 1].arrival_time;
+    }
+
+    plan_edit_index = index;
+    tp_ui.SetPlan(&prepared_plans[index], id, min_time, 1e20);
 }
 
 void Ship::Update() {
     time_type now = GlobalGetNow();
 
-    if (confirmed_plans_count == 0) {
+    //if (prepared_plans_count == 0 || (plan_edit_index > 0 && prepared_plans_count == 1)) {
+    if (prepared_plans_count - (plan_edit_index > 0) <= 0) {
         position = GetPlanet(parent_planet).position;
     } else {
         const TransferPlan& tp = prepared_plans[0];
@@ -153,7 +203,10 @@ void Ship::Draw(const CoordinateTransform* c_transf) const {
     //printf("draw_pos: %f, %f\n", draw_pos.x, draw_pos.y);
     _DrawShipAt(draw_pos, color);
 
-    for (int i=0; i < confirmed_plans_count; i++) {
+    for (int i=0; i < prepared_plans_count; i++) {
+        if (i == plan_edit_index) {
+            continue;
+        }
         const TransferPlan& plan = prepared_plans[i];
         OrbitPos to_departure = OrbitGetPosition(
             &plan.transfer_orbit[plan.primary_solution], 
@@ -163,10 +216,15 @@ void Ship::Draw(const CoordinateTransform* c_transf) const {
             &plan.transfer_orbit[plan.primary_solution], 
             plan.arrival_time
         );
-        DrawOrbitBounded(&plan.transfer_orbit[plan.primary_solution], to_departure, to_arrival, 0, ColorAlpha(color, i == 0 ? 1 : 0.5));
+        DrawOrbitBounded(&plan.transfer_orbit[plan.primary_solution], to_departure, to_arrival, 0, 
+            ColorAlpha(color, i == highlighted_plan_index ? 1 : 0.5)
+        );
+        if (i == plan_edit_index){
+            DrawOrbitBounded(&plan.transfer_orbit[plan.primary_solution], to_departure, to_arrival, 0, MAIN_UI_COLOR);
+        }
     }
-    if (confirmed_plans_count > 0) {
-        const TransferPlan& last_tp = prepared_plans[confirmed_plans_count- 1];
+    if (plan_edit_index >= 0 && IsIdValid(prepared_plans[plan_edit_index].arrival_planet)) {
+        const TransferPlan& last_tp = prepared_plans[plan_edit_index];
         OrbitPos last_pos = OrbitGetPosition(
             &GetPlanet(last_tp.arrival_planet).orbit, 
             last_tp.arrival_time
@@ -187,7 +245,9 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
             _OnClicked();
         }
     }
-    if (mouse_hover || GlobalGetState()->active_transfer_plan.ship == id) {
+
+    highlighted_plan_index = -1;
+    if (mouse_hover || GlobalGetState()->active_transfer_plan.ship == id || GlobalGetState()->focused_ship == id) {
         int text_size = 16;
         UIContextCreate(
             GetScreenWidth() - 20*text_size - 5, 5 + 200,
@@ -241,25 +301,32 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
 
             snprintf(tp_str[1], 40, "  %s >> %s", departure_planet_name, arrival_planet_name);
 
+            // Double Button
             UIContextPushInset(2, UIContextCurrent().GetLineHeight() * 2);
-                UIContextPushHSplit(0, -32);
-                    UIContextEnclose(0, 0, BG_COLOR, PALETTE_BLUE);
-                    UIContextWrite(tp_str[0]);
-                    UIContextWrite(tp_str[1]);
-                    if (UIContextAsButton() & BUTTON_STATE_FLAG_JUST_PRESSED) {
-                        // TBD: edit previous transfer
-                        PopTransferPlan(i);
-                    }
-                UIContextPop();
-                UIContextPushHSplit(-32, -1);
-                    //UIContextCurrent().text_size = text_size*2;
-                    UIContextWrite("X");
-                    UIContextEnclose(0, 0, BG_COLOR, PALETTE_BLUE);
-                    if (UIContextAsButton() & BUTTON_STATE_FLAG_JUST_PRESSED) {
-                        PopTransferPlan(i);
-                    }
-                UIContextPop();
+            UIContextPushHSplit(0, -32);
+            UIContextEnclose(0, 0, BG_COLOR, PALETTE_BLUE);
+            UIContextWrite(tp_str[0]);
+            UIContextWrite(tp_str[1]);
+            ButtonStateFlags button_results = UIContextAsButton();
+            if (button_results & BUTTON_STATE_FLAG_HOVER) {
+                highlighted_plan_index = i;
+            }
+            if (button_results & BUTTON_STATE_FLAG_JUST_PRESSED) {
+                StartEditingPlan(i);
+            }
             UIContextPop();
+            UIContextPushHSplit(-32, -1);
+            //UIContextCurrent().text_size = text_size*2;
+            UIContextWrite("X");
+            UIContextEnclose(0, 0, BG_COLOR, PALETTE_BLUE);
+            if (UIContextAsButton() & BUTTON_STATE_FLAG_JUST_PRESSED) {
+                PopTransferPlan(i);
+            }
+            UIContextPop();
+            UIContextPop();
+        }
+        if (UIContextDirectButton("+", 10) & BUTTON_STATE_FLAG_JUST_PRESSED) {
+            _OnNewPlanClicked();
         }
     }
 }

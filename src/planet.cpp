@@ -29,8 +29,10 @@ void Planet::_OnClicked() {
         && !IsIdValid(tp_ui.plan->arrival_planet)
     ) {
         tp_ui.SetDestination(id);
-    } else {
+    } else if (GlobalGetState()->focused_planet == id) {
         GetScreenTransform()->focus = position.cartesian;
+    } else {
+        GlobalGetState()->focused_planet = id;
     }
 }
 

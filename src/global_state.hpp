@@ -30,16 +30,9 @@ struct GlobalState {
     time_type time;
     time_type prev_time;
     CoordinateTransform c_transf;
-
-/*
-    int planet_count;
-    Planet planets[MAX_PLANETS];
-    int ship_count;
-    Ship ships[MAX_SHIPS];
-    int clickable_count;
-*/
     TransferPlanUI active_transfer_plan;
-
+    entity_id_t focused_planet;
+    entity_id_t focused_ship;
 
     // Lifecycle
     void Make(time_type time);

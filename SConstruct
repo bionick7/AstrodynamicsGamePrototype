@@ -7,7 +7,8 @@ lib_dir = 'lib'
 
 # Define compiler and flags
 env = Environment(CPPPATH = src_dirs + include_dirs)
-env.Append(CCFLAGS = ['-Wall', '-ggdb'])
+env["CC"] = "gcc"
+env.Append(CCFLAGS = ['-Wall', '-ggdb', "-g", "-rdynamic"])
 env.Append(LIBPATH = [lib_dir])
 env.Append(LIBS = [File('lib/libraylib.a'), 'm'])  # Add your libraries here
 defines = []
