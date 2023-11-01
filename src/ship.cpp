@@ -248,6 +248,7 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
                     UIContextWrite(tp_str[1]);
                     if (UIContextAsButton() & BUTTON_STATE_FLAG_JUST_PRESSED) {
                         // TBD: edit previous transfer
+                        PopTransferPlan(i);
                     }
                 UIContextPop();
                 UIContextPushHSplit(-32, -1);

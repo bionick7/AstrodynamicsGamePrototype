@@ -20,13 +20,18 @@ double _Mean2Ecc(double M, double e) {
     int counter = 0;
     double δ;
     do {
-        δ = M + e*sin(E) - E;
+        if (e < 0.1) {
+            δ = M + e*sin(E) - E;
+        } else {
+            δ = -(E - e*sin(E) - M) / (1 - e*cos(E));
+        }
         E += δ;
         if (counter++ > 1000) {
             printf("Counter exceeded for M = %f, e = %f\n", M, e);
             return E;
         }
     } while (fabs(δ) > 1e-6);
+
     //printf("E = %f\n", E);
     return E;
 }

@@ -7,9 +7,20 @@
 
 #include <time.h>
 
-double _lambert(double x, double K, int solution) {
+double _Lambert(double x, double K, int solution) {
     // x² = a_min/a
     // y = t_f * sqrt(mu / (a_min*a_min*a_min))
+    if (fabs(x) < 1e-3 && solution != 1 && solution != 3) {
+        // approaching singularity
+        // Instead return Taylor expansion up to O(x³)
+        double K2 = K*K;
+        switch (solution) {
+        case 0: return 4.0/3.0 * (1 - K2*K) + 0.4 * (1 - K2*K2*K) * x*x;
+        case 2: return 4.0/3.0 * (1 + K2*K) + 0.4 * (1 + K2*K2*K) * x*x;
+        case 4: return 4.0/3.0 * (1 - K2*K) - 0.4 * (1 - K2*K2*K) * x*x;
+        case 5: return 4.0/3.0 * (1 + K2*K) - 0.4 * (1 + K2*K2*K) * x*x;
+        }
+    }
     double α, β;
     if (solution < 4) {
         α = 2 * asin(x);
@@ -29,7 +40,7 @@ double _lambert(double x, double K, int solution) {
     FAIL("Solution provided to lambert solver must be 0, 1, 2, 3, 4 or 5")
 }
 
-double _lambert_derivative(double x, double K, int solution) {
+double _LambertDerivative(double x, double K, int solution) {
     // x² = a_min/a
     // y = t_f * sqrt(mu / (a_min*a_min*a_min))
     double α = 2 * asinh(x);
@@ -43,27 +54,27 @@ double _lambert_derivative(double x, double K, int solution) {
     FAIL("Derivative only implemented for cases 4 and 5")
 }
 
-double _solve_lambert_between_bounds(double y, double K, double xl, double xr, int solution) {
-    double yl = _lambert(xl, K, solution) - y;
-    double yr = _lambert(xr, K, solution) - y;
+double _SolveLambertBetweenBounds(double y, double K, double xl, double xr, int solution) {
+    double yl = _Lambert(xl, K, solution) - y;
+    double yr = _Lambert(xr, K, solution) - y;
     if (yl*yr > 0.0) {FAIL_FORMAT("yl = %f and yr = %f have the same sign (y = %f, xl = %f, xr = %f, K = %f, sol = %d\n)", yl, yr, y, xl, xr, K, solution);}
     //ASSERT(yl*yr < 0.0)
     int counter = 0;
     double xm, ym;
     do {
         xm = (xr + xl) / 2.0;
-        ym = _lambert(xm, K, solution) - y;
+        ym = _Lambert(xm, K, solution) - y;
         if (ym * yr < 0.0) xl = xm;
         else xr = xm;
         if (counter++ > 1000) FAIL("Counter exceeded")
     } while (fabs(ym) > 1e-6 * y);
     
-    double test_y = _lambert(xm, K, solution);
+    double test_y = _Lambert(xm, K, solution);
     ASSERT_ALOMST_EQUAL(test_y, y)
     return xm;
 }
 
-double _solve_lambert_by_newton(double y, double K, int solution) {
+double _SolveLambertWithNewton(double y, double K, int solution) {
     double xs;
     switch (solution) {
     case 4: xs = 2 * (K*K - 1) / y; break;
@@ -74,13 +85,13 @@ double _solve_lambert_by_newton(double y, double K, int solution) {
     int counter = 0;
     double ys, dydx_s;
     do {
-        ys = _lambert(xs, K, solution) - y;
-        dydx_s = _lambert_derivative(xs, K, solution);
+        ys = _Lambert(xs, K, solution) - y;
+        dydx_s = _LambertDerivative(xs, K, solution);
         xs -= ys / dydx_s;
         if (counter++ > 1000) FAIL_FORMAT("Counter exceeded y=%f K=%f, solution=%d, x settled at %f with dx %f ", y, K, solution, xs, ys / dydx_s)
     } while (fabs(ys) > 1e-6);
     
-    double test_y = _lambert(xs, K, solution);
+    double test_y = _Lambert(xs, K, solution);
     ASSERT_ALOMST_EQUAL(test_y, y)
     return xs;
 }
@@ -111,8 +122,8 @@ void TransferPlanSolve(TransferPlan* tp) {
     double K = sqrt((r_sum - c) / (r_sum + c));
     double y = (t2 - t1) * sqrt(mu / (a_min*a_min*a_min));
 
-    bool is_ellipse[2] =  {y > _lambert(1e-3, K, 0), y > _lambert(1e-3, K, 2)};
-    bool first_solution[2] = { y < _lambert(1, K, 0), y < _lambert(1, K, 2) };
+    bool is_ellipse[2] =  {y > _Lambert(1e-3, K, 0), y > _Lambert(1e-3, K, 2)};
+    bool first_solution[2] = { y < _Lambert(1, K, 0), y < _Lambert(1, K, 2) };
 
     double aa[2];
 
@@ -120,15 +131,15 @@ void TransferPlanSolve(TransferPlan* tp) {
     for (int i=0; i < 2; i++) {
         if (is_ellipse[i]) {
             int lambert_case = (first_solution[i] ? 0 : 1) + i*2;
-            double x = _solve_lambert_between_bounds(y, K, 1e-5, 1.0, lambert_case);
+            double x = _SolveLambertBetweenBounds(y, K, 1e-5, 1.0, lambert_case);
             aa[i] = a_min / (x*x);
         } else {
             int lambert_case = i + 4;
             double x;
-            if (y > _lambert(-2, K, i + 4)) {
-                x = _solve_lambert_between_bounds(y, K, -2, 1e-5, lambert_case);
+            if (y > _Lambert(-2, K, i + 4)) {
+                x = _SolveLambertBetweenBounds(y, K, -2, 1e-5, lambert_case);
             } else {
-                x = _solve_lambert_by_newton(y, K, lambert_case);
+                x = _SolveLambertWithNewton(y, K, lambert_case);
             }
             aa[i] = -a_min / (x*x);
         }
@@ -203,8 +214,8 @@ int TransferPlanTests() {
     for (double K = 0.0; K < 1.0; K += 0.2) {
         for(double x = -5.0; x < -0.1; x += 0.1) {
             for (int solution = 4; solution <= 5; solution++) {
-                double ddx = _lambert_derivative(x, K, solution);
-                double central_difference = (_lambert(x + epsilon, K, solution) - _lambert(x - epsilon, K, solution)) / (2*epsilon);
+                double ddx = _LambertDerivative(x, K, solution);
+                double central_difference = (_Lambert(x + epsilon, K, solution) - _Lambert(x - epsilon, K, solution)) / (2*epsilon);
                 if (fabs(ddx - central_difference) > epsilon) {
                     printf("Error for x=%f, K=%f, solution=%d d/dx expected to be %f, but is measured to be %f\n", x, K, solution, ddx, central_difference);
                     return 1;
