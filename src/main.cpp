@@ -1,6 +1,9 @@
+#define RUN_TESTS
+
 #ifdef RUN_TESTS
 //#include "resource_allocator.hpp"
 #include "transfer_plan.hpp"
+#include "datahandling.hpp"
 
 #define RETURN_OR_CONTINUE(fn_call) {int test_result = fn_call; if(test_result != 0) return test_result;}
 
@@ -8,6 +11,7 @@ int main() {
     printf("Running Tests\n");
     //RETURN_OR_CONTINUE(AllocatorTest);
     RETURN_OR_CONTINUE(TransferPlanTests());
+    RETURN_OR_CONTINUE(DataNodeTests());
     printf("All tests Sucessfull\n");
     return 0;
 }

@@ -1,0 +1,8 @@
+key1: value1
+key2: value
+child1:
+  key1: child_value1
+  key2: >
+    child
+    value
+    2

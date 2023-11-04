@@ -9,8 +9,8 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdint.h>
-#include "entt.hpp"
 
+#include "entt.hpp"
 typedef entt::entity entity_id_t;
 
 /*
@@ -34,6 +34,10 @@ static inline Vector2 GetScreenCenter() { return (Vector2) {GetScreenWidth() / 2
 
 typedef double time_type;
 
+#define DEBUG
+
+#ifdef DEBUG
+
 #define ASSERT(condition) if (!(condition)) { printf("%s:%d :: Assertion failed: (%s)\n", __FILE__, __LINE__, #condition); }
 #define ASSERT_MSG(condition, msg) if (!(condition)) { printf("%s:%d :: Assertion failed: (%s) with message %s\n", __FILE__, __LINE__, #condition, msg); }
 #define ASSERT_ALOMST_EQUAL(v1, v2) if (fabs(v1 - v2) > v1 * 1e-5) { printf("%s:%d :: Assertion failed: %s (%f) != %s (%f)\n", __FILE__, __LINE__, #v1, v1, #v2, v2); }
@@ -49,6 +53,20 @@ typedef double time_type;
 #define SHOW_F(var) printf("%s:%d :: %s = %f\n", __FILE__, __LINE__, #var, var);
 #define SHOW_I(var) printf("%s:%d :: %s = %d\n", __FILE__, __LINE__, #var, var);
 #define SHOW_V2(var) printf("%s:%d :: %s = (%f, %f)\n", __FILE__, __LINE__, #var, (var).x, (var).y);
+
+#else
+
+#define ASSERT(condition) 
+#define ASSERT_MSG(condition, msg) 
+#define ASSERT_ALOMST_EQUAL(v1, v2) 
+#define NOT_IMPLEMENTED
+#define FAIL(msg)
+#define FAIL_FORMAT(msg, ...) 
+#define SHOW_F(var)
+#define SHOW_I(var)
+#define SHOW_V2(var)
+
+#endif  // DEBUG
 
 void FormatTime(char* buffer, int buffer_len, time_type time);
 void FormatDate(char* buffer, int buffer_len, time_type time);

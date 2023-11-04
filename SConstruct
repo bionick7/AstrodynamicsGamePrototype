@@ -8,9 +8,10 @@ lib_dir = 'lib'
 # Define compiler and flags
 env = Environment(CPPPATH = src_dirs + include_dirs)
 env["CC"] = "gcc"
-env.Append(CCFLAGS = ['-Wall', '-ggdb', "-g", "-rdynamic"])
+env.Append(CCFLAGS = ['-Wall', '-Wno-narrowing', '-ggdb', "-g", "-rdynamic"])
 env.Append(LIBPATH = [lib_dir])
-env.Append(LIBS = [File('lib/libraylib.a'), 'm'])  # Add your libraries here
+env.Append(LIBS = [File('lib/libraylib.a'), 'm', File('libyaml-0.so.2')])  # Add your libraries here
+# libyaml-0.so.2
 defines = []
 if build_tests:
     defines.append('RUN_TESTS')
@@ -27,4 +28,4 @@ for sdir in src_dirs:
 objs = env.Object(c_files)
 
 # Link the object files
-env.Program('main', objs)
+env.Program('app', objs)

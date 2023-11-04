@@ -79,6 +79,7 @@
         "transfer_plan.h": "c",
         "list": "cpp",
         "unordered_set": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "variant": "cpp"
     }
 }
