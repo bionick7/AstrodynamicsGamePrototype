@@ -80,6 +80,19 @@
         "list": "cpp",
         "unordered_set": "cpp",
         "stack": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "xtr1common": "cpp",
+        "xtree": "cpp",
+        "xhash": "cpp",
+        "xstring": "cpp",
+        "ios": "cpp",
+        "xfacet": "cpp",
+        "xiosbase": "cpp",
+        "xlocale": "cpp",
+        "xlocinfo": "cpp",
+        "xlocnum": "cpp",
+        "xmemory": "cpp",
+        "xstddef": "cpp",
+        "xutility": "cpp"
     }
 }

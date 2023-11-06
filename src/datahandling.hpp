@@ -53,12 +53,16 @@ struct DataNode {
     void SetArrayElemF(const char* key, int index, double value);
     void SetArrayElemChild(const char* key, int index, const DataNode& value);
 
+    void AddArrayElem(const char* key, const char* value);
+    void AddArrayElemChild(const char* key, const DataNode& value);
+
     const char* Get(const char* key, const char* def="", bool quiet=false) const;
     int GetI(const char* key, int def=0, bool quiet=false) const;
     double GetF(const char* key, double def=0, bool quiet=false) const;
     DataNode* GetChild(const char* key, bool quiet=false) const;
 
     size_t GetArrayLen(const char* key, bool quiet=false) const;
+    size_t GetArrayChildLen(const char* key, bool quiet=false) const;
     const char* GetArray(const char* key, int index, const char* def = "", bool quiet=false) const;
     int GetArrayI(const char* key, int index, int def=0, bool quiet=false) const;
     double GetArrayF(const char* key, int index, double def=0, bool quiet=false) const;
