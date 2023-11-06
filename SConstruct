@@ -1,3 +1,5 @@
+import os
+
 build_tests = False
 
 # Define variables
@@ -5,16 +7,39 @@ src_dirs = ['src']
 include_dirs = ['include']
 lib_dir = 'lib'
 
+# Platform specific libraries
+platform_libs = []
+
 # Define compiler and flags
-env = Environment(CPPPATH = src_dirs + include_dirs)
-env["CC"] = "gcc"
-env.Append(CCFLAGS = ['-Wall', '-Wno-narrowing', '-ggdb', "-g", "-rdynamic"])
-env.Append(LIBPATH = [lib_dir])
-env.Append(LIBS = [File('lib/libraylib.a'), 'm', File('libyaml-0.so.2')])  # Add your libraries here
-# libyaml-0.so.2
+if Platform() == "win32":
+    env = Environment(
+        CC = "gcc",
+        ENV={'PATH': os.environ['PATH'], 'TEMP': os.environ['TEMP']},
+        tools=['mingw']
+    )
+    lib_dir = 'lib/win'
+    platform_libs = [
+        'opengl32',
+        'gdi32',
+        'winmm',
+    ]
+else:
+    env = Environment(CC = "gcc")
+    lib_dir = 'lib/linux'
+
 defines = []
 if build_tests:
     defines.append('RUN_TESTS')
+
+env.Append(CPPPATH = src_dirs + include_dirs)
+env.Append(CCFLAGS = ['-Wall', '-Wno-narrowing', '-ggdb'])
+env.Append(LIBPATH = [lib_dir])
+env.Append(LIBS = [
+    File(lib_dir + '/libraylib.a'), 
+    File(lib_dir + '/libyaml.a'),
+    'm',
+    *platform_libs
+])
 env.Append(CPPDEFINES=defines)
 # Get a list of all C files in the source directories
 

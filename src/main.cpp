@@ -19,26 +19,7 @@ int main() {
 #include "global_state.hpp"
 #include "ui.hpp"
 
-#include <signal.h>
-#include <execinfo.h>
-
-void segfault_handler(int sig) {
-    // from https://stackoverflow.com/questions/77005/how-to-automatically-generate-a-stacktrace-when-my-program-crashes
-    void *array[10];
-    size_t size;
-
-    // get void*'s for all entries on the stack
-    size = backtrace(array, 10);
-
-    // print out all the frames to stderr
-    fprintf(stderr, "Error: signal %d:\n", sig);
-    backtrace_symbols_fd(array, size, STDERR_FILENO);
-    exit(1);
-}
-
 int main() {
-    signal(SIGSEGV, segfault_handler);
-
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Window title");
     SetExitKey(KEY_NULL);
     SetTargetFPS(60);

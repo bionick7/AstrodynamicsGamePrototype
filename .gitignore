@@ -1,8 +1,9 @@
-tudat/*
-tudat-bundle/*
-tudat-resources/*
-libyaml/*
-yaml-0.2.5/*
-main
+.vscode/*
+.vs/*
+
+dependencies/*
+
 app
+app.exe
+
 *.o

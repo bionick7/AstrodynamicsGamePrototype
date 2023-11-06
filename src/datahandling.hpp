@@ -18,75 +18,8 @@ enum class FileFormat {
     CSV,
     Auto
 };
-/*
-template<typename T>
-static bool TypeSupported(T s) {
-    return (std::is_same<T, bool>::value
-        || std::is_same<T, std::string>::value
-        || std::is_integral<T>::value
-        || std::is_floating_point<T>::value
-    );
-}
 
-template<typename T>
-static bool CanConvertTo(std::string s) {
-    if (!TypeSupported<T>()) {
-        return false;
-    }
-    if constexpr (std::is_same<T, bool>::value) {
-        return ...;
-    }
-    if constexpr (std::is_same<T, std::string>::value) {
-        return s;
-    }
-    if constexpr (std::is_integral<T>::value) {
-        return ...;
-    }
-    if constexpr (std::is_floating_point<T>::value) {
-        return ...;
-    }
-    return true;
-}
-
-
-template<typename T>
-static T TryConvertTo(std::string s, T* def, bool* sucess) {
-    if (!TypeSupported<T>()) {
-        sucess = false;
-        return def;
-    }
-    sucess = true;
-    if constexpr (std::is_same<T, bool>::value) {
-        return ...;
-    }
-    if constexpr (std::is_same<T, std::string>::value) {
-        return s;
-    }
-    if constexpr (std::is_integral<T>::value) {
-        return ...;
-    }
-    if constexpr (std::is_floating_point<T>::value) {
-        return ...;
-    }
-
-    sucess = false;
-    return def;
-}
-
-template<typename T>
-static std::string ConvertFrom(T s) {
-    if (!TypeSupported(typeid(T))) return "";
-    if constexpr (std::is_same<T, bool>::value) return s ? "yes" : "no";
-    if constexpr (std::is_same<T, std::string>::value) return s;
-    if constexpr (std::is_integral<T>::value) NOT_IMPLEMENTED();
-    if constexpr (std::is_floating_point<T>::value) NOT_IMPLEMENTED();
-    return s.ToString();
-}
-*/
-
-
-class DataNode {
-public:
+struct DataNode {
     static const DataNode Empty;
     bool IsReadOnly;
 
@@ -94,69 +27,60 @@ public:
     ~DataNode();
     DataNode(const DataNode& other);
 
+    static void CopyTo(const DataNode& from, DataNode* to);
+
     static DataNode FromFile(const char* filepath, FileFormat fmt = FileFormat::Auto, bool isReadonly = false);
     static std::vector<DataNode> ManyFromFile(const char* filepath, FileFormat fmt = FileFormat::Auto);
-    //void ToFile(std::string filepath);
-    std::string Serialize(FileFormat format) const;
-    std::string WriteJSON() const;
-    std::string WriteYAML() const;
+    void ToFile(const char* filepath, FileFormat format);
     static int FromYaml(DataNode* dn, yaml_parser_t* yaml, bool isReadonly=false, int recursion_depth=0);
-    //static DataNode FromYamlString(std::string s, bool isReadonly = false);
-    //static DataNode FromJson(const JsonObject& node, bool isReadonly = false);
+    void WriteJSON(std::ostream& os, int indentLevel=0) const;
+    void WriteYAML(std::ostream& os, int indentLevel=0) const;
 
-    bool Has(const std::string key) const;
-    void Remove(const std::string key);
+    bool Has(const char* key) const;
+    void Remove(const char* key);
+    void RemoveAt(const char* key, int index);
 
-    void Set(std::string key, std::string value);
-    void SetI(std::string key, int value);
-    void SetF(std::string key, double value);
-    void SetChild(std::string key, const DataNode& child);
+    void Set(const char* key, const char* value);
+    void SetI(const char* key, int value);
+    void SetF(const char* key, double value);
+    void SetChild(const char* key, const DataNode& child);
 
-    void SetArray(std::string key, size_t size);
-    void SetArrayChild(std::string key, size_t size);
+    void SetArray(const char* key, size_t size);
+    void SetArrayChild(const char* key, size_t size);
 
-    void SetArrayElem(std::string key, int index, std::string value);
-    void SetArrayElemI(std::string key, int index, int value);
-    void SetArrayElemF(std::string key, int index, double value);
-    void SetArrayElemChild(std::string key, int index, const DataNode& value);
+    void SetArrayElem(const char* key, int index, const char* value);
+    void SetArrayElemI(const char* key, int index, int value);
+    void SetArrayElemF(const char* key, int index, double value);
+    void SetArrayElemChild(const char* key, int index, const DataNode& value);
 
-    std::string Get(std::string key, std::string def = "", bool quiet = false) const;
-    int GetI(std::string key, int def = 0, bool quiet = false) const;
-    double GetF(std::string key, double def = 0, bool quiet = false) const;
-    DataNode* GetChild(std::string key, bool quiet = false) const;
+    const char* Get(const char* key, const char* def="", bool quiet=false) const;
+    int GetI(const char* key, int def=0, bool quiet=false) const;
+    double GetF(const char* key, double def=0, bool quiet=false) const;
+    DataNode* GetChild(const char* key, bool quiet=false) const;
 
-    size_t GetArrayLen(std::string key, bool quiet) const;
-    std::string GetArray(std::string key, int index, std::string def = "", bool quiet = false) const;
-    int GetArrayI(std::string key, int index, int def = 0, bool quiet = false) const;
-    double GetArrayF(std::string key, int index, double def = 0, bool quiet = false) const;
-    DataNode* GetArrayChild(std::string key, int index, bool quiet = false) const;
+    size_t GetArrayLen(const char* key, bool quiet=false) const;
+    const char* GetArray(const char* key, int index, const char* def = "", bool quiet=false) const;
+    int GetArrayI(const char* key, int index, int def=0, bool quiet=false) const;
+    double GetArrayF(const char* key, int index, double def=0, bool quiet=false) const;
+    DataNode* GetArrayChild(const char* key, int index, bool quiet=false) const;
 
     size_t GetChildCount();
     size_t GetChildArrayCount();
 
-    std::string GetChildKey(int index);
-    std::string GetChildArrayKey(int index);
+    const char* GetChildKey(int index);
+    const char* GetChildArrayKey(int index);
 
-    static bool FieldEquals(std::string lhs, std::string rhs);
+    //static bool FieldEquals(std::string lhs, std::string rhs);
 
-    // static DataNode GetDifferenceDict(const DataNode& base, const DataNode& target, bool recursive = true, bool strict = true);
-    // static DataNode ApplyDifferenceDict(const DataNode& base, const DataNode& diff, bool recursive = true);
-    // DataNode FindChildRecursively(std::function<bool(const DataNode&)> check);
-    //bool operator==(const DataNode& other) const;
-    //bool operator!=(const DataNode& other) const;
-    //friend std::ostream& operator<<(std::ostream& os, const DataNode& dt) {
-    //    os << dt.WriteYAML();
-    //    return os;
-    //}
+    void Inspect() {
+        WriteYAML(std::cout);
+    }
 
 private:
     std::map<std::string, std::string> Fields;
     std::map<std::string, DataNode*> Children;
     std::map<std::string, std::vector<std::string>> FieldArrays;
     std::map<std::string, std::vector<DataNode>*> ChildArrays;
-
-    static void WriteJSONInternal(std::ostream& os, const DataNode* node, int indentLevel);
-    static void WriteYAMLInternal(std::ostream& os, const DataNode* node, int indentLevel);
 };
 
 int DataNodeTests();
