@@ -7,11 +7,11 @@ void CoordinateTransform::Make(){
     space_scale = 1e-6;
     time_scale = 2048;
     paused = true;
-    focus = (Vector2) {0};
+    focus = {0};
 }
 
 Vector2 _FlipY(Vector2 a) {
-    return (Vector2) {a.x, -a.y};
+    return {a.x, -a.y};
 }
 
 Vector2 CoordinateTransform::TransformV(Vector2 p) const {
@@ -63,7 +63,7 @@ void CoordinateTransform::HandleInput(double delta_t) {
         // ((P - c) / s1)*v - ((P - c) / s2) + f1 = f2
         focus = Vector2Subtract(
             _InvTransformV(space_scale, focus, GetMousePosition()),
-            _InvTransformV(space_scale * scroll_ratio, (Vector2){0, 0}, GetMousePosition())
+            _InvTransformV(space_scale * scroll_ratio, {0, 0}, GetMousePosition())
         );
         space_scale *= scroll_ratio;
     }
@@ -100,11 +100,11 @@ void CoordinateTransform::HandleInput(double delta_t) {
 void CoordinateTransform::DrawUI() const {
     const char* text = TextFormat("II Time x %.1f", time_scale);
     if (!paused) text += 3;
-    Vector2 pos = (Vector2) { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(), text, 20, 1).x - 10, 10 };
+    Vector2 pos = { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(), text, 20, 1).x - 10, 10 };
     DrawTextEx(GetCustomDefaultFont(), text, pos, 20, 1, MAIN_UI_COLOR);
     char text_date[100];
     FormatDate(text_date, 100, GlobalGetNow());
-    pos = (Vector2) { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(), text_date, 20, 1).x - 10, 30 };
+    pos = { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(), text_date, 20, 1).x - 10, 30 };
     DrawTextEx(GetCustomDefaultFont(), text_date, pos, 20, 1, MAIN_UI_COLOR);
 }
 

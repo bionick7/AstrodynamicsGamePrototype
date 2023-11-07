@@ -32,7 +32,7 @@ double LerpFromArray(double t, double array[], int array_len) {
 }
 
 Vector2 FromPolar(double radius, double phase) {
-    return (Vector2) {
+    return {
         radius * cos(phase),
         radius * sin(phase)
     };
@@ -51,7 +51,7 @@ Vector2 Apply2DTransformInv(Vector2 origin, Vector2 x, Vector2 y, Vector2 inp) {
     // x = Ay + b
     // y = A⁻¹ (x - b)
     Vector2 solution = Vector2Subtract(inp, origin);
-    return Vector2Scale(Apply2DTransform((Vector2) {0}, (Vector2) {y.y, -x.y}, (Vector2) {-y.x, x.x}, solution), 1. / Determinant(x, y));
+    return Vector2Scale(Apply2DTransform({0}, {y.y, -x.y}, {-y.x, x.x}, solution), 1. / Determinant(x, y));
 }
 
 double Determinant(Vector2 column1, Vector2 column2) {

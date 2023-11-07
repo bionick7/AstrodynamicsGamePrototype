@@ -2,6 +2,7 @@ import os
 
 build_tests = False
 platform = "win"
+build = "release"
 
 # Define variables
 src_dirs = ['src']
@@ -32,8 +33,14 @@ def main():
     if build_tests:
         defines.append('RUN_TESTS')
 
+    flags = ['-Wall', '-Wno-narrowing', '-Wno-sign-compare']
+    if build == "debug":
+        flags.append("-ggdb")
+    else:
+        defines.append('LOGGING_DISABLE')
+
     env.Append(CPPPATH = src_dirs + include_dirs)
-    env.Append(CCFLAGS = ['-Wall', '-Wno-narrowing', '-ggdb'])
+    env.Append(CCFLAGS = flags)
     env.Append(LIBPATH = [lib_dir])
     env.Append(LIBS = [
         File(lib_dir + '/libraylib.a'), 

@@ -1,5 +1,5 @@
-#ifndef DATA_HANDLING_H
-#define DATA_HANDLING_H
+#ifndef DATA_NODE_H
+#define DATA_NODE_H
 
 #include "basic.hpp"
 
@@ -29,9 +29,9 @@ struct DataNode {
 
     static void CopyTo(const DataNode& from, DataNode* to);
 
-    static DataNode FromFile(const char* filepath, FileFormat fmt = FileFormat::Auto, bool isReadonly = false);
-    static std::vector<DataNode> ManyFromFile(const char* filepath, FileFormat fmt = FileFormat::Auto);
-    void ToFile(const char* filepath, FileFormat format);
+    static int FromFile(DataNode* out, const char* filepath, FileFormat fmt = FileFormat::Auto, bool isReadonly = false);
+    //static std::vector<DataNode> ManyFromFile(const char* filepath, FileFormat fmt = FileFormat::Auto);
+    //void ToFile(const char* filepath, FileFormat format);
     static int FromYaml(DataNode* dn, yaml_parser_t* yaml, bool isReadonly=false, int recursion_depth=0);
     void WriteJSON(std::ostream& os, int indentLevel=0) const;
     void WriteYAML(std::ostream& os, int indentLevel=0) const;
@@ -89,4 +89,4 @@ private:
 
 int DataNodeTests();
 
-#endif   // DATA_HANDLING_H
+#endif   // DATA_NODE_H

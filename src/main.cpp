@@ -19,14 +19,17 @@ int main() {
 #include "global_state.hpp"
 #include "ui.hpp"
 
-int main() {
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Window title");
+const char* WINDOW_TITLE = "Astro navigation game prototype";
+
+int main(int argc, const char** argv) {
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
     SetExitKey(KEY_NULL);
     SetTargetFPS(60);
     UIInit();
 
+    printf("cwd: '%s'\n", GetWorkingDirectory());
     GlobalGetState()->Make(1e6);
-    GlobalGetState()->Load("irrelevant for now");
+    GlobalGetState()->Load("resources/data/start_state.yaml");
 
     while (!WindowShouldClose()) {  
         GlobalGetState()->UpdateState(1./60.);

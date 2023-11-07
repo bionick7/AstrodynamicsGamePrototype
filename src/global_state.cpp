@@ -1,7 +1,7 @@
 #include "global_state.hpp"
 #include "ephemerides.hpp"
 #include "debug_drawing.hpp"
-#include <random>
+#include "logging.hpp"
 
 GlobalState global_state;
 
@@ -32,24 +32,26 @@ Ship& GetShip(entity_id_t id) {
 
 Planet& _GetPlanet(entity_id_t id, const char* file_name, int line) {
     if ((!global_state.registry.valid(id))) {
-        FAIL_FORMAT("Invalid id (called from %s:%d)", file_name, line)
+        FAIL("Invalid id (called from %s:%d)", file_name, line)
     }
     return global_state.registry.get<Planet>(id);
 }
 
 void GlobalState::_InspectState() {
-    /*printf("%d planets, %d ships\n", planet_count, ship_count);
-    printf("Orbits:\n");
-    for (int i=0; i < planet_count; i++) {
-        OrbitPrint(&planets[i].orbit);
-        printf("\n");
-    }
-    for (int i=0; i < ship_count; i++) {
-        ShipInspect(&ships[i]);
-    }*/
 }
 
-entity_id_t GlobalState::_AddPlanet(int index) {
+entity_id_t _AddPlanet(GlobalState* gs, const DataNode* data, double parent_mu) {
+    entity_id_t planet_entity = gs->registry.create();
+    //entity_map.insert({uuid, planet_entity});
+    Planet &planet = gs->registry.emplace<Planet>(planet_entity);
+    planet.Load(data, parent_mu);
+    planet.id = planet_entity;
+    planet.Update();
+
+    return planet_entity;
+}
+
+/*entity_id_t GlobalState::_AddPlanet(int index) {
     //printf("Adding Planet N°%d\n", index);
     const char* name = PLANET_NAMES[index];
     double sma = PLANET_TABLE[index*6];
@@ -73,7 +75,7 @@ entity_id_t GlobalState::_AddPlanet(int index) {
     planet.id = planet_entity;
     planet.Update();
     return planet_entity;
-}
+}*/
 
 entity_id_t GlobalState::_AddShip(int index, entity_id_t origin_planet) {
     //printf("Adding Ship N°%d\n", index);
@@ -101,13 +103,26 @@ void GlobalState::Make(time_type time) {
     focused_ship = GetInvalidId();
 }
 
-void GlobalState::Load(const char * file_path) {
+void GlobalState::Load(const char* file_path) {
+    DataNode planet_data = DataNode();
+    if (DataNode::FromFile(&planet_data, file_path, FileFormat::YAML, true) != 0) {
+        FAIL("Could not load save %s", file_path);
+    }
+
+    double parent_radius = planet_data.GetF("radius");
+    double parent_mu = planet_data.GetF("mass") * G;
+
+    //planet_data.Inspect();
+
     entity_id_t planets[100];
-    int num_planets = sizeof(PLANET_NAMES) / (sizeof(PLANET_NAMES[0]));
+    int num_planets = planet_data.GetArrayChildLen("satellites");
     int num_ships = sizeof(SHIP_NAMES) / (sizeof(SHIP_NAMES[0]));
+    INFO("%d planets, %d ships", num_planets, num_ships)
     if (num_planets > 100) num_planets = 100;
     for(int i=0; i < num_planets; i++) {
-        planets[i] = _AddPlanet(i);
+        const DataNode* data = planet_data.GetArrayChild("satellites", i);
+        planets[i] = _AddPlanet(this, data, parent_mu);
+        //printf("%d\n", planets[i]);
     }
     for(int i=0; i < num_ships; i++) {
         _AddShip(i, planets[2]);
@@ -148,7 +163,7 @@ void GlobalState::UpdateState(double delta_t) {
         planet.Update();
         planet.mouse_hover = false;
         if (planet.HasMouseHover(&min_distance)) {
-            hover = (Clickable) {TYPE_PLANET, planet.id};
+            hover = {TYPE_PLANET, planet.id};
         }
     }
     int total_ship_count = 0;
@@ -159,7 +174,7 @@ void GlobalState::UpdateState(double delta_t) {
         }
         ship.mouse_hover = false;
         if (ship.HasMouseHover(&min_distance)) {
-            hover = (Clickable) {TYPE_SHIP, ship.id};
+            hover = {TYPE_SHIP, ship.id};
         }
     }
     switch (hover.type) {
@@ -175,7 +190,7 @@ void GlobalState::DrawState() {
     auto planet_view = registry.view<Planet>();
     auto ship_view = registry.view<Ship>();
 
-    DrawCircleV(c_transf.TransformV((Vector2){0}), c_transf.TransformS(PARENT_RADIUS), MAIN_UI_COLOR);
+    DrawCircleV(c_transf.TransformV({0}), c_transf.TransformS(PARENT_RADIUS), MAIN_UI_COLOR);
     for (auto [_, planet] : planet_view.each()) {
         planet.Draw(&c_transf);
     }

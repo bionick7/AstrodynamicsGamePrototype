@@ -8,7 +8,7 @@ ResourceTransfer ResourceTransferInvert(ResourceTransfer rt) {
     return rt;
 }
 
-void Planet::Make(const char* p_name, double p_mu, double p_radius) {
+Planet::Planet(const char* p_name, double p_mu, double p_radius) {
     strcpy(name, p_name);
     mu = p_mu;
     radius = p_radius;
@@ -18,6 +18,35 @@ void Planet::Make(const char* p_name, double p_mu, double p_radius) {
         resource_capacity[i] = 1e7;
     }
     resource_delta[RESOURCE_FOOD] = -20;
+}
+
+void Planet::Load(const DataNode *data, double parent_mu) {
+    strcpy(name, data->Get("name", "UNNAMED PLANET"));
+    mu = data->GetF("mass", 0) * G;
+    radius = data->GetF("radius", 0);
+
+    int resource_len = data->GetArrayChildLen("resources", true);
+    for (int resource_index=0; resource_index < RESOURCE_MAX && resource_index < resource_len; resource_index++) {
+        DataNode* resource = data->GetArrayChild("resources", resource_index, true);
+        resource_stock[resource_index] = resource->GetF("stock") * 1000;
+        resource_delta[resource_index] = resource->GetF("delta") * 1000;
+    }
+
+    double sma = data->GetF("SMA");
+    double ann = data->GetF("Ann") * DEG2RAD;
+    orbit = OrbitFromElements(
+        sma,
+        data->GetF("Ecc"),
+        (data->GetF("LoA") + data->GetF("AoP")) * DEG2RAD,
+        parent_mu,
+        GlobalGetNow() - ann / sqrt(parent_mu / (sma*sma*sma)), 
+        strcmp(data->Get("retrograde", "n", true), "y") == 0
+    );
+}
+
+
+void Planet::Save(DataNode* data) const {
+
 }
 
 void Planet::_OnClicked() {
@@ -99,7 +128,7 @@ void Planet::Draw(const CoordinateTransform* c_transf) {
     int screen_x = (int)screen_pos.x, screen_y = (int)screen_pos.y;
     int text_h = 16;
     Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), name, text_h, 1);
-    DrawTextEx(GetCustomDefaultFont(), name, (Vector2) {screen_x - text_size.x / 2,  screen_y - text_size.y - 5}, text_h, 1, MAIN_UI_COLOR);
+    DrawTextEx(GetCustomDefaultFont(), name, {screen_x - text_size.x / 2,  screen_y - text_size.y - 5}, text_h, 1, MAIN_UI_COLOR);
 
     if (mouse_hover) {
         // Hover

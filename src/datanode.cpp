@@ -1,7 +1,7 @@
-#include "datahandling.hpp"
+#include "datanode.hpp"
+#include "logging.hpp"
 
-const DataNode DataNode::Empty;
-
+const DataNode DataNode::Empty = DataNode();
 
 bool hasEnding (std::string const &fullString, std::string const &ending) {
     if (fullString.length() >= ending.length()) {
@@ -68,7 +68,7 @@ int _YamlParse(DataNode* node, const char* filepath) {
     yaml_parser_initialize(&parser);
     FILE *file = fopen(filepath, "rb");
     if (file == NULL) {
-        printf("No such file: %s\n", filepath);
+        ERROR("No such file: %s\n", filepath);
         return 1;
     }
     yaml_parser_set_input_file(&parser, file);
@@ -88,33 +88,34 @@ int _YamlParse(DataNode* node, const char* filepath) {
     return status;
 }
 
-DataNode DataNode::FromFile(const char* filepath, FileFormat fmt, bool isReadonly) {
+int DataNode::FromFile(DataNode* out, const char* filepath, FileFormat fmt, bool isReadonly) {
     switch (fmt) {
-        //case FileFormat::Auto: {
-        //    if (strcmp(filepath + strlen(filepath) - 5, ".json")) {
-        //        fmt = FileFormat::JSON;
-        //    } else if (strcmp(filepath + strlen(filepath) - 4, ".csv")) {
-        //        fmt = FileFormat::CSV;
-        //    } else if (strcmp(filepath + strlen(filepath) - 5, ".yaml")) {
-        //        fmt = FileFormat::YAML;
-        //    } else {
-        //        return DataNode();
-        //    }
-        //    return FromFile(filepath, fmt, isReadonly);
-        //}
-        case FileFormat::YAML: {
-            DataNode res = DataNode();
-            _YamlParse(&res, filepath);
-            return res;
+        case FileFormat::Auto: {
+            if (IsFileExtension(filepath, ".json")) {
+                fmt = FileFormat::JSON;
+            } else if (IsFileExtension(filepath, ".csv")) {
+                fmt = FileFormat::CSV;
+            } else if (IsFileExtension(filepath, ".yaml")) {
+                fmt = FileFormat::YAML;
+            } else {
+                return 1;
+            }
+            FromFile(out, filepath, fmt, isReadonly);
+            return 0;
         }
+        case FileFormat::YAML: {
+            _YamlParse(out, filepath);
+            return 0;
+        }
+        case FileFormat::JSON:
         case FileFormat::CSV:
         default: {
-            return DataNode();
+            return 1;
         }
     }
 }
 
-std::vector<DataNode> DataNode::ManyFromFile(const char* filepath, FileFormat fmt) {
+/*std::vector<DataNode> DataNode::ManyFromFile(const char* filepath, FileFormat fmt) {
     std::vector<DataNode> result;
 
     //if (fmt == FileFormat::Auto) {
@@ -140,7 +141,7 @@ std::vector<DataNode> DataNode::ManyFromFile(const char* filepath, FileFormat fm
     }
 
     return result;
-}
+}*/
 
 enum DataNodeParseState {
     DN_PARESE_EXPECT_KEY,
@@ -169,11 +170,11 @@ int DataNode::FromYaml(DataNode* node, yaml_parser_t* parser, bool is_readonly, 
 
         // Get the next event.
         if (!yaml_parser_parse(parser, &event)){
-            printf("Parsing error\n");
+            ERROR("Parsing error\n");
             goto error;
         }
 
-        //printf("%sgot %d\n", indent, event.type);
+        //INFO("%sgot %d\n", indent, event.type);
         switch(event.type) {
             default:
             case YAML_STREAM_START_EVENT:
@@ -181,12 +182,12 @@ int DataNode::FromYaml(DataNode* node, yaml_parser_t* parser, bool is_readonly, 
             case YAML_DOCUMENT_END_EVENT:
                 break;  // Ignore
             case YAML_STREAM_END_EVENT:{
-                printf("Unexpected end  of stream encountered\n");
+                ERROR("Unexpected end  of stream encountered\n");
                 goto error;
             }
             case YAML_SCALAR_EVENT: {
                 char* scalar_value = (char*) event.data.scalar.value;
-                //printf("%ss%d: %s\n", indent, parse_state, scalar_value);
+                //INFO("%ss%d: %s\n", indent, parse_state, scalar_value);
                 switch (parse_state) {
                 case DN_PARESE_EXPECT_KEY:
                     strcpy(key_name, scalar_value);
@@ -220,9 +221,9 @@ int DataNode::FromYaml(DataNode* node, yaml_parser_t* parser, bool is_readonly, 
                 DataNode child_node = DataNode();
                 // Consumes everything up to and inlcuding the corresponding end event
                 int status = DataNode::FromYaml(&child_node, parser, is_readonly, recursion_depth+1);
-                //printf("%sChild constructed\n", indent);
+                //INFO("%sChild constructed\n", indent);
                 if (status != 0) {
-                    printf("Error occured in child '%s'\n", key_name);
+                    ERROR("Error occured in child '%s'\n", key_name);
                     goto error;
                 }
                 switch (parse_state) {
@@ -234,13 +235,13 @@ int DataNode::FromYaml(DataNode* node, yaml_parser_t* parser, bool is_readonly, 
                         node->AddArrayElemChild(key_name, child_node);
                         break;
                     case DN_PARESE_EXPECT_KEY:
-                        printf("Expected key, got map\n");
+                        ERROR("Expected key, got map\n");
                         goto error;
                 }
                 break;
             }
             case YAML_MAPPING_END_EVENT:
-                //printf("%sMap end\n", indent);
+                //INFO("%sMap end\n", indent);
                 node->IsReadOnly = is_readonly;
                 yaml_event_delete(&event);
                 free(indent);
@@ -249,7 +250,6 @@ int DataNode::FromYaml(DataNode* node, yaml_parser_t* parser, bool is_readonly, 
     }
 
     error:
-    printf("%sError exit\n", indent);
     free(indent);
     yaml_event_delete(&event);
     return 1;
@@ -358,7 +358,7 @@ const char* DataNode::Get(const char* key, const char* def, bool quiet) const {
         return it->second.c_str();
     }
     if (!quiet) {
-        printf("Key %s not found\n", key);
+        WARNING("Key %s not found\n", key)
     }
     return def;
 }
@@ -381,7 +381,7 @@ DataNode* DataNode::GetChild(const char* key, bool quiet) const {
         return it->second;
     }
     if (!quiet) {
-        printf("Key %s not found\n", key);
+        WARNING("Key %s not found\n", key)
     }
     return NULL;
 }
@@ -394,7 +394,7 @@ const char* DataNode::GetArray(const char* key, int index, const char* def, bool
         }
     }
     if (!quiet) {
-        printf("Key %s not found\n", key);
+        WARNING("Key %s not found\n", key)
     }
     return def;
 }
@@ -419,7 +419,7 @@ DataNode* DataNode::GetArrayChild(const char* key, int index, bool quiet) const 
         }
     }
     if (!quiet) {
-        printf("Key %s not found\n", key);
+        WARNING("Key %s not found\n", key)
     }
     return NULL;
 }
@@ -439,7 +439,7 @@ size_t DataNode::GetArrayLen(const char* key, bool quiet) const {
         return it->second.size();
     } else {
         if (!quiet) {
-            printf("Key %s not found\n", key);
+            WARNING("Key %s not found\n", key)
         }
         return 0;
     }
@@ -451,7 +451,7 @@ size_t DataNode::GetArrayChildLen(const char* key, bool quiet) const {
         return it->second->size();
     } else {
         if (!quiet) {
-            printf("Key %s not found\n", key);
+            WARNING("Key %s not found\n", key)
         }
         return 0;
     }
@@ -477,7 +477,7 @@ const char* DataNode::GetChildArrayKey(int index) {
 
 void DataNode::Set(const char* key, const char* value) {
     if (IsReadOnly) {
-        printf("Trying to set data on a readonly datanode at '%s' with '%s'\n", key, value);
+        WARNING("Trying to set data on a readonly datanode at '%s' with '%s'\n", key, value);
         return;
     }
     Fields.insert_or_assign(std::string(key), std::string(value));
@@ -501,7 +501,7 @@ void DataNode::SetChild(const char* key, const DataNode& val) {
     //CopyTo(val, child);
     DataNode* child = new DataNode(val);
     if (IsReadOnly) {
-        printf("Trying to set child on a readonly datanode at '%s'\n", key);
+        WARNING("Trying to set child on a readonly datanode at '%s'\n", key);
         return;
     }
     
@@ -510,7 +510,7 @@ void DataNode::SetChild(const char* key, const DataNode& val) {
 
 void DataNode::SetArray(const char* key, size_t size) {
     if (IsReadOnly) {
-        printf("Trying to set array on a readonly datanode at '%s'\n", key);
+        WARNING("Trying to set array on a readonly datanode at '%s'\n", key);
         return;
     }
     auto find = FieldArrays.find(key);
@@ -524,16 +524,16 @@ void DataNode::SetArray(const char* key, size_t size) {
 
 void DataNode::SetArrayElem(const char* key, int index, const char* value) {
     if (IsReadOnly) {
-        printf("Trying to set array element on a readonly datanode at '%s' [%d] with '%s'\n", key, index, value);
+        WARNING("Trying to set array element on a readonly datanode at '%s' [%d] with '%s'\n", key, index, value);
         return;
     }
     auto find = FieldArrays.find(key);
     if (find == FieldArrays.end()) {
-        printf("No such array '%s'\n", key);
+        WARNING("No such array '%s'\n", key);
         return;
     }
     if (index < 0 || index >= find->second.size()) {
-        printf("Invalid index at '%s' (%d >= %lld)\n", key, index, find->second.size());
+        WARNING("Invalid index at '%s' (%d >= %lld)\n", key, index, find->second.size());
         return;
     }
     find->second[index] = value;
@@ -541,7 +541,7 @@ void DataNode::SetArrayElem(const char* key, int index, const char* value) {
 
 void DataNode::SetArrayChild(const char* key, size_t size) {
     if (IsReadOnly) {
-        printf("Trying to set child array element on a readonly datanode at '%s'\n", key);
+        WARNING("Trying to set child array element on a readonly datanode at '%s'\n", key);
         return;
     }
     auto find = ChildArrays.find(key);
@@ -567,16 +567,16 @@ void DataNode::SetArrayElemF(const char* key, int index, double value) {
 
 void DataNode::SetArrayElemChild(const char* key, int index, const DataNode& value) {
     if (IsReadOnly) {
-        printf("Trying to set array element on a readonly datanode at '%s' [%d]\n", key, index);
+        WARNING("Trying to set array element on a readonly datanode at '%s' [%d]\n", key, index);
         return;
     }
     auto find = ChildArrays.find(key);
     if (find == ChildArrays.end()) {
-        printf("No such child array '%s'\n", key);
+        WARNING("No such child array '%s'\n", key);
         return;
     }
     if (index < 0 || index >= find->second->size()) {
-        printf("Invalid index at '%s' (%d >= %lld)\n", key, index, find->second->size());
+        WARNING("Invalid index at '%s' (%d >= %lld)\n", key, index, find->second->size());
         return;
     }
     find->second->at(index) = DataNode(value);
@@ -584,7 +584,7 @@ void DataNode::SetArrayElemChild(const char* key, int index, const DataNode& val
 
 void DataNode::AddArrayElem(const char* key, const char* value) {
     if (IsReadOnly) {
-        printf("Trying to set child array element on a readonly datanode at '%s'\n", key);
+        WARNING("Trying to set child array element on a readonly datanode at '%s'\n", key);
         return;
     }
     auto find = FieldArrays.find(key);
@@ -599,7 +599,7 @@ void DataNode::AddArrayElem(const char* key, const char* value) {
 
 void DataNode::AddArrayElemChild(const char* key, const DataNode& value) {
     if (IsReadOnly) {
-        printf("Trying to set array element on a readonly datanode at '%s'\n", key);
+        WARNING("Trying to set array element on a readonly datanode at '%s'\n", key);
         return;
     }
     auto find = ChildArrays.find(key);  // This crashes quietly without error smh
@@ -619,7 +619,7 @@ bool DataNode::Has(const char* key) const {
 
 void DataNode::Remove(const char* key) {
     if (IsReadOnly) {
-        printf("Trying to remove %s from invalid datanode", key);
+        WARNING("Trying to remove %s from invalid datanode", key);
         return;
     }
 

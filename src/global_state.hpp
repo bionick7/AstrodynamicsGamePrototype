@@ -4,9 +4,8 @@
 #include "planet.hpp"
 #include "ship.hpp"
 #include "transfer_plan.hpp"
-//#include "resource_allocator.hpp"
+#include "datanode.hpp"
 #include "coordinate_transform.hpp"
-#include <map>
 
 #define MAX_PLANETS 32
 #define MAX_SHIPS 32
@@ -43,7 +42,6 @@ struct GlobalState {
     void DrawState();
 
     entt::registry registry;
-    entity_id_t _AddPlanet(int index);
     entity_id_t _AddShip(int index, entity_id_t origin_planet);
     void _InspectState();
 };

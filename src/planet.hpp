@@ -2,7 +2,9 @@
 #define PLANET_H
 #include "basic.hpp"
 #include "astro.hpp"
+#include "datanode.hpp"
 #include "coordinate_transform.hpp"
+#include "logging.hpp"
 
 #define RESOURCE_CAP INT
 typedef double resource_count_t;
@@ -17,7 +19,7 @@ struct ResourceTransfer {
     resource_count_t quantity;
 };
 
-#define EMPTY_TRANSFER (ResourceTransfer) {-1, 0}
+#define EMPTY_TRANSFER {-1, 0}
 
 enum ResourceType {
     RESOURCE_NONE = -1,
@@ -46,7 +48,10 @@ struct Planet {
     bool mouse_hover;
     entity_id_t id;
 
-    void Make(const char* name, double mu, double radius);
+    Planet() { Planet("", 0, 0); }
+    Planet(const char* name, double mu, double radius);
+    void Load(const DataNode* data, double parent_mu);
+    void Save(DataNode* data) const;
 
     void _OnClicked();
     double ScreenRadius() const;

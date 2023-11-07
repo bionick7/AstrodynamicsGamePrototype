@@ -4,6 +4,7 @@
 #include "debug_drawing.hpp"
 #include "utils.hpp"
 #include "ui.hpp"
+#include "logging.hpp"
 
 #include <time.h>
 
@@ -57,7 +58,7 @@ double _LambertDerivative(double x, double K, int solution) {
 double _SolveLambertBetweenBounds(double y, double K, double xl, double xr, int solution) {
     double yl = _Lambert(xl, K, solution) - y;
     double yr = _Lambert(xr, K, solution) - y;
-    if (yl*yr > 0.0) {FAIL_FORMAT("yl = %f and yr = %f have the same sign (y = %f, xl = %f, xr = %f, K = %f, sol = %d\n)", yl, yr, y, xl, xr, K, solution);}
+    if (yl*yr > 0.0) {FAIL("yl = %f and yr = %f have the same sign (y = %f, xl = %f, xr = %f, K = %f, sol = %d\n)", yl, yr, y, xl, xr, K, solution)}
     //ASSERT(yl*yr < 0.0)
     int counter = 0;
     double xm, ym;
@@ -88,7 +89,7 @@ double _SolveLambertWithNewton(double y, double K, int solution) {
         ys = _Lambert(xs, K, solution) - y;
         dydx_s = _LambertDerivative(xs, K, solution);
         xs -= ys / dydx_s;
-        if (counter++ > 1000) FAIL_FORMAT("Counter exceeded y=%f K=%f, solution=%d, x settled at %f with dx %f ", y, K, solution, xs, ys / dydx_s)
+        if (counter++ > 1000) FAIL("Counter exceeded y=%f K=%f, solution=%d, x settled at %f with dx %f ", y, K, solution, xs, ys / dydx_s)
     } while (fabs(ys) > 1e-6);
     
     double test_y = _Lambert(xs, K, solution);
@@ -232,8 +233,8 @@ int TransferPlanTests() {
     ship = GetInvalidId();
     is_dragging_departure = false;
     is_dragging_arrival = false;
-    departure_handle_pos = (Vector2) {0};
-    arrival_handle_pos = (Vector2) {0};
+    departure_handle_pos = {0};
+    arrival_handle_pos = {0};
     redraw_queued = false;
     time_bounds[0] = 0;
 }
@@ -358,18 +359,18 @@ time_type _DrawHandle(
     }
     const int extend = 5;
     DrawLineV(
-        Vector2Subtract(minus_pos, (Vector2) {extend, 0}),
-        Vector2Add(minus_pos, (Vector2) {extend, 0}),
+        Vector2Subtract(minus_pos, {extend, 0}),
+        Vector2Add(minus_pos, {extend, 0}),
         c
     );
     DrawLineV(
-        Vector2Subtract(plus_pos, (Vector2) {extend, 0}),
-        Vector2Add(plus_pos, (Vector2) {extend, 0}),
+        Vector2Subtract(plus_pos, {extend, 0}),
+        Vector2Add(plus_pos, {extend, 0}),
         c
     );
     DrawLineV(
-        Vector2Subtract(plus_pos, (Vector2) {0, extend}),
-        Vector2Add(plus_pos, (Vector2) {0, extend}),
+        Vector2Subtract(plus_pos, {0, extend}),
+        Vector2Add(plus_pos, {0, extend}),
         c
     );
     if (DrawCircleButton(plus_pos, 10, c) & BUTTON_STATE_FLAG_JUST_PRESSED) {

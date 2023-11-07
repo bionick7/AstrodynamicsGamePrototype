@@ -2,6 +2,7 @@
 #include "debug_drawing.hpp"
 #include "utils.hpp"
 #include "coordinate_transform.hpp"
+#include "logging.hpp"
 
 double _True2Ecc(double θ, double e) {
     return atan(sqrt((1 - e) / (1 + e)) * tan(θ/2)) * 2;
@@ -132,13 +133,11 @@ Orbit OrbitFrom2PointsAndSMA(OrbitPos pos1, OrbitPos pos2, time_type time_at_pos
     double y_f = sqrt(B_sqr * (x_f*x_f / (A*A) - 1));
     if (cut_focus) y_f = -y_f;  // For a hyperbola this means, it's the more direct way
     double e = hypot(x_0 - x_f, y_0 - y_f) / (2 * fabs(sma));
-    if (isnan(e)) {
-        printf("nan\n");
-    }
+    ASSERT(!isnan(e))
 
     Vector2 canon_x = Vector2Normalize(Vector2Scale(Vector2Subtract(pos2.cartesian, pos1.cartesian), .5));
     Vector2 canon_y = Vector2Rotate(canon_x, PI/2);
-    Vector2 periapsis_dir = Apply2DTransform((Vector2){0}, canon_x, canon_y, (Vector2) {x_0 - x_f, y_0 - y_f});
+    Vector2 periapsis_dir = Apply2DTransform({0}, canon_x, canon_y, {(float)(x_0 - x_f), (float)(y_0 - y_f)});
     periapsis_dir = Vector2Scale(periapsis_dir, Sign(sma));
 
     // DEBUG DRAWING
@@ -148,8 +147,8 @@ Orbit OrbitFrom2PointsAndSMA(OrbitPos pos1, OrbitPos pos2, time_type time_at_pos
     // DebugDrawLine(pos1.cartesian, pos2.cartesian);
     // DebugDrawConic(pos1.cartesian, Vector2Scale(Vector2Normalize(Vector2Subtract(pos2.cartesian, pos1.cartesian)), fabs(E)), -fabs(A));
     // DebugDrawLine(
-    //     Apply2DTransform(canon_center, canon_x, canon_y, (Vector2) {x_0, y_0}),
-    //     Apply2DTransform(canon_center, canon_x, canon_y, (Vector2) {x_f, y_f})
+    //     Apply2DTransform(canon_center, canon_x, canon_y, {x_0, y_0}),
+    //     Apply2DTransform(canon_center, canon_x, canon_y, {x_f, y_f})
     // );
 
     double lop = atan2(periapsis_dir.y, periapsis_dir.x);
@@ -183,7 +182,7 @@ OrbitPos OrbitGetPosition(const Orbit* orbit, time_type time) {
 Vector2 OrbitGetVelocity(const Orbit* orbit, OrbitPos pos) {
     double cot_ɣ = -orbit->ecc * sin(pos.θ) / (1 + orbit->ecc * cos(pos.θ));
     Vector2 local_vel = Vector2Scale(
-        Vector2Normalize((Vector2) {cot_ɣ, 1}),
+        Vector2Normalize({(float) cot_ɣ, 1}),
          sqrt((2*orbit->mu) / pos.r - orbit->mu/orbit->sma) * (orbit->prograde ? -1 : 1)
     );
     return Vector2Rotate(local_vel, -pos.θ - orbit->lop);
@@ -251,7 +250,7 @@ void SampleOrbitBounded(const Orbit* orbit, double θ_1, double θ_2, Vector2* b
         double θ = Lerp(θ_1, θ_2, (double) i / (double) (buffer_size - 1));
         double r = p / (1 + orbit->ecc*cos(θ));
         double cot_ɣ = -orbit->ecc * sin(θ) / (1 + orbit->ecc * cos(θ));
-        Vector2 normal = Vector2Rotate(Vector2Normalize((Vector2) {1, -cot_ɣ}), θ + orbit->lop);
+        Vector2 normal = Vector2Rotate(Vector2Normalize({1, -(float)cot_ɣ}), θ + orbit->lop);
         buffer[i] = Vector2Add(FromPolar(r, θ + orbit->lop), Vector2Scale(normal, offset));
     }
 }

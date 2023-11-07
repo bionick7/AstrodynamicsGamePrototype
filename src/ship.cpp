@@ -23,7 +23,7 @@ void Ship::_OnNewPlanClicked() {
 
     ASSERT(prepared_plans_count != 0 || is_parked)
     if (prepared_plans_count >= SHIP_MAX_PREPARED_PLANS) {
-        printf("Maximum transfer plan stack reached (ship %s)\n", name);
+        ERROR("Maximum transfer plan stack reached (ship %s)", name);
         return;
     }
 
@@ -88,7 +88,7 @@ bool Ship::HasMouseHover(double* min_distance) const {
 TransferPlan* Ship::_NewTransferPlan() {
     ASSERT(prepared_plans_count != 0 || is_parked)
     if (prepared_plans_count >= SHIP_MAX_PREPARED_PLANS) {
-        printf("Maximum transfer plan stack reached (ship %s)\n", name);
+        ERROR("Maximum transfer plan stack reached (ship %s)", name);
         return NULL;
     }
     prepared_plans[prepared_plans_count] = TransferPlan();
@@ -112,19 +112,19 @@ void Ship::ConfirmEditedTransferPlan() {
     ASSERT(!is_parked || IsIdValid(parent_planet))
     TransferPlan& tp = prepared_plans[prepared_plans_count - 1];
     if (prepared_plans_count == 1 && parent_planet != tp.departure_planet) {
-        printf("Inconsistent transfer plan pushed for ship %s (does not start at current planet)\n", name);
+        ERROR("Inconsistent transfer plan pushed for ship %s (does not start at current planet)", name);
         return;
     }
     else if (prepared_plans_count > 1 && prepared_plans[prepared_plans_count - 2].arrival_planet != tp.departure_planet) {
-        printf("Inconsistent transfer plan pushed for ship %s (does not start at planet last visited)\n", name);
+        ERROR("Inconsistent transfer plan pushed for ship %s (does not start at planet last visited)", name);
         return;
     }
     double dv_tot = tp.dv1[tp.primary_solution] + tp.dv2[tp.primary_solution];
     if (dv_tot > max_dv) {
-        printf("Not enough DV %f > %f\n", dv_tot, max_dv);
+        ERROR("Not enough DV %f > %f", dv_tot, max_dv);
         return;
     }
-    printf("Assigning transfer plan %f to ship %s\n", tp.arrival_time, name);
+    INFO("Assigning transfer plan %f to ship %s", tp.arrival_time, name);
     plan_edit_index = -1;
 }
 
@@ -135,7 +135,7 @@ void Ship::CloseEditedTransferPlan() {
 void Ship::PopTransferPlan(int index) {
     // Does not call _EnsureContinuity to prevent invinite recursion
     if (index < 0 || index >= prepared_plans_count) {
-        printf("Tried to remove transfer plan at invalid index %d (ship %s)\n", index, name);
+        ERROR("Tried to remove transfer plan at invalid index %d (ship %s)", index, name);
         return;
     }
 
@@ -195,7 +195,7 @@ void Ship::Update() {
 }
 
 void _DrawShipAt(Vector2 pos, Color color) {
-    DrawRectangleV(Vector2SubtractValue(pos, 4.0f), (Vector2) {8, 8}, color);
+    DrawRectangleV(Vector2SubtractValue(pos, 4.0f), {8, 8}, color);
 }
 
 void Ship::Draw(const CoordinateTransform* c_transf) const {
@@ -239,7 +239,7 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
     if (mouse_hover) {
         // Hover
         DrawCircleLines(draw_pos.x, draw_pos.y, 10, RED);
-        DrawTextEx(GetCustomDefaultFont(), name, Vector2Add(draw_pos, (Vector2){5, 5}), 16, 1, color);
+        DrawTextEx(GetCustomDefaultFont(), name, Vector2Add(draw_pos, {5, 5}), 16, 1, color);
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             _OnClicked();
@@ -333,11 +333,11 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
 
 void Ship::Inspect() {
     if (is_parked) {
-        printf("%s : parked on %s, %f m/s dv\n", name, GetPlanet(parent_planet).name, max_dv);
+        INFO("%s : parked on %s, %f m/s d", name, GetPlanet(parent_planet).name, max_dv);
     } else {
-        printf("%s : in transfer[", name);
+        INFO("%s : in transfer[", name);
         //OrbitPrint(&next_plan.transfer_orbit[next_plan.primary_solution]);
-        printf("] %f m/s dv\n", max_dv);
+        INFO("] %f m/s dv", max_dv);
     }
 }
 
@@ -347,7 +347,7 @@ void Ship::_OnDeparture(const TransferPlan& tp) {
 
     char date_buffer[30];
     FormatTime(date_buffer, 30, tp.departure_time);
-    printf(":: On %s, \"%s\" picked up %f kg of %s on %s\n", 
+    INFO(":: On %s, \"%s\" picked up %f kg of %s on %s", 
         date_buffer,
         name,
         respource_qtt,
@@ -370,7 +370,7 @@ void Ship::_OnArrival(const TransferPlan& tp) {
 
     char date_buffer[30];
     FormatTime(date_buffer, 30, tp.arrival_time);
-    printf(":: On %s, \"%s\" delivered %f kg of %s to %s\n", 
+    INFO(":: On %s, \"%s\" delivered %f kg of %s to %s", 
         date_buffer,
         name,
         delivered,
@@ -382,7 +382,7 @@ void Ship::_OnArrival(const TransferPlan& tp) {
 }
 
 void Ship::_EnsureContinuity() {
-    printf("Ensure Continuity\n");
+    INFO("Ensure Continuity Call");
     if (prepared_plans_count == 0) return;
     entity_id_t planet_tracker = parent_planet;
     int start_index = 0;

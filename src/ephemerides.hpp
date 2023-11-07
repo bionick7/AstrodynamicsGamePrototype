@@ -1,4 +1,4 @@
-const double G = 6.6743015e-11;  // m³/(s²kg)
+//const double G = 6.6743015e-11;  // m³/(s²kg)
 
 const double PARENT_MU = 3.793e+16;  // m³/s²
 const double PARENT_RADIUS = 58.232e+6;  // m

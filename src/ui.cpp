@@ -1,4 +1,5 @@
 #include "ui.hpp"
+#include "logging.hpp"
 #include <stack>
 
 Font default_font;
@@ -99,7 +100,7 @@ int TextBox::GetLineHeight() {
 }
 
 void TextBox::Write(const char* text) {
-    Vector2 pos = (Vector2) {text_start_x + x_cursor, text_start_y + y_cursor};
+    Vector2 pos = {text_start_x + x_cursor, text_start_y + y_cursor};
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
     if (text_background.a != 0) {
         DrawRectangleV(pos, size, text_background);
@@ -109,7 +110,7 @@ void TextBox::Write(const char* text) {
 }
 
 void TextBox::WriteLine(const char* text) {
-    Vector2 pos = (Vector2) {text_start_x + x_cursor, text_start_y + y_cursor};
+    Vector2 pos = {text_start_x + x_cursor, text_start_y + y_cursor};
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
     if (text_background.a != 0) {
         DrawRectangleV(pos, size, text_background);
@@ -120,7 +121,7 @@ void TextBox::WriteLine(const char* text) {
 }
 
 ButtonStateFlags TextBox::WriteButton(const char* text, int inset) {
-    Vector2 pos = (Vector2) {text_start_x + x_cursor, text_start_y + y_cursor + text_margin_y};
+    Vector2 pos = {text_start_x + x_cursor, text_start_y + y_cursor + text_margin_y};
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
     if (inset >= 0) {
         size.x += 2*inset;
@@ -131,13 +132,13 @@ ButtonStateFlags TextBox::WriteButton(const char* text, int inset) {
     }
     x_cursor += size.x + text_margin_x;
     DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, PALETTE_BLUE);
-    bool is_in_area = CheckCollisionPointRec(GetMousePosition(), (Rectangle) {pos.x, pos.y, size.x, size.y});
+    bool is_in_area = CheckCollisionPointRec(GetMousePosition(), {pos.x, pos.y, size.x, size.y});
     _Advance(size);
     return _GetButtonState(is_in_area);
 }
 
 ButtonStateFlags TextBox::AsButton() {
-    bool is_in_area = CheckCollisionPointRec(GetMousePosition(), (Rectangle) {text_start_x, text_start_y, width, height});
+    bool is_in_area = CheckCollisionPointRec(GetMousePosition(), {(float)text_start_x, (float)text_start_y, (float)width, (float)height});
     return _GetButtonState(is_in_area);
 }
 
