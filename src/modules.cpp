@@ -13,7 +13,7 @@ ResourceTransfer ResourceTransferInvert(ResourceTransfer rt) {
 
 void Module::Effect(resource_count_t* resource_delta, resource_count_t* stats) const {
     for(int i=0; i < RESOURCE_MAX; i++) {
-        resource_delta[i] = resource_delta_contributions[i];
+        resource_delta[i] += resource_delta_contributions[i];
     }
     for (int i=0; i < STAT_MAX; i++) {
         stats[i] += stat_contributions[i];
@@ -39,21 +39,15 @@ int LoadModules(const DataNode* data) {
 
         const DataNode* resource_delta = mod_data->GetChild("resource_delta", true);
         if (resource_delta != NULL) {
-            for (int resource_index=0; resource_index < resource_delta->GetChildCount(); resource_index++) {
-                const char* resource_id = resource_delta->GetKey(resource_index);
-                double value = resource_delta->GetF(resource_id);
-
-                NOT_IMPLEMENTED
+            for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
+                mod.resource_delta_contributions[resource_index] = resource_delta->GetF(resources_names[resource_index], 0, true) * 1000;  // t -> kg
             }
         }
         
-        const DataNode* stats = mod_data->GetChild("stats", true);
+        const DataNode* stats = mod_data->GetChild("stat_increase", true);
         if (stats != NULL) {
-            for (int resource_index=0; resource_index < stats->GetChildCount(); resource_index++) {
-                const char* stat_name = stats->GetKey(resource_index);
-                double value = stats->GetF(stat_name);
-
-                NOT_IMPLEMENTED
+            for (int stat_index=0; stat_index < STAT_MAX; stat_index++) {
+                mod.stat_contributions[stat_index] = stats->GetF(stat_names[stat_index], 0, true) * 1000;  // t -> kg
             }
         }
 

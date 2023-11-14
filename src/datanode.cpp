@@ -467,7 +467,7 @@ size_t DataNode::GetArrayChildLen(const char* key, bool quiet) const {
     }
 }
 
-size_t DataNode::GetKeyCount() const {
+size_t DataNode::GetFieldCount() const {
     return Fields.size();
 }
 

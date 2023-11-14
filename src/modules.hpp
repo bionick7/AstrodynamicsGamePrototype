@@ -7,17 +7,12 @@ typedef double resource_count_t;
 typedef uint16_t module_index_t;
 const module_index_t MODULE_INDEX_INVALID = UINT16_MAX;
 
-static const char resources_names[2][30] = {
-    "WATER",
-    "FOOD "
-};
-
 struct ResourceTransfer {
     int resource_id;
     resource_count_t quantity;
 };
 
-#define EMPTY_TRANSFER {-1, 0}
+#define EMPTY_TRANSFER (ResourceTransfer) {-1, 0}
 
 enum ResourceType {
     RESOURCE_NONE = -1,
@@ -30,11 +25,21 @@ enum ResourceType {
     RESOURCE_MAX,
 };
 
+static const char resources_names[RESOURCE_MAX][30] = {
+    "water", // RESOURCE_WATER
+    "food"  // RESOURCE_FOOD
+};
+
 enum StatType {
     STAT_NONE = -1,
     STAT_POPULATION = 0,
     STAT_MAX,
 };
+
+static const char stat_names[STAT_MAX][30] = {
+    "population", // STAT_POPULATION
+};
+
 
 ResourceTransfer ResourceTransferInvert(ResourceTransfer rt);
 

@@ -68,7 +68,7 @@ struct DataNode {
     double GetArrayF(const char* key, int index, double def=0, bool quiet=false) const;
     DataNode* GetArrayChild(const char* key, int index, bool quiet=false) const;
 
-    size_t GetKeyCount() const;
+    size_t GetFieldCount() const;
     size_t GetChildCount() const;
     size_t GetArrayCount() const;
     size_t GetChildArrayCount() const;

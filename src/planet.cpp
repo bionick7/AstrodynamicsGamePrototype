@@ -23,15 +23,10 @@ void Planet::Load(const DataNode *data, double parent_mu) {
     mu = data->GetF("mass", mu, true) * G;
     radius = data->GetF("radius", radius, true);
 
-    if (data->Has("resources")) {
-        int resource_count = data->GetArrayChildLen("resources", true);
-        if (resource_count > RESOURCE_MAX) {
-            resource_count = RESOURCE_MAX;
-        }
-        for (int resource_index=0; resource_index < resource_count; resource_index++) {
-            DataNode* resource = data->GetArrayChild("resources", resource_index, true);
-            resource_stock[resource_index] = resource->GetF("stock") * 1000;
-            resource_delta[resource_index] = resource->GetF("delta") * 1000;
+    const DataNode* resource_node = data->GetChild("resource_stock", true);
+    if (resource_node != NULL) {
+        for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
+            resource_stock[resource_index] = resource_node->GetF(resources_names[resource_index], 0, true) * 1000;
         }
     }
 
@@ -41,6 +36,7 @@ void Planet::Load(const DataNode *data, double parent_mu) {
             module_count = MAX_PLANET_MODULES;
         }
         
+        SHOW_I(module_count)
         for (int i = 0; i < module_count; i++) {
             const char* module_id = data->GetArray("modules", i);
             modules[i] = GetModuleIndexById(module_id);
@@ -131,7 +127,7 @@ void Planet::RecalcStats() {
         if (modules[i] == MODULE_INDEX_INVALID) continue;
         const Module* module_ = GetModuleByIndex(modules[i]);
         if (module_ == NULL) continue;
-        module_->Effect(resource_delta, stats);
+        module_->Effect(&resource_delta[0], &stats[0]);
     }
 }
 
