@@ -63,7 +63,11 @@ void UIContextWrite(const char* text, bool linebreak=true);
 ButtonStateFlags UIContextDirectButton(const char* text, int inset);
 TextBox& UIContextCurrent();
 
+void UISetMouseHint(const char* text);
+
 void UIInit();
+void UIStart();
+void UIEnd();
 Font GetCustomDefaultFont();
 
 ButtonStateFlags DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color);

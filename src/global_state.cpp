@@ -1,6 +1,7 @@
 #include "global_state.hpp"
 #include "debug_drawing.hpp"
 #include "logging.hpp"
+#include "ui.hpp"
 
 GlobalState global_state;
 
@@ -148,7 +149,6 @@ void GlobalState::LoadGame(const char* file_path) {
 
 // Update
 void GlobalState::UpdateState(double delta_t) {
-    SetMouseCursor(MOUSE_CURSOR_DEFAULT);
     c_transf.HandleInput(delta_t);
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) || IsKeyPressed(KEY_ESCAPE)) {
@@ -217,6 +217,7 @@ void GlobalState::DrawState() {
     active_transfer_plan.Draw(&c_transf);
 
     // UI
+    UIStart();
     c_transf.DrawUI();
     for (auto [_, planet] : planet_view.each()) {
         if (active_transfer_plan.IsActive()){
@@ -234,6 +235,7 @@ void GlobalState::DrawState() {
     for (auto [_, ship] : ship_view.each()) {
         ship.DrawUI(&c_transf);
     }
+    UIEnd();
 
     DebugFlushText();
     //DrawFPS(0, 0);

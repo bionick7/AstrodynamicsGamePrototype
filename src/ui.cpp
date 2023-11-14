@@ -4,15 +4,6 @@
 
 Font default_font;
 
-void UIInit() {
-    default_font = LoadFontEx("resources/fonts/OCRAEXT.TTF", 16, NULL, 256);
-    //default_font = LoadFontEx("resources/fonts/GOTHIC.TTF", 16, NULL, 256);
-}
-
-Font GetCustomDefaultFont() {
-    return default_font;
-}
-
 void DrawTextAligned(const char* text, Vector2 pos, TextAlignment alignment, Color c) {
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, 16, 1);
     if (alignment & TEXT_ALIGNMENT_HCENTER) {
@@ -211,6 +202,35 @@ ButtonStateFlags UIContextDirectButton(const char* text, int inset) {
 
 TextBox& UIContextCurrent() {
     return text_box_stack.top();
+}
+
+static char mouseover_text[1024] = "";
+
+void UISetMouseHint(const char* text) {
+    strncpy(mouseover_text, text, 1024);
+}
+
+void UIInit() {
+    default_font = LoadFontEx("resources/fonts/OCRAEXT.TTF", 16, NULL, 256);
+    //default_font = LoadFontEx("resources/fonts/GOTHIC.TTF", 16, NULL, 256);
+}
+
+void UIStart() {
+    SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+    mouseover_text[0] = '\x00';
+}
+
+void UIEnd() {
+    // Draw mouse
+    Vector2 mouse_pos = GetMousePosition();
+    Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), mouseover_text, 16, 1);
+    DrawRectangleV(mouse_pos, text_size, BG_COLOR);
+    DrawRectangleLines(mouse_pos.x, mouse_pos.y, text_size.x, text_size.y, MAIN_UI_COLOR);
+    DrawTextEx(GetCustomDefaultFont(), mouseover_text, mouse_pos, 16, 1, MAIN_UI_COLOR);
+}
+
+Font GetCustomDefaultFont() {
+    return default_font;
 }
 
 ButtonStateFlags DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color) {

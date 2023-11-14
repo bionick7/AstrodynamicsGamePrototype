@@ -174,18 +174,9 @@ void Planet::Draw(const CoordinateTransform* c_transf) {
     }
 }
 
-void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, ResourceTransfer transfer) {
-    if (upper_quadrant) {
-        UIContextCreate(10, 10, 16*30, GetScreenHeight() / 2 - 20, 16, MAIN_UI_COLOR);
-    } else {
-        UIContextCreate(10, GetScreenHeight() / 2 + 10, 16*30, GetScreenHeight() / 2 - 20, 16, MAIN_UI_COLOR);
-    }
-    UIContextCurrent().Enclose(2, 2, BG_COLOR, MAIN_UI_COLOR);
-    UIContextWrite(name);
-    UIContextWrite("================");
+void _UIDrawResources(const resource_count_t resource_stock[], const resource_count_t resource_delta[], const ResourceTransfer& transfer) {
     for (int i=0; i < RESOURCE_MAX; i++) {
         char buffer[50];
-        strcpy(buffer, resources_names[i]);
         //sprintf(buffer, "%-10s %5d/%5d (%+3d)", resources_names[i], qtt, cap, delta);
         sprintf(buffer, "%-10s %3.1fT (%+3d T/d)", resources_names[i], resource_stock[i] / 1e3, (int)(resource_delta[i]/1e3));
         if (GlobalGetState()->active_transfer_plan.IsActive()) {
@@ -201,4 +192,54 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
         UIContextWrite("");
         //TextBoxLineBreak(&tb);
     }
+}
+
+void _UIDrawStats(const resource_count_t stats[]) {
+    for (int i=0; i < STAT_MAX; i++) {
+        char buffer[50];
+        sprintf(buffer, "%-10s %3.1f", stat_names[i], stats[i]);
+        UIContextWrite(buffer);
+        //TextBoxLineBreak(&tb);
+    }
+}
+
+void _UIDrawModule(Module* module) {
+    UIContextPushInset(3, 16);
+    ButtonStateFlags button_state = UIContextAsButton();
+    if (button_state & BUTTON_STATE_FLAG_HOVER) {
+        UIContextEnclose(1, 1, BG_COLOR, MAIN_UI_COLOR);
+        UISetMouseHint(module->description);
+    }
+    UIContextWrite(module->name);
+    UIContextPop();
+}
+
+void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, ResourceTransfer transfer) {
+    if (upper_quadrant) {
+        UIContextCreate(10, 10, 16*30, GetScreenHeight() / 2 - 20, 16, MAIN_UI_COLOR);
+    } else {
+        UIContextCreate(10, GetScreenHeight() / 2 + 10, 16*30, GetScreenHeight() / 2 - 20, 16, MAIN_UI_COLOR);
+    }
+    UIContextCurrent().Enclose(2, 2, BG_COLOR, MAIN_UI_COLOR);
+    UIContextWrite(name);
+    UIContextWrite("================");
+
+    _UIDrawResources(resource_stock, resource_delta, transfer);
+    UIContextWrite("================");
+    _UIDrawStats(stats);
+    UIContextWrite("================");
+
+    int current_width = UIContextCurrent().width;
+    UIContextPushInset(0, UIContextCurrent().height - UIContextCurrent().y_cursor);
+    UIContextPushHSplit(0, current_width/2);
+    for (int i=0; i < module_count; i++) {
+        _UIDrawModule(GetModuleByIndex(modules[i]));
+    }
+    UIContextPop();
+    UIContextPushHSplit(current_width/2, current_width);
+    for (int i=1; i < module_count; i++) {
+        _UIDrawModule(GetModuleByIndex(modules[i]));
+    }
+    UIContextPop();
+    UIContextPop();
 }
