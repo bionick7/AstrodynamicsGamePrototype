@@ -1,8 +1,10 @@
 import os
 
-build_tests = False
-platform = "win"
-build = "release"
+#platform = "win"
+platform = "linux"
+
+#build = "release"
+build = "debug"
 
 # Define variables
 src_dirs = ['src']
@@ -28,15 +30,17 @@ def main():
     else:
         env = Environment(CC = "gcc")
         lib_dir = 'lib/linux'
+        platform_libs = []
 
+
+    flags = []
     defines = []
-    if build_tests:
-        defines.append('RUN_TESTS')
-
-    flags = ['-Wall', '-Wno-narrowing', '-Wno-sign-compare']
+    flags += ['-Wall', '-Wno-narrowing', '-Wno-sign-compare']  # Warnings we care about
     if build == "debug":
         flags.append("-ggdb")
-    else:
+    elif build == "tests":
+        defines.append('RUN_TESTS')
+    elif build == "release":
         defines.append('LOGGING_DISABLE')
 
     env.Append(CPPPATH = src_dirs + include_dirs)
