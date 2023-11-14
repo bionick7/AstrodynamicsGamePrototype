@@ -1,0 +1,36 @@
+modules:
+- id: mod_water_extractor
+  name: Water extractor
+  description: >
+    Automated, but low yield water extraction facility 
+    Requires no population.
+  resource_delta:
+    water: +100  # t/day
+  build_conditions: []
+  build_cost: []
+
+- id: mod_water_mine
+  name: Water mine
+  description: '...'
+  resource_delta:
+    water: +200  # t/day
+  build_conditions: []
+  build_cost: []
+
+- id: mod_food_mine
+  name: Farmhouse
+  description: '...'
+  resource_delta:
+    food: +200  # t/day
+  build_conditions: []
+  build_cost: []
+
+- id: mod_pop_small
+  name: Small settlement
+  description: '...'
+  stat_increase:
+    population: 100
+  resource_delta:
+    food: -300  # t/day
+  build_conditions: []
+  build_cost: []

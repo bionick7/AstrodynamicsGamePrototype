@@ -44,14 +44,15 @@ void Ship::_OnNewPlanClicked() {
     prepared_plans_count++;
 }
 
-void Ship::Make(const char *p_name) {
-    strcpy(name, p_name);
-    max_dv = 10000;
-    v_e = 10000;
-    max_capacity = 100000;
+void Ship::Load(const DataNode* data) {
+    strcpy(name, data->Get("name", "UNNAMED"));
     is_parked = true;
     prepared_plans_count = 0;
     plan_edit_index = -1;
+    
+    max_capacity = data->GetF("capacity", 0) * 1000;  // t -> kg
+    max_dv = data->GetF("dv", 0) * 1000;  // km/s -> m/s
+    v_e = data->GetF("Isp", 0) * 1000;  // km/s -> m/s
     /*color = (Color) {
         GetRandomValue(0, 255),
         GetRandomValue(0, 255),

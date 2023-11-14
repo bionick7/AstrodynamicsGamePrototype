@@ -68,11 +68,15 @@ struct DataNode {
     double GetArrayF(const char* key, int index, double def=0, bool quiet=false) const;
     DataNode* GetArrayChild(const char* key, int index, bool quiet=false) const;
 
-    size_t GetChildCount();
-    size_t GetChildArrayCount();
+    size_t GetKeyCount() const;
+    size_t GetChildCount() const;
+    size_t GetArrayCount() const;
+    size_t GetChildArrayCount() const;
 
-    const char* GetChildKey(int index);
-    const char* GetChildArrayKey(int index);
+    const char* GetKey(int index) const;
+    const char* GetChildKey(int index) const;
+    const char* GetArrayKey(int index) const;
+    const char* GetChildArrayKey(int index) const;
 
     //static bool FieldEquals(std::string lhs, std::string rhs);
 

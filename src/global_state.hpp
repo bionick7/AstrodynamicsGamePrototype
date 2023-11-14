@@ -33,26 +33,33 @@ struct GlobalState {
     entity_id_t focused_planet;
     entity_id_t focused_ship;
 
+    //DataNode ephemerides;
+    //DataNode module_data;
+
+    // Very unelegant
+    double parent_radius;
+    double parent_mu;
+
     // Lifecycle
     void Make(time_type time);
-    void Load(const char* file_path);
+    void LoadConfigs(const char* ephemerides_path, const char* module_data_path);
+    void LoadGame(const char* file_path);
     // Update
     void UpdateState(double delta_t);
     // Draw
     void DrawState();
 
     entt::registry registry;
-    entity_id_t _AddShip(int index, entity_id_t origin_planet);
     void _InspectState();
 };
 
 GlobalState* GlobalGetState();
 time_type GlobalGetNow();
 time_type GlobalGetPreviousFrameTime();
+Planet* GetPlanetByName(const char* planet_name);
 
-
-Ship& GetShip(entity_id_t uuid);
 #define GetPlanet(uuid) _GetPlanet(uuid, __FILE__, __LINE__)
+Ship& GetShip(entity_id_t uuid);
 Planet& _GetPlanet(entity_id_t uuid, const char* file, int line);
 
 #endif // GLOBAL_STATE_H

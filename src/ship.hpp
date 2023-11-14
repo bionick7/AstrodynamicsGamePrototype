@@ -3,9 +3,9 @@
 
 #include "planet.hpp"
 #include "transfer_plan.hpp"
-
-
+#include "datanode.hpp"
 #define SHIP_MAX_PREPARED_PLANS 10
+
 
 struct Ship {
     // Inherent properties
@@ -37,7 +37,7 @@ struct Ship {
     // Identifier
     entity_id_t id;
 
-    void Make(const char* name);
+    void Load(const DataNode* data);
     double GetPayloadCapacity(double dv) const;
     
     bool HasMouseHover(double* min_distance) const;

@@ -1,5 +1,4 @@
 #include "global_state.hpp"
-#include "ephemerides.hpp"
 #include "debug_drawing.hpp"
 #include "logging.hpp"
 
@@ -37,7 +36,19 @@ Planet& _GetPlanet(entity_id_t id, const char* file_name, int line) {
     return global_state.registry.get<Planet>(id);
 }
 
+Planet* GetPlanetByName(const char* planet_name) {
+    // Returns NULL if planet_name not found
+    auto planet_view = global_state.registry.view<Planet>();
+    for (auto [_, planet] : planet_view.each()) {
+        if (strcmp(planet.name, planet_name) == 0) {
+            return &planet;
+        }
+    }
+    return NULL;
+}
+
 void GlobalState::_InspectState() {
+
 }
 
 entity_id_t _AddPlanet(GlobalState* gs, const DataNode* data, double parent_mu) {
@@ -51,45 +62,20 @@ entity_id_t _AddPlanet(GlobalState* gs, const DataNode* data, double parent_mu) 
     return planet_entity;
 }
 
-/*entity_id_t GlobalState::_AddPlanet(int index) {
-    //printf("Adding Planet N°%d\n", index);
-    const char* name = PLANET_NAMES[index];
-    double sma = PLANET_TABLE[index*6];
-    double ecc = PLANET_TABLE[index*6+1];
-    double lop = PLANET_TABLE[index*6+2];
-    double ann = PLANET_TABLE[index*6+3];
-    bool is_prograde = (PLANET_PROGRADE_FLAGS >> index) % 2;
-    double radius = PLANET_TABLE[index*6+4];
-    double mu = PLANET_TABLE[index*6+5];
+entity_id_t _AddShip(GlobalState* gs, const DataNode* data) {
+    //printf("Adding Ship N°%d\n", index)
 
-    auto planet_entity = registry.create();
-    //entity_map.insert({uuid, planet_entity});
-    Planet &planet = registry.emplace<Planet>(planet_entity);
-
-    planet.Make(name, mu, radius);
-    for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-        planet.resource_stock[resource_index] = PLANET_RESOURCE_STOCK_TABLE[index * RESOURCE_MAX + resource_index] * 1000;
-        planet.resource_delta[resource_index] = PLANET_RESOURCE_DELTA_TABLE[index * RESOURCE_MAX + resource_index] * 1000;
-    }
-    planet.orbit = OrbitFromElements(sma, ecc, lop, PARENT_MU, time -ann / sqrt(PARENT_MU / (sma*sma*sma)), is_prograde);
-    planet.id = planet_entity;
-    planet.Update();
-    return planet_entity;
-}*/
-
-entity_id_t GlobalState::_AddShip(int index, entity_id_t origin_planet) {
-    //printf("Adding Ship N°%d\n", index);
-    const char* name = SHIP_NAMES[index];
-
-    auto ship_entity = registry.create();
+    auto ship_entity = gs->registry.create();
     //entity_map.insert({uuid, ship_entity});
-    Ship &ship = registry.emplace<Ship>(ship_entity);
-
-    ship.Make(name);
-    ship.max_capacity = SHIP_STAT_TABLE[index*3] * 1000;
-    ship.max_dv = SHIP_STAT_TABLE[index*3 + 1] * 1000;
-    ship.v_e = SHIP_STAT_TABLE[index*3 + 2] * 1000;
-    ship.parent_planet = origin_planet;
+    Ship &ship = gs->registry.emplace<Ship>(ship_entity);
+    
+    ship.Load(data);
+    const char* planet_name = data->Get("planet", "NO NAME SPECIFIED");
+    const Planet* planet = GetPlanetByName(planet_name);
+    if (planet == NULL) {
+        FAIL("Error while initializing ship '%s': no such planet '%s'", ship.name, planet_name)
+    }
+    ship.parent_planet = planet->id;
     ship.id = ship_entity;
     ship.Update();
     return ship_entity;
@@ -103,29 +89,59 @@ void GlobalState::Make(time_type time) {
     focused_ship = GetInvalidId();
 }
 
-void GlobalState::Load(const char* file_path) {
-    DataNode planet_data = DataNode();
-    if (DataNode::FromFile(&planet_data, file_path, FileFormat::YAML, true) != 0) {
-        FAIL("Could not load save %s", file_path);
+void GlobalState::LoadConfigs(const char* ephemerides_path, const char* module_data_path) {
+    DataNode ephemerides;
+    DataNode module_data;
+    INFO("Loading Config")
+    if (DataNode::FromFile(&ephemerides, ephemerides_path, FileFormat::YAML, true) != 0) {
+        FAIL("Could not load save %s", ephemerides_path);
+    }
+    if (DataNode::FromFile(&module_data, module_data_path, FileFormat::YAML, true) != 0) {
+        FAIL("Could not load save %s", module_data_path);
     }
 
-    double parent_radius = planet_data.GetF("radius");
-    double parent_mu = planet_data.GetF("mass") * G;
-
-    //planet_data.Inspect();
-
-    entity_id_t planets[100];
-    int num_planets = planet_data.GetArrayChildLen("satellites");
-    int num_ships = sizeof(SHIP_NAMES) / (sizeof(SHIP_NAMES[0]));
-    INFO("%d planets, %d ships", num_planets, num_ships)
+    // Init planets
+    parent_radius = ephemerides.GetF("radius");
+    parent_mu = ephemerides.GetF("mass") * G;
+    int num_planets = ephemerides.GetArrayChildLen("satellites");
     if (num_planets > 100) num_planets = 100;
+    entity_id_t planets[100];
     for(int i=0; i < num_planets; i++) {
-        const DataNode* data = planet_data.GetArrayChild("satellites", i);
+        const DataNode* data = ephemerides.GetArrayChild("satellites", i);
         planets[i] = _AddPlanet(this, data, parent_mu);
         //printf("%d\n", planets[i]);
     }
+    
+    int num_modules = LoadModules(&module_data);
+
+    // TODO: load modules into more comprehensive memory
+
+    INFO("%d planets, %d modules", num_planets, num_modules)
+}
+
+void GlobalState::LoadGame(const char* file_path) {
+    DataNode game_data = DataNode();
+    if (DataNode::FromFile(&game_data, file_path, FileFormat::YAML, true) != 0) {
+        FAIL("Could not load save %s", file_path);
+    }
+
+    //planet_data.Inspect();
+
+    int num_ships = game_data.GetArrayChildLen("ships");
     for(int i=0; i < num_ships; i++) {
-        _AddShip(i, planets[2]);
+        _AddShip(this, game_data.GetArrayChild("ships", i));
+    }
+    const DataNode* planets = game_data.GetChild("planets", true);
+    if (planets != NULL){
+        for(int i=0; i < planets->GetChildCount(); i++) {
+            const char* planet_name = planets->GetChildKey(i);
+            const DataNode* planet_data = planets->GetChild(planet_name);
+            Planet* planet = GetPlanetByName(planet_name);
+            if (planet == NULL) { 
+                FAIL("Error while loading game at '%s': no such planet '%s'", file_path, planet_name)
+            }
+            planet->Load(planet_data, parent_mu);
+        }
     }
     _InspectState();
 }
@@ -190,7 +206,7 @@ void GlobalState::DrawState() {
     auto planet_view = registry.view<Planet>();
     auto ship_view = registry.view<Ship>();
 
-    DrawCircleV(c_transf.TransformV({0}), c_transf.TransformS(PARENT_RADIUS), MAIN_UI_COLOR);
+    DrawCircleV(c_transf.TransformV({0}), c_transf.TransformS(parent_radius), MAIN_UI_COLOR);
     for (auto [_, planet] : planet_view.each()) {
         planet.Draw(&c_transf);
     }

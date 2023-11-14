@@ -3,15 +3,11 @@
 #include "ui.hpp"
 #include "utils.hpp"
 
-ResourceTransfer ResourceTransferInvert(ResourceTransfer rt) {
-    rt.quantity = -rt.quantity;
-    return rt;
-}
-
 Planet::Planet(const char* p_name, double p_mu, double p_radius) {
     strcpy(name, p_name);
     mu = p_mu;
     radius = p_radius;
+    orbit = OrbitFromElements(1, 0, 0, 1, 0, false);
     for (int i=0; i < RESOURCE_MAX; i++) {
         resource_stock[i] = 1e5;
         resource_delta[i] = 0;
@@ -21,26 +17,49 @@ Planet::Planet(const char* p_name, double p_mu, double p_radius) {
 }
 
 void Planet::Load(const DataNode *data, double parent_mu) {
-    strcpy(name, data->Get("name", "UNNAMED PLANET"));
-    mu = data->GetF("mass", 0) * G;
-    radius = data->GetF("radius", 0);
+    //SettingOverridePush("datanode_quite", true);
+    //SettingOverridePop("datanode_quite");
+    strcpy(name, data->Get("name", name, true));
+    mu = data->GetF("mass", mu, true) * G;
+    radius = data->GetF("radius", radius, true);
 
-    int resource_len = data->GetArrayChildLen("resources", true);
-    for (int resource_index=0; resource_index < RESOURCE_MAX && resource_index < resource_len; resource_index++) {
-        DataNode* resource = data->GetArrayChild("resources", resource_index, true);
-        resource_stock[resource_index] = resource->GetF("stock") * 1000;
-        resource_delta[resource_index] = resource->GetF("delta") * 1000;
+    if (data->Has("resources")) {
+        int resource_count = data->GetArrayChildLen("resources", true);
+        if (resource_count > RESOURCE_MAX) {
+            resource_count = RESOURCE_MAX;
+        }
+        for (int resource_index=0; resource_index < resource_count; resource_index++) {
+            DataNode* resource = data->GetArrayChild("resources", resource_index, true);
+            resource_stock[resource_index] = resource->GetF("stock") * 1000;
+            resource_delta[resource_index] = resource->GetF("delta") * 1000;
+        }
     }
 
-    double sma = data->GetF("SMA");
-    double ann = data->GetF("Ann") * DEG2RAD;
+    if (data->Has("modules")) {
+        module_count = data->GetArrayLen("modules", true);
+        if (module_count > MAX_PLANET_MODULES) {
+            module_count = MAX_PLANET_MODULES;
+        }
+        
+        for (int i = 0; i < module_count; i++) {
+            const char* module_id = data->GetArray("modules", i);
+            modules[i] = GetModuleIndexById(module_id);
+        }
+    }
+
+    double sma = data->GetF("SMA", orbit.sma, true);
+    double epoch = orbit.epoch;
+    if (data->Has("Ann")) {
+        double ann = data->GetF("Ann", 0) * DEG2RAD;
+        epoch = GlobalGetNow() - ann / sqrt(parent_mu / (sma*sma*sma));
+    }
     orbit = OrbitFromElements(
         sma,
-        data->GetF("Ecc"),
-        (data->GetF("LoA") + data->GetF("AoP")) * DEG2RAD,
+        data->GetF("Ecc", orbit.ecc, true),
+        (data->GetF("LoA", orbit.lop * RAD2DEG, true) + data->GetF("AoP", 0, true)) * DEG2RAD,
         parent_mu,
-        GlobalGetNow() - ann / sqrt(parent_mu / (sma*sma*sma)), 
-        strcmp(data->Get("retrograde", "n", true), "y") == 0
+        epoch, 
+        strcmp(data->Get("retrograde", orbit.prograde ? "n" : "y", true), "y") != 0
     );
 }
 
@@ -97,6 +116,25 @@ resource_count_t Planet::GiveResource(int resource, resource_count_t quantity) {
     return transferred_resources;
 }
 
+void Planet::RecalcStats() {
+    // Just call this every frame tbh
+    for (int i = 0; i < RESOURCE_MAX; i++){
+        resource_delta[i] = 0;
+    }
+    
+    for (int i = 0; i < STAT_MAX; i++){
+        stats[i] = 0;
+    }
+
+    for (int i = 0; i < module_count; i++) {
+        // TODO Update resource delta and stats
+        if (modules[i] == MODULE_INDEX_INVALID) continue;
+        const Module* module_ = GetModuleByIndex(modules[i]);
+        if (module_ == NULL) continue;
+        module_->Effect(resource_delta, stats);
+    }
+}
+
 bool Planet::HasMouseHover(double* min_distance) const {
     Vector2 screen_pos = GetScreenTransform()->TransformV(position.cartesian);
     double dist = Vector2Distance(GetMousePosition(), screen_pos);
@@ -111,6 +149,7 @@ bool Planet::HasMouseHover(double* min_distance) const {
 void Planet::Update() {
     time_type now = GlobalGetNow();
     time_type prev = GlobalGetPreviousFrameTime();
+    RecalcStats();
     position = OrbitGetPosition(&orbit, now);
     double delta_T = (now - prev) / 86400;
     for (int i=0; i < RESOURCE_MAX; i++) {

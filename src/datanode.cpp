@@ -82,6 +82,9 @@ int _YamlParse(DataNode* node, const char* filepath) {
     yaml_event_delete(&event);
 
     int status = DataNode::FromYaml(node, &parser, false, 0);
+    if (status != 0) {
+        FAIL("Error when reading '%s'", filepath)
+    }
 
     yaml_parser_delete(&parser);
     fclose(file);
@@ -149,18 +152,25 @@ enum DataNodeParseState {
     DN_PARESE_EXPECT_ITEM,
 };
 
-char* _GetIndent(int spaces) {
-    char* res = (char*)malloc(sizeof(char) * spaces + 1);
+static const char INDENTS[][21] = {
+    "  ", "    ", "      ", "        ", "          ","            ", "              ", "                ", "                  ", "                    ",
+};
+
+const char* _GetIndent(int indent_level) {
+    if (indent_level > 10) indent_level = 10;
+    return INDENTS[indent_level];
+
+    /*char* res = (char*)malloc(sizeof(char) * spaces + 1);
     for (int i=0; i < spaces*2; i++) res[i] = ' ';
     res[spaces*2] = '\x00';
-    return res;
+    return res;*/
 }
 
 int DataNode::FromYaml(DataNode* node, yaml_parser_t* parser, bool is_readonly, int recursion_depth) {
     node->IsReadOnly = false;
     yaml_event_t event;
 
-    char* indent = _GetIndent(recursion_depth*4);
+    //char* indent = _GetIndent(recursion_depth*4);
 
     DataNodeParseState parse_state = DN_PARESE_EXPECT_KEY;
     char key_name[1024];
@@ -170,7 +180,7 @@ int DataNode::FromYaml(DataNode* node, yaml_parser_t* parser, bool is_readonly, 
 
         // Get the next event.
         if (!yaml_parser_parse(parser, &event)){
-            ERROR("Parsing error\n");
+            ERROR("Parsing error at pos %s: '%s'", parser->problem_mark, parser->problem);
             goto error;
         }
 
@@ -244,20 +254,19 @@ int DataNode::FromYaml(DataNode* node, yaml_parser_t* parser, bool is_readonly, 
                 //INFO("%sMap end\n", indent);
                 node->IsReadOnly = is_readonly;
                 yaml_event_delete(&event);
-                free(indent);
                 return 0;
         }
     }
 
     error:
-    free(indent);
+    //free(indent);
     yaml_event_delete(&event);
     return 1;
 }
 
 // Helper function to write DataNode to JSON
 void DataNode::WriteJSON(std::ostream& os, int indentLevel) const {
-    char* indent = _GetIndent(indentLevel * 4);
+    const char* indent = _GetIndent(indentLevel*2);
 
     os << "{\n";
     for (auto it = Fields.begin(); it != Fields.end(); ++it) {
@@ -315,7 +324,7 @@ void DataNode::WriteJSON(std::ostream& os, int indentLevel) const {
 
 // Helper function to write DataNode to YAML
 void DataNode::WriteYAML(std::ostream& os, int indentLevel) const {
-    char* indent = _GetIndent(indentLevel * 2);
+    const char* indent = _GetIndent(indentLevel);
 
     //os << "Fields: " << Fields.size() << " -- Children: " << Children.size() << " -- Field Arrays " << FieldArrays.size() << std::endl;
 
@@ -343,8 +352,6 @@ void DataNode::WriteYAML(std::ostream& os, int indentLevel) const {
         }
     }
     os << std::endl;
-
-    free(indent);
 }
 
 /*******************************
@@ -358,21 +365,31 @@ const char* DataNode::Get(const char* key, const char* def, bool quiet) const {
         return it->second.c_str();
     }
     if (!quiet) {
-        WARNING("Key %s not found\n", key)
+        WARNING("Key %s not found", key)
     }
     return def;
 }
 
 int DataNode::GetI(const char* key, int def, bool quiet) const {
+    const char* str = Get(key, "needs non-empty string", quiet);
     char *p; 
-    int res = (int) strtol(Get(key, "", quiet), &p, 10);
-    return (p - key) == 0 ? def : res;
+    int res = (int) strtol(str, &p, 10);
+    if (p == str) {  // intentionally comparing pointers because of how strtoX works
+        if (!quiet) WARNING("Could not convert '%s' to int", str)
+        return def;
+    }
+    return res;
 }
 
 double DataNode::GetF(const char* key, double def, bool quiet) const {
+    const char* str = Get(key, "needs non-empty string", quiet);
     char *p; 
-    double res = strtod(Get(key, "", quiet), &p);
-    return (p - key) == 0 ? def : res;
+    double res = (double) strtod(str, &p);
+    if (p == str) {  // intentionally comparing pointers because of how strtoX works
+        if (!quiet) WARNING("Could not convert '%s' to double", str)
+        return def;
+    }
+    return res;
 }
 
 DataNode* DataNode::GetChild(const char* key, bool quiet) const {
@@ -400,15 +417,17 @@ const char* DataNode::GetArray(const char* key, int index, const char* def, bool
 }
 
 int DataNode::GetArrayI(const char* key, int index, int def, bool quiet) const {
+    const char *str = GetArray(key, index, "needs non-empty string", quiet); 
     char *p; 
-    int res = (int) strtol(GetArray(key, index, "", quiet), &p, 10);
-    return (p - key) == 0 ? def : res;
+    int res = (int) strtol(str, &p, 10);
+    return p == str ? def : res;
 }
 
 double DataNode::GetArrayF(const char* key, int index, double def, bool quiet) const {
+    const char *str = GetArray(key, index, "needs non-empty string", quiet); 
     char *p; 
-    double res = strtod(GetArray(key, index, "", quiet), &p);
-    return (p - key) == 0 ? def : res;
+    double res = strtod(str, &p);
+    return p == str ? def : res;
 }
 
 DataNode* DataNode::GetArrayChild(const char* key, int index, bool quiet) const {
@@ -422,15 +441,6 @@ DataNode* DataNode::GetArrayChild(const char* key, int index, bool quiet) const 
         WARNING("Key %s not found\n", key)
     }
     return NULL;
-}
-
-
-size_t DataNode::GetChildCount() {
-    return Children.size();
-}
-
-size_t DataNode::GetChildArrayCount() {
-    return ChildArrays.size();
 }
 
 size_t DataNode::GetArrayLen(const char* key, bool quiet) const {
@@ -451,25 +461,56 @@ size_t DataNode::GetArrayChildLen(const char* key, bool quiet) const {
         return it->second->size();
     } else {
         if (!quiet) {
-            WARNING("Key %s not found\n", key)
+            WARNING("Key '%s' not found", key)
         }
         return 0;
     }
 }
 
-const char* DataNode::GetChildKey(int index) {
+size_t DataNode::GetKeyCount() const {
+    return Fields.size();
+}
+
+size_t DataNode::GetChildCount() const {
+    return Children.size();
+}
+
+size_t DataNode::GetArrayCount() const {
+    return FieldArrays.size();
+}
+
+size_t DataNode::GetChildArrayCount() const {
+    return ChildArrays.size();
+}
+
+const char* DataNode::GetKey(int index) const {
+    if (index < 0 || index >= Fields.size()) return "[Out Of Bounds]";
+    auto it = Fields.begin();
+    for (int i=0; i < index; i++) it++;
+    return it->first.c_str();
+}
+
+const char* DataNode::GetChildKey(int index) const {
     if (index < 0 || index >= Children.size()) return "[Out Of Bounds]";
     auto it = Children.begin();
     for (int i=0; i < index; i++) it++;
     return it->first.c_str();
 }
 
-const char* DataNode::GetChildArrayKey(int index) {
+const char* DataNode::GetArrayKey(int index) const {
+    if (index < 0 || index >= FieldArrays.size()) return "[Out Of Bounds]";
+    auto it = FieldArrays.begin();
+    for (int i=0; i < index; i++) it++;
+    return it->first.c_str();
+}
+
+const char* DataNode::GetChildArrayKey(int index) const {
     if (index < 0 || index >= ChildArrays.size()) return "[Out Of Bounds]";
     auto it = ChildArrays.begin();
     for (int i=0; i < index; i++) it++;
     return it->first.c_str();
 }
+
 
 /***********************************
  * SETTERS
@@ -709,6 +750,8 @@ int DataNodeTests() {
 
     if (strcmp(node.Get("UNPRESENT_KEY", "default", true), "default") != 0) DN_TEST_FAIL("default getter error", 1);
     if (node.GetArrayLen("UNPRESENT_KEY", true) != 0) DN_TEST_FAIL("invalid array should not be registered", 1);
+    if (node.GetF("UNPRESENT_KEY", 123.4, true) != 123.4) DN_TEST_FAIL("default getter error (float)", 1);
+    if (node.GetF("UNPRESENT_KEY", 123, true) != 123) DN_TEST_FAIL("default getter error (int)", 1);
 
     // Test Setters
     node.Set("key1", "5");

@@ -90,13 +90,13 @@ double _Mean2TrueHyp(double M, double e) {
     return _Ecc2TrueHyp(_Mean2EccHyp(M, e), e);
 }
 
-Orbit OrbitFromElements(double semi_major_axis, double eccenetricity, double longuitude_of_periapsis, double mu, time_type period, bool is_prograde) {
+Orbit OrbitFromElements(double semi_major_axis, double eccenetricity, double longuitude_of_periapsis, double mu, time_type epoch, bool is_prograde) {
     Orbit res = {0};
     res.mu = mu;
     res.sma = semi_major_axis;
     res.ecc = eccenetricity;
     res.lop = longuitude_of_periapsis;
-    res.period = period;
+    res.epoch = epoch;
     res.prograde = is_prograde;
     return res;
 }
@@ -163,7 +163,7 @@ Orbit OrbitFrom2PointsAndSMA(OrbitPos pos1, OrbitPos pos2, time_type time_at_pos
 
 OrbitPos OrbitGetPosition(const Orbit* orbit, time_type time) {
     OrbitPos res = {0};
-    res.M = (time - orbit->period) * OrbitGetMeanMotion(orbit);
+    res.M = (time - orbit->epoch) * OrbitGetMeanMotion(orbit);
     if (orbit->sma > 0) {
         res.M = fmod(res.M, PI*2);
         res.θ = _Mean2True(res.M, orbit->ecc);
@@ -196,7 +196,7 @@ time_type OrbitGetTimeUntilFocalAnomaly(const Orbit* orbit, double θ, time_type
     double mean_motion_inv = sqrt(orbit->sma*orbit->sma*orbit->sma / orbit->mu);  // s
     double period = 2 * PI * mean_motion_inv;
     double M = _True2Mean(θ, orbit->ecc);
-    double reference_time = orbit->period + M *mean_motion_inv;
+    double reference_time = orbit->epoch + M *mean_motion_inv;
     time_type diff = fmod(reference_time - start_time, period);
     if (diff < 0) diff += period;
     return diff;

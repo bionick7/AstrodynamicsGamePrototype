@@ -6,7 +6,7 @@
 struct Orbit {
     double mu;
     double sma, ecc, lop;
-    time_type period;
+    time_type epoch;
     bool prograde;
 };
 
@@ -19,7 +19,7 @@ struct OrbitPos {
     double longuitude;
 };
 
-Orbit OrbitFromElements(double semi_major_axis, double eccenetricity, double longuitude_of_periapsis, double mu, time_type period, bool is_prograde);
+Orbit OrbitFromElements(double semi_major_axis, double eccenetricity, double longuitude_of_periapsis, double mu, time_type epoch, bool is_prograde);
 Orbit OrbitFromCartesian(Vector2 pos, Vector2 vel, time_type t, double mu);
 Orbit OrbitFrom2PointsAndSMA(OrbitPos pos1, OrbitPos pos2, time_type time_at_pos1, double sma, double mu, bool is_prograde, bool cut_focus);
 OrbitPos OrbitGetPosition(const Orbit* orbit, time_type time);
