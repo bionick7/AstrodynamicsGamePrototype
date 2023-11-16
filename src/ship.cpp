@@ -39,8 +39,11 @@ void Ship::_OnNewPlanClicked() {
         min_time = prepared_plans[plan_edit_index - 1].arrival_time;
     }
 
+    SHOW_F(min_time)
+    SHOW_F(GlobalGetNow())
+
     tp_ui.Make();
-    tp_ui.SetPlan(&prepared_plans[plan_edit_index] ,id, min_time, 1e20);
+    tp_ui.SetPlan(&prepared_plans[plan_edit_index], id, min_time, 1e20);
     prepared_plans_count++;
 }
 
@@ -167,8 +170,7 @@ void Ship::StartEditingPlan(int index) {
 void Ship::Update() {
     time_type now = GlobalGetNow();
 
-    //if (prepared_plans_count == 0 || (plan_edit_index > 0 && prepared_plans_count == 1)) {
-    if (prepared_plans_count - (plan_edit_index > 0) <= 0) {
+    if (prepared_plans_count == 0 || (plan_edit_index == 0 && prepared_plans_count == 1)) {
         position = GetPlanet(parent_planet).position;
     } else {
         const TransferPlan& tp = prepared_plans[0];

@@ -7,13 +7,12 @@ Planet::Planet(const char* p_name, double p_mu, double p_radius) {
     strcpy(name, p_name);
     mu = p_mu;
     radius = p_radius;
-    orbit = OrbitFromElements(1, 0, 0, 1, 0, false);
+    orbit = OrbitFromElements(1, 0, 0, 1, 0, true);
     for (int i=0; i < RESOURCE_MAX; i++) {
         resource_stock[i] = 1e5;
         resource_delta[i] = 0;
         resource_capacity[i] = 1e7;
     }
-    resource_delta[RESOURCE_FOOD] = -20;
 }
 
 void Planet::Load(const DataNode *data, double parent_mu) {
@@ -39,7 +38,7 @@ void Planet::Load(const DataNode *data, double parent_mu) {
         SHOW_I(module_count)
         for (int i = 0; i < module_count; i++) {
             const char* module_id = data->GetArray("modules", i);
-            modules[i] = GetModuleIndexById(module_id);
+            modules[i] = ModuleInstance(GetModuleIndexById(module_id));
         }
     }
 
@@ -123,11 +122,11 @@ void Planet::RecalcStats() {
     }
 
     for (int i = 0; i < module_count; i++) {
-        // TODO Update resource delta and stats
-        if (modules[i] == MODULE_INDEX_INVALID) continue;
-        const Module* module_ = GetModuleByIndex(modules[i]);
-        if (module_ == NULL) continue;
-        module_->Effect(&resource_delta[0], &stats[0]);
+        if (modules[i].IsValid()) {
+            modules[i].Effect(&resource_delta[0], &stats[0]);
+        } else {
+            WARNING("%s: Invalid module %d invalid (by index)", name, i)
+        }
     }
 }
 
@@ -203,17 +202,6 @@ void _UIDrawStats(const resource_count_t stats[]) {
     }
 }
 
-void _UIDrawModule(Module* module) {
-    UIContextPushInset(3, 16);
-    ButtonStateFlags button_state = UIContextAsButton();
-    if (button_state & BUTTON_STATE_FLAG_HOVER) {
-        UIContextEnclose(1, 1, BG_COLOR, MAIN_UI_COLOR);
-        UISetMouseHint(module->description);
-    }
-    UIContextWrite(module->name);
-    UIContextPop();
-}
-
 void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, ResourceTransfer transfer) {
     if (upper_quadrant) {
         UIContextCreate(10, 10, 16*30, GetScreenHeight() / 2 - 20, 16, MAIN_UI_COLOR);
@@ -221,24 +209,25 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
         UIContextCreate(10, GetScreenHeight() / 2 + 10, 16*30, GetScreenHeight() / 2 - 20, 16, MAIN_UI_COLOR);
     }
     UIContextCurrent().Enclose(2, 2, BG_COLOR, MAIN_UI_COLOR);
+
     UIContextWrite(name);
     UIContextWrite("================");
-
     _UIDrawResources(resource_stock, resource_delta, transfer);
     UIContextWrite("================");
     _UIDrawStats(stats);
     UIContextWrite("================");
 
+    // Draw modules
     int current_width = UIContextCurrent().width;
     UIContextPushInset(0, UIContextCurrent().height - UIContextCurrent().y_cursor);
     UIContextPushHSplit(0, current_width/2);
-    for (int i=0; i < module_count; i++) {
-        _UIDrawModule(GetModuleByIndex(modules[i]));
+    for (int i = 0; i < MAX_PLANET_MODULES; i += 2) {
+        modules[i].UIDraw();
     }
     UIContextPop();
     UIContextPushHSplit(current_width/2, current_width);
-    for (int i=1; i < module_count; i++) {
-        _UIDrawModule(GetModuleByIndex(modules[i]));
+    for (int i = 1; i < MAX_PLANET_MODULES; i += 2) {
+        modules[i].UIDraw();
     }
     UIContextPop();
     UIContextPop();

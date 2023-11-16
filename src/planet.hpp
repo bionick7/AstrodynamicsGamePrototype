@@ -7,7 +7,7 @@
 #include "logging.hpp"
 #include "modules.hpp"
 
-#define MAX_PLANET_MODULES 32
+#define MAX_PLANET_MODULES 20
 
 struct Planet {
     char name[100];
@@ -21,13 +21,13 @@ struct Planet {
     resource_count_t resource_delta[RESOURCE_MAX];
 
     resource_count_t stats[STAT_MAX];
-    module_index_t modules[MAX_PLANET_MODULES];
+    ModuleInstance modules[MAX_PLANET_MODULES];
     int module_count = 0;
 
     bool mouse_hover;
     entity_id_t id;
 
-    Planet() { Planet("UNNAMED", 0, 0); }
+    Planet() : Planet("UNNAMED", 0, 0) {};
     Planet(const char* name, double mu, double radius);
     void Load(const DataNode* data, double parent_mu);
     void Save(DataNode* data) const;

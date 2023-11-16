@@ -221,12 +221,14 @@ void UIStart() {
 }
 
 void UIEnd() {
-    // Draw mouse
-    Vector2 mouse_pos = GetMousePosition();
-    Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), mouseover_text, 16, 1);
-    DrawRectangleV(mouse_pos, text_size, BG_COLOR);
-    DrawRectangleLines(mouse_pos.x, mouse_pos.y, text_size.x, text_size.y, MAIN_UI_COLOR);
-    DrawTextEx(GetCustomDefaultFont(), mouseover_text, mouse_pos, 16, 1, MAIN_UI_COLOR);
+    if (strlen(mouseover_text) > 0) {
+        // Draw mouse
+        Vector2 mouse_pos = GetMousePosition();
+        Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), mouseover_text, 16, 1);
+        DrawRectangleV(mouse_pos, text_size, BG_COLOR);
+        DrawRectangleLines(mouse_pos.x, mouse_pos.y, text_size.x, text_size.y, MAIN_UI_COLOR);
+        DrawTextEx(GetCustomDefaultFont(), mouseover_text, mouse_pos, 16, 1, MAIN_UI_COLOR);
+    }
 }
 
 Font GetCustomDefaultFont() {

@@ -193,11 +193,16 @@ time_type OrbitGetTimeUntilFocalAnomaly(const Orbit* orbit, double θ, time_type
     if (orbit->sma < 0) {
         NOT_IMPLEMENTED
     }
-    double mean_motion_inv = sqrt(orbit->sma*orbit->sma*orbit->sma / orbit->mu);  // s
-    double period = 2 * PI * mean_motion_inv;
+    double mean_motion = OrbitGetMeanMotion(orbit);  // 1/s
+    double period = fabs(2 * PI /mean_motion);
     double M = _True2Mean(θ, orbit->ecc);
-    double reference_time = orbit->epoch + M *mean_motion_inv;
-    time_type diff = fmod(reference_time - start_time, period);
+    double M0 = fmod((start_time - orbit->epoch) * mean_motion, 2*PI);
+    time_type diff = fmod((M - M0) / mean_motion, period);
+    SHOW_F(start_time)
+    SHOW_F(orbit->epoch)
+    SHOW_F(start_time - orbit->epoch)
+    SHOW_F(M0)
+    SHOW_F(M)
     if (diff < 0) diff += period;
     return diff;
 }

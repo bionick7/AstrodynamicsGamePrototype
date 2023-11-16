@@ -1,31 +1,23 @@
 planets:
   Mimas:
-    resource_stock:
-      water: 0
-      food: 0
+    resource_stock: []
     modules:
     - mod_water_extractor
   Encelladus:
-    resource_stock:
-      water: 1000
-      food: 2000
-    modules:
-    - mod_pop_small
-    - mod_water_mine
-    - mod_water_mine
+    resource_stock: []
+    modules: []
   Tethys:
     resource_stock:
       water: 1000
       food: 2000
+      electronics: 600
     modules:
     - mod_pop_small
     - mod_water_mine
     - mod_food_mine
     - mod_food_mine
   Rhea:
-    resource_stock:
-      water: 0
-      food: 0
+    resource_stock: []
     modules: []
   Titan:
     resource_stock:
@@ -34,15 +26,12 @@ planets:
     modules:
     - mod_pop_small
     - mod_water_mine
+    - mod_metal_mine
   Iaeptus:
-    resource_stock:
-      water: 0
-      food: 0
+    resource_stock: []
     modules: []
   Phoebe:
-    resource_stock:
-      water: 0
-      food: 0
+    resource_stock: []
     modules: []
 
 ships:

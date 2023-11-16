@@ -18,46 +18,65 @@ enum ResourceType {
     RESOURCE_NONE = -1,
     RESOURCE_WATER = 0,
     RESOURCE_FOOD,
-    //RESOURCE_METALS,
-    //RESOURCE_ELECTRONICS,
+    RESOURCE_METALS,
+    RESOURCE_ELECTRONICS,
     //RESOURCE_ORGANICS,
-    //RESOURCE_PEOPLE,
     RESOURCE_MAX,
 };
 
-static const char resources_names[RESOURCE_MAX][30] = {
+#define MODULE_NAME_MAX_SIZE 128
+#define MODULE_DESCRIPTION_MAX_SIZE 2048
+#define MAX_NAME_LENGTH 30
+
+static const char resources_names[RESOURCE_MAX][MAX_NAME_LENGTH] = {
     "water", // RESOURCE_WATER
-    "food"  // RESOURCE_FOOD
+    "food",  // RESOURCE_FOOD
+    "metals",  // RESOURCE_METALS
+    "electronics"  // RESOURCE_ELECTRONICS
 };
 
 enum StatType {
     STAT_NONE = -1,
     STAT_POPULATION = 0,
+    STAT_WORKFORCE,
     STAT_MAX,
 };
 
-static const char stat_names[STAT_MAX][30] = {
+static const char stat_names[STAT_MAX][MAX_NAME_LENGTH] = {
     "population", // STAT_POPULATION
+    "workforce" // STAT_POPULATION
 };
-
 
 ResourceTransfer ResourceTransferInvert(ResourceTransfer rt);
 
-#define MODULE_NAME_MAX_SIZE 128
-#define MODULE_DESCRIPTION_MAX_SIZE 2048
-
-struct Module {
+struct ModuleClass {
     char name[MODULE_NAME_MAX_SIZE];
     char description[MODULE_DESCRIPTION_MAX_SIZE];
-
-    void Effect(resource_count_t* resource_delta, resource_count_t* stats) const;
     resource_count_t resource_delta_contributions[RESOURCE_MAX];
+    resource_count_t build_costs[RESOURCE_MAX];
     resource_count_t stat_contributions[STAT_MAX];
+    resource_count_t stat_required[STAT_MAX];
+
+    bool disabled;
+    char* disabled_reason = NULL;
+
+};
+
+struct ModuleInstance {
+    bool disabled;
+    module_index_t class_index;
+
+    ModuleInstance() : ModuleInstance(MODULE_INDEX_INVALID) {};
+    ModuleInstance(module_index_t class_index);
+
+    bool IsValid();
+    void Effect(resource_count_t* resource_delta, resource_count_t* stats);
+    void UIDraw();
 };
 
 int LoadModules(const DataNode* datanode);
 module_index_t GetModuleIndexById(const char* id);
-Module* GetModuleByIndex(module_index_t index);
+const ModuleClass* GetModuleByIndex(module_index_t index);
 
 #endif  // MODULES_H
 

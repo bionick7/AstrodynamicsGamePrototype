@@ -213,16 +213,15 @@ void TransferPlanSolve(TransferPlan* tp) {
 
 int TransferPlanTests() {
     const double epsilon = 1e-5;
-    for (double K = 0.0; K < 1.0; K += 0.2) {
-        for(double x = -5.0; x < -0.1; x += 0.1) {
-            for (int solution = 4; solution <= 5; solution++) {
-                double ddx = _LambertDerivative(x, K, solution);
-                double central_difference = (_Lambert(x + epsilon, K, solution) - _Lambert(x - epsilon, K, solution)) / (2*epsilon);
-                if (fabs(ddx - central_difference) > epsilon) {
-                    printf("Error for x=%f, K=%f, solution=%d d/dx expected to be %f, but is measured to be %f\n", x, K, solution, ddx, central_difference);
-                    return 1;
-                }
-            }
+    for (double K = 0.0; K < 1.0; K += 0.2) 
+        for (double x = -5.0; x < -0.1; x += 0.1) 
+            for (int solution = 4; solution <= 5; solution++) 
+    {
+        double ddx = _LambertDerivative(x, K, solution);
+        double central_difference = (_Lambert(x + epsilon, K, solution) - _Lambert(x - epsilon, K, solution)) / (2*epsilon);
+        if (fabs(ddx - central_difference) > epsilon) {
+            printf("Error for x=%f, K=%f, solution=%d d/dx expected to be %f, but is measured to be %f\n", x, K, solution, ddx, central_difference);
+            return 1;
         }
     }
     return 0;

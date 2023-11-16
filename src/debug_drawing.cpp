@@ -52,30 +52,12 @@ void DebugFlushText() {
     lines_index = 0;
 }
 
-void DebugPrintText(const char* text) {
+void DebugPrintText(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    vsprintf(lines[lines_index], format, args);
+    va_end(args);
+    
     if (lines_index >= 63) return;
-    strcpy(lines[lines_index], text);
     lines_index++;
-}
-
-void DebugPrintVarF(const char* var_name, float var) {
-    size_t varname_len = strlen(var_name);
-    if (varname_len + 13 >= 256) {
-        return;
-    }
-    char res[256];
-    strcpy(res, var_name);
-    sprintf(&res[varname_len], "%10f", var);
-    DebugPrintText(res);
-}
-
-void DebugPrintVarI(const char* var_name, int var) {
-    int varname_len = strlen(var_name);
-    if (varname_len + 13 >= 256) {
-        return;
-    }
-    char res[256];
-    strcpy(res, var_name);
-    sprintf(&res[varname_len], "%10d", var);
-    DebugPrintText(res);
 }

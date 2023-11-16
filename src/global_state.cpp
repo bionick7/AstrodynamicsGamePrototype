@@ -82,8 +82,8 @@ entity_id_t _AddShip(GlobalState* gs, const DataNode* data) {
     return ship_entity;
 }
 
-void GlobalState::Make(time_type time) {
-    time = time;
+void GlobalState::Make(time_type p_time) {
+    time = p_time;
     active_transfer_plan.Make();
     c_transf.Make();
     focused_planet = GetInvalidId();
