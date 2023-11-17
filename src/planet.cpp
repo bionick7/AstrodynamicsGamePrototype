@@ -30,13 +30,12 @@ void Planet::Load(const DataNode *data, double parent_mu) {
     }
 
     if (data->Has("modules")) {
-        module_count = data->GetArrayLen("modules", true);
-        if (module_count > MAX_PLANET_MODULES) {
-            module_count = MAX_PLANET_MODULES;
+        int initial_module_count = data->GetArrayLen("modules", true);
+        if (initial_module_count > MAX_PLANET_MODULES) {
+            initial_module_count = MAX_PLANET_MODULES;
         }
         
-        SHOW_I(module_count)
-        for (int i = 0; i < module_count; i++) {
+        for (int i = 0; i < initial_module_count; i++) {
             const char* module_id = data->GetArray("modules", i);
             modules[i] = ModuleInstance(GetModuleIndexById(module_id));
         }
@@ -121,12 +120,30 @@ void Planet::RecalcStats() {
         stats[i] = 0;
     }
 
-    for (int i = 0; i < module_count; i++) {
+    for (int i = 0; i < MAX_PLANET_MODULES; i++) {
         if (modules[i].IsValid()) {
             modules[i].Effect(&resource_delta[0], &stats[0]);
-        } else {
-            WARNING("%s: Invalid module %d invalid (by index)", name, i)
         }
+    }
+}
+
+void Planet::RequestBuild(int slot, module_index_t module_class) {
+    const ModuleClass* mc = GetModuleByIndex(module_class);
+    for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
+        if (mc->build_costs[resource_index] > resource_stock[resource_index]) {
+            PLAYER_INFO("Not enough %s (%f available, %f required)", 
+                resources_names[resource_index],
+                resource_stock [resource_index],
+                mc->build_costs[resource_index]
+            )
+            return;
+        }
+    }
+    ModuleInstance instance = ModuleInstance(module_class);
+    modules[slot] = instance;
+
+    for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
+        resource_stock[resource_index] -= mc->build_costs[resource_index];
     }
 }
 
@@ -211,24 +228,28 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
     UIContextCurrent().Enclose(2, 2, BG_COLOR, MAIN_UI_COLOR);
 
     UIContextWrite(name);
-    UIContextWrite("================");
+    UIContextWrite("-------------------------");
     _UIDrawResources(resource_stock, resource_delta, transfer);
-    UIContextWrite("================");
+    UIContextWrite("-------------------------");
     _UIDrawStats(stats);
-    UIContextWrite("================");
+    UIContextWrite("-------------------------");
 
     // Draw modules
     int current_width = UIContextCurrent().width;
     UIContextPushInset(0, UIContextCurrent().height - UIContextCurrent().y_cursor);
     UIContextPushHSplit(0, current_width/2);
     for (int i = 0; i < MAX_PLANET_MODULES; i += 2) {
-        modules[i].UIDraw();
+        if (modules[i].UIDraw()) {
+            ModuleConstructionOpen(id, i);
+        }
     }
-    UIContextPop();
+    UIContextPop();  // HSplit
     UIContextPushHSplit(current_width/2, current_width);
     for (int i = 1; i < MAX_PLANET_MODULES; i += 2) {
-        modules[i].UIDraw();
+        if (modules[i].UIDraw()) {
+            ModuleConstructionOpen(id, i);
+        }
     }
-    UIContextPop();
-    UIContextPop();
+    UIContextPop();  // HSplit
+    UIContextPop();  // Inset
 }

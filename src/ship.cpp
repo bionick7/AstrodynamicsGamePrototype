@@ -39,9 +39,6 @@ void Ship::_OnNewPlanClicked() {
         min_time = prepared_plans[plan_edit_index - 1].arrival_time;
     }
 
-    SHOW_F(min_time)
-    SHOW_F(GlobalGetNow())
-
     tp_ui.Make();
     tp_ui.SetPlan(&prepared_plans[plan_edit_index], id, min_time, 1e20);
     prepared_plans_count++;
@@ -350,7 +347,7 @@ void Ship::_OnDeparture(const TransferPlan& tp) {
 
     char date_buffer[30];
     FormatTime(date_buffer, 30, tp.departure_time);
-    INFO(":: On %s, \"%s\" picked up %f kg of %s on %s", 
+    PLAYER_INFO(":: On %s, \"%s\" picked up %f kg of %s on %s", 
         date_buffer,
         name,
         respource_qtt,
@@ -373,7 +370,7 @@ void Ship::_OnArrival(const TransferPlan& tp) {
 
     char date_buffer[30];
     FormatTime(date_buffer, 30, tp.arrival_time);
-    INFO(":: On %s, \"%s\" delivered %f kg of %s to %s", 
+    PLAYER_INFO(":: On %s, \"%s\" delivered %f kg of %s to %s", 
         date_buffer,
         name,
         delivered,

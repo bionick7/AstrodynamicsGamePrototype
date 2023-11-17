@@ -173,6 +173,19 @@ void UIContextPushHSplit(int x_start, int x_end) {
     text_box_stack.push(new_text_box);
 }
 
+void UIContextPushGridCell(int columns, int rows, int column, int row) {
+    TextBox& tb = UIContextCurrent();
+    TextBox new_text_box = TextBox(
+        tb.text_start_x + column * tb.width / columns,
+        tb.text_start_y + row * tb.height / rows,
+        tb.width / columns,
+        tb.height / rows,
+        tb.text_size,
+        tb.text_color
+    );
+    text_box_stack.push(new_text_box);
+}
+
 ButtonStateFlags UIContextAsButton() {
     return UIContextCurrent().AsButton();
 }

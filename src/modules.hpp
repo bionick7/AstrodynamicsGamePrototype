@@ -18,7 +18,7 @@ enum ResourceType {
     RESOURCE_NONE = -1,
     RESOURCE_WATER = 0,
     RESOURCE_FOOD,
-    RESOURCE_METALS,
+    RESOURCE_METAL,
     RESOURCE_ELECTRONICS,
     //RESOURCE_ORGANICS,
     RESOURCE_MAX,
@@ -31,7 +31,7 @@ enum ResourceType {
 static const char resources_names[RESOURCE_MAX][MAX_NAME_LENGTH] = {
     "water", // RESOURCE_WATER
     "food",  // RESOURCE_FOOD
-    "metals",  // RESOURCE_METALS
+    "metal",  // RESOURCE_METAL
     "electronics"  // RESOURCE_ELECTRONICS
 };
 
@@ -71,12 +71,17 @@ struct ModuleInstance {
 
     bool IsValid();
     void Effect(resource_count_t* resource_delta, resource_count_t* stats);
-    void UIDraw();
+    bool UIDraw();
 };
 
 int LoadModules(const DataNode* datanode);
 module_index_t GetModuleIndexById(const char* id);
 const ModuleClass* GetModuleByIndex(module_index_t index);
+
+void ModuleConstructionOpen(entity_id_t planet, int slot_index);
+void ModuleConstructionClose();
+bool ModuleConstructionIsOpen();
+void ModuleConstructionUI();
 
 #endif  // MODULES_H
 

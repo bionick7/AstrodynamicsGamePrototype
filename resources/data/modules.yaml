@@ -3,13 +3,13 @@ modules:
   name: Water extractor
   description: |
     Automated, but low yield water extraction facility 
-    Requires no population, but expensive automatation
+    Requires no population, but expensive automatisation
   resource_delta:
     water: +100  # t/day
   build_conditions: []
   build_cost: 
     metal: 600
-    metal: 200
+    electronics: 200
 
 - id: mod_water_mine
   name: Water mine

@@ -106,10 +106,10 @@ void GlobalState::LoadConfigs(const char* ephemerides_path, const char* module_d
     parent_mu = ephemerides.GetF("mass") * G;
     int num_planets = ephemerides.GetArrayChildLen("satellites");
     if (num_planets > 100) num_planets = 100;
-    entity_id_t planets[100];
+    //entity_id_t planets[100];
     for(int i=0; i < num_planets; i++) {
         const DataNode* data = ephemerides.GetArrayChild("satellites", i);
-        planets[i] = _AddPlanet(this, data, parent_mu);
+        _AddPlanet(this, data, parent_mu);
         //printf("%d\n", planets[i]);
     }
     
@@ -153,9 +153,18 @@ void GlobalState::UpdateState(double delta_t) {
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) || IsKeyPressed(KEY_ESCAPE)) {
         // Cancel out of next layer
-        if (active_transfer_plan.IsActive()) {
+
+        // cancel out of focused planet and ship
+        if (ModuleConstructionIsOpen()) {
+            ModuleConstructionClose();
+        } 
+
+        // transfer plan UI
+        else if (active_transfer_plan.IsActive()) {
             active_transfer_plan.Abort();
-        } else if (IsIdValid(focused_planet) || IsIdValid(focused_ship)) {
+        } 
+        // cancel out of focused planet and ship
+        else if (IsIdValid(focused_planet) || IsIdValid(focused_ship)) {
             focused_planet = GetInvalidId();
             focused_ship = GetInvalidId();
         } else {
@@ -219,6 +228,7 @@ void GlobalState::DrawState() {
     // UI
     UIStart();
     c_transf.DrawUI();
+    // 
     for (auto [_, planet] : planet_view.each()) {
         if (active_transfer_plan.IsActive()){
             if (active_transfer_plan.plan->departure_planet == planet.id) {
@@ -235,6 +245,7 @@ void GlobalState::DrawState() {
     for (auto [_, ship] : ship_view.each()) {
         ship.DrawUI(&c_transf);
     }
+    ModuleConstructionUI();
     UIEnd();
 
     DebugFlushText();

@@ -22,7 +22,6 @@ struct Planet {
 
     resource_count_t stats[STAT_MAX];
     ModuleInstance modules[MAX_PLANET_MODULES];
-    int module_count = 0;
 
     bool mouse_hover;
     entity_id_t id;
@@ -40,6 +39,7 @@ struct Planet {
     resource_count_t GiveResource(int resource, resource_count_t quantity);
 
     void RecalcStats();
+    void RequestBuild(int slot, module_index_t module_class);
 
     bool HasMouseHover(double* distance) const;
     void Update();
