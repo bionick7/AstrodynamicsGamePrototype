@@ -22,9 +22,8 @@ bool IsIdValid(entity_id_t id);
 static inline entity_id_t GetInvalidId() { return entt::null; }
 
 struct GlobalState {
-    Time time;
-    Time prev_time;
     CoordinateTransform c_transf;
+    Calendar calendar;
     TransferPlanUI active_transfer_plan;
     entity_id_t focused_planet;
     entity_id_t focused_ship;

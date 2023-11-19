@@ -18,7 +18,7 @@ void Ship::_OnNewPlanClicked() {
         return;
     }
 
-    GetScreenTransform()->paused = true;
+    GetCalendar()->paused = true;
 
     // Append new plan
 
@@ -76,6 +76,23 @@ double Ship::GetPayloadCapacity(double dv) const {
     double fuel_ratio = (exp(dv/v_e) - 1) / (exp(max_dv/v_e) - 1);
     return (1 - fuel_ratio) * max_capacity;
 }
+
+double Ship::GetFuelRequiredFull(double dv) const {
+    // assuming max payload
+    double fuel_ratio = (exp(dv/v_e) - 1) / (exp(max_dv/v_e) - 1);
+    return fuel_ratio * max_capacity;
+}
+
+double Ship::GetFuelRequiredEmpty(double dv) const {
+    // assuming no payload
+    // dv = v_e * ln(1 + m_fuel/m_dry)
+    // m_fuel = oem * (exp(dv/V_e) - 1)
+    // max_capacity - oem = oem * (exp(dv_max/V_e) - 1)
+    // oem = max_capacity / ((exp(dv_max/V_e) - 1) + 1)
+    double oem = max_capacity / ((exp(max_dv/v_e) - 1) + 1);
+    return oem * (exp(dv/v_e) - 1);
+}
+
 
 bool Ship::HasMouseHover(double* min_distance) const {
     double dist = Vector2Distance(GetMousePosition(), draw_pos);
@@ -345,6 +362,8 @@ void Ship::Inspect() {
 void Ship::_OnDeparture(const TransferPlan& tp) {
     respource_type = tp.resource_transfer.resource_id;
     respource_qtt = GetPlanet(tp.departure_planet).DrawResource(tp.resource_transfer.resource_id, tp.resource_transfer.quantity);
+
+    GetPlanet(tp.departure_planet).DrawResource(RESOURCE_WATER, tp.fuel_mass);
 
     char date_buffer[30];
     FormatTime(date_buffer, 30, tp.departure_time);

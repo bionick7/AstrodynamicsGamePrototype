@@ -193,7 +193,7 @@ void Planet::Draw(const CoordinateTransform* c_transf) {
 
 void _UIDrawResources(
     const resource_count_t resource_stock[], const resource_count_t resource_delta[], const resource_count_t resource_cap[], 
-    const ResourceTransfer& transfer
+    const ResourceTransfer& transfer, double fuel_draw
 ) {
     for (int i=0; i < RESOURCE_MAX; i++) {
         char buffer[50];
@@ -201,13 +201,22 @@ void _UIDrawResources(
         sprintf(buffer, "%-10s %3.1fT (%+3d T/d)", resources_names[i], resource_stock[i] / 1e3, (int)(resource_delta[i]/1e3));
         UIContextPushInset(0, 18);
             if (GlobalGetState()->active_transfer_plan.IsActive()) {
+                // Button
                 if (UIContextDirectButton(transfer.resource_id == i ? "X" : " ", 2) & BUTTON_STATE_FLAG_JUST_PRESSED) {
                     GlobalGetState()->active_transfer_plan.SetResourceType(i);
                 }
             }
             UIContextWrite(buffer, false);
+
+            double qtt = 0;
             if (transfer.resource_id == i) {
-                sprintf(buffer, "   %+3.1fK", transfer.quantity / 1000);
+                qtt += transfer.quantity;
+            }
+            if (fuel_draw > 0 && i == RESOURCE_WATER) {
+                qtt -= fuel_draw;
+            }
+            if (qtt != 0) {
+                sprintf(buffer, "   %+3.1fK", qtt / 1000);
                 UIContextWrite(buffer, false);
             }
             UIContextFillline(resource_stock[i] / resource_cap[i], MAIN_UI_COLOR, BG_COLOR);
@@ -225,7 +234,7 @@ void _UIDrawStats(const resource_count_t stats[]) {
     }
 }
 
-void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, ResourceTransfer transfer) {
+void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, ResourceTransfer transfer, double fuel_draw) {
     if (upper_quadrant) {
         UIContextCreate(10, 10, 16*30, GetScreenHeight() / 2 - 20, 16, MAIN_UI_COLOR);
     } else {
@@ -235,7 +244,7 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
 
     UIContextWrite(name);
     UIContextWrite("-------------------------");
-    _UIDrawResources(resource_stock, resource_delta, resource_capacity, transfer);
+    _UIDrawResources(resource_stock, resource_delta, resource_capacity, transfer, fuel_draw);
     UIContextWrite("-------------------------");
     _UIDrawStats(stats);
     UIContextWrite("-------------------------");

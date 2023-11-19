@@ -7,6 +7,7 @@
 
 struct TransferPlan {
     ResourceTransfer resource_transfer;
+    resource_count_t fuel_mass;
 
     // Inputs
     entity_id_t departure_planet;
@@ -57,7 +58,7 @@ struct TransferPlanUI {
     void Draw(const CoordinateTransform* c_transf);
     void SetPlan(TransferPlan* plan, entity_id_t ship, Time min_time, Time pos_time);
     void SetResourceType(int resource_type);
-    void SetPayloadMass(resource_count_t payload);
+    void SetLogistics(resource_count_t payload_mass, resource_count_t fuel_mass);
     void SetDestination(entity_id_t planet);
     bool IsActive();
 };

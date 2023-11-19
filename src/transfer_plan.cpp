@@ -262,9 +262,14 @@ void TransferPlanUI::Update() {
     }
 
     if (is_valid) {
-        SetPayloadMass(ship_comp.GetPayloadCapacity(plan->tot_dv));
+        if (plan->resource_transfer.resource_id == RESOURCE_NONE) {
+            SetLogistics(0, ship_comp.GetFuelRequiredEmpty(plan->tot_dv));
+        } else {
+            resource_count_t payload = ship_comp.GetPayloadCapacity(plan->tot_dv);
+            SetLogistics(payload, ship_comp.max_capacity - payload);
+        }
     } else {
-        SetPayloadMass(0);
+        SetLogistics(0, 0);
     }
 
     if (IsKeyPressed(KEY_ENTER) && is_valid) {
@@ -278,7 +283,6 @@ void _TransferPlanInitialize(TransferPlan* tp, Time t0) {
     ASSERT(IsIdValid(tp->departure_planet))
     ASSERT(IsIdValid(tp->arrival_planet))
     
-
     HohmannTransfer(
         &GetPlanet(tp->departure_planet).orbit, 
         &GetPlanet(tp->arrival_planet).orbit, 
@@ -517,9 +521,10 @@ void TransferPlanUI::SetPlan(TransferPlan* pplan, entity_id_t pship, Time pmin_t
     plan->resource_transfer.resource_id = resource_type;
 }
 
- void TransferPlanUI::SetPayloadMass(resource_count_t payload) {
+ void TransferPlanUI::SetLogistics(resource_count_t payload_mass, resource_count_t fuel_mass) {
     if (plan == NULL) return;
-    plan->resource_transfer.quantity = payload;
+    plan->resource_transfer.quantity = payload_mass;
+    plan->fuel_mass = fuel_mass;
 }
 
  void TransferPlanUI::SetDestination(entity_id_t planet) {

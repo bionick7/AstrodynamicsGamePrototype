@@ -4,10 +4,27 @@
 #include "basic.hpp"
 #include "time.hpp"
 
-struct CoordinateTransform {
-    float space_scale;
+struct Calendar {
+    Time time;
+    Time prev_time;
+
+    Time current_migration_period;
+    Time migration_arrrival_time;
+    entity_id_t migration_arrrival_planet;  // Doesn't really fit anywhere right now ...
+
     float time_scale;
     bool paused;
+
+    void Make(Time t0);
+    Time AdvanceTime(double delta_t);
+    void HandleInput(double delta_t);
+    void DrawUI() const;
+};
+
+Calendar* GetCalendar();
+
+struct CoordinateTransform {
+    float space_scale;
     Vector2 focus;
 
     void Make();
@@ -16,13 +33,10 @@ struct CoordinateTransform {
     double TransformS(double p) const;
     double InvTransformS(double p) const;
     void TransformBuffer(Vector2* buffer, int buffer_size) const;
-    Time AdvanceTime(Time t0, double delta_t) const;
     void HandleInput(double delta_t);
-    void DrawUI() const;
 };
 
 Vector2 GetMousePositionInWorld();
-
 CoordinateTransform* GetScreenTransform();
 
 #endif  // COORDINATE_TRANSFORM

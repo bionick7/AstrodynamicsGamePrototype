@@ -33,12 +33,13 @@ Arriving pops should be the only external driver.
 
 ## Immediate
 - build modules (Done)
-- water as fuel 
+- water as fuel (Done)
+- saving state
 - build ships in shipyard
 - Sound
 
 ## Known Bugs
-- 
+- Deleting a transfer plan 
 
 ## UX improvements wishlist
 Near-term, realisable only

@@ -39,6 +39,8 @@ struct Ship {
 
     void Load(const DataNode* data);
     double GetPayloadCapacity(double dv) const;
+    double GetFuelRequiredEmpty(double dv) const;
+    double GetFuelRequiredFull(double dv) const;
     
     bool HasMouseHover(double* min_distance) const;
     void Update();

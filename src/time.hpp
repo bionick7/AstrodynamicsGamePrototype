@@ -21,8 +21,8 @@ bool TimeIsPos(Time x);
 double TimeSeconds(Time x);
 double TimeDays(Time x);
 
-void FormatTime(char* buffer, int buffer_len, Time time);
-void FormatDate(char* buffer, int buffer_len, Time time);
+char* FormatTime(char* buffer, int buffer_len, Time time);
+char* FormatDate(char* buffer, int buffer_len, Time time);
 
 int TimeTests();
 #endif  // TIME_H

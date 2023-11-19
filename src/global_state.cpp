@@ -17,11 +17,11 @@ GlobalState* GlobalGetState() {
 }
 
 Time GlobalGetPreviousFrameTime() {
-    return global_state.prev_time;
+    return global_state.calendar.prev_time;
 }
 
 Time GlobalGetNow() {
-    return global_state.time;
+    return global_state.calendar.time;
 }
 
 Ship& GetShip(entity_id_t id) {
@@ -84,7 +84,7 @@ entity_id_t _AddShip(GlobalState* gs, const DataNode* data) {
 }
 
 void GlobalState::Make(Time p_time) {
-    time = p_time;
+    calendar.Make(p_time);
     active_transfer_plan.Make();
     c_transf.Make();
     focused_planet = GetInvalidId();
@@ -151,6 +151,7 @@ void GlobalState::LoadGame(const char* file_path) {
 // Update
 void GlobalState::UpdateState(double delta_t) {
     c_transf.HandleInput(delta_t);
+    calendar.HandleInput(delta_t);
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) || IsKeyPressed(KEY_ESCAPE)) {
         // Cancel out of next layer
@@ -174,8 +175,7 @@ void GlobalState::UpdateState(double delta_t) {
     }
 
     active_transfer_plan.Update();
-    prev_time = time;
-    time = c_transf.AdvanceTime(time, delta_t);
+    calendar.AdvanceTime(delta_t);
 
     Clickable hover = {TYPE_NONE, GetInvalidId()};
     double min_distance = INFINITY;
@@ -226,22 +226,20 @@ void GlobalState::DrawState() {
 
     // UI
     UIStart();
-    c_transf.DrawUI();
-
-
+    calendar.DrawUI();
 
     // 
     for (auto [_, planet] : planet_view.each()) {
         if (active_transfer_plan.IsActive()){
             if (active_transfer_plan.plan->departure_planet == planet.id) {
-                planet.DrawUI(&c_transf, true, ResourceTransferInvert(active_transfer_plan.plan->resource_transfer));
+                planet.DrawUI(&c_transf, true, ResourceTransferInvert(active_transfer_plan.plan->resource_transfer), active_transfer_plan.plan->fuel_mass);
             }
             if (active_transfer_plan.plan->arrival_planet == planet.id) {
-                planet.DrawUI(&c_transf, false, active_transfer_plan.plan->resource_transfer);
+                planet.DrawUI(&c_transf, false, active_transfer_plan.plan->resource_transfer, -1);
             }
         }
         else if (planet.mouse_hover || planet.id == focused_planet) {
-            planet.DrawUI(&c_transf, true, EMPTY_TRANSFER);
+            planet.DrawUI(&c_transf, true, EMPTY_TRANSFER, -1);
         }
     }
     for (auto [_, ship] : ship_view.each()) {

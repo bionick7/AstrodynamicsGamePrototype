@@ -4,10 +4,77 @@
 #include "debug_drawing.hpp"
 #include "constants.hpp"
 
-void CoordinateTransform::Make(){
-    space_scale = 1e-6;
+
+void Calendar::Make(Time t0) {
     time_scale = 2048;
     paused = true;
+    time = t0;
+    prev_time = t0;
+    current_migration_period = Time(86400 * 31 * 2);
+    migration_arrrival_time = TimeAdd(t0, current_migration_period);
+}
+
+Time Calendar::AdvanceTime(double delta_t) {
+    prev_time = time;
+    if (paused) return time;
+    
+    time = TimeAddSec(time, delta_t * time_scale);
+    if (TimeIsEarlier(migration_arrrival_time, GlobalGetNow())){
+        migration_arrrival_time = TimeAdd(migration_arrrival_time, current_migration_period);
+        PLAYER_INFO("New migrants arrive")
+    }
+
+    return time;
+}
+
+void Calendar::HandleInput(double delta_t) {
+    if (IsKeyPressed(KEY_PERIOD)) {
+        time_scale *= 2;
+    }
+    if (IsKeyPressed(KEY_COMMA)) {
+        time_scale /= 2;
+    }
+    if (IsKeyPressed(KEY_SPACE)) {
+        paused = !paused;
+    }
+}
+
+void Calendar::DrawUI() const {
+    // Time scale (top-right corner)
+    const int FONT_SIZE = 16;
+    const char* text = TextFormat("II Time x %.1f", time_scale);
+    if (!paused) text += 3;
+    Vector2 pos = { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(), text, FONT_SIZE, 1).x - 10, 10 };
+    DrawTextEx(GetCustomDefaultFont(), text, pos, FONT_SIZE, 1, MAIN_UI_COLOR);
+    char text_date[100];
+    FormatDate(text_date, 100, GlobalGetNow());
+    pos = { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(), text_date, FONT_SIZE, 1).x - 10, 30 };
+    DrawTextEx(GetCustomDefaultFont(), text_date, pos, FONT_SIZE, 1, MAIN_UI_COLOR);
+
+    // Migration progress
+    double t_val = 1.0 - TimeSecDiff(migration_arrrival_time, GlobalGetNow()) / TimeSeconds(current_migration_period);
+    int progress_x = t_val * GetScreenWidth();
+    DrawRectangle(0, 1, progress_x, 2, MAIN_UI_COLOR);
+    const int collider_rec_width = 16;
+    Rectangle mouse_collider = { progress_x - collider_rec_width/2, 0, collider_rec_width, collider_rec_width};
+    if (CheckCollisionPointRec(GetMousePosition(), mouse_collider) || GetMousePosition().y < 4) {
+        char buffer[30];
+        char* buffer2 = FormatTime(buffer, 30, TimeSub(migration_arrrival_time, GlobalGetNow()));
+        strncpy(buffer2, GetPlanet(migration_arrrival_planet).name, 30 - (buffer2 - buffer));
+        Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), buffer, 16, 1);
+        if (progress_x > GetScreenWidth() - text_size.x - 200) {
+            progress_x = GetScreenWidth() - text_size.x - 200;
+        }
+        DrawTextEx(GetCustomDefaultFont(), buffer, (Vector2) { progress_x, 1 }, 16, 1, MAIN_UI_COLOR);
+    }
+}
+
+Calendar* GetCalendar() {
+    return &GlobalGetState()->calendar;
+}
+
+void CoordinateTransform::Make(){
+    space_scale = 1e-6;
     focus = {0};
 }
 
@@ -51,11 +118,6 @@ void CoordinateTransform::TransformBuffer(Vector2* buffer, int buffer_size) cons
     }
 }
 
-Time CoordinateTransform::AdvanceTime(Time t0, double delta_t) const {
-    if (paused) return t0;
-    return TimeAddSec(t0, delta_t * time_scale);
-}
-
 void CoordinateTransform::HandleInput(double delta_t) {
     float scroll_ratio = 1 - atan(-0.1 * GetMouseWheelMove());
 
@@ -87,26 +149,6 @@ void CoordinateTransform::HandleInput(double delta_t) {
         focus.y += GetMouseDelta().y / space_scale;
     }
 
-    if (IsKeyPressed(KEY_PERIOD)) {
-        time_scale *= 2;
-    }
-    if (IsKeyPressed(KEY_COMMA)) {
-        time_scale /= 2;
-    }
-    if (IsKeyPressed(KEY_SPACE)) {
-        paused = !paused;
-    }
-}
-
-void CoordinateTransform::DrawUI() const {
-    const char* text = TextFormat("II Time x %.1f", time_scale);
-    if (!paused) text += 3;
-    Vector2 pos = { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(), text, 20, 1).x - 10, 10 };
-    DrawTextEx(GetCustomDefaultFont(), text, pos, 20, 1, MAIN_UI_COLOR);
-    char text_date[100];
-    FormatDate(text_date, 100, GlobalGetNow());
-    pos = { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(), text_date, 20, 1).x - 10, 30 };
-    DrawTextEx(GetCustomDefaultFont(), text_date, pos, 20, 1, MAIN_UI_COLOR);
 }
 
 Vector2 GetMousePositionInWorld() {

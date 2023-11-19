@@ -52,25 +52,29 @@ double TimeDays(Time x) {
     return x.__t / 86400;
 }
 
-void FormatTime(char* buffer, int buffer_len, Time time) {
+char* FormatTime(char* buffer, int buffer_len, Time time) {
     time_t time_in_s = (time_t) time.__t;
 
     tm time_tm = *gmtime(&time_in_s);
     time_tm.tm_year -= 70;
+    const int char_count = 17;
     if (time_tm.tm_year > 0) {
-        snprintf(buffer, buffer_len, "%4dY %2dM %2dD %dH", time_tm.tm_year, time_tm.tm_mon, time_tm.tm_mday - 1, time_tm.tm_hour);
+        snprintf(buffer, buffer_len, "%4dY %2dM %2dD %2dH", time_tm.tm_year, time_tm.tm_mon, time_tm.tm_mday - 1, time_tm.tm_hour);
     } else {
-        snprintf(buffer, buffer_len, "%2dM %2dD %dH", time_tm.tm_mon, time_tm.tm_mday - 1, time_tm.tm_hour);
+        snprintf(buffer, buffer_len, "%2dM %2dD %2dH", time_tm.tm_mon, time_tm.tm_mday - 1, time_tm.tm_hour);
     }
+    return buffer + char_count;
 }
 
-void FormatDate(char* buffer, int buffer_len, Time time){
+char* FormatDate(char* buffer, int buffer_len, Time time){
     int start_year = 2080 - 1970;
     //time_t epoch_in_s = 65744l*86400l;  // 1900 - 2080
     time_t time_in_s = time.__t;  // + epoch_in_s;
     tm time_tm = *gmtime(&time_in_s);
     time_tm.tm_year += start_year;
+    const int char_count = 17;
     snprintf(buffer, buffer_len, "%4dY %2dM %2dD %2dH", time_tm.tm_year + 1900, time_tm.tm_mon + 1, time_tm.tm_mday, time_tm.tm_hour);
+    return buffer + char_count;
 }
 
 
@@ -80,13 +84,22 @@ void FormatDate(char* buffer, int buffer_len, Time time){
 }
 
 int TimeTests() {
-    Time t1 = Time(123.456);
-    Time t2 = Time(456.789);
+    const double v1 = 123.456, v2 = 456.789;
+    Time t1 = Time(v1);
+    Time t2 = Time(v2);
 
-    TIMETEST_EQUAL(TimeAdd(t1, t2), 123.456 + 456.789)
-    TIMETEST_EQUAL(TimeSub(t1, t2), 123.456 - 456.789)
-    TIMETEST_EQUAL(TimeSub(t2, t1), 456.789 - 123.456)
+    TIMETEST_EQUAL(TimeAdd(t1, t2), v1 + v2)
+    TIMETEST_EQUAL(TimeSub(t1, t2), v1 - v2)
+    TIMETEST_EQUAL(TimeSub(t2, t1), v2 - v1)
     TIMETEST_EQUAL(TimePosMod(Time(-340), Time(100)), 60)
+    if (fabs(TimeSeconds(TimeSub(t1, t2)) - TimeSecDiff(t1, t2)) > 1e-10) {
+        ERROR("TimeSub != TimeSecDiff")
+        return 1;
+    }
+    if (fabs(TimeSecDiff(TimeSeconds(TimeAddSec(t1, v2)), TimeAdd(t1, t2))) > 1e-10) {
+        ERROR("TimeAdd != TimeAddSec")
+        return 1;
+    }
     if (!TimeIsEarlier(t1, t2)) return 1;
 
     return 0;

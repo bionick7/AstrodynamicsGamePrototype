@@ -44,7 +44,7 @@ struct Planet {
     bool HasMouseHover(double* distance) const;
     void Update();
     void Draw(const CoordinateTransform* c_transf);
-    void DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, ResourceTransfer transfer);
+    void DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, ResourceTransfer transfer, double fuel_draw);
 };
 
 
