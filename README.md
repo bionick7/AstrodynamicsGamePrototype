@@ -40,6 +40,7 @@ Arriving pops should be the only external driver.
 
 ## Known Bugs
 - Deleting a transfer plan 
+- Fullscreen doesn't work on linux
 
 ## UX improvements wishlist
 Near-term, realisable only

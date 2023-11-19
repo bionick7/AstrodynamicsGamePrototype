@@ -242,10 +242,11 @@ void GlobalState::DrawState() {
             planet.DrawUI(&c_transf, true, EMPTY_TRANSFER, -1);
         }
     }
+    ModuleConstructionUI();
     for (auto [_, ship] : ship_view.each()) {
         ship.DrawUI(&c_transf);
     }
-    ModuleConstructionUI();
+    active_transfer_plan.DrawUI();
     UIEnd();
 
     DebugFlushText();

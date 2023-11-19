@@ -2,6 +2,7 @@
 .vs/*
 
 dependencies/*
+screenshots/*
 
 app
 app.exe

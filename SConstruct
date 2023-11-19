@@ -14,6 +14,13 @@ lib_dir = 'lib'
 # Platform specific libraries
 platform_libs = []
 
+def get_all_cpp_files(dirs):
+    res = []
+    for sdir in dirs:
+        for f in Glob(sdir + '/*.cpp'):
+            res.append(f)
+    return res
+
 def main():
     if platform == "win":
         env = Environment(
@@ -31,7 +38,6 @@ def main():
         env = Environment(CC = "gcc")
         lib_dir = 'lib/linux'
         platform_libs = []
-
 
     flags = []
     defines = []
@@ -54,10 +60,7 @@ def main():
     # Get a list of all C files in the source directories
 
     #c_files = [f for f in Glob(sdir + '/*.c') for sdir in src_dirs]  WHY the fuck does this not work?
-    c_files = []
-    for sdir in src_dirs:
-        for f in Glob(sdir + '/*.cpp'):
-            c_files.append(f)
+    c_files = get_all_cpp_files(src_dirs)
 
     # Compile C files
     objs = env.Object(c_files)

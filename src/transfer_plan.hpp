@@ -56,6 +56,7 @@ struct TransferPlanUI {
     void Abort();
     void Update();
     void Draw(const CoordinateTransform* c_transf);
+    void DrawUI();
     void SetPlan(TransferPlan* plan, entity_id_t ship, Time min_time, Time pos_time);
     void SetResourceType(int resource_type);
     void SetLogistics(resource_count_t payload_mass, resource_count_t fuel_mass);

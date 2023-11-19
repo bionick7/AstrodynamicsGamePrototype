@@ -1,12 +1,11 @@
 #include "transfer_plan.hpp"
 #include "datanode.hpp"
+#include "app_meta.hpp"
 
 // For tests
 #include "global_state.hpp"
 #include "constants.hpp"
 #include "ui.hpp"
-
-const char* WINDOW_TITLE = "Astro navigation game prototype";
 
 const char* GetSetting(int argc, const char** argv, const char* find) {
     for (int i=0; i < argc; i++) {
@@ -27,10 +26,8 @@ int UnitTests() {
     return 0;
 }
 
-void Initialize(int argc, const char** argv) {
+void Load(int argc, const char** argv) {
     INFO("Init complete");
-    SetExitKey(KEY_NULL);
-    SetTargetFPS(60);
     UIInit();
 
     GlobalState* app = GlobalGetState();
@@ -49,7 +46,7 @@ void Initialize(int argc, const char** argv) {
     }
 }
 
-void MainLoop(GlobalState* app) {
+void MainLoopStep(GlobalState* app) {
     app->UpdateState(1./60.);
 
     BeginDrawing();
@@ -64,14 +61,15 @@ int main(int argc, const char** argv) {
     }
 
     // Initializing
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
-    Initialize(argc, argv);
+    AppMetaInit();
+    Load(argc, argv);
 
     GlobalState* app = GlobalGetState();
 
     // Main loop
-    while (!WindowShouldClose()) { 
-        MainLoop(app);
+    while (!WindowShouldClose()) {
+        AppMetaStep();
+        MainLoopStep(app);
     }
 
     CloseWindow();                  // Close window and OpenGL context

@@ -393,52 +393,6 @@ Time _DrawHandle(
     return current;
 }
 
-void _DrawText(const TransferPlan* tp, const Ship& ship, Time t0) {
-    UIContextCurrent().Enclose(2, 2, BG_COLOR, TRANSFER_UI_COLOR);
-    char departure_time_outpstr[30];
-    char arrival_time_outpstr[30];
-    char departure_time_str[40] = "Departs in ";
-    char arrival_time_str[40] =   "Arrives in ";
-    char dv1_str[40];
-    char dv2_str[40];
-    char dvtot_str[40];
-    char payload_str[40];
-
-    double total_dv = tp->dv1[tp->primary_solution] + tp->dv2[tp->primary_solution];
-    FormatTime(departure_time_outpstr, 30, TimeSub(tp->departure_time, t0));
-    FormatTime(arrival_time_outpstr, 30, TimeSub(tp->arrival_time, t0));
-    snprintf(dv1_str,   40, "DV 1      %5.3f km/s", tp->dv1[tp->primary_solution]/1000.0);
-    snprintf(dv2_str,   40, "DV 2      %5.3f km/s", tp->dv2[tp->primary_solution]/1000.0);
-    snprintf(dvtot_str, 40, "DV Tot    %5.3f km/s", total_dv/1000.0);
-    double capacity = ship.GetPayloadCapacity(total_dv);
-    snprintf(payload_str, 40, "Payload cap.  %3.0f %% (%.0f / %.0f t)", 
-        capacity / ship.max_capacity * 100,
-        capacity / 1000.0,
-        ship.max_capacity / 1000.0
-    );
-
-    UIContextWrite(strcat(departure_time_str, departure_time_outpstr));
-    UIContextPushInset(0, 18);
-        UIContextWrite(strcat(arrival_time_str, arrival_time_outpstr));
-        UIContextFillline(
-            fmin(TimeSecDiff(tp->arrival_time, t0) / TimeSecDiff(tp->hohmann_arrival_time, t0), 1.0), 
-            TRANSFER_UI_COLOR, BG_COLOR
-        );
-    UIContextPop();  // Inset
-    //UIContextWrite("=====================");
-    //UIContextWrite(dv1_str);
-    //UIContextWrite(dv2_str);
-    UIContextPushInset(0, 18);
-        UIContextWrite(dvtot_str);
-        //UIContextFillline(total_dv / ship.max_dv, TRANSFER_UI_COLOR, BG_COLOR);
-    UIContextPop();  // Inset
-    //UIContextWrite("=====================");
-    UIContextPushInset(0, 18);
-        UIContextWrite(payload_str);
-        UIContextFillline(capacity / ship.max_capacity, TRANSFER_UI_COLOR, BG_COLOR);
-    UIContextPop();  // Inset
-}
-
 void TransferPlanUI::Draw(const CoordinateTransform* c_transf) {
     if (!IsActive()) {
         return;
@@ -446,12 +400,6 @@ void TransferPlanUI::Draw(const CoordinateTransform* c_transf) {
     const Planet& from = GetPlanet(plan->departure_planet);
     const Planet& to = GetPlanet(plan->arrival_planet);
     const Ship& ship_comp = GetShip(ship);
-
-    UIContextCreate(
-        GetScreenWidth() - 20*16 - 5, 5 + 50,
-        20*16, MinInt(200, GetScreenHeight()) - 2*5 - 20, 
-        16, TRANSFER_UI_COLOR
-    );
 
     departure_handle_pos = c_transf->TransformV(OrbitGetPosition(&from.orbit, plan->departure_time).cartesian);
     arrival_handle_pos = c_transf->TransformV(OrbitGetPosition(&to.orbit, plan->arrival_time).cartesian);
@@ -473,23 +421,64 @@ void TransferPlanUI::Draw(const CoordinateTransform* c_transf) {
         _DrawTransferOrbit(plan, plan->primary_solution, false, time_bounds[0]);
         _DrawTransferOrbit(plan, 1 - plan->primary_solution, true, time_bounds[0]);
     }
-    if (is_valid) {
-        _DrawText(plan, ship_comp, time_bounds[0]);
+}
+
+void TransferPlanUI::DrawUI() {
+    if (!IsActive()) {
+        return;
     }
-    else if (sin(GetTime() * 6.0) > 0.0) {
-        char transfer_str[100];
-        if (plan->tot_dv > ship_comp.max_dv) {
-            sprintf(transfer_str, "INVALID TRANSFER: %5.3f > %5.3f km/s", 
-                plan->tot_dv / 1000,
-                ship_comp.max_dv / 1000
-            );
-        } else if (TimeIsEarlier(plan->departure_time, time_bounds[0])) {
-            strcpy(transfer_str, "INVALID TRANSFER: Departuring in the past");
-        }
-        UIContextCurrent().height = 30;
-        UIContextCurrent().Enclose(2, 2, BG_COLOR, TRANSFER_UI_COLOR);
-        UIContextWrite(transfer_str);
-    }
+    const Ship& ship_comp = GetShip(ship);
+    
+    const int y_margin = 5+50;
+    UIContextCreate(
+        GetScreenWidth() - 20*16 - 5, y_margin,
+        20*16, MinInt(200, GetScreenHeight()) - 2*5 - y_margin, 
+        16, TRANSFER_UI_COLOR
+    );
+
+    UIContextCurrent().Enclose(2, 2, BG_COLOR, TRANSFER_UI_COLOR);
+    char departure_time_outpstr[30];
+    char arrival_time_outpstr[30];
+    char departure_time_str[40] = "Departs in ";
+    char arrival_time_str[40] =   "Arrives in ";
+    char dv1_str[40];
+    char dv2_str[40];
+    char dvtot_str[40];
+    char payload_str[40];
+
+    double total_dv = plan->dv1[plan->primary_solution] + plan->dv2[plan->primary_solution];
+    FormatTime(departure_time_outpstr, 30, TimeSub(plan->departure_time, time_bounds[0]));
+    FormatTime(arrival_time_outpstr, 30, TimeSub(plan->arrival_time, time_bounds[0]));
+    snprintf(dv1_str,   40, "DV 1      %5.3f km/s", plan->dv1[plan->primary_solution]/1000.0);
+    snprintf(dv2_str,   40, "DV 2      %5.3f km/s", plan->dv2[plan->primary_solution]/1000.0);
+    snprintf(dvtot_str, 40, "DV Tot    %5.3f km/s", total_dv/1000.0);
+    double capacity = ship_comp.GetPayloadCapacity(total_dv);
+    snprintf(payload_str, 40, "Payload cap.  %3.0f %% (%.0f / %.0f t)", 
+        capacity / ship_comp.max_capacity * 100,
+        capacity / 1000.0,
+        ship_comp.max_capacity / 1000.0
+    );
+
+    UIContextWrite(strcat(departure_time_str, departure_time_outpstr));
+    UIContextPushInset(0, 18);
+        UIContextWrite(strcat(arrival_time_str, arrival_time_outpstr));
+        UIContextFillline(
+            fmin(TimeSecDiff(plan->arrival_time, time_bounds[0]) / TimeSecDiff(plan->hohmann_arrival_time, time_bounds[0]), 1.0), 
+            TRANSFER_UI_COLOR, BG_COLOR
+        );
+    UIContextPop();  // Inset
+    //UIContextWrite("=====================");
+    //UIContextWrite(dv1_str);
+    //UIContextWrite(dv2_str);
+    UIContextPushInset(0, 18);
+        UIContextWrite(dvtot_str);
+        //UIContextFillline(total_dv / ship.max_dv, TRANSFER_UI_COLOR, BG_COLOR);
+    UIContextPop();  // Inset
+    //UIContextWrite("=====================");
+    UIContextPushInset(0, 18);
+        UIContextWrite(payload_str);
+        UIContextFillline(capacity / ship_comp.max_capacity, TRANSFER_UI_COLOR, BG_COLOR);
+    UIContextPop();  // Inset
 }
 
 void TransferPlanUI::SetPlan(TransferPlan* pplan, entity_id_t pship, Time pmin_time, Time pmax_time) {
