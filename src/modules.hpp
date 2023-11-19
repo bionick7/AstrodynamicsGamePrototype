@@ -75,6 +75,7 @@ struct ModuleInstance {
 };
 
 int LoadModules(const DataNode* datanode);
+void WriteModulesToFile(const char* filepath);
 module_index_t GetModuleIndexById(const char* id);
 const ModuleClass* GetModuleByIndex(module_index_t index);
 

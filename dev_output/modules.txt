@@ -1,0 +1,15 @@
+ ==== water ====
+Water extractor :  ==>   100T/d water
+Water mine :    50 workforce ==>   200T/d water
+Colony :  1000T/d water 2000T/d food ==>  5000 population 5000 workforce
+
+ ==== food ====
+Farmhouse :   250 workforce ==>   200T/d food
+Small settlement :   300T/d food ==>  1000 population 1000 workforce
+Colony :  1000T/d water 2000T/d food ==>  5000 population 5000 workforce
+
+ ==== metal ====
+Refinmery Outpost :   250 workforce ==>    50T/d metal
+
+ ==== electronics ====
+

@@ -21,6 +21,15 @@ int main() {
 
 const char* WINDOW_TITLE = "Astro navigation game prototype";
 
+const char* GetSetting(int argc, const char** argv, const char* find) {
+    for (int i=0; i < argc; i++) {
+        if (strcmp(argv[i], find) == 0) {
+            return i == argc - 1 ? "" : argv[i+1];
+        }
+    }
+    return NULL;
+}
+
 int main(int argc, const char** argv) {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
     INFO("Init complete");
@@ -35,6 +44,11 @@ int main(int argc, const char** argv) {
         "resources/data/modules.yaml"
     );
     GlobalGetState()->LoadGame("resources/data/start_state.yaml");
+
+    const char* module_outp_fp = GetSetting(argc, argv, "--module_outp");
+    if (module_outp_fp != NULL){
+        WriteModulesToFile(module_outp_fp);
+    }
 
     while (!WindowShouldClose()) {  
         GlobalGetState()->UpdateState(1./60.);

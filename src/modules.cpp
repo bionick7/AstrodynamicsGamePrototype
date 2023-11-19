@@ -97,6 +97,52 @@ void _LoadArray(const DataNode* data_node, resource_count_t array[], const char 
     }
 }
 
+void _WriteSingleModuleToFile(FILE* file, const ModuleClass* mc) {
+    fprintf(file, "%s : ", mc->name);
+    for (int i=0; i < RESOURCE_MAX; i++) {
+        if (mc->resource_delta_contributions[i] < 0) {
+            fprintf(file, "%5.0fT/d %s", -mc->resource_delta_contributions[i] / 1000, resources_names[i]);
+        }
+    }
+    for (int i=0; i < STAT_MAX; i++) {
+        if (mc->stat_required[i] > 0) {
+            fprintf(file, "%5.0f %s", mc->stat_required[i], stat_names[i]);
+        }
+    }
+    fprintf(file, " ==> ");
+    for (int i=0; i < RESOURCE_MAX; i++) {
+        if (mc->resource_delta_contributions[i] > 0) {
+            fprintf(file, "%5.0fT/d %s", mc->resource_delta_contributions[i] / 1000, resources_names[i]);
+        }
+    }
+    for (int i=0; i < STAT_MAX; i++) {
+        if (mc->stat_contributions[i] > 0) {
+            fprintf(file, "%5.0f %s", mc->stat_contributions[i], stat_names[i]);
+        }
+    }
+    fprintf(file, "\n");
+
+}
+
+void WriteModulesToFile(const char* filename) {
+    //if (!FileExists(filename)) {
+    //    ERROR("Could not find file '%s'", filename)
+    //    return;
+    //}
+    FILE* file = fopen(filename, "w");
+    for (int i=0; i < RESOURCE_MAX; i++) {
+        fprintf(file, " ==== %s ====\n", resources_names[i]);
+        for (int module_index=0; module_index < module_count; module_index++) {
+            const ModuleClass* mc = &modules[module_index];
+            if (mc->resource_delta_contributions[i] != 0){
+                _WriteSingleModuleToFile(file, mc);
+            }
+        }
+        fprintf(file, "\n");
+    }
+    fclose(file);
+}
+
 int LoadModules(const DataNode* data) {
     if (modules != NULL) {
         WARNING("Loading modules more than once (possible memory leak)");
@@ -121,6 +167,7 @@ int LoadModules(const DataNode* data) {
 
         modules[module_index] = mod;
         module_ids.insert_or_assign(mod_data->Get("id", "_"), module_index);
+        
     }
     return module_count;
 }
