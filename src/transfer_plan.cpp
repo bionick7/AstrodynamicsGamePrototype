@@ -276,21 +276,16 @@ void _TransferPlanInitialize(TransferPlan* tp, time_type t0) {
     // Sets departure and arrival time to the dv-cheapest values (assuming hohmann transfer)
     ASSERT(IsIdValid(tp->departure_planet))
     ASSERT(IsIdValid(tp->arrival_planet))
-    const Planet& from = GetPlanet(tp->departure_planet);
-    const Planet& to = GetPlanet(tp->arrival_planet);
-    double mu = from.orbit.mu;
-    double hohmann_a = (from.orbit.sma + to.orbit.sma) * 0.5;
-    double hohmann_flight_time = sqrt(hohmann_a*hohmann_a*hohmann_a / mu) * PI;
-    double p1_mean_motion = OrbitGetMeanMotion(&from.orbit);
-    double p2_mean_motion = OrbitGetMeanMotion(&to.orbit);
-    double relative_mean_motion = p2_mean_motion - p1_mean_motion;
-    double current_relative_annomaly = OrbitGetPosition(&to.orbit, t0).longuitude - OrbitGetPosition(&from.orbit, t0).longuitude;
-    double target_relative_anomaly = PosMod(PI - p2_mean_motion * hohmann_flight_time, 2*PI);
-    double departure_wait_time = (target_relative_anomaly - current_relative_annomaly) / relative_mean_motion;
-    double relative_period = fabs(2 * PI / relative_mean_motion);
-    departure_wait_time = PosMod(departure_wait_time, relative_period);
-    tp->departure_time = t0 + departure_wait_time;
-    tp->arrival_time = t0 + departure_wait_time + hohmann_flight_time;
+    
+
+    HohmannTransfer(
+        &GetPlanet(tp->departure_planet).orbit, 
+        &GetPlanet(tp->arrival_planet).orbit, 
+        t0, &tp->hohmann_departure_time, &tp->hohmann_arrival_time, 
+        NULL, NULL
+    );
+    tp->departure_time = tp->hohmann_departure_time;
+    tp->arrival_time = tp->hohmann_arrival_time;
 }
 
 void _DrawSweep(const Orbit* orbit, time_type from, time_type to, Color color) {
@@ -309,7 +304,7 @@ void _DrawTransferOrbit(const TransferPlan* plan, int solution, bool is_secondar
     const Planet& from = GetPlanet(plan->departure_planet);
     const Planet& to = GetPlanet(plan->arrival_planet);
     Color velocity_color = YELLOW;
-    Color orbit_color = PALETTE_GREEN;
+    Color orbit_color = TRANSFER_UI_COLOR;
     if (is_secondary) {
         velocity_color = ColorTint(velocity_color, GRAY);
         orbit_color = ColorTint(orbit_color, GRAY);
@@ -394,7 +389,7 @@ time_type _DrawHandle(
 }
 
 void _DrawText(const TransferPlan* tp, const Ship& ship, time_type t0) {
-    UIContextCurrent().Enclose(2, 2, BG_COLOR, PALETTE_GREEN);
+    UIContextCurrent().Enclose(2, 2, BG_COLOR, TRANSFER_UI_COLOR);
     char departure_time_outpstr[30];
     char arrival_time_outpstr[30];
     char departure_time_str[40] = "Departs in ";
@@ -418,13 +413,25 @@ void _DrawText(const TransferPlan* tp, const Ship& ship, time_type t0) {
     );
 
     UIContextWrite(strcat(departure_time_str, departure_time_outpstr));
-    UIContextWrite(strcat(arrival_time_str, arrival_time_outpstr));
-    UIContextWrite("=====================");
+    UIContextPushInset(0, 18);
+        UIContextWrite(strcat(arrival_time_str, arrival_time_outpstr));
+        UIContextFillline(
+            fmin((tp->arrival_time - t0) / (tp->hohmann_arrival_time - t0), 1.0), 
+            TRANSFER_UI_COLOR, BG_COLOR
+        );
+    UIContextPop();  // Inset
+    //UIContextWrite("=====================");
     //UIContextWrite(dv1_str);
     //UIContextWrite(dv2_str);
-    UIContextWrite(dvtot_str);
-    UIContextWrite("=====================");
-    UIContextWrite(payload_str);
+    UIContextPushInset(0, 18);
+        UIContextWrite(dvtot_str);
+        //UIContextFillline(total_dv / ship.max_dv, TRANSFER_UI_COLOR, BG_COLOR);
+    UIContextPop();  // Inset
+    //UIContextWrite("=====================");
+    UIContextPushInset(0, 18);
+        UIContextWrite(payload_str);
+        UIContextFillline(capacity / ship.max_capacity, TRANSFER_UI_COLOR, BG_COLOR);
+    UIContextPop();  // Inset
 }
 
 void TransferPlanUI::Draw(const CoordinateTransform* c_transf) {
@@ -438,7 +445,7 @@ void TransferPlanUI::Draw(const CoordinateTransform* c_transf) {
     UIContextCreate(
         GetScreenWidth() - 20*16 - 5, 5 + 50,
         20*16, MinInt(200, GetScreenHeight()) - 2*5 - 20, 
-        16, PALETTE_GREEN
+        16, TRANSFER_UI_COLOR
     );
 
     departure_handle_pos = c_transf->TransformV(OrbitGetPosition(&from.orbit, plan->departure_time).cartesian);
@@ -475,7 +482,7 @@ void TransferPlanUI::Draw(const CoordinateTransform* c_transf) {
             strcpy(transfer_str, "INVALID TRANSFER: Departuring in the past");
         }
         UIContextCurrent().height = 30;
-        UIContextCurrent().Enclose(2, 2, BG_COLOR, PALETTE_GREEN);
+        UIContextCurrent().Enclose(2, 2, BG_COLOR, TRANSFER_UI_COLOR);
         UIContextWrite(transfer_str);
     }
 }

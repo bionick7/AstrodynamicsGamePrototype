@@ -16,7 +16,7 @@ Target period: ???
 - found colony  << motivation what?
 - supply colony
 - make self-sufficient
-- accomodate people << Forced frequency good?
+- accomodate people << 2M Forced frequency good?
 - make productive
 
 Loop C (sketch)

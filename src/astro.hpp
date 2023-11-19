@@ -38,4 +38,6 @@ void DrawOrbit(const Orbit* orbit, Color color);
 void DrawOrbitWithOffset(const Orbit* orbit, double offset, Color color);
 void DrawOrbitBounded(const Orbit* orbit, OrbitPos bound1, OrbitPos bound2, double offet, Color color);
 
+void HohmannTransfer(const Orbit* from, const Orbit* to, time_type t0, time_type* departure, time_type* arrival, double* dv1, double* dv2);
+
 #endif // ASTRO_H

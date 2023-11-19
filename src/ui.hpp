@@ -61,6 +61,7 @@ ButtonStateFlags UIContextAsButton();
 void UIContextPop();
 void UIContextEnclose(int inset_x, int inset_y, Color background_color, Color line_color);
 void UIContextWrite(const char* text, bool linebreak=true);
+void UIContextFillline(double value, Color fill_color, Color background_color);
 ButtonStateFlags UIContextDirectButton(const char* text, int inset);
 TextBox& UIContextCurrent();
 

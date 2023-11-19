@@ -20,7 +20,7 @@ typedef entt::entity entity_id_t;
 #define PALETTE_WHITE     GetColor(0xFFFFA0FFu)
 
 #define MAIN_UI_COLOR     PALETTE_WHITE
-#define TRANSFER_UI_COLOR PALETTE_RED
+#define TRANSFER_UI_COLOR PALETTE_GREEN
 
 #define SCREEN_WIDTH 1600
 #define SCREEN_HEIGHT 900

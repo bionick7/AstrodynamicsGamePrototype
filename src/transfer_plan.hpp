@@ -25,6 +25,10 @@ struct TransferPlan {
     double tot_dv;
     double tot_dv_sec;
 
+    // Cached
+    time_type hohmann_departure_time;
+    time_type hohmann_arrival_time;
+
     TransferPlan();
 };
 

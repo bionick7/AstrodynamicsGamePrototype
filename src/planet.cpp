@@ -190,7 +190,10 @@ void Planet::Draw(const CoordinateTransform* c_transf) {
     }
 }
 
-void _UIDrawResources(const resource_count_t resource_stock[], const resource_count_t resource_delta[], const ResourceTransfer& transfer) {
+void _UIDrawResources(
+    const resource_count_t resource_stock[], const resource_count_t resource_delta[], const resource_count_t resource_cap[], 
+    const ResourceTransfer& transfer
+) {
     for (int i=0; i < RESOURCE_MAX; i++) {
         char buffer[50];
         //sprintf(buffer, "%-10s %5d/%5d (%+3d)", resources_names[i], qtt, cap, delta);
@@ -200,12 +203,14 @@ void _UIDrawResources(const resource_count_t resource_stock[], const resource_co
                 GlobalGetState()->active_transfer_plan.SetResourceType(i);
             }
         }
-        UIContextWrite(buffer, false);
-        if (transfer.resource_id == i) {
-            sprintf(buffer, "   %+3.1fK", transfer.quantity / 1000);
+        UIContextPushInset(0, 16);
             UIContextWrite(buffer, false);
-        }
-        UIContextWrite("");
+            if (transfer.resource_id == i) {
+                sprintf(buffer, "   %+3.1fK", transfer.quantity / 1000);
+                UIContextWrite(buffer, false);
+            }
+            UIContextFillline(resource_stock[i] / resource_cap[i], MAIN_UI_COLOR, BG_COLOR);
+        UIContextPop();  // Inset
         //TextBoxLineBreak(&tb);
     }
 }
@@ -229,7 +234,7 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
 
     UIContextWrite(name);
     UIContextWrite("-------------------------");
-    _UIDrawResources(resource_stock, resource_delta, transfer);
+    _UIDrawResources(resource_stock, resource_delta, resource_capacity, transfer);
     UIContextWrite("-------------------------");
     _UIDrawStats(stats);
     UIContextWrite("-------------------------");

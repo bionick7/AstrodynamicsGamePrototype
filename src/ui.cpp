@@ -207,6 +207,15 @@ void UIContextWrite(const char* text, bool linebreak) {
     }
 }
 
+void UIContextFillline(double value, Color fill_color, Color background_color) {
+    TextBox& tb = UIContextCurrent();
+    int y_end = tb.text_start_y + tb.height;
+    int x_mid_point = tb.text_start_x + tb.width * value;
+    DrawLine(tb.text_start_x, y_end, tb.text_start_x + tb.width, y_end, background_color);
+    DrawLine(tb.text_start_x, y_end, x_mid_point, y_end, fill_color);
+    DrawLine(x_mid_point, y_end, x_mid_point, y_end - 4, fill_color);
+}
+
 ButtonStateFlags UIContextDirectButton(const char* text, int inset) {
     TextBox& tb = UIContextCurrent();
     return tb.WriteButton(text, inset);

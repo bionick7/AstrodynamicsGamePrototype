@@ -281,3 +281,21 @@ void DrawOrbitBounded(const Orbit* orbit, OrbitPos bound1, OrbitPos bound2, doub
     GetScreenTransform()->TransformBuffer(orbit_draw_buffer, ORBIT_BUFFER_SIZE);
     DrawLineStrip(&orbit_draw_buffer[0], ORBIT_BUFFER_SIZE, color);
 }
+
+void HohmannTransfer(const Orbit* from, const Orbit* to, time_type t0, time_type* departure, time_type* arrival, double* dv1, double* dv2) {
+    double mu = from->mu;
+    double hohmann_a = (from->sma + to->sma) * 0.5;
+    double hohmann_flight_time = sqrt(hohmann_a*hohmann_a*hohmann_a / mu) * PI;
+    double p1_mean_motion = OrbitGetMeanMotion(from);
+    double p2_mean_motion = OrbitGetMeanMotion(to);
+    double relative_mean_motion = p2_mean_motion - p1_mean_motion;
+    double current_relative_annomaly = OrbitGetPosition(to, t0).longuitude - OrbitGetPosition(from, t0).longuitude;
+    double target_relative_anomaly = PosMod(PI - p2_mean_motion * hohmann_flight_time, 2*PI);
+    double departure_wait_time = (target_relative_anomaly - current_relative_annomaly) / relative_mean_motion;
+    double relative_period = fabs(2 * PI / relative_mean_motion);
+    departure_wait_time = PosMod(departure_wait_time, relative_period);
+    if (departure != NULL) *departure = t0 + departure_wait_time;
+    if (arrival   != NULL) *arrival = t0 +departure_wait_time + hohmann_flight_time;
+    if (dv1       != NULL) *dv1 = sqrt(mu * (2 / from->sma - 1 / hohmann_a)) - sqrt(mu / from->sma);
+    if (dv2       != NULL) *dv2 = sqrt(mu / to->sma) - sqrt(mu * (2 / to->sma - 1 / hohmann_a));
+}
