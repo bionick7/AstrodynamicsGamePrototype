@@ -3,6 +3,7 @@
 
 #include "basic.hpp"
 
+static inline Vector2 GetScreenCenter() { return {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f}; }
 
 typedef uint8_t TextAlignment;
 const TextAlignment TEXT_ALIGNMENT_LEFT = 0x00;

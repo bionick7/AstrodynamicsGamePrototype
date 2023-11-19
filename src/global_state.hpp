@@ -7,10 +7,6 @@
 #include "datanode.hpp"
 #include "coordinate_transform.hpp"
 
-#define MAX_PLANETS 32
-#define MAX_SHIPS 32
-#define MAX_CLICKABLE_OBJECTS 32
-
 enum AgentType {
     TYPE_NONE,
     TYPE_SHIP,
@@ -26,22 +22,19 @@ bool IsIdValid(entity_id_t id);
 static inline entity_id_t GetInvalidId() { return entt::null; }
 
 struct GlobalState {
-    time_type time;
-    time_type prev_time;
+    Time time;
+    Time prev_time;
     CoordinateTransform c_transf;
     TransferPlanUI active_transfer_plan;
     entity_id_t focused_planet;
     entity_id_t focused_ship;
 
-    //DataNode ephemerides;
-    //DataNode module_data;
-
-    // Very unelegant
+    // Everything that doesn't fit anywhere else
     double parent_radius;
     double parent_mu;
 
     // Lifecycle
-    void Make(time_type time);
+    void Make(Time time);
     void LoadConfigs(const char* ephemerides_path, const char* module_data_path);
     void LoadGame(const char* file_path);
     // Update
@@ -54,8 +47,8 @@ struct GlobalState {
 };
 
 GlobalState* GlobalGetState();
-time_type GlobalGetNow();
-time_type GlobalGetPreviousFrameTime();
+Time GlobalGetNow();
+Time GlobalGetPreviousFrameTime();
 Planet* GetPlanetByName(const char* planet_name);
 
 #define GetPlanet(uuid) _GetPlanet(uuid, __FILE__, __LINE__)

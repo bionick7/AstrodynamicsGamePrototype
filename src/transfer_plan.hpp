@@ -3,7 +3,7 @@
 
 #include "basic.hpp"
 #include "planet.hpp"
-
+#include "time.hpp"
 
 struct TransferPlan {
     ResourceTransfer resource_transfer;
@@ -11,8 +11,8 @@ struct TransferPlan {
     // Inputs
     entity_id_t departure_planet;
     entity_id_t arrival_planet;
-    time_type departure_time;
-    time_type arrival_time;
+    Time departure_time;
+    Time arrival_time;
 
     // Outputs
     int num_solutions;
@@ -26,8 +26,8 @@ struct TransferPlan {
     double tot_dv_sec;
 
     // Cached
-    time_type hohmann_departure_time;
-    time_type hohmann_arrival_time;
+    Time hohmann_departure_time;
+    Time hohmann_arrival_time;
 
     TransferPlan();
 };
@@ -48,14 +48,14 @@ struct TransferPlanUI {
     Vector2 arrival_handle_pos;
     bool redraw_queued;
 
-    time_type time_bounds[2];
+    Time time_bounds[2];
 
     TransferPlanUI() { Make(); }
     void Make();
     void Abort();
     void Update();
     void Draw(const CoordinateTransform* c_transf);
-    void SetPlan(TransferPlan* plan, entity_id_t ship, time_type min_time, time_type pos_time);
+    void SetPlan(TransferPlan* plan, entity_id_t ship, Time min_time, Time pos_time);
     void SetResourceType(int resource_type);
     void SetPayloadMass(resource_count_t payload);
     void SetDestination(entity_id_t planet);

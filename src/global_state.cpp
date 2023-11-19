@@ -2,6 +2,7 @@
 #include "debug_drawing.hpp"
 #include "logging.hpp"
 #include "ui.hpp"
+#include "constants.hpp"
 
 GlobalState global_state;
 
@@ -15,11 +16,11 @@ GlobalState* GlobalGetState() {
     return &global_state;
 }
 
-time_type GlobalGetPreviousFrameTime() {
+Time GlobalGetPreviousFrameTime() {
     return global_state.prev_time;
 }
 
-time_type GlobalGetNow() {
+Time GlobalGetNow() {
     return global_state.time;
 }
 
@@ -82,7 +83,7 @@ entity_id_t _AddShip(GlobalState* gs, const DataNode* data) {
     return ship_entity;
 }
 
-void GlobalState::Make(time_type p_time) {
+void GlobalState::Make(Time p_time) {
     time = p_time;
     active_transfer_plan.Make();
     c_transf.Make();
@@ -179,8 +180,6 @@ void GlobalState::UpdateState(double delta_t) {
     Clickable hover = {TYPE_NONE, GetInvalidId()};
     double min_distance = INFINITY;
 
-    //int ships_per_planet[MAX_PLANETS] = {0};
-
     auto ship_view = registry.view<Ship>();
     auto planet_view = registry.view<Planet>();
 
@@ -228,6 +227,9 @@ void GlobalState::DrawState() {
     // UI
     UIStart();
     c_transf.DrawUI();
+
+
+
     // 
     for (auto [_, planet] : planet_view.each()) {
         if (active_transfer_plan.IsActive()){

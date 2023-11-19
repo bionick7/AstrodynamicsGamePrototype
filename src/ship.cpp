@@ -2,6 +2,7 @@
 #include "utils.hpp"
 #include "global_state.hpp"
 #include "ui.hpp"
+#include "constants.hpp"
 
 void Ship::_OnClicked() {
     if (GlobalGetState()->focused_ship == id) {
@@ -30,7 +31,7 @@ void Ship::_OnNewPlanClicked() {
     prepared_plans[prepared_plans_count] = TransferPlan();
     plan_edit_index = prepared_plans_count;
 
-    time_type min_time = 0;
+    Time min_time = 0;
     if (plan_edit_index == 0) {
         prepared_plans[plan_edit_index].departure_planet = parent_planet;
         min_time = GlobalGetNow();
@@ -151,7 +152,7 @@ void Ship::PopTransferPlan(int index) {
 
 void Ship::StartEditingPlan(int index) {
     TransferPlanUI& tp_ui = GlobalGetState()->active_transfer_plan;
-    time_type min_time = 0;
+    Time min_time = 0;
     if (prepared_plans_count == 0) {
         prepared_plans[prepared_plans_count].departure_planet = parent_planet;
         min_time = GlobalGetNow();
@@ -165,20 +166,20 @@ void Ship::StartEditingPlan(int index) {
 }
 
 void Ship::Update() {
-    time_type now = GlobalGetNow();
+    Time now = GlobalGetNow();
 
     if (prepared_plans_count == 0 || (plan_edit_index == 0 && prepared_plans_count == 1)) {
         position = GetPlanet(parent_planet).position;
     } else {
         const TransferPlan& tp = prepared_plans[0];
         if (is_parked) {
-            if (tp.departure_time <= now) {
+            if (TimeIsEarlier(tp.departure_time, now)) {
                 _OnDeparture(tp);
             } else {
                 position = GetPlanet(parent_planet).position;
             }
         } else {
-            if (tp.arrival_time <= now) {
+            if (TimeIsEarlier(tp.arrival_time, now)) {
                 _OnArrival(tp);
             } else {
                 position = OrbitGetPosition(&tp.transfer_orbit[tp.primary_solution], now);
@@ -210,7 +211,7 @@ void Ship::Draw(const CoordinateTransform* c_transf) const {
         const TransferPlan& plan = prepared_plans[i];
         OrbitPos to_departure = OrbitGetPosition(
             &plan.transfer_orbit[plan.primary_solution], 
-            fmax(plan.departure_time, GlobalGetNow())
+            TimeLatest(plan.departure_time, GlobalGetNow())
         );
         OrbitPos to_arrival = OrbitGetPosition(
             &plan.transfer_orbit[plan.primary_solution], 
@@ -270,7 +271,7 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
         sprintf(maxdv_str, "dv %.0f m/s", max_dv);
         UIContextWrite(maxdv_str);
 
-        time_type now = GlobalGetNow();
+        Time now = GlobalGetNow();
         for (int i=0; i < prepared_plans_count; i++) {
             char tp_str[2][40];
             const char* resource_name;
@@ -295,8 +296,8 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
 
             snprintf(tp_str[0], 40, "- %s (%3d D %2d H)",
                 resource_name,
-                (int)(prepared_plans[i].arrival_time - now) / 86400,
-                ((int)(prepared_plans[i].arrival_time - now) % 86400) / 3600
+                (int) TimeDays(TimeSub(prepared_plans[i].arrival_time, now)),
+                ((int) TimeSeconds(TimeSub(prepared_plans[i].arrival_time, now)) % 86400) / 3600
             );
 
             snprintf(tp_str[1], 40, "  %s >> %s", departure_planet_name, arrival_planet_name);

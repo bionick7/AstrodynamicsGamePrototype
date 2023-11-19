@@ -1,5 +1,6 @@
 #include "ui.hpp"
 #include "logging.hpp"
+#include "constants.hpp"
 #include <stack>
 
 Font default_font;

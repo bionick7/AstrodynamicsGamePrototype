@@ -2,6 +2,7 @@
 #include "global_state.hpp"
 #include "ui.hpp"
 #include "debug_drawing.hpp"
+#include "constants.hpp"
 
 void CoordinateTransform::Make(){
     space_scale = 1e-6;
@@ -50,9 +51,9 @@ void CoordinateTransform::TransformBuffer(Vector2* buffer, int buffer_size) cons
     }
 }
 
-time_type CoordinateTransform::AdvanceTime(time_type t0, double delta_t) const {
+Time CoordinateTransform::AdvanceTime(Time t0, double delta_t) const {
     if (paused) return t0;
-    return t0 + delta_t * time_scale;
+    return TimeAddSec(t0, delta_t * time_scale);
 }
 
 void CoordinateTransform::HandleInput(double delta_t) {

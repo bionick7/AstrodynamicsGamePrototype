@@ -2,6 +2,7 @@
 #include "global_state.hpp"
 #include "ui.hpp"
 #include "utils.hpp"
+#include "constants.hpp"
 
 Planet::Planet(const char* p_name, double p_mu, double p_radius) {
     strcpy(name, p_name);
@@ -42,10 +43,10 @@ void Planet::Load(const DataNode *data, double parent_mu) {
     }
 
     double sma = data->GetF("SMA", orbit.sma, true);
-    double epoch = orbit.epoch;
+    Time epoch = orbit.epoch;
     if (data->Has("Ann")) {
         double ann = data->GetF("Ann", 0) * DEG2RAD;
-        epoch = GlobalGetNow() - ann / sqrt(parent_mu / (sma*sma*sma));
+        epoch = TimeSub(GlobalGetNow(), Time(ann / sqrt(parent_mu / (sma*sma*sma))));
     }
     orbit = OrbitFromElements(
         sma,
@@ -159,11 +160,11 @@ bool Planet::HasMouseHover(double* min_distance) const {
 }
 
 void Planet::Update() {
-    time_type now = GlobalGetNow();
-    time_type prev = GlobalGetPreviousFrameTime();
+    Time now = GlobalGetNow();
+    Time prev = GlobalGetPreviousFrameTime();
     RecalcStats();
     position = OrbitGetPosition(&orbit, now);
-    double delta_T = (now - prev) / 86400;
+    double delta_T = TimeDays(TimeSub(now, prev));
     for (int i=0; i < RESOURCE_MAX; i++) {
         resource_stock[i] = Clamp(resource_stock[i] + resource_delta[i] * delta_T, 0, resource_capacity[i]);
     }
@@ -198,12 +199,12 @@ void _UIDrawResources(
         char buffer[50];
         //sprintf(buffer, "%-10s %5d/%5d (%+3d)", resources_names[i], qtt, cap, delta);
         sprintf(buffer, "%-10s %3.1fT (%+3d T/d)", resources_names[i], resource_stock[i] / 1e3, (int)(resource_delta[i]/1e3));
-        if (GlobalGetState()->active_transfer_plan.IsActive()) {
-            if (UIContextDirectButton(transfer.resource_id == i ? "X" : " ", 2) & BUTTON_STATE_FLAG_JUST_PRESSED) {
-                GlobalGetState()->active_transfer_plan.SetResourceType(i);
+        UIContextPushInset(0, 18);
+            if (GlobalGetState()->active_transfer_plan.IsActive()) {
+                if (UIContextDirectButton(transfer.resource_id == i ? "X" : " ", 2) & BUTTON_STATE_FLAG_JUST_PRESSED) {
+                    GlobalGetState()->active_transfer_plan.SetResourceType(i);
+                }
             }
-        }
-        UIContextPushInset(0, 16);
             UIContextWrite(buffer, false);
             if (transfer.resource_id == i) {
                 sprintf(buffer, "   %+3.1fK", transfer.quantity / 1000);

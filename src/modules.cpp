@@ -3,6 +3,7 @@
 #include "ui.hpp"
 #include "debug_drawing.hpp"
 #include "global_state.hpp"
+#include "constants.hpp"
 #include <map>
 
 std::map<std::string, module_index_t> module_ids = std::map<std::string, module_index_t>();

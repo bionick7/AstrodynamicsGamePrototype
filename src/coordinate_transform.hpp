@@ -2,6 +2,7 @@
 #define COORDINATE_TRANSFORM_H
 
 #include "basic.hpp"
+#include "time.hpp"
 
 struct CoordinateTransform {
     float space_scale;
@@ -15,7 +16,7 @@ struct CoordinateTransform {
     double TransformS(double p) const;
     double InvTransformS(double p) const;
     void TransformBuffer(Vector2* buffer, int buffer_size) const;
-    time_type AdvanceTime(time_type t0, double delta_t) const;
+    Time AdvanceTime(Time t0, double delta_t) const;
     void HandleInput(double delta_t);
     void DrawUI() const;
 };
