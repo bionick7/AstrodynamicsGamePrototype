@@ -1,7 +1,7 @@
 #include "transfer_plan.hpp"
 #include "datanode.hpp"
-#define RETURN_OR_CONTINUE(fn_call) {int test_result = fn_call; if(test_result != 0) return test_result;}
 
+// For tests
 #include "global_state.hpp"
 #include "constants.hpp"
 #include "ui.hpp"
@@ -17,16 +17,23 @@ const char* GetSetting(int argc, const char** argv, const char* find) {
     return NULL;
 }
 
-int main(int argc, const char** argv) {
-    // Initializing
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
+#define RETURN_OR_CONTINUE(fn_call) {int test_result = fn_call; if(test_result != 0) return test_result;}
+int UnitTests() {
+    printf("Running Tests\n");
+    RETURN_OR_CONTINUE(TransferPlanTests());
+    RETURN_OR_CONTINUE(DataNodeTests());
+    RETURN_OR_CONTINUE(TimeTests());
+    printf("All tests Sucessfull\n");
+    return 0;
+}
+
+void Initialize(int argc, const char** argv) {
     INFO("Init complete");
     SetExitKey(KEY_NULL);
     SetTargetFPS(60);
     UIInit();
 
     GlobalState* app = GlobalGetState();
-
     INFO("cwd: '%s'", GetWorkingDirectory());
     app->Make(1e6);
     app->LoadConfigs(
@@ -40,27 +47,33 @@ int main(int argc, const char** argv) {
     if (module_outp_fp != NULL){
         WriteModulesToFile(module_outp_fp);
     }
+}
 
-    if (GetSetting(argc, argv, "--run_tests")) {
-        printf("Running Tests\n");
-        //RETURN_OR_CONTINUE(AllocatorTest);
-        RETURN_OR_CONTINUE(TransferPlanTests());
-        RETURN_OR_CONTINUE(DataNodeTests());
-        printf("All tests Sucessfull\n");
-        return 0;
+void MainLoop(GlobalState* app) {
+    app->UpdateState(1./60.);
+
+    BeginDrawing();
+    ClearBackground(BG_COLOR);
+    app->DrawState();
+    EndDrawing();
+}
+
+int main(int argc, const char** argv) {
+    if (GetSetting(argc, argv, "-run_tests")) {
+        return UnitTests();
     }
 
-    // Main loop
-    while (!WindowShouldClose()) {  
-        app->UpdateState(1./60.);
+    // Initializing
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
+    Initialize(argc, argv);
 
-        BeginDrawing();
-        ClearBackground(BG_COLOR);
-        app->DrawState();
-        EndDrawing();
+    GlobalState* app = GlobalGetState();
+
+    // Main loop
+    while (!WindowShouldClose()) { 
+        MainLoop(app);
     }
 
     CloseWindow();                  // Close window and OpenGL context
-
     return 0;
 }

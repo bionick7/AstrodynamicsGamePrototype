@@ -23,4 +23,6 @@ double TimeDays(Time x);
 
 void FormatTime(char* buffer, int buffer_len, Time time);
 void FormatDate(char* buffer, int buffer_len, Time time);
+
+int TimeTests();
 #endif  // TIME_H

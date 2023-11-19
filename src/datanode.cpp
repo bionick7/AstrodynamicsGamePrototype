@@ -62,13 +62,13 @@ void DataNode::CopyTo(const DataNode& from, DataNode* to) {
     to->IsReadOnly = from.IsReadOnly;
 }
 
-int _YamlParse(DataNode* node, const char* filepath) {
+int _YamlParse(DataNode* node, const char* filepath, bool quiet) {
     yaml_parser_t parser;
 
     yaml_parser_initialize(&parser);
     FILE *file = fopen(filepath, "rb");
     if (file == NULL) {
-        ERROR("No such file: %s\n", filepath);
+        if (!quiet) { ERROR("No such file: %s\n", filepath) }
         return 1;
     }
     yaml_parser_set_input_file(&parser, file);
@@ -91,7 +91,7 @@ int _YamlParse(DataNode* node, const char* filepath) {
     return status;
 }
 
-int DataNode::FromFile(DataNode* out, const char* filepath, FileFormat fmt, bool isReadonly) {
+int DataNode::FromFile(DataNode* out, const char* filepath, FileFormat fmt, bool isReadonly, bool quiet) {
     switch (fmt) {
         case FileFormat::Auto: {
             if (IsFileExtension(filepath, ".json")) {
@@ -107,7 +107,7 @@ int DataNode::FromFile(DataNode* out, const char* filepath, FileFormat fmt, bool
             return 0;
         }
         case FileFormat::YAML: {
-            _YamlParse(out, filepath);
+            _YamlParse(out, filepath, quiet);
             return 0;
         }
         case FileFormat::JSON:
@@ -712,11 +712,11 @@ int DataNodeTests() {
     //printf("Current directiory: %s\n", GetWorkingDirectory());
 
     int status;
-    status = _YamlParse(&node, "resources/data/test_data/inexistiant_file.yaml");
+    status = _YamlParse(&node, "resources/data/test_data/inexistiant_file.yaml", true);
     if (status != 1) DN_TEST_FAIL("inexistant file did not fail", 1);
     //_YamlParse(&node, "resources/data/test_data/readonly_file.yaml");
     //if (status != 1) return 1;
-    status = _YamlParse(&node, "resources/data/test_data/test_data.yaml");
+    status = _YamlParse(&node, "resources/data/test_data/test_data.yaml", false);
     if (status != 0) DN_TEST_FAIL("test_data could not be loaded", 1);
 
     //node.Inspect();
@@ -764,7 +764,7 @@ int DataNodeTests() {
     // Test others
     if (!node.Has("new_key")) DN_TEST_FAIL("'Has' error", 1);
     node.Remove("new_key");
-    DN_TEST_ASSERTKV(node, "new_key", "");
+    if(strcmp(node.Get("new_key", "", true), "") != 0) DN_TEST_FAIL("Sould not have found 'new_key'", 1);
     if (node.Has("new_key")) DN_TEST_FAIL("'Has' error", 1);
 
     // Untested methods

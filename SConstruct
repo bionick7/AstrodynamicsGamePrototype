@@ -38,8 +38,6 @@ def main():
     flags += ['-Wall', '-Wno-narrowing', '-Wno-sign-compare']  # Warnings we care about
     if build == "debug":
         flags.append("-ggdb")
-    elif build == "tests":
-        defines.append('RUN_TESTS')
     elif build == "release":
         defines.append('LOGGING_DISABLE')
 

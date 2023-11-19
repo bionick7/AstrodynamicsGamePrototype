@@ -1,4 +1,5 @@
 #include "time.hpp"
+#include "logging.hpp"
 #include <time.h>
 
 Time::Time(double seconds) {
@@ -70,4 +71,23 @@ void FormatDate(char* buffer, int buffer_len, Time time){
     tm time_tm = *gmtime(&time_in_s);
     time_tm.tm_year += start_year;
     snprintf(buffer, buffer_len, "%4dY %2dM %2dD %2dH", time_tm.tm_year + 1900, time_tm.tm_mon + 1, time_tm.tm_mday, time_tm.tm_hour);
+}
+
+
+#define TIMETEST_EQUAL(expr, seconds_res) if (fabs(TimeSeconds(expr) - (seconds_res)) > 1e-10) { \
+    ERROR("'%s' returned unexpected value: %f instead of %f", #expr, TimeSeconds(expr), (seconds_res)) \
+    return 1; \
+}
+
+int TimeTests() {
+    Time t1 = Time(123.456);
+    Time t2 = Time(456.789);
+
+    TIMETEST_EQUAL(TimeAdd(t1, t2), 123.456 + 456.789)
+    TIMETEST_EQUAL(TimeSub(t1, t2), 123.456 - 456.789)
+    TIMETEST_EQUAL(TimeSub(t2, t1), 456.789 - 123.456)
+    TIMETEST_EQUAL(TimePosMod(Time(-340), Time(100)), 60)
+    if (!TimeIsEarlier(t1, t2)) return 1;
+
+    return 0;
 }
