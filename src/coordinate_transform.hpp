@@ -12,10 +12,13 @@ struct Calendar {
     Time migration_arrrival_time;
     entity_id_t migration_arrrival_planet;  // Doesn't really fit anywhere right now ...
 
-    float time_scale;
+    double time_scale;
     bool paused;
 
     void Make(Time t0);
+    void Serialize(DataNode* data) const;
+    void Deserialize(const DataNode* data);
+
     Time AdvanceTime(double delta_t);
     void HandleInput(double delta_t);
     void DrawUI() const;
@@ -28,6 +31,9 @@ struct CoordinateTransform {
     Vector2 focus;
 
     void Make();
+    void Serialize(DataNode* data) const;
+    void Deserialize(const DataNode* data);
+
     Vector2 TransformV(Vector2 p) const;
     Vector2 InvTransformV(Vector2 p) const;
     double TransformS(double p) const;

@@ -1,12 +1,12 @@
 planets:
-  Mimas:
+  - name: Mimas
     resource_stock: []
     modules:
     - mod_water_extractor
-  Encelladus:
+  - name: Encelladus
     resource_stock: []
     modules: []
-  Tethys:
+  - name: Tethys
     resource_stock:
       water: 1000
       food: 2000
@@ -16,10 +16,10 @@ planets:
     - mod_water_mine
     - mod_food_mine
     - mod_food_mine
-  Rhea:
+  - name: Rhea
     resource_stock: []
     modules: []
-  Titan:
+  - name: Titan
     resource_stock:
       water: 1000
       food: 2000
@@ -27,10 +27,10 @@ planets:
     - mod_pop_small
     - mod_water_mine
     - mod_metal_mine
-  Iaeptus:
+  - name: Iaeptus
     resource_stock: []
     modules: []
-  Phoebe:
+  - name: Phoebe
     resource_stock: []
     modules: []
 
@@ -40,18 +40,18 @@ ships:
   Isp: 10  # km/s
   capacity: 3000  # t
   planet: Tethys
-  tf_planes: []
+  tf_plans: []
 
 - name: Light transport
   dv: 10
   Isp: 10
   capacity: 1000
   planet: Tethys
-  tf_planes: []
+  tf_plans: []
   
 - name: Express
   dv: 30
   Isp: 30
   capacity: 1000
   planet: Tethys
-  tf_planes: []
+  tf_plans: []

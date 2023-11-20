@@ -26,14 +26,20 @@ Time GlobalGetNow() {
 
 Ship& GetShip(entity_id_t id) {
     if ((!global_state.registry.valid(id))) {
-        FAIL("Invalid id")
+        FAIL("Invalid id (%d)", id)
+    }
+    if (!global_state.registry.any_of<Ship>(id)) {
+        FAIL("Id not ship (%d)", id)
     }
     return global_state.registry.get<Ship>(id);
 }
 
 Planet& _GetPlanet(entity_id_t id, const char* file_name, int line) {
     if ((!global_state.registry.valid(id))) {
-        FAIL("Invalid id (called from %s:%d)", file_name, line)
+        FAIL("Invalid id (%d) (called from %s:%d)", id, file_name, line)
+    }
+    if (!global_state.registry.any_of<Planet>(id)) {
+        FAIL("Id (%d) not planet (called from %s:%d)", id, file_name, line)
     }
     return global_state.registry.get<Planet>(id);
 }
@@ -53,34 +59,44 @@ void GlobalState::_InspectState() {
 
 }
 
-entity_id_t _AddPlanet(GlobalState* gs, const DataNode* data, double parent_mu) {
-    entity_id_t planet_entity = gs->registry.create();
-    //entity_map.insert({uuid, planet_entity});
-    Planet &planet = gs->registry.emplace<Planet>(planet_entity);
-    planet.Load(data, parent_mu);
-    planet.id = planet_entity;
-    planet.Update();
-
-    return planet_entity;
+bool _PauseMenuButton(const char* label) {
+    UIContextPushInset(0, 20);
+    UIContextEnclose(0, 0, BG_COLOR, MAIN_UI_COLOR);
+    UIContextWrite(label);
+    ButtonStateFlags buttonstate = UIContextAsButton();
+    UIContextPop();
+    return buttonstate & BUTTON_STATE_FLAG_JUST_PRESSED;
 }
 
-entity_id_t _AddShip(GlobalState* gs, const DataNode* data) {
-    //printf("Adding Ship N°%d\n", index)
-
-    auto ship_entity = gs->registry.create();
-    //entity_map.insert({uuid, ship_entity});
-    Ship &ship = gs->registry.emplace<Ship>(ship_entity);
-    
-    ship.Load(data);
-    const char* planet_name = data->Get("planet", "NO NAME SPECIFIED");
-    const Planet* planet = GetPlanetByName(planet_name);
-    if (planet == NULL) {
-        FAIL("Error while initializing ship '%s': no such planet '%s'", ship.name, planet_name)
+bool is_in_pause_menu;
+void _PauseMenu() {
+    const int menu_width = 200;
+    const int button_height = 20;
+    const int menu_height = button_height * 3;
+    UIContextCreate(
+        (GetScreenWidth() - menu_width)/2, 
+        (GetScreenHeight() - menu_height)/2, 
+        menu_width,
+        menu_height,
+        16,
+        MAIN_UI_COLOR
+    );
+    UIContextEnclose(0, 0, BG_COLOR, MAIN_UI_COLOR);
+    if (_PauseMenuButton("Save")) {
+        INFO("Save")
+        DataNode dn;
+        GlobalGetState()->Serialize(&dn);
+        dn.WriteToFile("save.yaml", FileFormat::YAML);
     }
-    ship.parent_planet = planet->id;
-    ship.id = ship_entity;
-    ship.Update();
-    return ship_entity;
+    if (_PauseMenuButton("Load")) {
+        INFO("Load")
+        DataNode dn;
+        DataNode::FromFile(&dn, "save.yaml", FileFormat::YAML, true, false);
+        GlobalGetState()->Deserialize(&dn);
+    }
+    if (_PauseMenuButton("Exit")) {
+        // ???
+    }
 }
 
 void GlobalState::Make(Time p_time) {
@@ -91,34 +107,28 @@ void GlobalState::Make(Time p_time) {
     focused_ship = GetInvalidId();
 }
 
-void GlobalState::LoadConfigs(const char* ephemerides_path, const char* module_data_path) {
-    DataNode ephemerides;
+void GlobalState::LoadModulesFromFile(const char* module_data_path) {
     DataNode module_data;
-    INFO("Loading Config")
-    if (DataNode::FromFile(&ephemerides, ephemerides_path, FileFormat::YAML, true) != 0) {
-        FAIL("Could not load save %s", ephemerides_path);
-    }
+    INFO("Loading Modules")
     if (DataNode::FromFile(&module_data, module_data_path, FileFormat::YAML, true) != 0) {
         FAIL("Could not load save %s", module_data_path);
     }
 
-    // Init planets
-    parent_radius = ephemerides.GetF("radius");
-    parent_mu = ephemerides.GetF("mass") * G;
-    int num_planets = ephemerides.GetArrayChildLen("satellites");
-    if (num_planets > 100) num_planets = 100;
-    //entity_id_t planets[100];
-    for(int i=0; i < num_planets; i++) {
-        const DataNode* data = ephemerides.GetArrayChild("satellites", i);
-        _AddPlanet(this, data, parent_mu);
-        //printf("%d\n", planets[i]);
-    }
-    
     int num_modules = LoadModules(&module_data);
 
     // TODO: load modules into more comprehensive memory
+    INFO("%d modules", num_modules)
+}
 
-    INFO("%d planets, %d modules", num_planets, num_modules)
+void GlobalState::LoadEphemeridesFromFile(const char* ephemerides_path) {
+    DataNode ephemerides;
+    INFO("Loading Ephemerides")
+    if (DataNode::FromFile(&ephemerides, ephemerides_path, FileFormat::YAML, true) != 0) {
+        FAIL("Could not load save %s", ephemerides_path);
+    }
+
+    int num_planets = LoadEphemerides(&ephemerides);
+    INFO("%d planets", num_planets)
 }
 
 void GlobalState::LoadGame(const char* file_path) {
@@ -127,25 +137,7 @@ void GlobalState::LoadGame(const char* file_path) {
         FAIL("Could not load save %s", file_path);
     }
 
-    //planet_data.Inspect();
-
-    int num_ships = game_data.GetArrayChildLen("ships");
-    for(int i=0; i < num_ships; i++) {
-        _AddShip(this, game_data.GetArrayChild("ships", i));
-    }
-    const DataNode* planets = game_data.GetChild("planets", true);
-    if (planets != NULL){
-        for(int i=0; i < planets->GetChildCount(); i++) {
-            const char* planet_name = planets->GetChildKey(i);
-            const DataNode* planet_data = planets->GetChild(planet_name);
-            Planet* planet = GetPlanetByName(planet_name);
-            if (planet == NULL) { 
-                FAIL("Error while loading game at '%s': no such planet '%s'", file_path, planet_name)
-            }
-            planet->Load(planet_data, parent_mu);
-        }
-    }
-    _InspectState();
+    Deserialize(&game_data);
 }
 
 // Update
@@ -170,7 +162,8 @@ void GlobalState::UpdateState(double delta_t) {
             focused_planet = GetInvalidId();
             focused_ship = GetInvalidId();
         } else {
-            // Enter Pause menu
+            is_in_pause_menu = !is_in_pause_menu;
+            if (is_in_pause_menu) calendar.paused = true;
         }
     }
 
@@ -214,7 +207,7 @@ void GlobalState::DrawState() {
     auto planet_view = registry.view<Planet>();
     auto ship_view = registry.view<Ship>();
 
-    DrawCircleV(c_transf.TransformV({0}), c_transf.TransformS(parent_radius), MAIN_UI_COLOR);
+    DrawCircleV(c_transf.TransformV({0}), c_transf.TransformS(GetParentNature()->radius), MAIN_UI_COLOR);
     for (auto [_, planet] : planet_view.each()) {
         planet.Draw(&c_transf);
     }
@@ -247,8 +240,136 @@ void GlobalState::DrawState() {
         ship.DrawUI(&c_transf);
     }
     active_transfer_plan.DrawUI();
+
+    if (is_in_pause_menu){
+        _PauseMenu();
+    }
     UIEnd();
 
     DebugFlushText();
     //DrawFPS(0, 0);
+}
+
+void GlobalState::Serialize(DataNode* data) const {
+    // TODO: refer to the ephemerides used
+    
+    c_transf.Serialize(data->SetChild("coordinate_transform", DataNode()));
+    calendar.Serialize(data->SetChild("calendar", DataNode()));
+    // ignore transferplanui for now
+    data->SetI("focused_planet", (int) focused_planet);
+    data->SetI("focused_ship", (int) focused_ship);
+
+    auto planet_view = registry.view<Planet>();
+    data->SetArrayChild("planets", planet_view.size());
+    int i=0;
+    for (auto [entity, planet] : planet_view.each()) {
+        DataNode dn2 = DataNode();
+        dn2.SetI("id", (int) entity);
+        planet.Serialize(data->SetArrayElemChild("planets", i++, dn2));
+    }
+
+    auto ship_view = registry.view<Ship>();
+    data->SetArrayChild("ships", ship_view.size());
+    i=0;
+    for (auto [entity, ship] : ship_view.each()) {
+        DataNode dn2 = DataNode();
+        dn2.SetI("id", (int) entity);
+        if (ship.is_parked) {
+            dn2.Set("planet", GetPlanet(ship.parent_planet).name);
+        }
+        ship.Serialize(data->SetArrayElemChild("ships", i++, dn2));
+    }
+}
+
+entity_id_t _AddPlanet(GlobalState* gs, const DataNode* data, entity_id_t planet_entity) {
+    //entity_map.insert({uuid, planet_entity});
+    Planet &planet = gs->registry.emplace<Planet>(planet_entity);
+    planet.Deserialize(data);
+    planet.id = planet_entity;
+    planet.Update();
+
+    return planet_entity;
+}
+
+entity_id_t _AddShip(GlobalState* gs, const DataNode* data, entity_id_t ship_entity) {
+    //printf("Adding Ship N°%d\n", index)
+    //entity_map.insert({uuid, ship_entity});
+    Ship &ship = gs->registry.emplace<Ship>(ship_entity);
+    
+    ship.Deserialize(data);
+    if (ship.is_parked) {
+        const char* planet_name = data->Get("planet", "NO NAME SPECIFIED");
+        const Planet* planet = GetPlanetByName(planet_name);
+        if (planet == NULL) {
+            FAIL("Error while initializing ship '%s': no such planet '%s'", ship.name, planet_name)
+        }
+        ship.parent_planet = planet->id;
+    }
+
+    ship.id = ship_entity;
+    ship.Update();
+    return ship_entity;
+}
+
+void GlobalState::Deserialize(const DataNode* data) {
+    if (data->Has("coordinate_transform")) {
+        c_transf.Deserialize(data->GetChild("coordinate_transform"));
+    } else {
+        c_transf.Make();
+    }
+    if (data->Has("calendar")) {
+        calendar.Deserialize(data->GetChild("calendar"));
+    } else {
+        calendar.Make(Time(data->GetF("start_time", 0, true)));
+    }
+    // ignore transferplanui for now
+
+    //LoadEphemeridesFromFile("resources/data/ephemerides.yaml");  // if necaissary
+    
+    // Be explicit to not kill any non-intended things
+    auto deletion_view_pl = registry.view<Planet>();
+    auto deletion_view_ship = registry.view<Ship>();
+    registry.destroy(deletion_view_pl.begin(), deletion_view_pl.end());
+    registry.destroy(deletion_view_ship.begin(), deletion_view_ship.end());
+
+    focused_planet = (entity_id_t) data->GetI("focused_planet", -1, true);
+    focused_ship = (entity_id_t) data->GetI("focused_ship", -1, true);
+
+    for (int i=0; i < data->GetArrayChildLen("planets"); i++) {
+        DataNode* planet_data = data->GetArrayChild("planets", i);
+        entity_id_t id;
+        if (planet_data->Has("id")) {
+            entity_id_t id_hint = (entity_id_t) planet_data->GetI("id");
+            id = registry.create(id_hint);
+            if (id != id_hint){
+                WARNING(
+                    "Could not initialize planet %s with intended ID %d. Instead assigned ID %d. This might lead to inconsistencies", 
+                    planet_data->Get("name", "UNNAMED"),
+                    id_hint, id
+                )
+            }
+        } else {
+            id = registry.create();
+        }
+        _AddPlanet(this, planet_data, id);
+    }
+    for (int i=0; i < data->GetArrayChildLen("ships"); i++) {
+        DataNode* ship_data = data->GetArrayChild("ships", i);
+
+        entity_id_t id;
+        if (ship_data->Has("id")) {
+            entity_id_t id_hint = (entity_id_t) ship_data->GetI("id");
+            id = registry.create(id_hint);
+            if (id != id_hint){
+                WARNING(
+                    "Could not initialize ship %s with intended ID %d. Instead assigned ID %d. This might lead to inconsistencies", 
+                    ship_data->Get("name", "UNNAMED"),
+                    id_hint, id
+                )
+            }
+        } else {
+            id = registry.create();
+        }
+        _AddShip(this, ship_data, id);
+    }
 }

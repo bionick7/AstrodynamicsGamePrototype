@@ -16,7 +16,12 @@ const char* GetSetting(int argc, const char** argv, const char* find) {
     return NULL;
 }
 
-#define RETURN_OR_CONTINUE(fn_call) {int test_result = fn_call; if(test_result != 0) return test_result;}
+#define RETURN_OR_CONTINUE(fn_call) {\
+    INFO("Running '%s'", #fn_call) \
+    int test_result = fn_call; \
+    if(test_result != 0) return test_result;\
+}
+
 int UnitTests() {
     printf("Running Tests\n");
     RETURN_OR_CONTINUE(TransferPlanTests());
@@ -33,10 +38,8 @@ void Load(int argc, const char** argv) {
     GlobalState* app = GlobalGetState();
     INFO("cwd: '%s'", GetWorkingDirectory());
     app->Make(1e6);
-    app->LoadConfigs(
-        "resources/data/ephemerides.yaml",
-        "resources/data/modules.yaml"
-    );
+    app->LoadEphemeridesFromFile("resources/data/ephemerides.yaml");
+    app->LoadModulesFromFile("resources/data/modules.yaml");
     app->LoadGame("resources/data/start_state.yaml");
 
     // Interpreting cmdline

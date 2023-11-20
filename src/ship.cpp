@@ -45,15 +45,35 @@ void Ship::_OnNewPlanClicked() {
     prepared_plans_count++;
 }
 
-void Ship::Load(const DataNode* data) {
+void Ship::Serialize(DataNode* data) const {
+    data->Set("name", name);
+    data->Set("is_parked", is_parked ? "y" : "n");
+    
+    data->SetF("capacity", max_capacity / 1000);  // t -> kg
+    data->SetF("dv", max_dv / 1000);  // km/s -> m/s
+    data->SetF("Isp", v_e / 1000);    // km/s -> m/s
+
+    // Not necaissarily the same as ammount specified in the transfer
+    data->SetI("payload_type", payload_type);
+    data->SetF("payload_quantity", payload_quantity / 1000);
+
+    data->SetArrayChild("prepared_plans", prepared_plans_count);
+    for (int i=0; i < prepared_plans_count; i++) {
+        prepared_plans[i].Serialize(data->SetArrayElemChild("prepared_plans", i, DataNode()));
+    }
+}
+
+void Ship::Deserialize(const DataNode* data) {
     strcpy(name, data->Get("name", "UNNAMED"));
-    is_parked = true;
-    prepared_plans_count = 0;
+    is_parked = strcmp(data->Get("is_parked", "y", true), "y") == 0;
     plan_edit_index = -1;
+
+    payload_type = data->GetI("payload_type", payload_type);
+    payload_quantity = data->GetF("payload_quantity", payload_quantity / 1000) * 1000;
     
     max_capacity = data->GetF("capacity", 0) * 1000;  // t -> kg
     max_dv = data->GetF("dv", 0) * 1000;  // km/s -> m/s
-    v_e = data->GetF("Isp", 0) * 1000;  // km/s -> m/s
+    v_e = data->GetF("Isp", 0) * 1000;    // km/s -> m/s
     /*color = (Color) {
         GetRandomValue(0, 255),
         GetRandomValue(0, 255),
@@ -61,6 +81,12 @@ void Ship::Load(const DataNode* data) {
         255
     };*/
     color = PALETTE_GREEN;
+
+    prepared_plans_count = data->GetArrayChildLen("prepared_plans", true);
+    for (int i=0; i < prepared_plans_count; i++) {
+        prepared_plans[i] = TransferPlan();
+        prepared_plans[i].Deserialize(data->GetArrayChild("prepared_plans", i, true));
+    }
 }
 
 double Ship::GetPayloadCapacity(double dv) const {
@@ -360,8 +386,8 @@ void Ship::Inspect() {
 }
 
 void Ship::_OnDeparture(const TransferPlan& tp) {
-    respource_type = tp.resource_transfer.resource_id;
-    respource_qtt = GetPlanet(tp.departure_planet).DrawResource(tp.resource_transfer.resource_id, tp.resource_transfer.quantity);
+    payload_type = tp.resource_transfer.resource_id;
+    payload_quantity = GetPlanet(tp.departure_planet).DrawResource(tp.resource_transfer.resource_id, tp.resource_transfer.quantity);
 
     GetPlanet(tp.departure_planet).DrawResource(RESOURCE_WATER, tp.fuel_mass);
 
@@ -370,8 +396,8 @@ void Ship::_OnDeparture(const TransferPlan& tp) {
     PLAYER_INFO(":: On %s, \"%s\" picked up %f kg of %s on %s", 
         date_buffer,
         name,
-        respource_qtt,
-        resources_names[respource_type],
+        payload_quantity,
+        resources_names[payload_type],
         GetPlanet(parent_planet).name
     );
 
@@ -385,8 +411,10 @@ void Ship::_OnArrival(const TransferPlan& tp) {
     parent_planet = tp.arrival_planet;
     is_parked = true;
     position = GetPlanet(parent_planet).position;
+    payload_type = tp.resource_transfer.resource_id;
+    payload_quantity = GetPlanet(tp.departure_planet).DrawResource(tp.resource_transfer.resource_id, tp.resource_transfer.quantity);
 
-    resource_count_t delivered = GetPlanet(tp.arrival_planet).GiveResource(respource_type, respource_qtt);  // Ignore how much actually arrives (for now)
+    resource_count_t delivered = GetPlanet(tp.arrival_planet).GiveResource(payload_type, payload_quantity);  // Ignore how much actually arrives (for now)
 
     char date_buffer[30];
     FormatTime(date_buffer, 30, tp.arrival_time);
@@ -394,7 +422,7 @@ void Ship::_OnArrival(const TransferPlan& tp) {
         date_buffer,
         name,
         delivered,
-        resources_names[respource_type],
+        resources_names[payload_type],
         GetPlanet(parent_planet).name
     );
     PopTransferPlan(0);

@@ -28,18 +28,19 @@ struct GlobalState {
     entity_id_t focused_planet;
     entity_id_t focused_ship;
 
-    // Everything that doesn't fit anywhere else
-    double parent_radius;
-    double parent_mu;
-
     // Lifecycle
     void Make(Time time);
-    void LoadConfigs(const char* ephemerides_path, const char* module_data_path);
+    void LoadEphemeridesFromFile(const char* ephemerides_path);
+    void LoadModulesFromFile(const char* module_data_path);
     void LoadGame(const char* file_path);
     // Update
     void UpdateState(double delta_t);
     // Draw
     void DrawState();
+
+    // Serialization
+    void Serialize(DataNode* dn) const;
+    void Deserialize(const DataNode* dn);
 
     entt::registry registry;
     void _InspectState();

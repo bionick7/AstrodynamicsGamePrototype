@@ -59,7 +59,7 @@ struct ModuleClass {
 
     bool disabled;
     char* disabled_reason = NULL;
-
+    const char* id = "INVALID ID - MODULE CLASS LOADING ERROR";
 };
 
 struct ModuleInstance {
@@ -69,7 +69,7 @@ struct ModuleInstance {
     ModuleInstance() : ModuleInstance(MODULE_INDEX_INVALID) {};
     ModuleInstance(module_index_t class_index);
 
-    bool IsValid();
+    bool IsValid() const;
     void Effect(resource_count_t* resource_delta, resource_count_t* stats);
     bool UIDraw();
 };

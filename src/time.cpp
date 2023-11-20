@@ -77,6 +77,13 @@ char* FormatDate(char* buffer, int buffer_len, Time time){
     return buffer + char_count;
 }
 
+void TimeSerialize(Time x, DataNode* data) {
+    data->SetF("t", x.__t);
+}
+
+void TimeDeserialize(Time* x, const DataNode* data) {
+    *x = Time(data->GetF("t", x->__t));
+}
 
 #define TIMETEST_EQUAL(expr, seconds_res) if (fabs(TimeSeconds(expr) - (seconds_res)) > 1e-10) { \
     ERROR("'%s' returned unexpected value: %f instead of %f", #expr, TimeSeconds(expr), (seconds_res)) \
@@ -98,6 +105,14 @@ int TimeTests() {
     }
     if (fabs(TimeSecDiff(TimeSeconds(TimeAddSec(t1, v2)), TimeAdd(t1, t2))) > 1e-10) {
         ERROR("TimeAdd != TimeAddSec")
+        return 1;
+    }
+    DataNode dn = DataNode();
+    TimeSerialize(t1, &dn);
+    Time t1_prime;
+    TimeDeserialize(&t1_prime, &dn);
+    if (fabs(TimeSecDiff(t1, t1_prime) > 1e-10)) {
+        ERROR("Serialization is not the proper inverse of deserialization")
         return 1;
     }
     if (!TimeIsEarlier(t1, t2)) return 1;

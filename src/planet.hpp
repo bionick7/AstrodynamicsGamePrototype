@@ -9,11 +9,19 @@
 
 #define MAX_PLANET_MODULES 20
 
+struct PlanetNature {
+    char name[100];
+    double mu;
+    double radius;
+    Orbit orbit;
+};
+
 struct Planet {
     char name[100];
     double mu;
     double radius;
     Orbit orbit;
+
     OrbitPos position;
 
     resource_count_t resource_stock[RESOURCE_MAX];
@@ -28,8 +36,8 @@ struct Planet {
 
     Planet() : Planet("UNNAMED", 0, 0) {};
     Planet(const char* name, double mu, double radius);
-    void Load(const DataNode* data, double parent_mu);
-    void Save(DataNode* data) const;
+    void Serialize(DataNode* data) const;
+    void Deserialize(const DataNode* data);
 
     void _OnClicked();
     double ScreenRadius() const;
@@ -47,5 +55,7 @@ struct Planet {
     void DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, ResourceTransfer transfer, double fuel_draw);
 };
 
+const PlanetNature* GetParentNature();
+int LoadEphemerides(const DataNode* data);
 
 #endif  // PLANET_H

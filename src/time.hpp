@@ -1,7 +1,7 @@
 #ifndef TIME_H
 #define TIME_H
 #include "basic.hpp"
-
+#include "datanode.hpp"
 struct Time {
     double __t;
     Time() : Time(0.0) {};
@@ -20,6 +20,9 @@ bool TimeIsPos(Time x);
 
 double TimeSeconds(Time x);
 double TimeDays(Time x);
+
+void TimeSerialize(Time x, DataNode* data);
+void TimeDeserialize(Time* x, const DataNode* data);
 
 char* FormatTime(char* buffer, int buffer_len, Time time);
 char* FormatDate(char* buffer, int buffer_len, Time time);

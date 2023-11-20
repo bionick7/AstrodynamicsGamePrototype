@@ -34,7 +34,8 @@ struct DataNode {
     //void ToFile(const char* filepath, FileFormat format);
     static int FromYaml(DataNode* dn, yaml_parser_t* yaml, bool isReadonly=false, int recursion_depth=0);
     void WriteJSON(std::ostream& os, int indentLevel=0) const;
-    void WriteYAML(std::ostream& os, int indentLevel=0) const;
+    void WriteYAML(std::ostream& os, int indentLevel=0, bool ignore_first_indent=false) const;
+    void WriteToFile(const char* file, FileFormat fmt) const;
 
     bool Has(const char* key) const;
     void Remove(const char* key);
@@ -43,7 +44,7 @@ struct DataNode {
     void Set(const char* key, const char* value);
     void SetI(const char* key, int value);
     void SetF(const char* key, double value);
-    void SetChild(const char* key, const DataNode& child);
+    DataNode* SetChild(const char* key, const DataNode& child);
 
     void SetArray(const char* key, size_t size);
     void SetArrayChild(const char* key, size_t size);
@@ -51,10 +52,10 @@ struct DataNode {
     void SetArrayElem(const char* key, int index, const char* value);
     void SetArrayElemI(const char* key, int index, int value);
     void SetArrayElemF(const char* key, int index, double value);
-    void SetArrayElemChild(const char* key, int index, const DataNode& value);
+    DataNode* SetArrayElemChild(const char* key, int index, const DataNode& value);
 
     void AddArrayElem(const char* key, const char* value);
-    void AddArrayElemChild(const char* key, const DataNode& value);
+    DataNode* AddArrayElemChild(const char* key, const DataNode& value);
 
     const char* Get(const char* key, const char* def="", bool quiet=false) const;
     int GetI(const char* key, int def=0, bool quiet=false) const;
@@ -80,7 +81,7 @@ struct DataNode {
 
     //static bool FieldEquals(std::string lhs, std::string rhs);
 
-    void Inspect() {
+    void Inspect() const {
         WriteYAML(std::cout);
     }
 

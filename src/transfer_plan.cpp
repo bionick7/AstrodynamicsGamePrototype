@@ -212,6 +212,37 @@ void TransferPlanSolve(TransferPlan* tp) {
     }
 }
 
+void TransferPlan::Serialize(DataNode* data) const {
+    data->SetI("resource_transfer_id", resource_transfer.resource_id);
+    data->SetF("resource_transfer_qtt", resource_transfer.quantity / 1000);
+    data->SetF("fuel_mass", resource_transfer.quantity / 1000);
+    data->SetI("departure_planet", (int)departure_planet);
+    data->SetI("arrival_planet", (int)arrival_planet);
+    TimeSerialize(departure_time, data->SetChild("departure_time", DataNode()));
+    TimeSerialize(arrival_time, data->SetChild("arrival_time", DataNode()));
+    data->SetI("primary_solution", primary_solution);
+}
+
+void TransferPlan::Deserialize(const DataNode* data) {
+    resource_transfer.resource_id = data->GetI("resource_transfer_id", resource_transfer.resource_id);
+    resource_transfer.quantity = data->GetF("resource_transfer_qtt", resource_transfer.quantity) * 1000;
+    fuel_mass = data->GetF("fuel_mass", resource_transfer.quantity) * 1000;
+    departure_planet = (entity_id_t) data->GetI("departure_planet", (int)departure_planet);
+    arrival_planet = (entity_id_t) data->GetI("arrival_planet", (int)arrival_planet);
+    TimeDeserialize(&departure_time, data->GetChild("departure_time"));
+    TimeDeserialize(&arrival_time, data->GetChild("arrival_time"));
+    primary_solution = data->GetI("primary_solution", primary_solution);
+
+    GetPlanet(departure_planet);
+    HohmannTransfer(  // Initialize hohmann_departure_time & hohmann_arrival_time
+        &GetPlanet(departure_planet).orbit, 
+        &GetPlanet(arrival_planet).orbit, 
+        departure_time, &hohmann_departure_time, &hohmann_arrival_time, 
+        NULL, NULL
+    );
+    TransferPlanSolve(this);
+}
+
 int TransferPlanTests() {
     const double epsilon = 1e-5;
     for (double K = 0.0; K < 1.0; K += 0.2) 
@@ -399,7 +430,6 @@ void TransferPlanUI::Draw(const CoordinateTransform* c_transf) {
     }
     const Planet& from = GetPlanet(plan->departure_planet);
     const Planet& to = GetPlanet(plan->arrival_planet);
-    const Ship& ship_comp = GetShip(ship);
 
     departure_handle_pos = c_transf->TransformV(OrbitGetPosition(&from.orbit, plan->departure_time).cartesian);
     arrival_handle_pos = c_transf->TransformV(OrbitGetPosition(&to.orbit, plan->arrival_time).cartesian);

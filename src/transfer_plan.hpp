@@ -17,7 +17,6 @@ struct TransferPlan {
 
     // Outputs
     int num_solutions;
-    int primary_solution;
     Orbit transfer_orbit[2];
     Vector2 departure_dvs[2];
     Vector2 arrival_dvs[2];
@@ -25,12 +24,17 @@ struct TransferPlan {
     double dv2[2];
     double tot_dv;
     double tot_dv_sec;
+    
+    int primary_solution;
 
     // Cached
     Time hohmann_departure_time;
     Time hohmann_arrival_time;
 
     TransferPlan();
+
+    void Serialize(DataNode* data) const;
+    void Deserialize(const DataNode* data);
 };
 
 void TransferPlanSolve(TransferPlan* tp);

@@ -4,24 +4,57 @@
 #include "utils.hpp"
 #include "constants.hpp"
 
+static std::map<std::string, PlanetNature> ephemerides = std::map<std::string, PlanetNature>();
+static PlanetNature parent = {0};
+
 Planet::Planet(const char* p_name, double p_mu, double p_radius) {
     strcpy(name, p_name);
     mu = p_mu;
     radius = p_radius;
     orbit = OrbitFromElements(1, 0, 0, 1, 0, true);
     for (int i=0; i < RESOURCE_MAX; i++) {
-        resource_stock[i] = 1e5;
+        resource_stock[i] = 0;
         resource_delta[i] = 0;
         resource_capacity[i] = 1e7;
     }
 }
 
-void Planet::Load(const DataNode *data, double parent_mu) {
+void Planet::Serialize(DataNode* data) const {
+    data->Set("name", name);
+    //data->SetF("mass", mu / G);
+    //data->SetF("radius", radius);
+
+    DataNode* resource_node = data->SetChild("resource_stock", DataNode());
+    for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
+        resource_node->SetF(resources_names[resource_index], resource_stock[resource_index] / 1000);
+    }
+    int last_module_index = 0;
+    for(int i=0; i < MAX_PLANET_MODULES; i++) 
+        if (modules[i].IsValid()) last_module_index = i;
+
+    data->SetArray("modules", last_module_index);
+    for(int i=0; i < last_module_index; i++) {
+        const ModuleClass* mc = GetModuleByIndex(modules[i].class_index);
+        data->SetArrayElem("modules", i, mc->id);
+    }
+
+    // We assume the orbital info is stored in the ephemerides
+}
+
+void Planet::Deserialize(const DataNode *data) {
     //SettingOverridePush("datanode_quite", true);
     //SettingOverridePop("datanode_quite");
     strcpy(name, data->Get("name", name, true));
-    mu = data->GetF("mass", mu, true) * G;
-    radius = data->GetF("radius", radius, true);
+    auto find = ephemerides.find(name);
+    if (find == ephemerides.end()) {
+        ERROR("Could not find planet %s in ephemerides", name)
+        return;
+    }
+    //*this = *((Planet*) (void*) &find->second);
+    PlanetNature nature = find->second;
+    mu = nature.mu;
+    radius = nature.radius;
+    orbit = nature.orbit;
 
     const DataNode* resource_node = data->GetChild("resource_stock", true);
     if (resource_node != NULL) {
@@ -41,26 +74,6 @@ void Planet::Load(const DataNode *data, double parent_mu) {
             modules[i] = ModuleInstance(GetModuleIndexById(module_id));
         }
     }
-
-    double sma = data->GetF("SMA", orbit.sma, true);
-    Time epoch = orbit.epoch;
-    if (data->Has("Ann")) {
-        double ann = data->GetF("Ann", 0) * DEG2RAD;
-        epoch = TimeSub(GlobalGetNow(), Time(ann / sqrt(parent_mu / (sma*sma*sma))));
-    }
-    orbit = OrbitFromElements(
-        sma,
-        data->GetF("Ecc", orbit.ecc, true),
-        (data->GetF("LoA", orbit.lop * RAD2DEG, true) + data->GetF("AoP", 0, true)) * DEG2RAD,
-        parent_mu,
-        epoch, 
-        strcmp(data->Get("retrograde", orbit.prograde ? "n" : "y", true), "y") != 0
-    );
-}
-
-
-void Planet::Save(DataNode* data) const {
-
 }
 
 void Planet::_OnClicked() {
@@ -267,4 +280,39 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
     }
     UIContextPop();  // HSplit
     UIContextPop();  // Inset
+}
+
+const PlanetNature* GetParentNature() {
+    return &parent;
+}
+
+int LoadEphemerides(const DataNode* data) {
+    // Init planets
+    parent.radius = data->GetF("radius");
+    parent.mu = data->GetF("mass") * G;
+    int num_planets = data->GetArrayChildLen("satellites");
+    //if (num_planets > 100) num_planets = 100;
+    //entity_id_t planets[100];
+    for(int i=0; i < num_planets; i++) {
+        const DataNode* planet_data = data->GetArrayChild("satellites", i);
+        const char* name = planet_data->Get("name");
+        ephemerides.insert_or_assign(name, PlanetNature());
+        PlanetNature* nature = &ephemerides.at(name);
+        
+        double sma = planet_data->GetF("SMA");
+        double ann = planet_data->GetF("Ann") * DEG2RAD;
+        Time epoch = TimeSub(GlobalGetNow(), Time(ann / sqrt(parent.mu / (sma*sma*sma))));
+
+        nature->mu = planet_data->GetF("mass") * G;
+        nature->radius = planet_data->GetF("radius");
+        nature->orbit = OrbitFromElements(
+            sma,
+            planet_data->GetF("Ecc"),
+            (planet_data->GetF("LoA") + planet_data->GetF("AoP")) * DEG2RAD,
+            parent.mu,
+            epoch, 
+            strcmp(planet_data->Get("retrograde", "y", true), "y") != 0
+        );
+    }
+    return num_planets;
 }

@@ -21,7 +21,7 @@ ModuleInstance::ModuleInstance(module_index_t p_class_index) {
     disabled = false;
 }
 
-bool ModuleInstance::IsValid() {
+bool ModuleInstance::IsValid() const {
     if (class_index == MODULE_INDEX_INVALID) {
         return false;
     }
@@ -167,8 +167,8 @@ int LoadModules(const DataNode* data) {
         _LoadArray(mod_data->GetChild("stat_require", true), mod.stat_required, stat_names, STAT_MAX, 1);
 
         modules[module_index] = mod;
-        module_ids.insert_or_assign(mod_data->Get("id", "_"), module_index);
-        
+        auto pair = module_ids.insert_or_assign(mod_data->Get("id", "_"), module_index);
+        modules[module_index].id = pair.first->first.c_str();  // points to string in dictionary
     }
     return module_count;
 }

@@ -14,6 +14,24 @@ void Calendar::Make(Time t0) {
     migration_arrrival_time = TimeAdd(t0, current_migration_period);
 }
 
+void Calendar::Serialize(DataNode* data) const {
+    TimeSerialize(time, data->SetChild("time", DataNode()));
+    TimeSerialize(current_migration_period, data->SetChild("current_migration_period", DataNode()));
+    TimeSerialize(migration_arrrival_time, data->SetChild("migration_arrrival_time", DataNode()));
+    data->SetI("migration_arrrival_planet", (int) migration_arrrival_planet);
+    data->SetF("time_scale", time_scale);
+    data->Set("paused", paused ? "y": "n");
+}
+
+void Calendar::Deserialize(const DataNode* data) {
+    TimeDeserialize(&time, data->GetChild("time"));
+    TimeDeserialize(&current_migration_period, data->GetChild("current_migration_period"));
+    TimeDeserialize(&migration_arrrival_time, data->GetChild("migration_arrrival_time"));
+    migration_arrrival_planet = (entity_id_t) data->GetI("migration_arrrival_planet", (int) migration_arrrival_planet);
+    time_scale = data->GetF("time_scale", time_scale);
+    paused = strcmp(data->Get("paused", paused ? "y": "n"), "y") == 0;
+}
+
 Time Calendar::AdvanceTime(double delta_t) {
     prev_time = time;
     if (paused) return time;
@@ -76,6 +94,18 @@ Calendar* GetCalendar() {
 void CoordinateTransform::Make(){
     space_scale = 1e-6;
     focus = {0};
+}
+
+void CoordinateTransform::Serialize(DataNode* data) const {
+    data->SetF("log_space_scale", log10(space_scale));
+    data->SetF("focus_x", focus.x);
+    data->SetF("focus_y", focus.y);
+}
+
+void CoordinateTransform::Deserialize(const DataNode* data) {
+    space_scale = pow(10, data->GetF("log_space_scale", log10(space_scale)));
+    focus.x = data->GetF("focus_x", focus.x);
+    focus.y = data->GetF("focus_y", focus.y);
 }
 
 Vector2 _FlipY(Vector2 a) {

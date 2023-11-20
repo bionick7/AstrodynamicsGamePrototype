@@ -26,8 +26,8 @@ struct Ship {
     int highlighted_plan_index;
 
     // Payload
-    int respource_type;
-    resource_count_t respource_qtt;
+    int payload_type;
+    resource_count_t payload_quantity;
 
     // UI state
     Vector2 draw_pos;
@@ -37,7 +37,8 @@ struct Ship {
     // Identifier
     entity_id_t id;
 
-    void Load(const DataNode* data);
+    void Serialize(DataNode* data) const;
+    void Deserialize(const DataNode* data);
     double GetPayloadCapacity(double dv) const;
     double GetFuelRequiredEmpty(double dv) const;
     double GetFuelRequiredFull(double dv) const;

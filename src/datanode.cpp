@@ -80,7 +80,6 @@ int _YamlParse(DataNode* node, const char* filepath, bool quiet) {
         if (event.type == YAML_MAPPING_START_EVENT) break;
     }
     yaml_event_delete(&event);
-
     int status = DataNode::FromYaml(node, &parser, false, 0);
     if (status != 0) {
         FAIL("Error when reading '%s'", filepath)
@@ -104,10 +103,12 @@ int DataNode::FromFile(DataNode* out, const char* filepath, FileFormat fmt, bool
                 return 1;
             }
             FromFile(out, filepath, fmt, isReadonly);
+            out->IsReadOnly = true;
             return 0;
         }
         case FileFormat::YAML: {
             _YamlParse(out, filepath, quiet);
+            out->IsReadOnly = true;
             return 0;
         }
         case FileFormat::JSON:
@@ -152,25 +153,19 @@ enum DataNodeParseState {
     DN_PARESE_EXPECT_ITEM,
 };
 
-static const char INDENTS[][21] = {
-    "  ", "    ", "      ", "        ", "          ","            ", "              ", "                ", "                  ", "                    ",
-};
+const int MAX_INDENT = 40;
+static const char INDENTS[MAX_INDENT+1] = "                                        ";
 
-const char* _GetIndent(int indent_level) {
-    if (indent_level > 10) indent_level = 10;
-    return INDENTS[indent_level];
-
-    /*char* res = (char*)malloc(sizeof(char) * spaces + 1);
-    for (int i=0; i < spaces*2; i++) res[i] = ' ';
-    res[spaces*2] = '\x00';
-    return res;*/
+const char* _GetSpaces(int indent_level) {
+    if (indent_level > MAX_INDENT) indent_level = MAX_INDENT;
+    return &INDENTS[MAX_INDENT - indent_level];
 }
 
 int DataNode::FromYaml(DataNode* node, yaml_parser_t* parser, bool is_readonly, int recursion_depth) {
     node->IsReadOnly = false;
     yaml_event_t event;
 
-    //char* indent = _GetIndent(recursion_depth*4);
+    //const char* indent = _GetSpaces(recursion_depth*4);
 
     DataNodeParseState parse_state = DN_PARESE_EXPECT_KEY;
     char key_name[1024];
@@ -197,7 +192,7 @@ int DataNode::FromYaml(DataNode* node, yaml_parser_t* parser, bool is_readonly, 
             }
             case YAML_SCALAR_EVENT: {
                 char* scalar_value = (char*) event.data.scalar.value;
-                //INFO("%ss%d: %s\n", indent, parse_state, scalar_value);
+                //INFO("%ss%d: %s", indent, parse_state, scalar_value)
                 switch (parse_state) {
                 case DN_PARESE_EXPECT_KEY:
                     strcpy(key_name, scalar_value);
@@ -259,14 +254,13 @@ int DataNode::FromYaml(DataNode* node, yaml_parser_t* parser, bool is_readonly, 
     }
 
     error:
-    //free(indent);
     yaml_event_delete(&event);
     return 1;
 }
 
 // Helper function to write DataNode to JSON
 void DataNode::WriteJSON(std::ostream& os, int indentLevel) const {
-    const char* indent = _GetIndent(indentLevel*2);
+    const char* indent = _GetSpaces(indentLevel*2);
 
     os << "{\n";
     for (auto it = Fields.begin(); it != Fields.end(); ++it) {
@@ -323,35 +317,67 @@ void DataNode::WriteJSON(std::ostream& os, int indentLevel) const {
 }
 
 // Helper function to write DataNode to YAML
-void DataNode::WriteYAML(std::ostream& os, int indentLevel) const {
-    const char* indent = _GetIndent(indentLevel);
+void DataNode::WriteYAML(std::ostream& os, int indentLevel, bool ignore_first_indent) const {
+    const char* indent = _GetSpaces(indentLevel*2);
+    int indent_nr = 0;
+#define INDENT ((indent_nr++==0 && ignore_first_indent) ? "" : indent)  // All this to make lists of children look nicer
 
     //os << "Fields: " << Fields.size() << " -- Children: " << Children.size() << " -- Field Arrays " << FieldArrays.size() << std::endl;
 
     for (auto it = Fields.begin(); it != Fields.end(); ++it) {
-        os << indent << it->first << ": " << it->second << "\n";
+        os << INDENT << it->first << ": " << it->second << "\n";
     }
 
     for (auto it = Children.begin(); it != Children.end(); ++it) {
-        os << indent << it->first << ":\n";
-        it->second->WriteYAML(os, indentLevel + 1);
+        os << INDENT << it->first << ":\n";
+        it->second->WriteYAML(os, indentLevel + 1, false);
     }
 
     for (auto it = FieldArrays.begin(); it != FieldArrays.end(); ++it) {
-        os << indent << it->first << ":\n";
+        if (it->second.empty()) {
+            os << INDENT << it->first << ": []\n";
+        } else {
+            os << INDENT << it->first << ":\n";
+        }
         for (const auto& item : it->second) {
-            os << indent << "  - " << item << "\n";
+            os << INDENT << "- " << item << "\n";
         }
     }
 
     for (auto it = ChildArrays.begin(); it != ChildArrays.end(); ++it) {
-        os << indent << it->first << ":\n";
+        if (it->second->empty()) {
+            os << INDENT << it->first << ": []\n";
+        } else {
+            os << INDENT << it->first << ":\n";
+        }
         for (const auto& item : *it->second) {
-            os << indent << "  - ";
-            item.WriteYAML(os, indentLevel + 1);
+            os << INDENT << "- ";
+            item.WriteYAML(os, indentLevel + 1, true);
         }
     }
     os << std::endl;
+#undef INDENT
+}
+
+void DataNode::WriteToFile(const char* filepath, FileFormat fmt) const {
+    /*if (!FileExists(filepath)) {
+        ERROR("Could not find file '%s'", filepath)
+        return;
+    }*/
+    std::ofstream file;
+    file.open(filepath);
+    switch (fmt) {
+    case FileFormat::JSON:
+        WriteJSON(file, 0);
+        break;
+    case FileFormat::YAML:
+        WriteYAML(file, 0);
+        break;
+    default:
+        WARNING("Unsupported safe format %d", fmt)
+        break;
+    }
+    file.close();
 }
 
 /*******************************
@@ -536,17 +562,18 @@ void DataNode::SetF(const char* key, double value) {
     Set(key, buffer);
 }
 
-void DataNode::SetChild(const char* key, const DataNode& val) {
-    // Adds a copy to the DataNode to the map
+DataNode* DataNode::SetChild(const char* key, const DataNode& val) {
+    // Adds a copy to the DataNode to the map and returns pointer to it
     //DataNode* child = (DataNode*) malloc(sizeof(DataNode));
     //CopyTo(val, child);
     DataNode* child = new DataNode(val);
     if (IsReadOnly) {
         WARNING("Trying to set child on a readonly datanode at '%s'\n", key);
-        return;
+        return NULL;
     }
     
     Children.insert_or_assign(std::string(key), child);
+    return child;
 }
 
 void DataNode::SetArray(const char* key, size_t size) {
@@ -557,10 +584,11 @@ void DataNode::SetArray(const char* key, size_t size) {
     auto find = FieldArrays.find(key);
     if (find == FieldArrays.end()) {
         std::vector<std::string> arr = std::vector<std::string>();
-        FieldArrays.insert({key, arr});
-        find->second = arr;
+        arr.resize(size);
+        FieldArrays.insert({std::string(key), arr});
+    } else {
+        find->second.resize(size);
     }
-    find->second.resize(size);
 }
 
 void DataNode::SetArrayElem(const char* key, int index, const char* value) {
@@ -588,10 +616,11 @@ void DataNode::SetArrayChild(const char* key, size_t size) {
     auto find = ChildArrays.find(key);
     if (find == ChildArrays.end()) {
         std::vector<DataNode>* arr = new std::vector<DataNode>();
+        arr->resize(size);
         ChildArrays.insert({key, arr});
-        find->second = arr;
+    } else {
+        find->second->resize(size);
     }
-    find->second->resize(size);
 }
 
 void DataNode::SetArrayElemI(const char* key, int index, int value) {
@@ -606,21 +635,22 @@ void DataNode::SetArrayElemF(const char* key, int index, double value) {
     SetArrayElem(key, index, buffer);
 }
 
-void DataNode::SetArrayElemChild(const char* key, int index, const DataNode& value) {
+DataNode* DataNode::SetArrayElemChild(const char* key, int index, const DataNode& value) {
     if (IsReadOnly) {
         WARNING("Trying to set array element on a readonly datanode at '%s' [%d]\n", key, index);
-        return;
+        return NULL;
     }
     auto find = ChildArrays.find(key);
     if (find == ChildArrays.end()) {
         WARNING("No such child array '%s'\n", key);
-        return;
+        return NULL;
     }
     if (index < 0 || index >= find->second->size()) {
         WARNING("Invalid index at '%s' (%d >= %lld)\n", key, index, find->second->size());
-        return;
+        return NULL;
     }
     find->second->at(index) = DataNode(value);
+    return &find->second->at(index);
 }
 
 void DataNode::AddArrayElem(const char* key, const char* value) {
@@ -638,18 +668,20 @@ void DataNode::AddArrayElem(const char* key, const char* value) {
     }
 }
 
-void DataNode::AddArrayElemChild(const char* key, const DataNode& value) {
+DataNode* DataNode::AddArrayElemChild(const char* key, const DataNode& value) {
     if (IsReadOnly) {
         WARNING("Trying to set array element on a readonly datanode at '%s'\n", key);
-        return;
+        return NULL;
     }
     auto find = ChildArrays.find(key);  // This crashes quietly without error smh
     if (find == ChildArrays.end()) {
         std::vector<DataNode>* arr = new std::vector<DataNode>();
         arr->push_back(value);
         ChildArrays.insert({key, arr});
+        return &arr->back();
     } else {
         find->second->push_back(value);
+        return &find->second->back();
     }
 }
 
@@ -702,6 +734,14 @@ void RemoveAt(const char* key, int index) {
 
 #define DN_TEST_FAIL(msg, exit_code) {printf("DataNodeTest failed with: %s\n", msg); return exit_code;}
 #define DN_TEST_ASSERTKV(node, key, value) if(strcmp(node.Get(key), value) != 0){ \
+    printf("DataNodeTest failed with: %s != %s\n", key, value); \
+    return 1; \
+}
+#define DN_TEST_ASSERTKV_PTR(node, key, value) if(strcmp(node->Get(key), value) != 0){ \
+    printf("DataNodeTest failed with: %s != %s\n", key, value); \
+    return 1; \
+}
+#define DN_TEST_ASSERTNOKV_PTR(node, key, value) if(strcmp(node->Get(key, "__INVALID__", true), value) == 0){ \
     printf("DataNodeTest failed with: %s != %s\n", key, value); \
     return 1; \
 }
@@ -761,6 +801,35 @@ int DataNodeTests() {
     node.SetF("new_key", 3.5);
     if (node.GetF("new_key") != 3.5) DN_TEST_FAIL("Did not reset new_key properly", 1);
 
+    // Test Array Setters
+    node.SetArray("array2", 3);
+    if(node.GetArrayLen("array2") != 3) DN_TEST_FAIL("Array not properly initialized", 1);
+    node.SetArrayElem("array2", 0, "a");
+    node.SetArrayElemI("array2", 1, 1);
+    node.SetArrayElemF("array2", 2, -0.5);
+    if(strcmp(node.GetArray("array2", 0), "a") != 0) DN_TEST_FAIL("Array element 0 not properly set", 1);
+    if(node.GetArrayI("array2", 1) != 1) DN_TEST_FAIL("Array element 0 not properly set", 1);
+    if(node.GetArrayF("array2", 2) != -0.5) DN_TEST_FAIL("Array element 0 not properly set", 1);
+
+
+    // Test Child Setters
+    DataNode child_prefab = DataNode();
+    child_prefab.Set("x", "y");
+    DataNode* child2 = node.SetChild("child2", child_prefab);
+    node.SetArrayChild("child_arr", 2);
+    DataNode* arr0_child = node.SetArrayElemChild("child_arr", 0, child_prefab);
+    child2->Set("x2", "y2");
+    arr0_child->Set("x2", "z2");
+    DataNode* child2_tst = node.GetChild("child2");
+    DataNode* child_arr0_tst = node.GetArrayChild("child_arr", 0);
+    DataNode* child_arr1_tst = node.GetArrayChild("child_arr", 1);
+    DN_TEST_ASSERTKV_PTR(child2_tst, "x", "y")
+    DN_TEST_ASSERTKV_PTR(child2_tst, "x2", "y2")
+    DN_TEST_ASSERTKV_PTR(child2_tst, "x", "y")
+    DN_TEST_ASSERTKV_PTR(child_arr0_tst, "x2", "z2")
+    DN_TEST_ASSERTNOKV_PTR(child_arr0_tst, "x2", "y2")
+    DN_TEST_ASSERTNOKV_PTR(child_arr1_tst, "x", "y")
+
     // Test others
     if (!node.Has("new_key")) DN_TEST_FAIL("'Has' error", 1);
     node.Remove("new_key");
@@ -769,13 +838,6 @@ int DataNodeTests() {
 
     // Untested methods
 
-    // SetChild(const char* key, const DataNode& child);
-    // SetArray(const char* key, size_t size);
-    // SetArrayChild(const char* key, size_t size);
-    // SetArrayElem(const char* key, int index, const char* value);
-    // SetArrayElemI(const char* key, int index, int value);
-    // SetArrayElemF(const char* key, int index, double value);
-    // SetArrayElemChild(const char* key, int index, const DataNode& value);
 
     // RemoveAt(const char* key, int index);
 
