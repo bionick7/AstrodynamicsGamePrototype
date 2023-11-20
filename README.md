@@ -16,7 +16,7 @@ Target period: ???
 - found colony  << motivation what?
 - supply colony
 - make self-sufficient
-- accomodate people << 2M Forced frequency good?
+- accomodate people << 2M; Forced frequency good?
 - make productive
 
 Loop C (sketch)
@@ -34,7 +34,7 @@ Arriving pops should be the only external driver.
 ## Immediate
 - build modules (Done)
 - water as fuel (Done)
-- saving state
+- saving state  (Done)
 - build ships in shipyard
 - Sound
 

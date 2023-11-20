@@ -466,11 +466,11 @@ void TransferPlanUI::DrawUI() {
         16, TRANSFER_UI_COLOR
     );
 
-    UIContextCurrent().Enclose(2, 2, BG_COLOR, TRANSFER_UI_COLOR);
+    UIContextCurrent().Enclose(2, 2, BG_COLOR, is_valid ? TRANSFER_UI_COLOR : PALETTE_RED);
     char departure_time_outpstr[30];
     char arrival_time_outpstr[30];
     char departure_time_str[40] = "Departs in ";
-    char arrival_time_str[40] =   "Arrives in ";
+    char arrival_time_str[40]   = "Arrives in ";
     char dv1_str[40];
     char dv2_str[40];
     char dvtot_str[40];
@@ -483,11 +483,15 @@ void TransferPlanUI::DrawUI() {
     snprintf(dv2_str,   40, "DV 2      %5.3f km/s", plan->dv2[plan->primary_solution]/1000.0);
     snprintf(dvtot_str, 40, "DV Tot    %5.3f km/s", total_dv/1000.0);
     double capacity = ship_comp.GetPayloadCapacity(total_dv);
-    snprintf(payload_str, 40, "Payload cap.  %3.0f %% (%.0f / %.0f t)", 
-        capacity / ship_comp.max_capacity * 100,
-        capacity / 1000.0,
-        ship_comp.max_capacity / 1000.0
-    );
+    if (capacity >= 0) {
+        snprintf(payload_str, 40, "Payload cap.  %3.0f %% (%.0f / %.0f t)", 
+            capacity / ship_comp.max_capacity * 100,
+            capacity / 1000.0,
+            ship_comp.max_capacity / 1000.0
+        );
+    } else {
+        snprintf(payload_str, 40, "Cannot make transfer");
+    }
 
     UIContextWrite(strcat(departure_time_str, departure_time_outpstr));
     UIContextPushInset(0, 18);
@@ -507,7 +511,7 @@ void TransferPlanUI::DrawUI() {
     //UIContextWrite("=====================");
     UIContextPushInset(0, 18);
         UIContextWrite(payload_str);
-        UIContextFillline(capacity / ship_comp.max_capacity, TRANSFER_UI_COLOR, BG_COLOR);
+        UIContextFillline(fmax(0, capacity / ship_comp.max_capacity), capacity >= 0 ? TRANSFER_UI_COLOR : PALETTE_RED, BG_COLOR);
     UIContextPop();  // Inset
 }
 
