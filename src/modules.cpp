@@ -15,7 +15,6 @@ ResourceTransfer ResourceTransferInvert(ResourceTransfer rt) {
     return rt;
 }
 
-
 ModuleInstance::ModuleInstance(module_index_t p_class_index) {
     class_index = p_class_index;
     disabled = false;
@@ -50,7 +49,7 @@ void ModuleInstance::Effect(resource_count_t* resource_delta, resource_count_t* 
     }
 }
 
-void _DrawRelevantStatsFromArray(std::stringstream& ss, const resource_count_t array[], const char array_names[][MAX_NAME_LENGTH], int array_size, resource_count_t scaler, const char* suffix) {
+void _DrawRelevantStatsFromArray(std::stringstream& ss, const resource_count_t array[], const char array_names[][RESOURCE_NAME_MAX_SIZE], int array_size, resource_count_t scaler, const char* suffix) {
     for (int i=0; i < array_size; i++) {
         if (array[i] > 0) {
             char temp[1024];
@@ -90,7 +89,7 @@ bool ModuleInstance::UIDraw() {
     return button_state & BUTTON_STATE_FLAG_JUST_PRESSED;
 }
 
-void _LoadArray(const DataNode* data_node, resource_count_t array[], const char array_names[][MAX_NAME_LENGTH], int array_size, resource_count_t scaler) {
+void _LoadArray(const DataNode* data_node, resource_count_t array[], const char array_names[][RESOURCE_NAME_MAX_SIZE], int array_size, resource_count_t scaler) {
     if (data_node != NULL) {
         for (int i=0; i < array_size; i++) {
             array[i] = data_node->GetF(array_names[i], 0, true) * scaler;  // t -> kg
@@ -146,7 +145,7 @@ void WriteModulesToFile(const char* filename) {
 
 int LoadModules(const DataNode* data) {
     if (modules != NULL) {
-        WARNING("Loading modules more than once (possible memory leak)");
+        WARNING("Loading modules more than once (I'm not freeing this memory)");
     }
     module_count = data->GetArrayChildLen("modules");
     if (module_count == 0){
@@ -176,13 +175,17 @@ int LoadModules(const DataNode* data) {
 module_index_t GetModuleIndexById(const char *id) {
     auto find = module_ids.find(id);
     if (find == module_ids.end()) {
-        ERROR("No such module id '%s", id)
+        ERROR("No such module id '%s'", id)
         return MODULE_INDEX_INVALID;
     }
     return find->second;
 }
 
 const ModuleClass *GetModuleByIndex(module_index_t index) {
+    if (modules == NULL) {
+        ERROR("Modules uninitialized")
+        return NULL;
+    }
     if (index >= module_count) {
         ERROR("Invalid module index (%d >= %d or negative)", index, module_count)
         return NULL;

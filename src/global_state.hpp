@@ -30,8 +30,7 @@ struct GlobalState {
 
     // Lifecycle
     void Make(Time time);
-    void LoadEphemeridesFromFile(const char* ephemerides_path);
-    void LoadModulesFromFile(const char* module_data_path);
+    void LoadData();
     void LoadGame(const char* file_path);
     // Update
     void UpdateState(double delta_t);

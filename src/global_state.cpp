@@ -107,7 +107,11 @@ void GlobalState::Make(Time p_time) {
     focused_ship = GetInvalidId();
 }
 
-void GlobalState::LoadModulesFromFile(const char* module_data_path) {
+void GlobalState::LoadData() {
+    const char* module_data_path = "resources/data/modules.yaml";
+    const char* ephemerides_path = "resources/data/ephemerides.yaml";
+    const char* ship_classes_path = "resources/data/ship_classes.yaml";
+    
     DataNode module_data;
     INFO("Loading Modules")
     if (DataNode::FromFile(&module_data, module_data_path, FileFormat::YAML, true) != 0) {
@@ -117,10 +121,7 @@ void GlobalState::LoadModulesFromFile(const char* module_data_path) {
     int num_modules = LoadModules(&module_data);
 
     // TODO: load modules into more comprehensive memory
-    INFO("%d modules", num_modules)
-}
-
-void GlobalState::LoadEphemeridesFromFile(const char* ephemerides_path) {
+    
     DataNode ephemerides;
     INFO("Loading Ephemerides")
     if (DataNode::FromFile(&ephemerides, ephemerides_path, FileFormat::YAML, true) != 0) {
@@ -128,7 +129,16 @@ void GlobalState::LoadEphemeridesFromFile(const char* ephemerides_path) {
     }
 
     int num_planets = LoadEphemerides(&ephemerides);
-    INFO("%d planets", num_planets)
+
+    DataNode ship_classes;
+    INFO("Loading Ships")
+    if (DataNode::FromFile(&ship_classes, ship_classes_path, FileFormat::YAML, true) != 0) {
+        FAIL("Could not load save %s", ship_classes_path);
+    }
+
+    int num_ships = LoadShipClasses(&ship_classes);
+
+    INFO("%d modules, %d planets, %d ships", num_modules, num_planets, num_ships)
 }
 
 void GlobalState::LoadGame(const char* file_path) {

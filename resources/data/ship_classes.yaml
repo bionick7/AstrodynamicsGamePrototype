@@ -1,0 +1,31 @@
+ship_classes:
+- id: shp_bulk_transport
+  name: C1K-998++
+  description: >
+    A larger variant that carries tripple the fuel and triple the engines
+    of a traditional C1K-998. 
+  dv: 4  # km/s
+  Isp: 4  # km/s
+  capacity: 3000  # t
+  
+- id: shp_light_transport
+  name: C1K-998
+  description: >
+    Despite beeing nowadays classified as a light freightship, the C1K was
+    at its time the largest cargo ship at the time of its construction. With
+    simple Hydrolox combustion engines, this design was ideal to haul large
+    ammount of cargo with cislunar space. After loosing popularity around the 
+    2060s, some modified version made it to the outer planets and found some 
+    popularity due to their large maintenancy ecosystem and their independance 
+    of nuclear fuel.
+  dv: 6
+  Isp: 4
+  capacity: 1000
+  
+- id: shp_express
+  name: Express
+  description: >
+    High-end ship
+  dv: 25
+  Isp: 20
+  capacity: 1000

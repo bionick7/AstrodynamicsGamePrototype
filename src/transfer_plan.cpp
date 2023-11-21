@@ -282,11 +282,12 @@ void TransferPlanUI::Update() {
         return;
     }
 
-    Ship& ship_comp = GetShip(ship);
+    Ship& ship_instance = GetShip(ship);
+    const ShipClass* ship_class = GetShipClassByIndex(ship_instance.ship_class);
 
     if (IsIdValid(plan->departure_planet) && IsIdValid(plan->arrival_planet) && redraw_queued) {
         TransferPlanSolve(plan);
-        is_valid = plan->num_solutions > 0 && plan->tot_dv <= ship_comp.max_dv;
+        is_valid = plan->num_solutions > 0 && plan->tot_dv <= ship_class->max_dv;
         is_valid = is_valid && TimeIsEarlier(GetTime(), plan->departure_time);
 
         redraw_queued = false;
@@ -294,17 +295,17 @@ void TransferPlanUI::Update() {
 
     if (is_valid) {
         if (plan->resource_transfer.resource_id == RESOURCE_NONE) {
-            SetLogistics(0, ship_comp.GetFuelRequiredEmpty(plan->tot_dv));
+            SetLogistics(0, ship_class->GetFuelRequiredEmpty(plan->tot_dv));
         } else {
-            resource_count_t payload = ship_comp.GetPayloadCapacity(plan->tot_dv);
-            SetLogistics(payload, ship_comp.max_capacity - payload);
+            resource_count_t payload = ship_class->GetPayloadCapacity(plan->tot_dv);
+            SetLogistics(payload, ship_class->max_capacity - payload);
         }
     } else {
         SetLogistics(0, 0);
     }
 
     if (IsKeyPressed(KEY_ENTER) && is_valid) {
-        ship_comp.ConfirmEditedTransferPlan();
+        ship_instance.ConfirmEditedTransferPlan();
         Make();
     }
 }
@@ -457,7 +458,9 @@ void TransferPlanUI::DrawUI() {
     if (!IsActive()) {
         return;
     }
-    const Ship& ship_comp = GetShip(ship);
+    
+    Ship& ship_instance = GetShip(ship);
+    const ShipClass* ship_class = GetShipClassByIndex(ship_instance.ship_class);
     
     const int y_margin = 5+50;
     UIContextCreate(
@@ -482,12 +485,12 @@ void TransferPlanUI::DrawUI() {
     snprintf(dv1_str,   40, "DV 1      %5.3f km/s", plan->dv1[plan->primary_solution]/1000.0);
     snprintf(dv2_str,   40, "DV 2      %5.3f km/s", plan->dv2[plan->primary_solution]/1000.0);
     snprintf(dvtot_str, 40, "DV Tot    %5.3f km/s", total_dv/1000.0);
-    double capacity = ship_comp.GetPayloadCapacity(total_dv);
+    double capacity = ship_class->GetPayloadCapacity(total_dv);
     if (capacity >= 0) {
         snprintf(payload_str, 40, "Payload cap.  %3.0f %% (%.0f / %.0f t)", 
-            capacity / ship_comp.max_capacity * 100,
+            capacity / ship_class->max_capacity * 100,
             capacity / 1000.0,
-            ship_comp.max_capacity / 1000.0
+            ship_class->max_capacity / 1000.0
         );
     } else {
         snprintf(payload_str, 40, "Cannot make transfer");
@@ -511,7 +514,7 @@ void TransferPlanUI::DrawUI() {
     //UIContextWrite("=====================");
     UIContextPushInset(0, 18);
         UIContextWrite(payload_str);
-        UIContextFillline(fmax(0, capacity / ship_comp.max_capacity), capacity >= 0 ? TRANSFER_UI_COLOR : PALETTE_RED, BG_COLOR);
+        UIContextFillline(fmax(0, capacity / ship_class->max_capacity), capacity >= 0 ? TRANSFER_UI_COLOR : PALETTE_RED, BG_COLOR);
     UIContextPop();  // Inset
 }
 

@@ -38,8 +38,7 @@ void Load(int argc, const char** argv) {
     GlobalState* app = GlobalGetState();
     INFO("cwd: '%s'", GetWorkingDirectory());
     app->Make(1e6);
-    app->LoadEphemeridesFromFile("resources/data/ephemerides.yaml");
-    app->LoadModulesFromFile("resources/data/modules.yaml");
+    app->LoadData();
     app->LoadGame("resources/data/start_state.yaml");
 
     // Interpreting cmdline

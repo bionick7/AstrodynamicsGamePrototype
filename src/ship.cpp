@@ -4,6 +4,85 @@
 #include "ui.hpp"
 #include "constants.hpp"
 
+std::map<std::string, shipclass_index_t> ship_classes_ids = std::map<std::string, shipclass_index_t>();
+ShipClass* ship_classes = NULL;
+size_t ship_classes_count = 0;
+
+double ShipClass::GetFuelRequiredFull(double dv) const {
+    // assuming max payload
+    double fuel_ratio = (exp(dv/v_e) - 1) / (exp(max_dv/v_e) - 1);
+    return fuel_ratio * max_capacity;
+}
+
+double ShipClass::GetFuelRequiredEmpty(double dv) const {
+    // assuming no payload
+    // dv = v_e * ln(1 + m_fuel/m_dry)
+    // m_fuel = oem * (exp(dv/V_e) - 1)
+    // max_capacity - oem = oem * (exp(dv_max/V_e) - 1)
+    // oem = max_capacity / ((exp(dv_max/V_e) - 1) + 1)
+    double oem = max_capacity / ((exp(max_dv/v_e) - 1) + 1);
+    return oem * (exp(dv/v_e) - 1);
+}
+
+int LoadShipClasses(const DataNode* data) {
+    if (ship_classes != NULL) {
+        WARNING("Loading ship classes more than once (I'm not freeing this memory)");
+    }
+    ship_classes_count = data->GetArrayChildLen("ship_classes", true);
+    if (ship_classes_count == 0){
+        WARNING("No ship classes loaded")
+        return 0;
+    }
+    ship_classes = (ShipClass*) malloc(sizeof(ShipClass) * ship_classes_count);
+    for (int index=0; index < ship_classes_count; index++) {
+        const DataNode* ship_data = data->GetArrayChild("ship_classes", index);
+        ShipClass sc = {0};
+
+        strncpy(sc.name, ship_data->Get("name", "[NAME MISSING]"), MODULE_NAME_MAX_SIZE);
+        strncpy(sc.description, ship_data->Get("description", "[DESCRITION MISSING]"), MODULE_DESCRIPTION_MAX_SIZE);
+
+        sc.max_capacity = ship_data->GetF("capacity", 0) * 1000;  // t -> kg
+        sc.max_dv = ship_data->GetF("dv", 0) * 1000;  // km/s -> m/s
+        sc.v_e = ship_data->GetF("Isp", 0) * 1000;    // km/s -> m/s
+
+        ship_classes[index] = sc;
+        auto pair = ship_classes_ids.insert_or_assign(ship_data->Get("id", "_"), index);
+        ship_classes[index].id = pair.first->first.c_str();  // points to string in dictionary
+    }
+    return ship_classes_count;
+}
+
+shipclass_index_t GetShipClassIndexById(const char *id) {
+    auto find = ship_classes_ids.find(id);
+    if (find == ship_classes_ids.end()) {
+        ERROR("No such ship id '%s'", id)
+        return MODULE_INDEX_INVALID;
+    }
+    return find->second;
+}
+
+const ShipClass* GetShipClassByIndex(shipclass_index_t index) {
+    if (ship_classes == NULL) {
+        ERROR("Ship Class uninitialized")
+        return NULL;
+    }
+    if (index >= ship_classes_count) {
+        ERROR("Invalid ship class index (%d >= %d or negative)", index, ship_classes_count)
+        return NULL;
+    }
+    return &ship_classes[index];
+}
+
+bool Ship::HasMouseHover(double* min_distance) const {
+    double dist = Vector2Distance(GetMousePosition(), draw_pos);
+    if (dist <= 10 && dist < *min_distance) {
+        *min_distance = dist;
+        return true;
+    } else {
+        return false;
+    }
+}
+
 void Ship::_OnClicked() {
     if (GlobalGetState()->focused_ship == id) {
         GetScreenTransform()->focus = position.cartesian;
@@ -49,9 +128,7 @@ void Ship::Serialize(DataNode* data) const {
     data->Set("name", name);
     data->Set("is_parked", is_parked ? "y" : "n");
     
-    data->SetF("capacity", max_capacity / 1000);  // t -> kg
-    data->SetF("dv", max_dv / 1000);  // km/s -> m/s
-    data->SetF("Isp", v_e / 1000);    // km/s -> m/s
+    data->Set("class_id", GetShipClassByIndex(ship_class)->id);
 
     // Not necaissarily the same as ammount specified in the transfer
     data->SetI("payload_type", payload_type);
@@ -67,13 +144,12 @@ void Ship::Deserialize(const DataNode* data) {
     strcpy(name, data->Get("name", "UNNAMED"));
     is_parked = strcmp(data->Get("is_parked", "y", true), "y") == 0;
     plan_edit_index = -1;
+    ship_class = GetShipClassIndexById(data->Get("class_id"));
 
-    payload_type = data->GetI("payload_type", payload_type);
-    payload_quantity = data->GetF("payload_quantity", payload_quantity / 1000) * 1000;
-    
-    max_capacity = data->GetF("capacity", 0) * 1000;  // t -> kg
-    max_dv = data->GetF("dv", 0) * 1000;  // km/s -> m/s
-    v_e = data->GetF("Isp", 0) * 1000;    // km/s -> m/s
+    payload_type = data->GetI("payload_type", payload_type, true);
+    payload_quantity = data->GetF("payload_quantity", payload_quantity / 1000, true) * 1000;
+
+
     /*color = (Color) {
         GetRandomValue(0, 255),
         GetRandomValue(0, 255),
@@ -89,7 +165,7 @@ void Ship::Deserialize(const DataNode* data) {
     }
 }
 
-double Ship::GetPayloadCapacity(double dv) const {
+double ShipClass::GetPayloadCapacity(double dv) const {
     // dv = v_e * ln(1 + m_fuel/m_dry)
     // fuel_ratio = (exp(dv/v_e) - 1) / (exp(dv_max/v_e) - 1)
     // MOTM * fuel_ratio - OEM
@@ -103,32 +179,6 @@ double Ship::GetPayloadCapacity(double dv) const {
     return (1 - fuel_ratio) * max_capacity;
 }
 
-double Ship::GetFuelRequiredFull(double dv) const {
-    // assuming max payload
-    double fuel_ratio = (exp(dv/v_e) - 1) / (exp(max_dv/v_e) - 1);
-    return fuel_ratio * max_capacity;
-}
-
-double Ship::GetFuelRequiredEmpty(double dv) const {
-    // assuming no payload
-    // dv = v_e * ln(1 + m_fuel/m_dry)
-    // m_fuel = oem * (exp(dv/V_e) - 1)
-    // max_capacity - oem = oem * (exp(dv_max/V_e) - 1)
-    // oem = max_capacity / ((exp(dv_max/V_e) - 1) + 1)
-    double oem = max_capacity / ((exp(max_dv/v_e) - 1) + 1);
-    return oem * (exp(dv/v_e) - 1);
-}
-
-
-bool Ship::HasMouseHover(double* min_distance) const {
-    double dist = Vector2Distance(GetMousePosition(), draw_pos);
-    if (dist <= 10 && dist < *min_distance) {
-        *min_distance = dist;
-        return true;
-    } else {
-        return false;
-    }
-}
 /*
 TransferPlan* Ship::_NewTransferPlan() {
     ASSERT(prepared_plans_count != 0 || is_parked)
@@ -165,8 +215,8 @@ void Ship::ConfirmEditedTransferPlan() {
         return;
     }
     double dv_tot = tp.dv1[tp.primary_solution] + tp.dv2[tp.primary_solution];
-    if (dv_tot > max_dv) {
-        ERROR("Not enough DV %f > %f", dv_tot, max_dv);
+    if (dv_tot > GetShipClassByIndex(ship_class)->max_dv) {
+        ERROR("Not enough DV %f > %f", dv_tot, GetShipClassByIndex(ship_class));
         return;
     }
     INFO("Assigning transfer plan %f to ship %s", tp.arrival_time, name);
@@ -300,18 +350,19 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
         );
 
         UIContextEnclose(2, 2, BG_COLOR, color);
-        UIContextWrite(name);
+
+        char name_str[40];
+        snprintf(name_str, 40, "%s (%s)", name, GetShipClassByIndex(ship_class)->name);
+        UIContextWrite(name_str);
         
         char max_cargo_str[40];
-        sprintf(max_cargo_str, "Cargo Cap. %.0f t", max_capacity);
-        UIContextWrite(max_cargo_str);
-
         char specific_impulse_str[40];
-        sprintf(specific_impulse_str, "I_sp %.0f m/s", v_e);
-        UIContextWrite(specific_impulse_str);
-
         char maxdv_str[40];
-        sprintf(maxdv_str, "dv %.0f m/s", max_dv);
+        sprintf(max_cargo_str,        "Cargo Cap. %2.3f kT",   GetShipClassByIndex(ship_class)->max_capacity / 1000000);
+        sprintf(specific_impulse_str, "I_sp       %2.2f km/s", GetShipClassByIndex(ship_class)->v_e / 1000);
+        sprintf(maxdv_str,            "dv         %2.2f km/s", GetShipClassByIndex(ship_class)->max_dv / 1000);
+        UIContextWrite(max_cargo_str);
+        UIContextWrite(specific_impulse_str);
         UIContextWrite(maxdv_str);
 
         Time now = GlobalGetNow();
@@ -377,11 +428,11 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
 
 void Ship::Inspect() {
     if (is_parked) {
-        INFO("%s : parked on %s, %f m/s d", name, GetPlanet(parent_planet).name, max_dv);
+        INFO("%s : parked on %s, %f m/s d", name, GetPlanet(parent_planet).name, GetShipClassByIndex(ship_class)->max_dv);
     } else {
         INFO("%s : in transfer[", name);
         //OrbitPrint(&next_plan.transfer_orbit[next_plan.primary_solution]);
-        INFO("] %f m/s dv", max_dv);
+        INFO("] %f m/s dv", GetShipClassByIndex(ship_class)->max_dv);
     }
 }
 

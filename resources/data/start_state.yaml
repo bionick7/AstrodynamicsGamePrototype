@@ -36,22 +36,25 @@ planets:
 
 ships:
 - name: Bulk transport
-  dv: 10  # km/s
-  Isp: 10  # km/s
+  class_id: shp_bulk_transport
+  dv: 4  # km/s
+  Isp: 4  # km/s
   capacity: 3000  # t
   planet: Tethys
   tf_plans: []
 
 - name: Light transport
-  dv: 10
-  Isp: 10
+  class_id: shp_light_transport
+  dv: 6
+  Isp: 4
   capacity: 1000
   planet: Tethys
   tf_plans: []
   
 - name: Express
-  dv: 30
-  Isp: 30
+  class_id: shp_express
+  dv: 25
+  Isp: 20
   capacity: 1000
   planet: Tethys
   tf_plans: []

@@ -1,6 +1,27 @@
 # astrodynamics_concept_3
 Need a better name
 
+## Ships
+light freighter:
+    1kT
+    4km/s H20
+bulk freighter:
+    3kT
+    4km/s H20
+nuclear freighter:
+    1kT
+    10km/s H2
+express:
+    1kT
+    20km/s H2
+long-flight ships ... (modules?)
+Ship modules for:
+- engines
+- heat shields
+-
+
+## Modules
+
 ## Gamplay loops
 
 Loop A << current  focus
@@ -31,6 +52,8 @@ Disruptive events
 
 Arriving pops should be the only external driver.
 
+# TODO/Wishlists
+
 ## Immediate
 - build modules (Done)
 - water as fuel (Done)
@@ -41,6 +64,9 @@ Arriving pops should be the only external driver.
 ## Known Bugs
 - Deleting a transfer plan 
 - Fullscreen doesn't work on linux
+
+## Gameplay issues
+- Metal resource loop very lame
 
 ## UX improvements wishlist
 Near-term, realisable only
@@ -57,9 +83,16 @@ Near-term, realisable only
 - different icons for different ships
 - preview small 3D models for flavour
 
+## Tech wishlist
+- Integrate modules into ECS
+- Hot reloading
+- cmd console
+- global settings (with push_override etc.)
+
 ## Gameplay wishlist
 Regardless of implementability
 - disruption events (can be tied to morale)
+- segment planets into regions
 - ship modules
 - ship maintenance
 - planet modifiers

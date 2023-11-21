@@ -24,11 +24,11 @@ enum ResourceType {
     RESOURCE_MAX,
 };
 
-#define MODULE_NAME_MAX_SIZE 128
-#define MODULE_DESCRIPTION_MAX_SIZE 2048
-#define MAX_NAME_LENGTH 30
+#define MODULE_NAME_MAX_SIZE 64
+#define MODULE_DESCRIPTION_MAX_SIZE 1024
+#define RESOURCE_NAME_MAX_SIZE 30
 
-static const char resources_names[RESOURCE_MAX][MAX_NAME_LENGTH] = {
+static const char resources_names[RESOURCE_MAX][RESOURCE_NAME_MAX_SIZE] = {
     "water", // RESOURCE_WATER
     "food",  // RESOURCE_FOOD
     "metal",  // RESOURCE_METAL
@@ -42,7 +42,7 @@ enum StatType {
     STAT_MAX,
 };
 
-static const char stat_names[STAT_MAX][MAX_NAME_LENGTH] = {
+static const char stat_names[STAT_MAX][RESOURCE_NAME_MAX_SIZE] = {
     "population", // STAT_POPULATION
     "workforce" // STAT_POPULATION
 };
@@ -57,8 +57,6 @@ struct ModuleClass {
     resource_count_t stat_contributions[STAT_MAX];
     resource_count_t stat_required[STAT_MAX];
 
-    bool disabled;
-    char* disabled_reason = NULL;
     const char* id = "INVALID ID - MODULE CLASS LOADING ERROR";
 };
 
