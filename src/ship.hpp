@@ -72,7 +72,7 @@ struct Ship {
     TransferPlan* GetEditedTransferPlan();
     void ConfirmEditedTransferPlan();
     void CloseEditedTransferPlan();
-    void PopTransferPlan(int index);
+    void RemoveTransferPlan(int index);
     void StartEditingPlan(int index);
 
 private:

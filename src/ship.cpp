@@ -224,13 +224,18 @@ void Ship::ConfirmEditedTransferPlan() {
 }
 
 void Ship::CloseEditedTransferPlan() {
-    PopTransferPlan(prepared_plans_count - 1);
+    RemoveTransferPlan(prepared_plans_count - 1);
 }
 
-void Ship::PopTransferPlan(int index) {
+void Ship::RemoveTransferPlan(int index) {
     // Does not call _EnsureContinuity to prevent invinite recursion
     if (index < 0 || index >= prepared_plans_count) {
         ERROR("Tried to remove transfer plan at invalid index %d (ship %s)", index, name);
+        return;
+    }
+
+    if (index == plan_edit_index) {
+        ERROR("Stop editing plan before attempting to remove it");
         return;
     }
 
@@ -410,14 +415,17 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
                 StartEditingPlan(i);
             }
             UIContextPop();
-            UIContextPushHSplit(-32, -1);
-            //UIContextCurrent().text_size = text_size*2;
-            UIContextWrite("X");
-            UIContextEnclose(0, 0, BG_COLOR, PALETTE_BLUE);
-            if (UIContextAsButton() & BUTTON_STATE_FLAG_JUST_PRESSED) {
-                PopTransferPlan(i);
+
+            if (i != plan_edit_index) {
+                UIContextPushHSplit(-32, -1);
+                UIContextWrite("X");
+                UIContextEnclose(0, 0, BG_COLOR, PALETTE_BLUE);
+                if (UIContextAsButton() & BUTTON_STATE_FLAG_JUST_PRESSED) {
+                    RemoveTransferPlan(i);
+                }
+                UIContextPop();
             }
-            UIContextPop();
+
             UIContextPop();
         }
         if (UIContextDirectButton("+", 10) & BUTTON_STATE_FLAG_JUST_PRESSED) {
@@ -444,7 +452,7 @@ void Ship::_OnDeparture(const TransferPlan& tp) {
 
     char date_buffer[30];
     FormatTime(date_buffer, 30, tp.departure_time);
-    PLAYER_INFO(":: On %s, \"%s\" picked up %f kg of %s on %s", 
+    USER_INFO(":: On %s, \"%s\" picked up %f kg of %s on %s", 
         date_buffer,
         name,
         payload_quantity,
@@ -469,14 +477,14 @@ void Ship::_OnArrival(const TransferPlan& tp) {
 
     char date_buffer[30];
     FormatTime(date_buffer, 30, tp.arrival_time);
-    PLAYER_INFO(":: On %s, \"%s\" delivered %f kg of %s to %s", 
+    USER_INFO(":: On %s, \"%s\" delivered %f kg of %s to %s", 
         date_buffer,
         name,
         delivered,
         resources_names[payload_type],
         GetPlanet(parent_planet).name
     );
-    PopTransferPlan(0);
+    RemoveTransferPlan(0);
     Update();
 }
 
@@ -493,7 +501,7 @@ void Ship::_EnsureContinuity() {
         if (prepared_plans[i].departure_planet == planet_tracker) {
             planet_tracker = prepared_plans[i].arrival_planet;
         } else {
-            PopTransferPlan(i);
+            RemoveTransferPlan(i);
         }
     }
 }

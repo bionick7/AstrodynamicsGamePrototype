@@ -82,7 +82,7 @@ Arriving pops should be the only external driver.
 - Sound
 
 ## Known Bugs
-- Deleting a transfer plan while editing it is a problem
+- Deleting a transfer plan while editing it is a problem  (Done)
 
 ## UX improvements wishlist
 Near-term, realizable only

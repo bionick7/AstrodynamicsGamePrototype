@@ -145,7 +145,7 @@ void Planet::RequestBuild(int slot, building_index_t building_class) {
     const BuildingClass* mc = GetBuildingByIndex(building_class);
     for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
         if (mc->build_costs[resource_index] > resource_stock[resource_index]) {
-            PLAYER_INFO("Not enough %s (%f available, %f required)", 
+            USER_INFO("Not enough %s (%f available, %f required)", 
                 resources_names[resource_index],
                 resource_stock [resource_index],
                 mc->build_costs[resource_index]

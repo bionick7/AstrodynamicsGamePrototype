@@ -39,7 +39,7 @@ Time Calendar::AdvanceTime(double delta_t) {
     time = TimeAddSec(time, delta_t * time_scale);
     if (TimeIsEarlier(migration_arrrival_time, GlobalGetNow())){
         migration_arrrival_time = TimeAdd(migration_arrrival_time, current_migration_period);
-        PLAYER_INFO("New migrants arrive")
+        USER_INFO("New migrants arrive")
     }
 
     return time;

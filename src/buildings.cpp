@@ -49,7 +49,11 @@ void BuildingInstance::Effect(resource_count_t* resource_delta, resource_count_t
     }
 }
 
-void _DrawRelevantStatsFromArray(std::stringstream& ss, const resource_count_t array[], const char array_names[][RESOURCE_NAME_MAX_SIZE], int array_size, resource_count_t scaler, const char* suffix) {
+void _DrawRelevantStatsFromArray(
+    std::stringstream& ss, 
+    const resource_count_t array[], const char array_names[][RESOURCE_NAME_MAX_SIZE], 
+    int array_size, resource_count_t scaler, const char* suffix
+) {
     for (int i=0; i < array_size; i++) {
         if (array[i] > 0) {
             char temp[1024];
