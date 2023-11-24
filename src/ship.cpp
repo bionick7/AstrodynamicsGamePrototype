@@ -38,8 +38,8 @@ int LoadShipClasses(const DataNode* data) {
         const DataNode* ship_data = data->GetArrayChild("ship_classes", index);
         ShipClass sc = {0};
 
-        strncpy(sc.name, ship_data->Get("name", "[NAME MISSING]"), MODULE_NAME_MAX_SIZE);
-        strncpy(sc.description, ship_data->Get("description", "[DESCRITION MISSING]"), MODULE_DESCRIPTION_MAX_SIZE);
+        strncpy(sc.name, ship_data->Get("name", "[NAME MISSING]"), SHIPCLASS_NAME_MAX_SIZE);
+        strncpy(sc.description, ship_data->Get("description", "[DESCRITION MISSING]"), SHIPCLASS_DESCRIPTION_MAX_SIZE);
 
         sc.max_capacity = ship_data->GetF("capacity", 0) * 1000;  // t -> kg
         sc.max_dv = ship_data->GetF("dv", 0) * 1000;  // km/s -> m/s
@@ -56,7 +56,7 @@ shipclass_index_t GetShipClassIndexById(const char *id) {
     auto find = ship_classes_ids.find(id);
     if (find == ship_classes_ids.end()) {
         ERROR("No such ship id '%s'", id)
-        return MODULE_INDEX_INVALID;
+        return BUILDING_INDEX_INVALID;
     }
     return find->second;
 }

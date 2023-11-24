@@ -5,9 +5,9 @@
 #include "datanode.hpp"
 #include "coordinate_transform.hpp"
 #include "logging.hpp"
-#include "modules.hpp"
+#include "buildings.hpp"
 
-#define MAX_PLANET_MODULES 20
+#define MAX_PLANET_BUILDINGS 20
 
 struct PlanetNature {
     char name[100];
@@ -29,7 +29,7 @@ struct Planet {
     resource_count_t resource_delta[RESOURCE_MAX];
 
     resource_count_t stats[STAT_MAX];
-    ModuleInstance modules[MAX_PLANET_MODULES];
+    BuildingInstance buildings[MAX_PLANET_BUILDINGS];
 
     bool mouse_hover;
     entity_id_t id;
@@ -47,7 +47,7 @@ struct Planet {
     resource_count_t GiveResource(int resource, resource_count_t quantity);
 
     void RecalcStats();
-    void RequestBuild(int slot, module_index_t module_class);
+    void RequestBuild(int slot, building_index_t building_class);
 
     bool HasMouseHover(double* distance) const;
     void Update();

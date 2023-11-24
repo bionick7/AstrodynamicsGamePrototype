@@ -42,9 +42,9 @@ void Load(int argc, const char** argv) {
     app->LoadGame("resources/data/start_state.yaml");
 
     // Interpreting cmdline
-    const char* module_outp_fp = GetSetting(argc, argv, "--module_outp");
-    if (module_outp_fp != NULL){
-        WriteModulesToFile(module_outp_fp);
+    const char* building_outp_fp = GetSetting(argc, argv, "--building_outp");
+    if (building_outp_fp != NULL){
+        WriteBuildingsToFile(building_outp_fp);
     }
 }
 

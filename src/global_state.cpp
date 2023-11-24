@@ -108,19 +108,19 @@ void GlobalState::Make(Time p_time) {
 }
 
 void GlobalState::LoadData() {
-    const char* module_data_path = "resources/data/modules.yaml";
+    const char* buildings_data_path = "resources/data/buildings.yaml";
     const char* ephemerides_path = "resources/data/ephemerides.yaml";
     const char* ship_classes_path = "resources/data/ship_classes.yaml";
     
-    DataNode module_data;
-    INFO("Loading Modules")
-    if (DataNode::FromFile(&module_data, module_data_path, FileFormat::YAML, true) != 0) {
-        FAIL("Could not load save %s", module_data_path);
+    DataNode building_data;
+    INFO("Loading Buildings")
+    if (DataNode::FromFile(&building_data, buildings_data_path, FileFormat::YAML, true) != 0) {
+        FAIL("Could not load save %s", buildings_data_path);
     }
 
-    int num_modules = LoadModules(&module_data);
+    int num_buildings = LoadBuildings(&building_data);
 
-    // TODO: load modules into more comprehensive memory
+    // TODO: load buildings into more comprehensive memory
     
     DataNode ephemerides;
     INFO("Loading Ephemerides")
@@ -138,7 +138,7 @@ void GlobalState::LoadData() {
 
     int num_ships = LoadShipClasses(&ship_classes);
 
-    INFO("%d modules, %d planets, %d ships", num_modules, num_planets, num_ships)
+    INFO("%d buildings, %d planets, %d ships", num_buildings, num_planets, num_ships)
 }
 
 void GlobalState::LoadGame(const char* file_path) {
@@ -159,8 +159,8 @@ void GlobalState::UpdateState(double delta_t) {
         // Cancel out of next layer
 
         // cancel out of focused planet and ship
-        if (ModuleConstructionIsOpen()) {
-            ModuleConstructionClose();
+        if (BuildingConstructionIsOpen()) {
+            BuildingConstructionClose();
         } 
 
         // transfer plan UI
@@ -245,7 +245,7 @@ void GlobalState::DrawState() {
             planet.DrawUI(&c_transf, true, EMPTY_TRANSFER, -1);
         }
     }
-    ModuleConstructionUI();
+    BuildingConstructionUI();
     for (auto [_, ship] : ship_view.each()) {
         ship.DrawUI(&c_transf);
     }

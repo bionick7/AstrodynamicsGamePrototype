@@ -1,38 +1,35 @@
 planets:
   - name: Mimas
     resource_stock: []
-    modules:
+    buildings:
     - mod_water_extractor
   - name: Encelladus
     resource_stock: []
-    modules: []
+    buildings: []
   - name: Tethys
     resource_stock:
       water: 1000
       food: 2000
       electronics: 600
-    modules:
+    buildings:
     - mod_pop_small
     - mod_water_mine
     - mod_food_mine
     - mod_food_mine
   - name: Rhea
     resource_stock: []
-    modules: []
+    buildings: []
   - name: Titan
     resource_stock:
       water: 1000
       food: 2000
-    modules:
-    - mod_pop_small
-    - mod_water_mine
-    - mod_metal_mine
+    buildings: []
   - name: Iaeptus
     resource_stock: []
-    modules: []
+    buildings: []
   - name: Phoebe
     resource_stock: []
-    modules: []
+    buildings: []
 
 ships:
 - name: Bulk transport

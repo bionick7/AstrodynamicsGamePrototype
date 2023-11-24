@@ -28,14 +28,14 @@ void Planet::Serialize(DataNode* data) const {
     for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
         resource_node->SetF(resources_names[resource_index], resource_stock[resource_index] / 1000);
     }
-    int last_module_index = 0;
-    for(int i=0; i < MAX_PLANET_MODULES; i++) 
-        if (modules[i].IsValid()) last_module_index = i;
+    int last_building_index = 0;
+    for(int i=0; i < MAX_PLANET_BUILDINGS; i++) 
+        if (buildings[i].IsValid()) last_building_index = i;
 
-    data->SetArray("modules", last_module_index);
-    for(int i=0; i < last_module_index; i++) {
-        const ModuleClass* mc = GetModuleByIndex(modules[i].class_index);
-        data->SetArrayElem("modules", i, mc->id);
+    data->SetArray("buildings", last_building_index);
+    for(int i=0; i < last_building_index; i++) {
+        const BuildingClass* mc = GetBuildingByIndex(buildings[i].class_index);
+        data->SetArrayElem("buildings", i, mc->id);
     }
 
     // We assume the orbital info is stored in the ephemerides
@@ -63,15 +63,15 @@ void Planet::Deserialize(const DataNode *data) {
         }
     }
 
-    if (data->Has("modules")) {
-        int initial_module_count = data->GetArrayLen("modules", true);
-        if (initial_module_count > MAX_PLANET_MODULES) {
-            initial_module_count = MAX_PLANET_MODULES;
+    if (data->Has("buildings")) {
+        int initial_building_count = data->GetArrayLen("buildings", true);
+        if (initial_building_count > MAX_PLANET_BUILDINGS) {
+            initial_building_count = MAX_PLANET_BUILDINGS;
         }
         
-        for (int i = 0; i < initial_module_count; i++) {
-            const char* module_id = data->GetArray("modules", i);
-            modules[i] = ModuleInstance(GetModuleIndexById(module_id));
+        for (int i = 0; i < initial_building_count; i++) {
+            const char* building_id = data->GetArray("buildings", i);
+            buildings[i] = BuildingInstance(GetBuildingIndexById(building_id));
         }
     }
 }
@@ -134,15 +134,15 @@ void Planet::RecalcStats() {
         stats[i] = 0;
     }
 
-    for (int i = 0; i < MAX_PLANET_MODULES; i++) {
-        if (modules[i].IsValid()) {
-            modules[i].Effect(&resource_delta[0], &stats[0]);
+    for (int i = 0; i < MAX_PLANET_BUILDINGS; i++) {
+        if (buildings[i].IsValid()) {
+            buildings[i].Effect(&resource_delta[0], &stats[0]);
         }
     }
 }
 
-void Planet::RequestBuild(int slot, module_index_t module_class) {
-    const ModuleClass* mc = GetModuleByIndex(module_class);
+void Planet::RequestBuild(int slot, building_index_t building_class) {
+    const BuildingClass* mc = GetBuildingByIndex(building_class);
     for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
         if (mc->build_costs[resource_index] > resource_stock[resource_index]) {
             PLAYER_INFO("Not enough %s (%f available, %f required)", 
@@ -153,8 +153,8 @@ void Planet::RequestBuild(int slot, module_index_t module_class) {
             return;
         }
     }
-    ModuleInstance instance = ModuleInstance(module_class);
-    modules[slot] = instance;
+    BuildingInstance instance = BuildingInstance(building_class);
+    buildings[slot] = instance;
 
     for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
         resource_stock[resource_index] -= mc->build_costs[resource_index];
@@ -262,20 +262,20 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
     _UIDrawStats(stats);
     UIContextWrite("-------------------------");
 
-    // Draw modules
+    // Draw buildings
     int current_width = UIContextCurrent().width;
     UIContextPushInset(0, UIContextCurrent().height - UIContextCurrent().y_cursor);
     UIContextPushHSplit(0, current_width/2);
-    for (int i = 0; i < MAX_PLANET_MODULES; i += 2) {
-        if (modules[i].UIDraw()) {
-            ModuleConstructionOpen(id, i);
+    for (int i = 0; i < MAX_PLANET_BUILDINGS; i += 2) {
+        if (buildings[i].UIDraw()) {
+            BuildingConstructionOpen(id, i);
         }
     }
     UIContextPop();  // HSplit
     UIContextPushHSplit(current_width/2, current_width);
-    for (int i = 1; i < MAX_PLANET_MODULES; i += 2) {
-        if (modules[i].UIDraw()) {
-            ModuleConstructionOpen(id, i);
+    for (int i = 1; i < MAX_PLANET_BUILDINGS; i += 2) {
+        if (buildings[i].UIDraw()) {
+            BuildingConstructionOpen(id, i);
         }
     }
     UIContextPop();  // HSplit

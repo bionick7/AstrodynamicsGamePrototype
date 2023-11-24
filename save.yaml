@@ -28,7 +28,7 @@ planets:
     metal: 0.000000
     water: 0.000000
 
-  modules: []
+  buildings: []
 
 - id: 5
   name: Iaeptus
@@ -38,7 +38,7 @@ planets:
     metal: 0.000000
     water: 0.000000
 
-  modules: []
+  buildings: []
 
 - id: 4
   name: Titan
@@ -48,7 +48,7 @@ planets:
     metal: 75.298492
     water: 1301.205750
 
-  modules:
+  buildings:
   - mod_pop_small
   - mod_water_mine
 
@@ -60,7 +60,7 @@ planets:
     metal: 0.000000
     water: 0.000000
 
-  modules: []
+  buildings: []
 
 - id: 2
   name: Tethys
@@ -70,7 +70,7 @@ planets:
     metal: 0.000000
     water: 1095.340750
 
-  modules:
+  buildings:
   - mod_pop_small
   - mod_water_mine
   - mod_food_mine
@@ -83,7 +83,7 @@ planets:
     metal: 0.000000
     water: 0.000000
 
-  modules: []
+  buildings: []
 
 - id: 0
   name: Mimas
@@ -93,7 +93,7 @@ planets:
     metal: 0.000000
     water: 150.596984
 
-  modules: []
+  buildings: []
 
 ships:
 - Isp: 30.000000

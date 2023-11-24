@@ -1,4 +1,4 @@
-modules:
+buildings:
 - id: mod_water_extractor
   name: Water extractor
   description: |

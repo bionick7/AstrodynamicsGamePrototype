@@ -1,11 +1,11 @@
-#ifndef MODULES_H
-#define MODULES_H
+#ifndef BUILDINGS_H
+#define BUILDINGS_H
 #include "basic.hpp"
 #include "datanode.hpp"
 
 typedef double resource_count_t;
-typedef uint16_t module_index_t;
-const module_index_t MODULE_INDEX_INVALID = UINT16_MAX;
+typedef uint16_t building_index_t;
+const building_index_t BUILDING_INDEX_INVALID = UINT16_MAX;
 
 struct ResourceTransfer {
     int resource_id;
@@ -24,8 +24,8 @@ enum ResourceType {
     RESOURCE_MAX,
 };
 
-#define MODULE_NAME_MAX_SIZE 64
-#define MODULE_DESCRIPTION_MAX_SIZE 1024
+#define BUILDING_NAME_MAX_SIZE 64
+#define BUILDING_DESCRIPTION_MAX_SIZE 1024
 #define RESOURCE_NAME_MAX_SIZE 30
 
 static const char resources_names[RESOURCE_MAX][RESOURCE_NAME_MAX_SIZE] = {
@@ -49,38 +49,38 @@ static const char stat_names[STAT_MAX][RESOURCE_NAME_MAX_SIZE] = {
 
 ResourceTransfer ResourceTransferInvert(ResourceTransfer rt);
 
-struct ModuleClass {
-    char name[MODULE_NAME_MAX_SIZE];
-    char description[MODULE_DESCRIPTION_MAX_SIZE];
+struct BuildingClass {
+    char name[BUILDING_NAME_MAX_SIZE];
+    char description[BUILDING_DESCRIPTION_MAX_SIZE];
     resource_count_t resource_delta_contributions[RESOURCE_MAX];
     resource_count_t build_costs[RESOURCE_MAX];
     resource_count_t stat_contributions[STAT_MAX];
     resource_count_t stat_required[STAT_MAX];
 
-    const char* id = "INVALID ID - MODULE CLASS LOADING ERROR";
+    const char* id = "INVALID ID - BUILDING CLASS LOADING ERROR";
 };
 
-struct ModuleInstance {
+struct BuildingInstance {
     bool disabled;
-    module_index_t class_index;
+    building_index_t class_index;
 
-    ModuleInstance() : ModuleInstance(MODULE_INDEX_INVALID) {};
-    ModuleInstance(module_index_t class_index);
+    BuildingInstance() : BuildingInstance(BUILDING_INDEX_INVALID) {};
+    BuildingInstance(building_index_t class_index);
 
     bool IsValid() const;
     void Effect(resource_count_t* resource_delta, resource_count_t* stats);
     bool UIDraw();
 };
 
-int LoadModules(const DataNode* datanode);
-void WriteModulesToFile(const char* filepath);
-module_index_t GetModuleIndexById(const char* id);
-const ModuleClass* GetModuleByIndex(module_index_t index);
+int LoadBuildings(const DataNode* datanode);
+void WriteBuildingsToFile(const char* filepath);
+building_index_t GetBuildingIndexById(const char* id);
+const BuildingClass* GetBuildingByIndex(building_index_t index);
 
-void ModuleConstructionOpen(entity_id_t planet, int slot_index);
-void ModuleConstructionClose();
-bool ModuleConstructionIsOpen();
-void ModuleConstructionUI();
+void BuildingConstructionOpen(entity_id_t planet, int slot_index);
+void BuildingConstructionClose();
+bool BuildingConstructionIsOpen();
+void BuildingConstructionUI();
 
-#endif  // MODULES_H
+#endif  // BUILDINGS_H
 
