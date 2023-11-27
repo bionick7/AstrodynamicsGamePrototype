@@ -7,30 +7,11 @@
 static std::map<std::string, PlanetNature> ephemerides = std::map<std::string, PlanetNature>();
 static PlanetNature parent = {0};
 
-const int max_prices[RESOURCE_MAX] = { 2, 10, 8, 30 };
-
-const int default_prices[RESOURCE_MAX] = { 1, 3, 4, 10 };
-
-const int min_prices[RESOURCE_MAX] = { 1, 1, 2, 5 };
-
-
 Planet::Planet(const char* p_name, double p_mu, double p_radius) {
     strcpy(name, p_name);
     mu = p_mu;
     radius = p_radius;
     orbit = OrbitFromElements(1, 0, 0, 1, 0, true);
-    for (int i=0; i < RESOURCE_MAX; i++) {
-        resource_stock[i] = 0;
-        resource_delta[i] = 0;
-        resource_capacity[i] = 1e6;
-        resource_price[i] = default_prices[i];
-    }
-    for (int i=0; i < RESOURCE_MAX*PRICE_TREND_SIZE; i++) {
-        price_history[i] = resource_price[i % RESOURCE_MAX];
-    }
-    for (int i=0; i < PRICE_TREND_SIZE; i++) {
-        RecalcEconomy();
-    }
 }
 
 void Planet::Serialize(DataNode* data) const {
@@ -41,8 +22,8 @@ void Planet::Serialize(DataNode* data) const {
     DataNode* resource_node = data->SetChild("resource_stock", DataNode());
     DataNode* resource_delta_node = data->SetChild("resource_delta", DataNode());
     for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-        resource_node->SetF(resources_names[resource_index], resource_stock[resource_index] / 1000);
-        resource_delta_node->SetF(resources_names[resource_index], resource_delta[resource_index] / 1000);
+        resource_node->SetF(GetResourceData(resource_index).name, economy.resource_stock[resource_index] / 1000);
+        resource_delta_node->SetF(GetResourceData(resource_index).name, economy.resource_delta[resource_index] / 1000);
     }
 
     int last_building_index = 0;
@@ -76,13 +57,13 @@ void Planet::Deserialize(const DataNode *data) {
     const DataNode* resource_node = data->GetChild("resource_stock", true);
     if (resource_node != NULL) {
         for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-            resource_stock[resource_index] = resource_node->GetF(resources_names[resource_index], 0, true) * 1000;
+            economy.resource_stock[resource_index] = resource_node->GetF(GetResourceData(resource_index).name, 0, true) * 1000;
         }
     }
     const DataNode* resource_delta_node = data->GetChild("resource_delta", true);
     if (resource_delta_node != NULL) {
         for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-            resource_delta[resource_index] = resource_delta_node->GetF(resources_names[resource_index], 0, true) * 1000;
+            economy.resource_delta[resource_index] = resource_delta_node->GetF(GetResourceData(resource_index).name, 0, true) * 1000;
         }
     }
 
@@ -97,7 +78,7 @@ void Planet::Deserialize(const DataNode *data) {
             buildings[i] = BuildingInstance(GetBuildingIndexById(building_id));
         }
     }
-    RecalcEconomy();
+    economy.RecalcEconomy();
 }
 
 void Planet::_OnClicked() {
@@ -124,42 +105,10 @@ double Planet::GetDVFromExcessVelocity(Vector2 vel) const {
     return sqrt(mu / (2*radius) + Vector2LengthSqr(vel));
 }
 
-resource_count_t Planet::DrawResource(ResourceType resource, resource_count_t quantity) {
-    // Returns how much of the resource the planet was able to give
-    if (resource < 0 || resource >= RESOURCE_MAX) {
-        return 0;
-    }
-    
-    resource_count_t transferred_resources = ClampInt(quantity, 0, resource_stock[resource]);
-    resource_stock[resource] -= transferred_resources;
-    GlobalGetState()->CompleteTransaction(-GetPrice(resource, quantity), "purchased resource");
-
-    //return transferred_resources;
-    return quantity;
-}
-
-resource_count_t Planet::GiveResource(ResourceType resource, resource_count_t quantity) {
-    // Returns how much of the resource the planet was able to take
-    if (resource < 0 || resource >= RESOURCE_MAX) {
-        return 0;
-    }
-
-    resource_count_t transferred_resources = Clamp(quantity, 0, resource_capacity[resource]);
-    resource_stock[resource] += transferred_resources;
-    GlobalGetState()->CompleteTransaction(-GetPrice(resource, quantity), "sold resource");
-
-    //return transferred_resources;
-    return quantity;
-}
-
-int Planet::GetPrice(ResourceType resource, resource_count_t quantity) const {
-    return resource_price[resource] * quantity;
-}
-
 void Planet::RecalcStats() {
     // Just call this every frame tbh
     for (int i = 0; i < RESOURCE_MAX; i++){
-        resource_delta[i] = 0;
+        economy.resource_delta[i] = 0;
     }
     
     for (int i = 0; i < STAT_MAX; i++){
@@ -168,34 +117,18 @@ void Planet::RecalcStats() {
 
     for (int i = 0; i < MAX_PLANET_BUILDINGS; i++) {
         if (buildings[i].IsValid()) {
-            buildings[i].Effect(&resource_delta[0], &stats[0]);
+            buildings[i].Effect(&economy.resource_delta[0], &stats[0]);
         }
-    }
-}
-
-void Planet::RecalcEconomy() {
-    // Call every day
-    for(int i = 0; i < RESOURCE_MAX * (PRICE_TREND_SIZE - 1); i++) {
-        price_history[i] = price_history[i + RESOURCE_MAX];
-    }
-    for (int i = 0; i < RESOURCE_MAX; i++){
-        if (GetRandomValue(0, 3) == 0) {
-            resource_price[i] = MaxInt(resource_price[i]-1, min_prices[i]);
-        }
-        if (GetRandomValue(0, 3) == 0) {
-            resource_price[i] = MinInt(resource_price[i]+1, max_prices[i]);
-        }
-        price_history[RESOURCE_MAX*(PRICE_TREND_SIZE-1) + i] = resource_price[i];
     }
 }
 
 void Planet::RequestBuild(int slot, building_index_t building_class) {
     const BuildingClass* mc = GetBuildingByIndex(building_class);
     for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-        if (mc->build_costs[resource_index] > resource_stock[resource_index]) {
+        if (mc->build_costs[resource_index] > economy.resource_stock[resource_index]) {
             USER_INFO("Not enough %s (%f available, %f required)", 
-                resources_names[resource_index],
-                resource_stock [resource_index],
+                GetResourceData(resource_index).name,
+                economy.resource_stock[resource_index],
                 mc->build_costs[resource_index]
             )
             return;
@@ -205,7 +138,7 @@ void Planet::RequestBuild(int slot, building_index_t building_class) {
     buildings[slot] = instance;
 
     for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-        resource_stock[resource_index] -= mc->build_costs[resource_index];
+        economy.resource_stock[resource_index] -= mc->build_costs[resource_index];
     }
 }
 
@@ -222,16 +155,9 @@ bool Planet::HasMouseHover(double* min_distance) const {
 
 void Planet::Update() {
     Time now = GlobalGetNow();
-    Time prev = GlobalGetPreviousFrameTime();
-    //RecalcStats();
     position = OrbitGetPosition(&orbit, now);
-    double delta_T = TimeDays(TimeSub(now, prev));
-    for (int i=0; i < RESOURCE_MAX; i++) {
-        resource_stock[i] = Clamp(resource_stock[i] + resource_delta[i] * delta_T, 0, resource_capacity[i]);
-    }
-    if ((int)TimeDays(prev) != (int)TimeDays(now)) {
-        RecalcEconomy();
-    }
+    // RecalcStats();
+    economy.Update();
 }
 
 void Planet::Draw(const CoordinateTransform* c_transf) {
@@ -252,92 +178,6 @@ void Planet::Draw(const CoordinateTransform* c_transf) {
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             _OnClicked();
         }
-    }
-}
-
-void _UIDrawResourceGrpah(const int price_history[], int resource_index) {
-    TextBox& box = UIContextCurrent();
-    int graph_height = max_prices[resource_index] - min_prices[resource_index];
-
-    int current_graph_x = 0;
-    int current_graph_y = price_history[resource_index] - min_prices[resource_index];
-    int current_draw_x = box.text_start_x + current_graph_x * box.width / PRICE_TREND_SIZE;
-    int current_draw_y = box.text_start_y + box.height - current_graph_y * box.height / graph_height;
-    for (int i=1; i < PRICE_TREND_SIZE; i++){
-        current_graph_x = i;
-        current_graph_y = price_history[i * RESOURCE_MAX + resource_index] - min_prices[resource_index];
-        int next_draw_x = box.text_start_x + current_graph_x * box.width / PRICE_TREND_SIZE;
-        int next_draw_y = box.text_start_y + box.height - current_graph_y * box.height / graph_height;
-        DrawLine(current_draw_x, current_draw_y, next_draw_x, next_draw_y, MAIN_UI_COLOR);
-        current_draw_x = next_draw_x;
-        current_draw_y = next_draw_y;
-    }
-}
-
-void _UIDrawResources(
-    const resource_count_t resource_stock[], const resource_count_t resource_delta[], const resource_count_t resource_cap[], 
-    const ResourceTransfer& transfer, double fuel_draw
-) {
-    for (int i=0; i < RESOURCE_MAX; i++) {
-        char buffer[50];
-        //sprintf(buffer, "%-10s %5d/%5d (%+3d)", resources_names[i], qtt, cap, delta);
-        sprintf(buffer, "%-10s %3.1fT (%+3d T/d)", resources_names[i], resource_stock[i] / 1e3, (int)(resource_delta[i]/1e3));
-        UIContextPushInset(0, 18);
-            if (GlobalGetState()->active_transfer_plan.IsActive()) {
-                // Button
-                if (UIContextDirectButton(transfer.resource_id == i ? "X" : " ", 2) & BUTTON_STATE_FLAG_JUST_PRESSED) {
-                    GlobalGetState()->active_transfer_plan.SetResourceType((ResourceType) i);
-                }
-            }
-            UIContextWrite(buffer, false);
-
-            double qtt = 0;
-            if (transfer.resource_id == i) {
-                qtt += transfer.quantity;
-            }
-            if (fuel_draw > 0 && i == RESOURCE_WATER) {
-                qtt -= fuel_draw;
-            }
-            if (qtt != 0) {
-                sprintf(buffer, "   %+3.1fK", qtt / 1000);
-                UIContextWrite(buffer, false);
-            }
-            UIContextFillline(resource_stock[i] / resource_cap[i], MAIN_UI_COLOR, BG_COLOR);
-        UIContextPop();  // Inset
-        //TextBoxLineBreak(&tb);
-    }
-}
-
-void _UIDrawEconomy(const Planet* planet, const ResourceTransfer& transfer, double fuel_draw) {
-    for (int i=0; i < RESOURCE_MAX; i++) {
-        char buffer[50];
-        //sprintf(buffer, "%-10s %5d/%5d (%+3d)", resources_names[i], qtt, cap, delta);
-        UIContextPushInset(0, 18);
-            if (GlobalGetState()->active_transfer_plan.IsActive()) {
-                // Button
-                if (UIContextDirectButton(transfer.resource_id == i ? "X" : " ", 2) & BUTTON_STATE_FLAG_JUST_PRESSED) {
-                    GlobalGetState()->active_transfer_plan.SetResourceType((ResourceType)i);
-                }
-            }
-            sprintf(buffer, "%-10s %+3d $/T", resources_names[i], planet->resource_price[i]);
-            UIContextWrite(buffer, false);
-
-            double qtt = 0;
-            if (transfer.resource_id == i) {
-                qtt += transfer.quantity;
-            }
-            if (fuel_draw > 0 && i == RESOURCE_WATER) {
-                qtt -= fuel_draw;
-            }
-            if (qtt != 0) {
-                sprintf(buffer, "   %+3.1fT (%d K$)", qtt / 1000, planet->GetPrice((ResourceType) i, qtt) / 1000);
-                UIContextWrite(buffer, false);
-            }
-        UIContextPop();  // Inset
-        UIContextPushInset(0, 32);
-            _UIDrawResourceGrpah(planet->price_history, i);
-        UIContextPop();  // Inset
-        //TextBoxLineBreak(&tb);
     }
 }
 
@@ -406,10 +246,10 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
     UIContextFillline(1, MAIN_UI_COLOR, MAIN_UI_COLOR);
     //_UIDrawStats(stats);
     if (current_tab == 0) {
-        _UIDrawResources(resource_stock, resource_delta, resource_capacity, transfer, fuel_draw);
+        economy.UIDrawResources(transfer, fuel_draw);
     }
     if (current_tab == 1) {
-        _UIDrawEconomy(this, transfer, fuel_draw);
+        economy.UIDrawEconomy(transfer, fuel_draw);
     }
     if (current_tab == 2) {
         _UIDrawBuildings(this);

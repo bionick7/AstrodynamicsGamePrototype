@@ -5,33 +5,33 @@ planets:
       water: 1000
       food: 2000
     resource_delta:
-      water: 100
-      food: -50
-    buildings: []
+      water: 0
+      food: 0
+    buildings: 
+    - mod_water_extractor
   - name: Encelladus
     resource_stock: {}
-    buildings: []
+    buildings: 
+    - mod_pop_small
+    - mod_food_mine
+    - mod_food_mine
   - name: Tethys
     resource_stock:
       water: 1000
       food: 2000
       electronics: 6
     resource_delta:
-      water: 100
-      food: 100
-    buildings: []
+      water: 0
+      food: -50
+    buildings: 
+    - mod_pop_small
+    - mod_food_mine
+    - mod_food_mine
   - name: Rhea
     resource_stock: {}
     buildings: []
   - name: Titan
-    resource_stock:
-      water: 10000
-      food: 20000
-      electronics: 6
-    resource_deta:
-      water: 200
-      food: 200
-      electronics: 6
+    resource_stock: {}
     buildings: []
   - name: Iaeptus
     resource_stock: {}

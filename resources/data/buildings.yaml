@@ -33,7 +33,7 @@ buildings:
   stat_require:
     workforce: 250
   resource_delta:
-    food: +1  # t/day
+    food: +100  # t/day
   build_conditions: []
   build_cost: 
     metal: 500
@@ -56,10 +56,10 @@ buildings:
     Barely more compfortable than a large ship, these places provide inhabitants with a place to
     sleep, a place to eat and some public grounds like a cafeteria.
   stat_increase:
-    population: 1000
-    workforce: 1000
+    population: 100000
+    workforce: 100000
   resource_delta:
-    food: -1.5  # t/day
+    food: -200  # t/day
   build_conditions: []
   build_cost:
     metal: 1000
@@ -70,11 +70,11 @@ buildings:
     Residential buildings, some commerial areas, an office or two and the odd third place
     for the essentials for man to live a livable life.
   stat_increase:
-    population: 5000
-    workforce: 5000
+    population: 5e5
+    workforce: 5e5
   resource_delta:
     water: -1000  # t/day
-    food: -10  # t/day
+    food: -1000  # t/day
   build_conditions: []
   build_cost: 
     metal: 4000

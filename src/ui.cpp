@@ -15,10 +15,10 @@ void DrawTextAligned(const char* text, Vector2 pos, TextAlignment alignment, Col
         // Do nothing
     }
     if (alignment & TEXT_ALIGNMENT_VCENTER) {
-        pos.x -= size.x / 2;
+        pos.y -= size.y / 2;
     } else if (alignment & TEXT_ALIGNMENT_BOTTOM) {
-        pos.x -= size.x;
-    } else {  // left - aligned
+        pos.y -= size.y;
+    } else {  // top - aligned
         // Do nothing
     }
     Vector2 bottom_left = Vector2Subtract(pos, Vector2Scale(size, 0.5));
@@ -118,15 +118,16 @@ ButtonStateFlags TextBox::WriteButton(const char* text, int inset) {
     if (inset >= 0) {
         size.x += 2*inset;
         size.y += 2*inset;
-        DrawRectangleLines(pos.x, pos.y, size.x, size.y, PALETTE_BLUE);
         pos.x += inset;
         pos.y += inset;
     }
-    x_cursor += size.x + text_margin_x;
-    DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, PALETTE_BLUE);
     bool is_in_area = CheckCollisionPointRec(GetMousePosition(), {pos.x, pos.y, size.x, size.y});
+    ButtonStateFlags res = _GetButtonState(is_in_area);
+    Color c = is_in_area ? MAIN_UI_COLOR : PALETTE_BLUE;
+    DrawRectangleLines(pos.x - inset, pos.y - inset, size.x, size.y, c);
+    DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, c);
     _Advance(size);
-    return _GetButtonState(is_in_area);
+    return res;
 }
 
 ButtonStateFlags TextBox::AsButton() {

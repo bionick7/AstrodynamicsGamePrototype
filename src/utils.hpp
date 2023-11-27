@@ -15,4 +15,8 @@ double Determinant(Vector2 column1, Vector2 column2);
 //void Swap(void* lhs, void* rhs);
 double PosMod(double x, double period);
 
+double SetRandomSeed(uint_fast64_t seed);
+double GetRandomUniform(double from, double to);
+double GetRandomGaussian(double mean, double std);
+
 #endif  // UTILS_H

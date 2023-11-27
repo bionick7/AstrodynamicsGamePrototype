@@ -32,8 +32,9 @@ int UnitTests() {
 }
 
 void Load(int argc, const char** argv) {
-    INFO("Init complete");
+    INFO("Init");
     UIInit();
+    SetRandomSeed(0);  // For consistency
 
     GlobalState* app = GlobalGetState();
     INFO("cwd: '%s'", GetWorkingDirectory());
@@ -74,6 +75,6 @@ int main(int argc, const char** argv) {
         MainLoopStep(app);
     }
 
-    CloseWindow();                  // Close window and OpenGL context
+    CloseWindow();  // Close window and OpenGL context
     return 0;
 }

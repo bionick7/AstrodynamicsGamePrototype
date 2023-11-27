@@ -1,5 +1,10 @@
 # Game Design Document
 
+## Experimentation:
+immediatly buy/sell + disable water as fuel (for now)
+get economy semi-enjoyable
+add urgency with quests
+
 ## Ships
 ```
 light freighter:
@@ -71,6 +76,7 @@ VS
 ### economy/monetary vs. balancing needs
 company RP \
 \+ natural and organic filler between quests \
+\- hard to make it always worth doing something \
 \- needs simulated market \
 \- who cares about money as an end goal? \
 

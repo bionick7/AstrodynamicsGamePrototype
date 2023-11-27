@@ -1,5 +1,5 @@
 #include "utils.hpp"
-
+#include <random>
 
 int MinInt(int a, int b) {
     return a < b ? a : b;
@@ -68,4 +68,20 @@ double PosMod(double x, double period) {
     double res = fmod(x, period);
     if (res < 0) res += period;
     return res;
+}
+
+static std::mt19937_64 r_generator = std::mt19937_64(std::random_device{}());
+
+double SetRandomSeed(uint_fast64_t seed) {
+    r_generator.seed(seed);
+}
+
+double GetRandomUniform(double from, double to) {
+    auto uniform = std::uniform_real_distribution(from, to);
+    return uniform(r_generator);
+}
+
+double GetRandomGaussian(double mean, double std) {
+    auto normal = std::normal_distribution(mean, std);
+    return normal(r_generator);
 }

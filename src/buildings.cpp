@@ -57,7 +57,7 @@ void _DrawRelevantStatsFromArray(
     for (int i=0; i < array_size; i++) {
         if (array[i] > 0) {
             char temp[1024];
-            sprintf(&temp[0], "%s: %+3.0f%s", array_names[i], array[i] / scaler, suffix);
+            sprintf(&temp[0], "%s: %+3.0f%s", array_names, array[i] / scaler, suffix);
             ss << std::string(temp) << "\n";
         }
     }
@@ -77,7 +77,7 @@ bool BuildingInstance::UIDraw() {
             std::stringstream ss = std::stringstream();
             ss << building_class->name << "\n";
             ss << building_class->description << "\n";
-            _DrawRelevantStatsFromArray(ss, building_class->resource_delta_contributions, resources_names, RESOURCE_MAX, 1000, "T");
+            _DrawRelevantStatsFromArray(ss, building_class->resource_delta_contributions, resource_names, RESOURCE_MAX, 1000, "T");
             _DrawRelevantStatsFromArray(ss, building_class->stat_contributions, stat_names, STAT_MAX, 1, "");
             _DrawRelevantStatsFromArray(ss, building_class->stat_required, stat_names, STAT_MAX, -1, "");
             UISetMouseHint(ss.str().c_str());
@@ -105,7 +105,7 @@ void _WriteSingleBuildingToFile(FILE* file, const BuildingClass* mc) {
     fprintf(file, "%s : ", mc->name);
     for (int i=0; i < RESOURCE_MAX; i++) {
         if (mc->resource_delta_contributions[i] < 0) {
-            fprintf(file, "%5.0fT/d %s", -mc->resource_delta_contributions[i] / 1000, resources_names[i]);
+            fprintf(file, "%5.0fT/d %s", -mc->resource_delta_contributions[i] / 1000, GetResourceData(i).name);
         }
     }
     for (int i=0; i < STAT_MAX; i++) {
@@ -116,7 +116,7 @@ void _WriteSingleBuildingToFile(FILE* file, const BuildingClass* mc) {
     fprintf(file, " ==> ");
     for (int i=0; i < RESOURCE_MAX; i++) {
         if (mc->resource_delta_contributions[i] > 0) {
-            fprintf(file, "%5.0fT/d %s", mc->resource_delta_contributions[i] / 1000, resources_names[i]);
+            fprintf(file, "%5.0fT/d %s", mc->resource_delta_contributions[i] / 1000, GetResourceData(i).name);
         }
     }
     for (int i=0; i < STAT_MAX; i++) {
@@ -135,7 +135,7 @@ void WriteBuildingsToFile(const char* filename) {
     //}
     FILE* file = fopen(filename, "w");
     for (int i=0; i < RESOURCE_MAX; i++) {
-        fprintf(file, " ==== %s ====\n", resources_names[i]);
+        fprintf(file, " ==== %s ====\n", GetResourceData(i).name);
         for (int building_index=0; building_index < building_count; building_index++) {
             const BuildingClass* mc = &buildings[building_index];
             if (mc->resource_delta_contributions[i] != 0){
@@ -164,8 +164,8 @@ int LoadBuildings(const DataNode* data) {
         strncpy(mod.name, mod_data->Get("name", "[NAME MISSING]"), BUILDING_NAME_MAX_SIZE);
         strncpy(mod.description, mod_data->Get("description", "[DESCRITION MISSING]"), BUILDING_DESCRIPTION_MAX_SIZE);
 
-        _LoadArray(mod_data->GetChild("resource_delta", true), mod.resource_delta_contributions, resources_names, RESOURCE_MAX, 1000);
-        _LoadArray(mod_data->GetChild("build_cost", true), mod.build_costs, resources_names, RESOURCE_MAX, 1000);
+        _LoadArray(mod_data->GetChild("resource_delta", true), mod.resource_delta_contributions, resource_names, RESOURCE_MAX, 1000);
+        _LoadArray(mod_data->GetChild("build_cost", true), mod.build_costs, resource_names, RESOURCE_MAX, 1000);
         _LoadArray(mod_data->GetChild("stat_increase", true), mod.stat_contributions, stat_names, STAT_MAX, 1);
         _LoadArray(mod_data->GetChild("stat_require", true), mod.stat_required, stat_names, STAT_MAX, 1);
 
@@ -237,11 +237,11 @@ void BuildingConstructionUI() {
             std::stringstream ss = std::stringstream();
             ss << building_class->name << "\n";
             ss << building_class->description << "\n";
-            _DrawRelevantStatsFromArray(ss, building_class->resource_delta_contributions, resources_names, RESOURCE_MAX, 1000, "T");
+            _DrawRelevantStatsFromArray(ss, building_class->resource_delta_contributions, resource_names, RESOURCE_MAX, 1000, "T");
             _DrawRelevantStatsFromArray(ss, building_class->stat_contributions, stat_names, STAT_MAX, 1, "");
             _DrawRelevantStatsFromArray(ss, building_class->stat_required, stat_names, STAT_MAX, -1, "");
             ss << "COST:\n";
-            _DrawRelevantStatsFromArray(ss, building_class->build_costs, resources_names, RESOURCE_MAX, 1000, "T");
+            _DrawRelevantStatsFromArray(ss, building_class->build_costs, resource_names, RESOURCE_MAX, 1000, "T");
             UISetMouseHint(ss.str().c_str());
         }
         if (state_flags & BUTTON_STATE_FLAG_JUST_PRESSED) {

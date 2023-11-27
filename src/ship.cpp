@@ -380,7 +380,7 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
             if (prepared_plans[i].resource_transfer.resource_id < 0){
                 resource_name = "EMPTY";
             } else {
-                resource_name = resources_names[prepared_plans[i].resource_transfer.resource_id];
+                resource_name = GetResourceData(prepared_plans[i].resource_transfer.resource_id).name;
             }
             if (IsIdValid(prepared_plans[i].departure_planet)) {
                 departure_planet_name = GetPlanet(prepared_plans[i].departure_planet).name;
@@ -446,9 +446,9 @@ void Ship::Inspect() {
 
 void Ship::_OnDeparture(const TransferPlan& tp) {
     payload_type = tp.resource_transfer.resource_id;
-    payload_quantity = GetPlanet(tp.departure_planet).DrawResource(tp.resource_transfer.resource_id, tp.resource_transfer.quantity);
+    payload_quantity = GetPlanet(tp.departure_planet).economy.DrawResource(tp.resource_transfer.resource_id, tp.resource_transfer.quantity);
 
-    GetPlanet(tp.departure_planet).DrawResource(RESOURCE_WATER, tp.fuel_mass);
+    GetPlanet(tp.departure_planet).economy.DrawResource(RESOURCE_WATER, tp.fuel_mass);
 
     char date_buffer[30];
     FormatTime(date_buffer, 30, tp.departure_time);
@@ -456,7 +456,7 @@ void Ship::_OnDeparture(const TransferPlan& tp) {
         date_buffer,
         name,
         payload_quantity,
-        resources_names[payload_type],
+        GetResourceData(payload_type).name,
         GetPlanet(parent_planet).name
     );
 
@@ -471,9 +471,9 @@ void Ship::_OnArrival(const TransferPlan& tp) {
     is_parked = true;
     position = GetPlanet(parent_planet).position;
     payload_type = tp.resource_transfer.resource_id;
-    payload_quantity = GetPlanet(tp.departure_planet).DrawResource(tp.resource_transfer.resource_id, tp.resource_transfer.quantity);
+    payload_quantity = GetPlanet(tp.departure_planet).economy.DrawResource(tp.resource_transfer.resource_id, tp.resource_transfer.quantity);
 
-    resource_count_t delivered = GetPlanet(tp.arrival_planet).GiveResource(payload_type, payload_quantity);  // Ignore how much actually arrives (for now)
+    resource_count_t delivered = GetPlanet(tp.arrival_planet).economy.GiveResource(payload_type, payload_quantity);  // Ignore how much actually arrives (for now)
 
     char date_buffer[30];
     FormatTime(date_buffer, 30, tp.arrival_time);
@@ -481,7 +481,7 @@ void Ship::_OnArrival(const TransferPlan& tp) {
         date_buffer,
         name,
         delivered,
-        resources_names[payload_type],
+        GetResourceData(payload_type).name,
         GetPlanet(parent_planet).name
     );
     RemoveTransferPlan(0);

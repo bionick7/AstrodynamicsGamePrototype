@@ -6,6 +6,7 @@
 #include "coordinate_transform.hpp"
 #include "logging.hpp"
 #include "buildings.hpp"
+#include "planetary_economy.hpp"
 
 #define MAX_PLANET_BUILDINGS 20
 
@@ -16,21 +17,15 @@ struct PlanetNature {
     Orbit orbit;
 };
 
-#define PRICE_TREND_SIZE 31
 
 struct Planet {
     char name[100];
     double mu;
     double radius;
     Orbit orbit;
-
     OrbitPos position;
 
-    resource_count_t resource_stock[RESOURCE_MAX];
-    resource_count_t resource_capacity[RESOURCE_MAX];
-    resource_count_t resource_delta[RESOURCE_MAX];
-    int resource_price[RESOURCE_MAX];
-    int price_history[RESOURCE_MAX*PRICE_TREND_SIZE];
+    PlanetaryEconomy economy;
 
     resource_count_t stats[STAT_MAX];
     BuildingInstance buildings[MAX_PLANET_BUILDINGS];
@@ -47,12 +42,7 @@ struct Planet {
     double ScreenRadius() const;
     double GetDVFromExcessVelocity(Vector2 vel) const;
 
-    resource_count_t DrawResource(ResourceType resource, resource_count_t quantity);
-    resource_count_t GiveResource(ResourceType resource, resource_count_t quantity);
-    int GetPrice(ResourceType resource, resource_count_t quantity) const;
-
     void RecalcStats();
-    void RecalcEconomy();
     void RequestBuild(int slot, building_index_t building_class);
 
     bool HasMouseHover(double* distance) const;

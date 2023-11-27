@@ -112,6 +112,7 @@ void GlobalState::LoadData() {
     const char* buildings_data_path = "resources/data/buildings.yaml";
     const char* ephemerides_path    = "resources/data/ephemerides.yaml";
     const char* ship_classes_path   = "resources/data/ship_classes.yaml";
+    const char* resources_path      = "resources/data/resources.yaml";
     
     DataNode building_data;
     INFO("Loading Buildings")
@@ -126,7 +127,7 @@ void GlobalState::LoadData() {
     DataNode ephemerides;
     INFO("Loading Ephemerides")
     if (DataNode::FromFile(&ephemerides, ephemerides_path, FileFormat::YAML, true) != 0) {
-        FAIL("Could not load save %s", ephemerides_path);
+        FAIL("Could not load datafile %s", ephemerides_path);
     }
 
     int num_planets = LoadEphemerides(&ephemerides);
@@ -134,10 +135,19 @@ void GlobalState::LoadData() {
     DataNode ship_classes;
     INFO("Loading Ships")
     if (DataNode::FromFile(&ship_classes, ship_classes_path, FileFormat::YAML, true) != 0) {
-        FAIL("Could not load save %s", ship_classes_path);
+        FAIL("Could not load datafile %s", ship_classes_path);
     }
 
     int num_ships = LoadShipClasses(&ship_classes);
+
+    DataNode resources_datanode;
+    INFO("Loading resources")
+    if (DataNode::FromFile(&resources_datanode , resources_path, FileFormat::YAML, true) != 0) {
+        FAIL("Could not load datafile %s", resources_path);
+    }
+
+    LoadResources(&resources_datanode);
+
 
     INFO("%d buildings, %d planets, %d ships", num_buildings, num_planets, num_ships)
 }
@@ -231,6 +241,9 @@ void GlobalState::DrawState() {
     // UI
     UIStart();
     calendar.DrawUI();
+    char capital_str[14];
+    sprintf(capital_str, "%6d.%3d M$", capital / (int)1e6, capital % 1000000 / 1000);
+    DrawTextAligned(capital_str, {GetScreenWidth() / 2.0f, 10}, TEXT_ALIGNMENT_HCENTER & TEXT_ALIGNMENT_TOP, MAIN_UI_COLOR);
 
     // 
     for (auto [_, planet] : planet_view.each()) {
@@ -294,10 +307,7 @@ void GlobalState::Serialize(DataNode* data) const {
 }
 
 bool GlobalState::CompleteTransaction(int delta, const char *message) {
-    if (capital < delta) {
-        return false;
-    }
-    capital -= delta;
+    capital += delta;
     return true;
 }
 

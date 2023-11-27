@@ -1,0 +1,36 @@
+water:
+  description: Stay hydrated! :)
+  min_cost: 1
+  max_cost: 2
+  default_cost : 1
+  cost_volatility: 0.1  # Frequency of "noise"
+  max_noise: 0.5  # Amplitude of "noise"
+
+food:
+  description: ...
+  min_cost: 2
+  max_cost: 10
+  default_cost : 3
+  cost_volatility: 0.5
+  max_noise: 2
+
+metal:
+  description: ...
+  min_cost: 5
+  max_cost: 8
+  default_cost : 7
+  cost_volatility: 0.5
+  max_noise: 8  # Amplitude of "noise"
+
+electronics:
+  description: ...
+  min_cost: 10
+  max_cost: 30
+  default_cost : 15
+  cost_volatility: 5
+  max_noise: 10
+
+# Not yet implemented
+
+hydrogen:
+  description: ...
