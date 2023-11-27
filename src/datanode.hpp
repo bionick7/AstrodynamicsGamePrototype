@@ -32,7 +32,7 @@ struct DataNode {
     static int FromFile(DataNode* out, const char* filepath, FileFormat fmt = FileFormat::Auto, bool isReadonly = false, bool quiet = false);
     //static std::vector<DataNode> ManyFromFile(const char* filepath, FileFormat fmt = FileFormat::Auto);
     //void ToFile(const char* filepath, FileFormat format);
-    static int FromYaml(DataNode* dn, yaml_parser_t* yaml, bool isReadonly=false, int recursion_depth=0);
+    static int FromYaml(DataNode* dn, const char* filepath, yaml_parser_t* yaml, bool isReadonly=false, int recursion_depth=0);
     void WriteJSON(std::ostream& os, int indentLevel=0) const;
     void WriteYAML(std::ostream& os, int indentLevel=0, bool ignore_first_indent=false) const;
     void WriteToFile(const char* file, FileFormat fmt) const;

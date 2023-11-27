@@ -7,13 +7,6 @@ typedef double resource_count_t;
 typedef uint16_t building_index_t;
 const building_index_t BUILDING_INDEX_INVALID = UINT16_MAX;
 
-struct ResourceTransfer {
-    int resource_id;
-    resource_count_t quantity;
-};
-
-#define EMPTY_TRANSFER (ResourceTransfer) {-1, 0}
-
 enum ResourceType {
     RESOURCE_NONE = -1,
     RESOURCE_WATER = 0,
@@ -23,6 +16,13 @@ enum ResourceType {
     //RESOURCE_ORGANICS,
     RESOURCE_MAX,
 };
+
+struct ResourceTransfer {
+    ResourceType resource_id;
+    resource_count_t quantity;
+};
+
+#define EMPTY_TRANSFER (ResourceTransfer) {RESOURCE_NONE, 0}
 
 #define BUILDING_NAME_MAX_SIZE 64
 #define BUILDING_DESCRIPTION_MAX_SIZE 1024
@@ -44,7 +44,7 @@ enum StatType {
 
 static const char stat_names[STAT_MAX][RESOURCE_NAME_MAX_SIZE] = {
     "population", // STAT_POPULATION
-    "workforce" // STAT_POPULATION
+    "workforce" // STAT_WORKFORCE
 };
 
 ResourceTransfer ResourceTransferInvert(ResourceTransfer rt);

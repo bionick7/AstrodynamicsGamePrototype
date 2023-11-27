@@ -105,12 +105,13 @@ void GlobalState::Make(Time p_time) {
     c_transf.Make();
     focused_planet = GetInvalidId();
     focused_ship = GetInvalidId();
+    capital = 0;
 }
 
 void GlobalState::LoadData() {
     const char* buildings_data_path = "resources/data/buildings.yaml";
-    const char* ephemerides_path = "resources/data/ephemerides.yaml";
-    const char* ship_classes_path = "resources/data/ship_classes.yaml";
+    const char* ephemerides_path    = "resources/data/ephemerides.yaml";
+    const char* ship_classes_path   = "resources/data/ship_classes.yaml";
     
     DataNode building_data;
     INFO("Loading Buildings")
@@ -265,6 +266,7 @@ void GlobalState::Serialize(DataNode* data) const {
     
     c_transf.Serialize(data->SetChild("coordinate_transform", DataNode()));
     calendar.Serialize(data->SetChild("calendar", DataNode()));
+    data->SetF("capital", capital);
     // ignore transferplanui for now
     data->SetI("focused_planet", (int) focused_planet);
     data->SetI("focused_ship", (int) focused_ship);
@@ -289,6 +291,14 @@ void GlobalState::Serialize(DataNode* data) const {
         }
         ship.Serialize(data->SetArrayElemChild("ships", i++, dn2));
     }
+}
+
+bool GlobalState::CompleteTransaction(int delta, const char *message) {
+    if (capital < delta) {
+        return false;
+    }
+    capital -= delta;
+    return true;
 }
 
 entity_id_t _AddPlanet(GlobalState* gs, const DataNode* data, entity_id_t planet_entity) {
@@ -336,6 +346,8 @@ void GlobalState::Deserialize(const DataNode* data) {
 
     //LoadEphemeridesFromFile("resources/data/ephemerides.yaml");  // if necaissary
     
+    capital = data->GetF("capital", capital);
+
     // Be explicit to not kill any non-intended things
     auto deletion_view_pl = registry.view<Planet>();
     auto deletion_view_ship = registry.view<Ship>();

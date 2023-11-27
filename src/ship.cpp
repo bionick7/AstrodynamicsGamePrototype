@@ -146,7 +146,7 @@ void Ship::Deserialize(const DataNode* data) {
     plan_edit_index = -1;
     ship_class = GetShipClassIndexById(data->Get("class_id"));
 
-    payload_type = data->GetI("payload_type", payload_type, true);
+    payload_type = (ResourceType) data->GetI("payload_type", payload_type, true);
     payload_quantity = data->GetF("payload_quantity", payload_quantity / 1000, true) * 1000;
 
 

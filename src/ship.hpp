@@ -48,7 +48,7 @@ struct Ship {
     int highlighted_plan_index;
 
     // Payload
-    int payload_type = 0;
+    ResourceType payload_type = RESOURCE_NONE;
     resource_count_t payload_quantity = 0;
 
     // UI state

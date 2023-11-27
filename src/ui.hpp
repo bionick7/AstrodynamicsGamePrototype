@@ -56,6 +56,7 @@ private:
 
 void UIContextCreate(int x, int y, int w, int h, int text_size, Color color);
 void UIContextPushInset(int margin, int h);
+void UIContextPushInline(int x_margin);
 void UIContextPushHSplit(int x_start, int x_end);
 void UIContextPushGridCell(int columns, int rows, int column, int row);
 ButtonStateFlags UIContextAsButton();

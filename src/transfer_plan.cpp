@@ -224,7 +224,7 @@ void TransferPlan::Serialize(DataNode* data) const {
 }
 
 void TransferPlan::Deserialize(const DataNode* data) {
-    resource_transfer.resource_id = data->GetI("resource_transfer_id", resource_transfer.resource_id);
+    resource_transfer.resource_id = (ResourceType) data->GetI("resource_transfer_id", resource_transfer.resource_id);
     resource_transfer.quantity = data->GetF("resource_transfer_qtt", resource_transfer.quantity) * 1000;
     fuel_mass = data->GetF("fuel_mass", resource_transfer.quantity) * 1000;
     departure_planet = (entity_id_t) data->GetI("departure_planet", (int)departure_planet);
@@ -542,7 +542,7 @@ void TransferPlanUI::SetPlan(TransferPlan* pplan, entity_id_t pship, Time pmin_t
     }
 }
 
- void TransferPlanUI::SetResourceType(int resource_type) {
+ void TransferPlanUI::SetResourceType(ResourceType resource_type) {
     if (plan == NULL) return;
     plan->resource_transfer.resource_id = resource_type;
 }

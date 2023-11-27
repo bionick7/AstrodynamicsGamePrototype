@@ -159,6 +159,20 @@ void UIContextPushInset(int margin, int h) {
     text_box_stack.push(new_text_box);
 }
 
+void UIContextPushInline(int margin) {
+    TextBox& tb = UIContextCurrent();
+    TextBox new_text_box = TextBox(
+        tb.text_start_x + tb.x_cursor + margin,
+        tb.text_start_y,
+        tb.width - tb.x_cursor - 2*margin,
+        tb.height,
+        tb.text_size,
+        tb.text_color
+    );
+    tb.x_cursor = tb.width;
+    text_box_stack.push(new_text_box);
+}
+
 void UIContextPushHSplit(int x_start, int x_end) {
     TextBox& tb = UIContextCurrent();
     if (x_start < 0) x_start += tb.width;

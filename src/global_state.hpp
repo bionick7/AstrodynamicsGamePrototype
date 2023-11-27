@@ -28,6 +28,8 @@ struct GlobalState {
     entity_id_t focused_planet;
     entity_id_t focused_ship;
 
+    int capital;
+
     // Lifecycle
     void Make(Time time);
     void LoadData();
@@ -36,6 +38,9 @@ struct GlobalState {
     void UpdateState(double delta_t);
     // Draw
     void DrawState();
+
+    // Interaction
+    bool CompleteTransaction(int delta, const char* message);
 
     // Serialization
     void Serialize(DataNode* dn) const;
