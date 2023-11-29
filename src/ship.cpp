@@ -89,6 +89,7 @@ void Ship::_OnClicked() {
     } else {
         GlobalGetState()->focused_ship = id;
     }
+    HandleButtonSound(BUTTON_STATE_FLAG_JUST_PRESSED);
 }
 
 void Ship::_OnNewPlanClicked() {
@@ -224,7 +225,9 @@ void Ship::ConfirmEditedTransferPlan() {
 }
 
 void Ship::CloseEditedTransferPlan() {
-    RemoveTransferPlan(prepared_plans_count - 1);
+    int index = plan_edit_index;
+    plan_edit_index = -1;
+    RemoveTransferPlan(index);
 }
 
 void Ship::RemoveTransferPlan(int index) {
@@ -407,11 +410,13 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
             UIContextEnclose(0, 0, BG_COLOR, PALETTE_BLUE);
             UIContextWrite(tp_str[0]);
             UIContextWrite(tp_str[1]);
-            ButtonStateFlags button_results = UIContextAsButton();
-            if (button_results & BUTTON_STATE_FLAG_HOVER) {
+            ButtonStateFlags button_state = UIContextAsButton();
+            HandleButtonSound(button_state & BUTTON_STATE_FLAG_JUST_PRESSED);
+            if (button_state & BUTTON_STATE_FLAG_HOVER) {
                 highlighted_plan_index = i;
             }
-            if (button_results & BUTTON_STATE_FLAG_JUST_PRESSED) {
+            if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+                INFO("PRESSED")
                 StartEditingPlan(i);
             }
             UIContextPop();
@@ -420,7 +425,9 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
                 UIContextPushHSplit(-32, -1);
                 UIContextWrite("X");
                 UIContextEnclose(0, 0, BG_COLOR, PALETTE_BLUE);
-                if (UIContextAsButton() & BUTTON_STATE_FLAG_JUST_PRESSED) {
+                ButtonStateFlags button_state = UIContextAsButton();
+                HandleButtonSound(button_state & BUTTON_STATE_FLAG_JUST_PRESSED);
+                if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
                     RemoveTransferPlan(i);
                 }
                 UIContextPop();

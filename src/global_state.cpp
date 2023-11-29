@@ -3,6 +3,7 @@
 #include "logging.hpp"
 #include "ui.hpp"
 #include "constants.hpp"
+#include "audio_server.hpp"
 
 GlobalState global_state;
 
@@ -63,9 +64,10 @@ bool _PauseMenuButton(const char* label) {
     UIContextPushInset(0, 20);
     UIContextEnclose(0, 0, BG_COLOR, MAIN_UI_COLOR);
     UIContextWrite(label);
-    ButtonStateFlags buttonstate = UIContextAsButton();
+    ButtonStateFlags button_state = UIContextAsButton();
+    HandleButtonSound(button_state & BUTTON_STATE_FLAG_JUST_PRESSED);
     UIContextPop();
-    return buttonstate & BUTTON_STATE_FLAG_JUST_PRESSED;
+    return button_state & BUTTON_STATE_FLAG_JUST_PRESSED;
 }
 
 bool is_in_pause_menu;
@@ -95,7 +97,7 @@ void _PauseMenu() {
         GlobalGetState()->Deserialize(&dn);
     }
     if (_PauseMenuButton("Exit")) {
-        // ???
+        exit(0);
     }
 }
 
@@ -161,41 +163,41 @@ void GlobalState::LoadGame(const char* file_path) {
     Deserialize(&game_data);
 }
 
-// Update
-void GlobalState::UpdateState(double delta_t) {
-    c_transf.HandleInput(delta_t);
-    calendar.HandleInput(delta_t);
 
-    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) || IsKeyPressed(KEY_ESCAPE)) {
-        // Cancel out of next layer
-
-        // cancel out of focused planet and ship
-        if (BuildingConstructionIsOpen()) {
-            BuildingConstructionClose();
-        } 
-
-        // transfer plan UI
-        else if (active_transfer_plan.IsActive()) {
-            active_transfer_plan.Abort();
-        } 
-        // cancel out of focused planet and ship
-        else if (IsIdValid(focused_planet) || IsIdValid(focused_ship)) {
-            focused_planet = GetInvalidId();
-            focused_ship = GetInvalidId();
-        } else {
-            is_in_pause_menu = !is_in_pause_menu;
-            if (is_in_pause_menu) calendar.paused = true;
-        }
+void _HandleDeselect(GlobalState* gs) {
+    if (!IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !IsKeyPressed(KEY_ESCAPE)) {
+        return;
     }
 
-    active_transfer_plan.Update();
-    calendar.AdvanceTime(delta_t);
+    // Cancel out of next layer
+    PlaySFX(SFX_CANCEL);
 
+    // cancel out of focused planet and ship
+    if (BuildingConstructionIsOpen()) {
+        BuildingConstructionClose();
+    } 
+
+    // transfer plan UI
+    else if (gs->active_transfer_plan.IsActive() || gs->active_transfer_plan.IsSelectingDestination()) {
+        gs->active_transfer_plan.Abort();
+    } 
+    // cancel out of focused planet and ship
+    else if (IsIdValid(gs->focused_planet) || IsIdValid(gs->focused_ship)) {
+        gs->focused_planet = GetInvalidId();
+        gs->focused_ship = GetInvalidId();
+    } else {
+        is_in_pause_menu = !is_in_pause_menu;
+        if (is_in_pause_menu) gs->calendar.paused = true;
+    }
+}
+
+Clickable prev_hover {TYPE_NONE, GetInvalidId()};
+void _HandleMouseSelect(GlobalState* gs) {
     Clickable hover = {TYPE_NONE, GetInvalidId()};
     double min_distance = INFINITY;
 
-    auto ship_view = registry.view<Ship>();
-    auto planet_view = registry.view<Planet>();
+    auto ship_view = gs->registry.view<Ship>();
+    auto planet_view = gs->registry.view<Planet>();
 
     for (auto [_, planet] : planet_view.each()) {
         planet.Update();
@@ -221,7 +223,28 @@ void GlobalState::UpdateState(double delta_t) {
     case TYPE_NONE:
     default: break;
     }
+
+    if (prev_hover.id != hover.id) {
+    //if (!IsIdValid(prev_hover.id) && IsIdValid(hover.id)) {
+        HandleButtonSound(BUTTON_STATE_FLAG_JUST_HOVER_IN);
+    }
+    if (IsIdValid(prev_hover.id) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        HandleButtonSound(BUTTON_STATE_FLAG_JUST_PRESSED);
+    }
+    prev_hover = hover;
 }
+
+// Update
+void GlobalState::UpdateState(double delta_t) {
+    c_transf.HandleInput(delta_t);
+    calendar.HandleInput(delta_t);
+
+    _HandleDeselect(this);
+    active_transfer_plan.Update();
+    calendar.AdvanceTime(delta_t);
+    _HandleMouseSelect(this);
+}
+
 
 // Draw
 void GlobalState::DrawState() {

@@ -1,6 +1,7 @@
 #include "ui.hpp"
 #include "logging.hpp"
 #include "constants.hpp"
+#include "audio_server.hpp"
 #include <stack>
 
 Font default_font;
@@ -25,15 +26,29 @@ void DrawTextAligned(const char* text, Vector2 pos, TextAlignment alignment, Col
     DrawTextEx(GetCustomDefaultFont(), text, bottom_left, 16, 1, c);
 }
 
-ButtonStateFlags _GetButtonState(bool is_in_area) {
+ButtonStateFlags _GetButtonState(bool is_in_area, bool was_in_area) {
     ButtonStateFlags res = BUTTON_STATE_FLAG_NONE;
     if (is_in_area) {
         SetMouseCursor(MOUSE_CURSOR_CROSSHAIR);
         res |= BUTTON_STATE_FLAG_HOVER;
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) res |= BUTTON_STATE_FLAG_PRESSED;
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) res |= BUTTON_STATE_FLAG_JUST_PRESSED;
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))     res |= BUTTON_STATE_FLAG_PRESSED;
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))  res |= BUTTON_STATE_FLAG_JUST_PRESSED;
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) res |= BUTTON_STATE_FLAG_JUST_UNPRESSED;
+
+        if (!was_in_area) res |= BUTTON_STATE_FLAG_JUST_HOVER_IN;
     }
+    if (was_in_area && !is_in_area) res |= BUTTON_STATE_FLAG_JUST_HOVER_OUT;
+
     return res;
+}
+
+void HandleButtonSound(ButtonStateFlags state) {
+    if (state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+        PlaySFX(SFX_CLICK_BUTTON);
+    }
+    if (state & BUTTON_STATE_FLAG_JUST_HOVER_IN) {
+        PlaySFX(SFX_CLICK_SHORT);
+    }
 }
 
 TextBox::TextBox(int x, int y, int w, int h, int ptext_size, Color color) {
@@ -122,7 +137,10 @@ ButtonStateFlags TextBox::WriteButton(const char* text, int inset) {
         pos.y += inset;
     }
     bool is_in_area = CheckCollisionPointRec(GetMousePosition(), {pos.x, pos.y, size.x, size.y});
-    ButtonStateFlags res = _GetButtonState(is_in_area);
+    ButtonStateFlags res = _GetButtonState(
+        is_in_area,
+        CheckCollisionPointRec(Vector2Subtract(GetMousePosition(), GetMouseDelta()), {pos.x, pos.y, size.x, size.y})
+    );
     Color c = is_in_area ? MAIN_UI_COLOR : PALETTE_BLUE;
     DrawRectangleLines(pos.x - inset, pos.y - inset, size.x, size.y, c);
     DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, c);
@@ -132,7 +150,10 @@ ButtonStateFlags TextBox::WriteButton(const char* text, int inset) {
 
 ButtonStateFlags TextBox::AsButton() {
     bool is_in_area = CheckCollisionPointRec(GetMousePosition(), {(float)text_start_x, (float)text_start_y, (float)width, (float)height});
-    return _GetButtonState(is_in_area);
+    return _GetButtonState(
+        CheckCollisionPointRec(GetMousePosition(), {(float)text_start_x, (float)text_start_y, (float)width, (float)height}),
+        CheckCollisionPointRec(Vector2Subtract(GetMousePosition(), GetMouseDelta()), {(float)text_start_x, (float)text_start_y, (float)width, (float)height})
+    );
 }
 
 std::stack<TextBox> text_box_stack = std::stack<TextBox>();
@@ -234,7 +255,9 @@ void UIContextFillline(double value, Color fill_color, Color background_color) {
 
 ButtonStateFlags UIContextDirectButton(const char* text, int inset) {
     TextBox& tb = UIContextCurrent();
-    return tb.WriteButton(text, inset);
+    ButtonStateFlags button_state = tb.WriteButton(text, inset);
+    HandleButtonSound(button_state);
+    return button_state;
 }
 
 
@@ -284,7 +307,10 @@ ButtonStateFlags DrawTriangleButton(Vector2 point, Vector2 base, double width, C
     } else {
         DrawTriangleLines(side_1, point, side_2, PALETTE_BLUE);
     }
-    return _GetButtonState(is_in_area);
+    return _GetButtonState(
+        is_in_area,
+        CheckCollisionPointTriangle(Vector2Subtract(GetMousePosition(), GetMouseDelta()), side_1, point, side_2)
+    );
 }
 
 ButtonStateFlags DrawCircleButton(Vector2 midpoint, double radius, Color color) {
@@ -294,5 +320,8 @@ ButtonStateFlags DrawCircleButton(Vector2 midpoint, double radius, Color color) 
     } else {
         DrawCircleLines(midpoint.x, midpoint.y, radius, PALETTE_BLUE);
     }
-    return _GetButtonState(is_in_area);
+    return _GetButtonState(
+        is_in_area,
+        CheckCollisionPointCircle(Vector2Subtract(GetMousePosition(), GetMouseDelta()), midpoint, radius)
+    );
 }

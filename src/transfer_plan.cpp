@@ -404,12 +404,12 @@ Time _DrawHandle(
         Vector2Add(plus_pos, {0, extend}),
         c
     );
-    if (DrawCircleButton(plus_pos, 10, c) & BUTTON_STATE_FLAG_JUST_PRESSED) {
-        current = TimeAdd(current, period);
-    }
-    if (DrawCircleButton(minus_pos, 10, c) & BUTTON_STATE_FLAG_JUST_PRESSED) {
-        current = TimeSub(current, period);
-    }
+    ButtonStateFlags button_state_plus  = DrawCircleButton(plus_pos, 10, c);
+    ButtonStateFlags button_state_minus = DrawCircleButton(minus_pos, 10, c);
+    if (button_state_plus & BUTTON_STATE_FLAG_JUST_PRESSED)  current = TimeAdd(current, period);
+    if (button_state_minus & BUTTON_STATE_FLAG_JUST_PRESSED) current = TimeSub(current, period);
+    HandleButtonSound(button_state_plus);
+    HandleButtonSound(button_state_minus);
     if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
         *is_dragging = false;
     }
@@ -561,6 +561,14 @@ void TransferPlanUI::SetPlan(TransferPlan* pplan, entity_id_t pship, Time pmin_t
     if (plan->departure_planet != entt::null && plan->arrival_planet != entt::null) {
         _TransferPlanInitialize(plan, time_bounds[0]);
     }
+}
+
+bool TransferPlanUI::IsSelectingDestination() {
+    if (plan == NULL) return false;
+    if (!IsIdValid(ship)) return false;
+    if (!IsIdValid(plan->departure_planet)) return false;
+    if (IsIdValid(plan->arrival_planet)) return false;
+    return true;
 }
 
 bool TransferPlanUI::IsActive() {

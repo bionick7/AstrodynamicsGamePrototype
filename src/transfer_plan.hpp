@@ -65,6 +65,8 @@ struct TransferPlanUI {
     void SetResourceType(ResourceType resource_type);
     void SetLogistics(resource_count_t payload_mass, resource_count_t fuel_mass);
     void SetDestination(entity_id_t planet);
+
+    bool IsSelectingDestination();
     bool IsActive();
 };
 

@@ -1,6 +1,7 @@
 #include "transfer_plan.hpp"
 #include "datanode.hpp"
 #include "app_meta.hpp"
+#include "audio_server.hpp"
 
 // For tests
 #include "global_state.hpp"
@@ -32,15 +33,17 @@ int UnitTests() {
 }
 
 void Load(int argc, const char** argv) {
-    INFO("Init");
-    UIInit();
+    INFO("Init from working directory: '%s'", GetWorkingDirectory());
     SetRandomSeed(0);  // For consistency
+    
+    UIInit();
+    GetAudioServer()->LoadSFX("unused string input :)");
 
     GlobalState* app = GlobalGetState();
-    INFO("cwd: '%s'", GetWorkingDirectory());
     app->Make(1e6);
     app->LoadData();
     app->LoadGame("resources/data/start_state.yaml");
+
 
     // Interpreting cmdline
     const char* building_outp_fp = GetSetting(argc, argv, "--building_outp");

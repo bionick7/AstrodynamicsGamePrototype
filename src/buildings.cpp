@@ -66,6 +66,7 @@ void _DrawRelevantStatsFromArray(
 bool BuildingInstance::UIDraw() {
     UIContextPushInset(3, 16);
     ButtonStateFlags button_state = UIContextAsButton();
+    HandleButtonSound(button_state & (BUTTON_STATE_FLAG_JUST_PRESSED | BUTTON_STATE_FLAG_JUST_HOVER_IN));
     if (button_state & BUTTON_STATE_FLAG_HOVER) {
         if (!IsValid()) {
             UIContextEnclose(1, 1, BG_COLOR, PALETTE_RED);
@@ -231,8 +232,9 @@ void BuildingConstructionUI() {
         const BuildingClass* building_class = GetBuildingByIndex(i);
 
         UIContextPushGridCell(4, 4, i % 4, i / 4);
-        ButtonStateFlags state_flags = UIContextAsButton();
-        if (state_flags & BUTTON_STATE_FLAG_HOVER) {
+        ButtonStateFlags button_state = UIContextAsButton();
+        HandleButtonSound(button_state & (BUTTON_STATE_FLAG_JUST_PRESSED | BUTTON_STATE_FLAG_JUST_HOVER_IN));
+        if (button_state & BUTTON_STATE_FLAG_HOVER) {
             UIContextEnclose(-2, -2, BG_COLOR, MAIN_UI_COLOR);
             std::stringstream ss = std::stringstream();
             ss << building_class->name << "\n";
@@ -244,7 +246,7 @@ void BuildingConstructionUI() {
             _DrawRelevantStatsFromArray(ss, building_class->build_costs, resource_names, RESOURCE_MAX, 1000, "T");
             UISetMouseHint(ss.str().c_str());
         }
-        if (state_flags & BUTTON_STATE_FLAG_JUST_PRESSED) {
+        if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
             GetPlanet(building_construction_planet_id).RequestBuild(building_construction_slot_index, i);
             BuildingConstructionClose();
         }

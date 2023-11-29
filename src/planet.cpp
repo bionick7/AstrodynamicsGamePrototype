@@ -174,7 +174,7 @@ void Planet::Draw(const CoordinateTransform* c_transf) {
 
     if (mouse_hover) {
         // Hover
-        DrawCircleLines(screen_x, screen_y, 10, TRANSFER_UI_COLOR);
+        DrawCircleLines(screen_x, screen_y, 20, TRANSFER_UI_COLOR);
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             _OnClicked();
         }
@@ -231,6 +231,7 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
     for (int i=0; i < n_tabs; i++) {
         UIContextPushHSplit(i * w / n_tabs, (i + 1) * w / n_tabs);
         ButtonStateFlags button_state = UIContextAsButton();
+        HandleButtonSound(button_state & BUTTON_STATE_FLAG_JUST_PRESSED);
         if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
             current_tab = i;
         }
