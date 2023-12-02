@@ -4,6 +4,7 @@
 #include "planet.hpp"
 #include "transfer_plan.hpp"
 #include "datanode.hpp"
+#include "id_allocator.hpp"
 
 #define SHIP_MAX_PREPARED_PLANS 10
 #define SHIPCLASS_NAME_MAX_SIZE 64
@@ -75,7 +76,6 @@ struct Ship {
     void RemoveTransferPlan(int index);
     void StartEditingPlan(int index);
 
-private:
     TransferPlan* _NewTransferPlan();
     void _OnDeparture(const TransferPlan &tp);
     void _OnArrival(const TransferPlan &tp);
@@ -83,5 +83,10 @@ private:
     void _OnNewPlanClicked();
     void _OnClicked();
 };
+
+Ship* GetShip(entity_id_t uuid);
+entity_id_t AddShip(const DataNode* data);
+const IDAllocatorList<Ship>* GetShipList() ;
+void ClearShipList();
 
 #endif  // SHIP_H

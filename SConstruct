@@ -7,7 +7,7 @@ platform = "linux"
 build = "debug"
 
 # Define variables
-src_dirs = ['src']
+src_dirs = ['src', 'src/core']
 include_dirs = ['include']
 lib_dir = 'lib'
 

@@ -3,10 +3,12 @@
 #include "global_state.hpp"
 #include "ui.hpp"
 #include "constants.hpp"
+#include "id_allocator.hpp"
 
 std::map<std::string, shipclass_index_t> ship_classes_ids = std::map<std::string, shipclass_index_t>();
 ShipClass* ship_classes = NULL;
 size_t ship_classes_count = 0;
+IDAllocatorList<Ship> ship_allocator = IDAllocatorList<Ship>();
 
 double ShipClass::GetFuelRequiredFull(double dv) const {
     // assuming max payload
@@ -270,14 +272,14 @@ void Ship::Update() {
     Time now = GlobalGetNow();
 
     if (prepared_plans_count == 0 || (plan_edit_index == 0 && prepared_plans_count == 1)) {
-        position = GetPlanet(parent_planet).position;
+        position = GetPlanet(parent_planet)->position;
     } else {
         const TransferPlan& tp = prepared_plans[0];
         if (is_parked) {
             if (TimeIsEarlier(tp.departure_time, now)) {
                 _OnDeparture(tp);
             } else {
-                position = GetPlanet(parent_planet).position;
+                position = GetPlanet(parent_planet)->position;
             }
         } else {
             if (TimeIsEarlier(tp.arrival_time, now)) {
@@ -290,7 +292,7 @@ void Ship::Update() {
 
     draw_pos = GetScreenTransform()->TransformV(position.cartesian);
     if (is_parked) {
-        double rad = fmax(GetScreenTransform()->TransformS(GetPlanet(parent_planet).radius), 4) + 8.0;
+        double rad = fmax(GetScreenTransform()->TransformS(GetPlanet(parent_planet)->radius), 4) + 8.0;
         double phase = 20.0 /  rad * index_on_planet;
         draw_pos = Vector2Add(FromPolar(rad, phase), draw_pos);
     }
@@ -328,7 +330,7 @@ void Ship::Draw(const CoordinateTransform* c_transf) const {
     if (plan_edit_index >= 0 && IsIdValid(prepared_plans[plan_edit_index].arrival_planet)) {
         const TransferPlan& last_tp = prepared_plans[plan_edit_index];
         OrbitPos last_pos = OrbitGetPosition(
-            &GetPlanet(last_tp.arrival_planet).orbit, 
+            &GetPlanet(last_tp.arrival_planet)->orbit, 
             last_tp.arrival_time
         );
         Vector2 last_draw_pos = c_transf->TransformV(last_pos.cartesian);
@@ -386,12 +388,12 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
                 resource_name = GetResourceData(prepared_plans[i].resource_transfer.resource_id).name;
             }
             if (IsIdValid(prepared_plans[i].departure_planet)) {
-                departure_planet_name = GetPlanet(prepared_plans[i].departure_planet).name;
+                departure_planet_name = GetPlanet(prepared_plans[i].departure_planet)->name;
             } else {
                 departure_planet_name = "NOT SET";
             }
             if (IsIdValid(prepared_plans[i].arrival_planet)) {
-                arrival_planet_name = GetPlanet(prepared_plans[i].arrival_planet).name;
+                arrival_planet_name = GetPlanet(prepared_plans[i].arrival_planet)->name;
             } else {
                 arrival_planet_name = "NOT SET";
             }
@@ -443,7 +445,7 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
 
 void Ship::Inspect() {
     if (is_parked) {
-        INFO("%s : parked on %s, %f m/s d", name, GetPlanet(parent_planet).name, GetShipClassByIndex(ship_class)->max_dv);
+        INFO("%s : parked on %s, %f m/s d", name, GetPlanet(parent_planet)->name, GetShipClassByIndex(ship_class)->max_dv);
     } else {
         INFO("%s : in transfer[", name);
         //OrbitPrint(&next_plan.transfer_orbit[next_plan.primary_solution]);
@@ -453,9 +455,9 @@ void Ship::Inspect() {
 
 void Ship::_OnDeparture(const TransferPlan& tp) {
     payload_type = tp.resource_transfer.resource_id;
-    payload_quantity = GetPlanet(tp.departure_planet).economy.DrawResource(tp.resource_transfer.resource_id, tp.resource_transfer.quantity);
+    payload_quantity = GetPlanet(tp.departure_planet)->economy.DrawResource(tp.resource_transfer.resource_id, tp.resource_transfer.quantity);
 
-    GetPlanet(tp.departure_planet).economy.DrawResource(RESOURCE_WATER, tp.fuel_mass);
+    GetPlanet(tp.departure_planet)->economy.DrawResource(RESOURCE_WATER, tp.fuel_mass);
 
     char date_buffer[30];
     FormatTime(date_buffer, 30, tp.departure_time);
@@ -464,7 +466,7 @@ void Ship::_OnDeparture(const TransferPlan& tp) {
         name,
         payload_quantity,
         GetResourceData(payload_type).name,
-        GetPlanet(parent_planet).name
+        GetPlanet(parent_planet)->name
     );
 
     parent_planet = GetInvalidId();
@@ -476,11 +478,11 @@ void Ship::_OnDeparture(const TransferPlan& tp) {
 void Ship::_OnArrival(const TransferPlan& tp) {
     parent_planet = tp.arrival_planet;
     is_parked = true;
-    position = GetPlanet(parent_planet).position;
+    position = GetPlanet(parent_planet)->position;
     payload_type = tp.resource_transfer.resource_id;
-    payload_quantity = GetPlanet(tp.departure_planet).economy.DrawResource(tp.resource_transfer.resource_id, tp.resource_transfer.quantity);
+    payload_quantity = GetPlanet(tp.departure_planet)->economy.DrawResource(tp.resource_transfer.resource_id, tp.resource_transfer.quantity);
 
-    resource_count_t delivered = GetPlanet(tp.arrival_planet).economy.GiveResource(payload_type, payload_quantity);  // Ignore how much actually arrives (for now)
+    resource_count_t delivered = GetPlanet(tp.arrival_planet)->economy.GiveResource(payload_type, payload_quantity);  // Ignore how much actually arrives (for now)
 
     char date_buffer[30];
     FormatTime(date_buffer, 30, tp.arrival_time);
@@ -489,7 +491,7 @@ void Ship::_OnArrival(const TransferPlan& tp) {
         name,
         delivered,
         GetResourceData(payload_type).name,
-        GetPlanet(parent_planet).name
+        GetPlanet(parent_planet)->name
     );
     RemoveTransferPlan(0);
     Update();
@@ -511,4 +513,41 @@ void Ship::_EnsureContinuity() {
             RemoveTransferPlan(i);
         }
     }
+}
+
+Ship* GetShip(entity_id_t id) {
+    ship_allocator.Get((int)id);
+    if ((!ship_allocator.IsValidIndex((int)id))) {
+        FAIL("Invalid id (%d)", id)
+    }
+    return (Ship*) ship_allocator.Get((int)id);
+}
+
+entity_id_t AddShip(const DataNode* data) {
+    //printf("Adding Ship N°%d\n", index)
+    //entity_map.insert({uuid, ship_entity});
+    Ship *ship;
+    int ship_entity = ship_allocator.Allocate(&ship);
+    
+    ship->Deserialize(data);
+    if (ship->is_parked) {
+        const char* planet_name = data->Get("planet", "NO NAME SPECIFIED");
+        const Planet* planet = GetPlanetByName(planet_name);
+        if (planet == NULL) {
+            FAIL("Error while initializing ship '%s': no such planet '%s'", ship->name, planet_name)
+        }
+        ship->parent_planet = planet->id;
+    }
+
+    ship->id = (entity_id_t) ship_entity;
+    ship->Update();
+    return (entity_id_t) ship_entity;
+}
+
+const IDAllocatorList<Ship>* GetShipList() {
+    return &ship_allocator;
+}
+
+void ClearShipList() {
+    ship_allocator.Clear();
 }

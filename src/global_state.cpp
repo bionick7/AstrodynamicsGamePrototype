@@ -4,12 +4,13 @@
 #include "ui.hpp"
 #include "constants.hpp"
 #include "audio_server.hpp"
+#include "quests.hpp"
 
 GlobalState global_state;
 
 bool IsIdValid(entity_id_t id) {
-    if (id == entt::null) return false;
-    if (!global_state.registry.valid(id)) return false;
+    if (id == UINT32_MAX) return false;
+    //if (!global_state.registry.valid(id)) return false;
     return true;
 }
 
@@ -23,37 +24,6 @@ Time GlobalGetPreviousFrameTime() {
 
 Time GlobalGetNow() {
     return global_state.calendar.time;
-}
-
-Ship& GetShip(entity_id_t id) {
-    if ((!global_state.registry.valid(id))) {
-        FAIL("Invalid id (%d)", id)
-    }
-    if (!global_state.registry.any_of<Ship>(id)) {
-        FAIL("Id not ship (%d)", id)
-    }
-    return global_state.registry.get<Ship>(id);
-}
-
-Planet& _GetPlanet(entity_id_t id, const char* file_name, int line) {
-    if ((!global_state.registry.valid(id))) {
-        FAIL("Invalid id (%d) (called from %s:%d)", id, file_name, line)
-    }
-    if (!global_state.registry.any_of<Planet>(id)) {
-        FAIL("Id (%d) not planet (called from %s:%d)", id, file_name, line)
-    }
-    return global_state.registry.get<Planet>(id);
-}
-
-Planet* GetPlanetByName(const char* planet_name) {
-    // Returns NULL if planet_name not found
-    auto planet_view = global_state.registry.view<Planet>();
-    for (auto [_, planet] : planet_view.each()) {
-        if (strcmp(planet.name, planet_name) == 0) {
-            return &planet;
-        }
-    }
-    return NULL;
 }
 
 void GlobalState::_InspectState() {
@@ -111,47 +81,48 @@ void GlobalState::Make(Time p_time) {
 }
 
 void GlobalState::LoadData() {
-    const char* buildings_data_path = "resources/data/buildings.yaml";
-    const char* ephemerides_path    = "resources/data/ephemerides.yaml";
-    const char* ship_classes_path   = "resources/data/ship_classes.yaml";
-    const char* resources_path      = "resources/data/resources.yaml";
+    #define NUM 5
+    const char* loading_paths[NUM] = {
+        "resources/data/buildings.yaml",
+        "resources/data/ephemerides.yaml",
+        "resources/data/ship_classes.yaml",
+        "resources/data/resources.yaml",
+        "resources/data/quests.yaml"
+    };
+
+    int (*load_funcs[NUM])(const DataNode*) = { 
+        LoadBuildings,
+        LoadEphemerides,
+        LoadShipClasses,
+        LoadResources,
+        LoadQuests
+    };
+
+    const char* declarations[NUM] {
+        "Buildings",
+        "Planets",
+        "ShipClasses",
+        "Resources",
+        "Quests",
+    };
+
+    int ammounts[NUM];
     
-    DataNode building_data;
-    INFO("Loading Buildings")
-    if (DataNode::FromFile(&building_data, buildings_data_path, FileFormat::YAML, true) != 0) {
-        FAIL("Could not load save %s", buildings_data_path);
+    for (int i=0; i < NUM; i++) {
+        INFO("Loading %s", declarations[i])
+        DataNode data;
+        if (DataNode::FromFile(&data, loading_paths[i], FileFormat::YAML, true) != 0) {
+            FAIL("Could not load save %s", loading_paths[i]);
+        }
+
+        ammounts[i] = load_funcs[i](&data);
     }
 
-    int num_buildings = LoadBuildings(&building_data);
-
-    // TODO: load buildings into more comprehensive memory
-    
-    DataNode ephemerides;
-    INFO("Loading Ephemerides")
-    if (DataNode::FromFile(&ephemerides, ephemerides_path, FileFormat::YAML, true) != 0) {
-        FAIL("Could not load datafile %s", ephemerides_path);
+    for (int i=0; i < NUM; i++) {
+        printf("%d %s%s", ammounts[i], declarations[i], i == NUM-1 ? "\n" : "; ");
     }
 
-    int num_planets = LoadEphemerides(&ephemerides);
-
-    DataNode ship_classes;
-    INFO("Loading Ships")
-    if (DataNode::FromFile(&ship_classes, ship_classes_path, FileFormat::YAML, true) != 0) {
-        FAIL("Could not load datafile %s", ship_classes_path);
-    }
-
-    int num_ships = LoadShipClasses(&ship_classes);
-
-    DataNode resources_datanode;
-    INFO("Loading resources")
-    if (DataNode::FromFile(&resources_datanode , resources_path, FileFormat::YAML, true) != 0) {
-        FAIL("Could not load datafile %s", resources_path);
-    }
-
-    LoadResources(&resources_datanode);
-
-
-    INFO("%d buildings, %d planets, %d ships", num_buildings, num_planets, num_ships)
+    #undef NUM
 }
 
 void GlobalState::LoadGame(const char* file_path) {
@@ -192,34 +163,33 @@ void _HandleDeselect(GlobalState* gs) {
 }
 
 Clickable prev_hover {TYPE_NONE, GetInvalidId()};
-void _HandleMouseSelect(GlobalState* gs) {
+void _UpdateShipsPlanets(GlobalState* gs) {
     Clickable hover = {TYPE_NONE, GetInvalidId()};
     double min_distance = INFINITY;
 
-    auto ship_view = gs->registry.view<Ship>();
-    auto planet_view = gs->registry.view<Planet>();
-
-    for (auto [_, planet] : planet_view.each()) {
-        planet.Update();
-        planet.mouse_hover = false;
-        if (planet.HasMouseHover(&min_distance)) {
-            hover = {TYPE_PLANET, planet.id};
+    for (int planet_id = 0; planet_id < GetPlanetCount(); planet_id++) {
+        Planet* planet = GetPlanet((entity_id_t) planet_id);
+        planet->Update();
+        planet->mouse_hover = false;
+        if (planet->HasMouseHover(&min_distance)) {
+            hover = {TYPE_PLANET, planet->id};
         }
     }
     int total_ship_count = 0;
-    for (auto [_, ship] : ship_view.each()) {
-        ship.Update();
-        if (IsIdValid(ship.parent_planet)) {
-            ship.index_on_planet = total_ship_count++;
+    for (auto it = GetShipList()->GetIter(); GetShipList()->IsIterGoing(it); GetShipList()->IncIterator(&it)) {
+        Ship* ship = GetShipList()->Get(it);
+        ship->Update();
+        if (IsIdValid(ship->parent_planet)) {
+            ship->index_on_planet = total_ship_count++;
         }
-        ship.mouse_hover = false;
-        if (ship.HasMouseHover(&min_distance)) {
-            hover = {TYPE_SHIP, ship.id};
+        ship->mouse_hover = false;
+        if (ship->HasMouseHover(&min_distance)) {
+            hover = {TYPE_SHIP, ship->id};
         }
     }
     switch (hover.type) {
-    case TYPE_PLANET: GetPlanet(hover.id).mouse_hover = true; break;
-    case TYPE_SHIP: GetShip(hover.id).mouse_hover = true; break;
+    case TYPE_PLANET: GetPlanet(hover.id)->mouse_hover = true; break;
+    case TYPE_SHIP: GetShip(hover.id)->mouse_hover = true; break;
     case TYPE_NONE:
     default: break;
     }
@@ -238,25 +208,25 @@ void _HandleMouseSelect(GlobalState* gs) {
 void GlobalState::UpdateState(double delta_t) {
     c_transf.HandleInput(delta_t);
     calendar.HandleInput(delta_t);
+    GetAudioServer()->Update(delta_t);
+    //GetQuestManager()->Update(delta_t);
 
     _HandleDeselect(this);
     active_transfer_plan.Update();
     calendar.AdvanceTime(delta_t);
-    _HandleMouseSelect(this);
+    _UpdateShipsPlanets(this);
 }
-
 
 // Draw
 void GlobalState::DrawState() {
-    auto planet_view = registry.view<Planet>();
-    auto ship_view = registry.view<Ship>();
 
     DrawCircleV(c_transf.TransformV({0}), c_transf.TransformS(GetParentNature()->radius), MAIN_UI_COLOR);
-    for (auto [_, planet] : planet_view.each()) {
-        planet.Draw(&c_transf);
+    for (entity_id_t planet_id = 0; planet_id < GetPlanetCount(); planet_id++) {
+        GetPlanet(planet_id)->Draw(&c_transf);
     }
-    for (auto [_, ship] : ship_view.each()) {
-        ship.Draw(&c_transf);
+    for (auto it = GetShipList()->GetIter(); GetShipList()->IsIterGoing(it); GetShipList()->IncIterator(&it)) {
+        Ship* ship = GetShipList()->Get(it);
+        ship->Draw(&c_transf);
     }
 
     active_transfer_plan.Draw(&c_transf);
@@ -269,22 +239,24 @@ void GlobalState::DrawState() {
     DrawTextAligned(capital_str, {GetScreenWidth() / 2.0f, 10}, TEXT_ALIGNMENT_HCENTER & TEXT_ALIGNMENT_TOP, MAIN_UI_COLOR);
 
     // 
-    for (auto [_, planet] : planet_view.each()) {
+    for (entity_id_t planet_id = 0; planet_id < GetPlanetCount(); planet_id++) {
+        Planet* planet = GetPlanet(planet_id);
         if (active_transfer_plan.IsActive()){
-            if (active_transfer_plan.plan->departure_planet == planet.id) {
-                planet.DrawUI(&c_transf, true, ResourceTransferInvert(active_transfer_plan.plan->resource_transfer), active_transfer_plan.plan->fuel_mass);
+            if (active_transfer_plan.plan->departure_planet == planet->id) {
+                planet->DrawUI(&c_transf, true, ResourceTransferInvert(active_transfer_plan.plan->resource_transfer), active_transfer_plan.plan->fuel_mass);
             }
-            if (active_transfer_plan.plan->arrival_planet == planet.id) {
-                planet.DrawUI(&c_transf, false, active_transfer_plan.plan->resource_transfer, -1);
+            if (active_transfer_plan.plan->arrival_planet == planet->id) {
+                planet->DrawUI(&c_transf, false, active_transfer_plan.plan->resource_transfer, -1);
             }
         }
-        else if (planet.mouse_hover || planet.id == focused_planet) {
-            planet.DrawUI(&c_transf, true, EMPTY_TRANSFER, -1);
+        else if (planet->mouse_hover || planet->id == focused_planet) {
+            planet->DrawUI(&c_transf, true, EMPTY_TRANSFER, -1);
         }
     }
     BuildingConstructionUI();
-    for (auto [_, ship] : ship_view.each()) {
-        ship.DrawUI(&c_transf);
+    for (auto it = GetShipList()->GetIter(); GetShipList()->IsIterGoing(it); GetShipList()->IncIterator(&it)) {
+        Ship* ship = GetShipList()->Get(it);
+        ship->DrawUI(&c_transf);
     }
     active_transfer_plan.DrawUI();
 
@@ -307,61 +279,30 @@ void GlobalState::Serialize(DataNode* data) const {
     data->SetI("focused_planet", (int) focused_planet);
     data->SetI("focused_ship", (int) focused_ship);
 
-    auto planet_view = registry.view<Planet>();
-    data->SetArrayChild("planets", planet_view.size());
+    data->SetArrayChild("planets", GetPlanetCount());
     int i=0;
-    for (auto [entity, planet] : planet_view.each()) {
+    for (entity_id_t planet_id = 0; planet_id < GetPlanetCount(); planet_id++) {
         DataNode dn2 = DataNode();
-        dn2.SetI("id", (int) entity);
-        planet.Serialize(data->SetArrayElemChild("planets", i++, dn2));
+        dn2.SetI("id", (int) planet_id);
+        GetPlanet(planet_id)->Serialize(data->SetArrayElemChild("planets", i++, dn2));
     }
 
-    auto ship_view = registry.view<Ship>();
-    data->SetArrayChild("ships", ship_view.size());
+    data->SetArrayChild("ships", GetShipList()->Count());
     i=0;
-    for (auto [entity, ship] : ship_view.each()) {
+    for (auto it = GetShipList()->GetIter(); GetShipList()->IsIterGoing(it); GetShipList()->IncIterator(&it)) {
+        Ship* ship = GetShipList()->Get(it);
         DataNode dn2 = DataNode();
-        dn2.SetI("id", (int) entity);
-        if (ship.is_parked) {
-            dn2.Set("planet", GetPlanet(ship.parent_planet).name);
+        dn2.SetI("id", (int) it.index);
+        if (ship->is_parked) {
+            dn2.Set("planet", GetPlanet(ship->parent_planet)->name);
         }
-        ship.Serialize(data->SetArrayElemChild("ships", i++, dn2));
+        ship->Serialize(data->SetArrayElemChild("ships", i++, dn2));
     }
 }
 
 bool GlobalState::CompleteTransaction(int delta, const char *message) {
     capital += delta;
     return true;
-}
-
-entity_id_t _AddPlanet(GlobalState* gs, const DataNode* data, entity_id_t planet_entity) {
-    //entity_map.insert({uuid, planet_entity});
-    Planet &planet = gs->registry.emplace<Planet>(planet_entity);
-    planet.Deserialize(data);
-    planet.id = planet_entity;
-    planet.Update();
-
-    return planet_entity;
-}
-
-entity_id_t _AddShip(GlobalState* gs, const DataNode* data, entity_id_t ship_entity) {
-    //printf("Adding Ship N°%d\n", index)
-    //entity_map.insert({uuid, ship_entity});
-    Ship &ship = gs->registry.emplace<Ship>(ship_entity);
-    
-    ship.Deserialize(data);
-    if (ship.is_parked) {
-        const char* planet_name = data->Get("planet", "NO NAME SPECIFIED");
-        const Planet* planet = GetPlanetByName(planet_name);
-        if (planet == NULL) {
-            FAIL("Error while initializing ship '%s': no such planet '%s'", ship.name, planet_name)
-        }
-        ship.parent_planet = planet->id;
-    }
-
-    ship.id = ship_entity;
-    ship.Update();
-    return ship_entity;
 }
 
 void GlobalState::Deserialize(const DataNode* data) {
@@ -381,50 +322,53 @@ void GlobalState::Deserialize(const DataNode* data) {
     
     capital = data->GetF("capital", capital);
 
-    // Be explicit to not kill any non-intended things
-    auto deletion_view_pl = registry.view<Planet>();
-    auto deletion_view_ship = registry.view<Ship>();
-    registry.destroy(deletion_view_pl.begin(), deletion_view_pl.end());
-    registry.destroy(deletion_view_ship.begin(), deletion_view_ship.end());
+    ClearShipList();
+    ClearPlanetList();
 
     focused_planet = (entity_id_t) data->GetI("focused_planet", -1, true);
     focused_ship = (entity_id_t) data->GetI("focused_ship", -1, true);
 
+    InitPlanetArray(data->GetArrayChildLen("planets"));
     for (int i=0; i < data->GetArrayChildLen("planets"); i++) {
         DataNode* planet_data = data->GetArrayChild("planets", i);
-        entity_id_t id;
+        entity_id_t id = AddPlanet(planet_data);
+        //entity_id_t id;
         if (planet_data->Has("id")) {
-            entity_id_t id_hint = (entity_id_t) planet_data->GetI("id");
-            id = registry.create(id_hint);
-            if (id != id_hint){
-                WARNING(
-                    "Could not initialize planet %s with intended ID %d. Instead assigned ID %d. This might lead to inconsistencies", 
-                    planet_data->Get("name", "UNNAMED"),
-                    id_hint, id
-                )
-            }
-        } else {
-            id = registry.create();
+            ASSERT(id == (entity_id_t) planet_data->GetI("id"))
         }
-        _AddPlanet(this, planet_data, id);
+        //    entity_id_t id_hint = (entity_id_t) planet_data->GetI("id");
+        //    id = registry.create(id_hint);
+        //    if (id != id_hint){
+        //        WARNING(
+        //            "Could not initialize planet %s with intended ID %d. Instead assigned ID %d. This might lead to inconsistencies", 
+        //            planet_data->Get("name", "UNNAMED"),
+        //            id_hint, id
+        //        )
+        //    }
+        //} else {
+        //    id = registry.create();
+        //}
     }
     for (int i=0; i < data->GetArrayChildLen("ships"); i++) {
         DataNode* ship_data = data->GetArrayChild("ships", i);
+        entity_id_t id = AddShip(ship_data);
 
-        entity_id_t id;
         if (ship_data->Has("id")) {
-            entity_id_t id_hint = (entity_id_t) ship_data->GetI("id");
-            id = registry.create(id_hint);
-            if (id != id_hint){
-                WARNING(
-                    "Could not initialize ship %s with intended ID %d. Instead assigned ID %d. This might lead to inconsistencies", 
-                    ship_data->Get("name", "UNNAMED"),
-                    id_hint, id
-                )
-            }
-        } else {
-            id = registry.create();
+            ASSERT(id == (entity_id_t) ship_data->GetI("id"))
         }
-        _AddShip(this, ship_data, id);
+
+        //entity_id_t id;
+        //if (ship_data->Has("id")) {
+        //    entity_id_t id_hint = (entity_id_t) ship_data->GetI("id");
+        //    if (id != id_hint){
+        //        WARNING(
+        //            "Could not initialize ship %s with intended ID %d. Instead assigned ID %d. This might lead to inconsistencies", 
+        //            ship_data->Get("name", "UNNAMED"),
+        //            id_hint, id
+        //        )
+        //    }
+        //} else {
+        //    id = AddShip(this, ship_data, id);
+        //}
     }
 }

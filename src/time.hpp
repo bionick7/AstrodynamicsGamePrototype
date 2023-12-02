@@ -24,6 +24,9 @@ double TimeDays(Time x);
 void TimeSerialize(Time x, DataNode* data);
 void TimeDeserialize(Time* x, const DataNode* data);
 
+Time GetInvalidTime();
+bool IsTimeInvalid();
+
 char* FormatTime(char* buffer, int buffer_len, Time time);
 char* FormatDate(char* buffer, int buffer_len, Time time);
 

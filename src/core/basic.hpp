@@ -10,7 +10,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "entt.hpp"
-typedef entt::entity entity_id_t;
+//#include "entt.hpp"
+typedef uint32_t entity_id_t;
 
 #endif // BASIC_H

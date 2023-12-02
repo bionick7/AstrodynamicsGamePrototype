@@ -7,11 +7,19 @@
 static std::map<std::string, PlanetNature> ephemerides = std::map<std::string, PlanetNature>();
 static PlanetNature parent = {0};
 
+Planet* planet_array = NULL;
+int planet_count = 0;
+int planet_array_iter = 0;
+
 Planet::Planet(const char* p_name, double p_mu, double p_radius) {
     strcpy(name, p_name);
     mu = p_mu;
     radius = p_radius;
     orbit = OrbitFromElements(1, 0, 0, 1, 0, true);
+
+    for (int i = 0; i < MAX_PLANET_BUILDINGS; i++) {
+        buildings[i] = BuildingInstance(BUILDING_INDEX_INVALID);
+    }
 }
 
 void Planet::Serialize(DataNode* data) const {
@@ -257,6 +265,48 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
     }
 
     UIContextPop();  // Outside
+}
+
+void InitPlanetArray(entity_id_t p_planet_count) {
+    if (planet_array != NULL) {
+        WARNING("Initializing planets array more than once. I will not manage this memory")
+        planet_array_iter = 0;
+    }
+    planet_count = p_planet_count;
+    planet_array = new Planet[planet_count];
+}
+
+entity_id_t AddPlanet(const DataNode* data) {
+    //entity_map.insert({uuid, planet_entity});
+    planet_array[planet_array_iter].Deserialize(data);
+    planet_array[planet_array_iter].Update();
+    planet_array[planet_array_iter].id = (entity_id_t)planet_array_iter;
+    planet_array_iter++;
+    return (entity_id_t) planet_array_iter;
+}
+
+Planet* GetPlanet(entity_id_t id) {
+    return &planet_array[(int)id];
+}
+
+void ClearPlanetList() {
+    planet_array = NULL;
+    planet_count = 0;
+    planet_array_iter = 0;
+}
+
+entity_id_t GetPlanetCount() {
+    return planet_count;
+}
+
+Planet* GetPlanetByName(const char* planet_name) {
+    // Returns NULL if planet_name not found
+    for(int i=0; i < planet_count; i++) {
+        if (strcmp(planet_array[i].name, planet_name) == 0) {
+            return &planet_array[i];
+        }
+    }
+    return NULL;
 }
 
 const PlanetNature* GetParentNature() {

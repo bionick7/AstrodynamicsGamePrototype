@@ -7,6 +7,7 @@
 #include "global_state.hpp"
 #include "constants.hpp"
 #include "ui.hpp"
+#include "id_allocator.hpp"
 
 const char* GetSetting(int argc, const char** argv, const char* find) {
     for (int i=0; i < argc; i++) {
@@ -24,20 +25,22 @@ const char* GetSetting(int argc, const char** argv, const char* find) {
 }
 
 int UnitTests() {
-    printf("Running Tests\n");
+    INFO("Running Tests");
     RETURN_OR_CONTINUE(TransferPlanTests());
     RETURN_OR_CONTINUE(DataNodeTests());
     RETURN_OR_CONTINUE(TimeTests());
-    printf("All tests Sucessfull\n");
+    RETURN_OR_CONTINUE(IDAllocatorListTests());
+    INFO("All tests Sucessfull\n");
     return 0;
 }
 
 void Load(int argc, const char** argv) {
     INFO("Init from working directory: '%s'", GetWorkingDirectory());
     SetRandomSeed(0);  // For consistency
-    
+
     UIInit();
     GetAudioServer()->LoadSFX("unused string input :)");
+    GetAudioServer()->StartMusic();
 
     GlobalState* app = GlobalGetState();
     app->Make(1e6);

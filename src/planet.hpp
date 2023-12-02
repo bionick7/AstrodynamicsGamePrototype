@@ -7,6 +7,7 @@
 #include "logging.hpp"
 #include "buildings.hpp"
 #include "planetary_economy.hpp"
+#include "datanode.hpp"
 
 #define MAX_PLANET_BUILDINGS 20
 
@@ -50,6 +51,13 @@ struct Planet {
     void Draw(const CoordinateTransform* c_transf);
     void DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, ResourceTransfer transfer, double fuel_draw);
 };
+
+void InitPlanetArray(entity_id_t p_planet_count);
+entity_id_t AddPlanet(const DataNode* data);
+Planet* GetPlanet(entity_id_t id);
+void ClearPlanetList();
+entity_id_t GetPlanetCount();
+Planet* GetPlanetByName(const char* planet_name);
 
 const PlanetNature* GetParentNature();
 int LoadEphemerides(const DataNode* data);

@@ -247,7 +247,7 @@ void BuildingConstructionUI() {
             UISetMouseHint(ss.str().c_str());
         }
         if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
-            GetPlanet(building_construction_planet_id).RequestBuild(building_construction_slot_index, i);
+            GetPlanet(building_construction_planet_id)->RequestBuild(building_construction_slot_index, i);
             BuildingConstructionClose();
         }
         

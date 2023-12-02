@@ -4,7 +4,7 @@ focused_ship: -1
 calendar:
   migration_arrrival_planet: 0
   paused: y
-  time_scale: 2048.000000
+  time_scale: 8192.000000
   current_migration_period:
     t: 5356800.000000
 
@@ -12,17 +12,33 @@ calendar:
     t: 5356800.000000
 
   time:
-    t: 0.000000
+    t: 228556.800000
 
 
 coordinate_transform:
-  focus_x: 0.000000
-  focus_y: 0.000000
-  log_space_scale: -6.000000
+  focus_x: 3872224.000000
+  focus_y: -4194912.000000
+  log_space_scale: -6.008672
 
 planets:
-- id: 6
-  name: Phoebe
+- id: 0
+  name: Mimas
+  resource_delta:
+    electronics: 0.000000
+    food: 0.000000
+    metal: 0.000000
+    water: 0.000000
+
+  resource_stock:
+    electronics: 0.000000
+    food: 2000.000000
+    metal: 0.000000
+    water: 1000.000000
+
+  buildings: []
+
+- id: 1
+  name: Encelladus
   resource_delta:
     electronics: 0.000000
     food: 0.000000
@@ -35,10 +51,30 @@ planets:
     metal: 0.000000
     water: 0.000000
 
-  buildings: []
+  buildings:
+  - mod_pop_small
+  - mod_food_mine
 
-- id: 5
-  name: Iaeptus
+- id: 2
+  name: Tethys
+  resource_delta:
+    electronics: 0.000000
+    food: -50.000000
+    metal: 0.000000
+    water: 0.000000
+
+  resource_stock:
+    electronics: 6.000000
+    food: 1019.308562
+    metal: 0.000000
+    water: 848.445500
+
+  buildings:
+  - mod_pop_small
+  - mod_food_mine
+
+- id: 3
+  name: Rhea
   resource_delta:
     electronics: 0.000000
     food: 0.000000
@@ -69,8 +105,8 @@ planets:
 
   buildings: []
 
-- id: 3
-  name: Rhea
+- id: 5
+  name: Iaeptus
   resource_delta:
     electronics: 0.000000
     food: 0.000000
@@ -85,26 +121,8 @@ planets:
 
   buildings: []
 
-- id: 2
-  name: Tethys
-  resource_delta:
-    electronics: 0.000000
-    food: -50.000000
-    metal: 0.000000
-    water: 0.000000
-
-  resource_stock:
-    electronics: 6.000000
-    food: 2000.000000
-    metal: 0.000000
-    water: 1000.000000
-
-  buildings:
-  - mod_pop_small
-  - mod_food_mine
-
-- id: 1
-  name: Encelladus
+- id: 6
+  name: Phoebe
   resource_delta:
     electronics: 0.000000
     food: 0.000000
@@ -116,65 +134,46 @@ planets:
     food: 0.000000
     metal: 0.000000
     water: 0.000000
-
-  buildings:
-  - mod_pop_small
-  - mod_food_mine
-
-- id: 0
-  name: Mimas
-  resource_delta:
-    electronics: 0.000000
-    food: 0.000000
-    metal: 0.000000
-    water: 0.000000
-
-  resource_stock:
-    electronics: 0.000000
-    food: 2000.000000
-    metal: 0.000000
-    water: 1000.000000
 
   buildings: []
 
 ships:
-- class_id: shp_express
-  id: 9
-  is_parked: y
-  name: Express
-  payload_quantity: 0.000000
-  payload_type: -1
-  planet: Tethys
-  prepared_plans:
-  - arrival_planet: -1
-    departure_planet: 2
-    fuel_mass: 0.000000
-    primary_solution: 0
-    resource_transfer_id: -1
-    resource_transfer_qtt: 0.000000
-    arrival_time:
-      t: 0.000000
-
-    departure_time:
-      t: 0.000000
-
-
-
-- class_id: shp_light_transport
-  id: 8
-  is_parked: y
-  name: Light transport
-  payload_quantity: 0.000000
-  payload_type: -1
-  planet: Tethys
-  prepared_plans: []
-
 - class_id: shp_bulk_transport
-  id: 7
+  id: 0
   is_parked: y
   name: Bulk transport
   payload_quantity: 0.000000
-  payload_type: -1
+  payload_type: 0
+  planet: Tethys
+  prepared_plans: []
+
+- class_id: shp_light_transport
+  id: 1
+  is_parked: n
+  name: Light transport
+  payload_quantity: 848.445438
+  payload_type: 1
+  prepared_plans:
+  - arrival_planet: 1
+    departure_planet: 2
+    fuel_mass: 848.445465
+    primary_solution: 0
+    resource_transfer_id: 1
+    resource_transfer_qtt: 848.445465
+    arrival_time:
+      t: 272538.497592
+
+    departure_time:
+      t: 202456.225118
+
+
+
+- class_id: shp_express
+  id: 2
+  is_parked: y
+  name: Express
+  payload_quantity: 0.000000
+  payload_type: 0
   planet: Tethys
   prepared_plans: []
 

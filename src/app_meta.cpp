@@ -1,5 +1,6 @@
 #include "app_meta.hpp"
 #include "constants.hpp"
+#include <time.h>
 
 const char* WINDOW_TITLE = "Astro navigation game prototype";
 
