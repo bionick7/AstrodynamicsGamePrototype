@@ -32,7 +32,7 @@ void GlobalState::_InspectState() {
 
 bool _PauseMenuButton(const char* label) {
     UIContextPushInset(0, 20);
-    UIContextEnclose(0, 0, BG_COLOR, MAIN_UI_COLOR);
+    UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
     UIContextWrite(label);
     ButtonStateFlags button_state = UIContextAsButton();
     HandleButtonSound(button_state & BUTTON_STATE_FLAG_JUST_PRESSED);
@@ -53,7 +53,7 @@ void _PauseMenu() {
         16,
         MAIN_UI_COLOR
     );
-    UIContextEnclose(0, 0, BG_COLOR, MAIN_UI_COLOR);
+    UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
     if (_PauseMenuButton("Save")) {
         INFO("Save")
         DataNode dn;
@@ -156,7 +156,14 @@ void _HandleDeselect(GlobalState* gs) {
     else if (IsIdValid(gs->focused_planet) || IsIdValid(gs->focused_ship)) {
         gs->focused_planet = GetInvalidId();
         gs->focused_ship = GetInvalidId();
-    } else {
+    } 
+
+    // out of quest menu
+    else if (gs->quest_manager.show_ui) {
+        gs->quest_manager.show_ui = false;
+    } 
+    // toggle pause
+    else {
         is_in_pause_menu = !is_in_pause_menu;
         if (is_in_pause_menu) gs->calendar.paused = true;
     }
@@ -176,7 +183,7 @@ void _UpdateShipsPlanets(GlobalState* gs) {
         }
     }
     int total_ship_count = 0;
-    for (auto it = gs->ships.alloc.GetIter(); gs->ships.alloc.IsIterGoing(it); gs->ships.alloc.IncIterator(&it)) {
+    for (auto it = gs->ships.alloc.GetIter(); it.IsIterGoing(); it++) {
         Ship* ship = gs->ships.alloc[it];
         ship->Update();
         if (IsIdValid(ship->parent_planet)) {
@@ -209,22 +216,21 @@ void GlobalState::UpdateState(double delta_t) {
     c_transf.HandleInput(delta_t);
     calendar.HandleInput(delta_t);
     GetAudioServer()->Update(delta_t);
-    //GetQuestManager()->Update(delta_t);
 
     _HandleDeselect(this);
-    active_transfer_plan.Update();
     calendar.AdvanceTime(delta_t);
+    active_transfer_plan.Update();
+    quest_manager.Update(delta_t);
     _UpdateShipsPlanets(this);
 }
 
 // Draw
 void GlobalState::DrawState() {
-
     DrawCircleV(c_transf.TransformV({0}), c_transf.TransformS(planets.GetParentNature()->radius), MAIN_UI_COLOR);
     for (entity_id_t planet_id = 0; planet_id < planets.GetPlanetCount(); planet_id++) {
         planets.GetPlanet(planet_id)->Draw(&c_transf);
     }
-    for (auto it = ships.alloc.GetIter(); ships.alloc.IsIterGoing(it); ships.alloc.IncIterator(&it)) {
+    for (auto it = ships.alloc.GetIter(); it.IsIterGoing(); it++) {
         Ship* ship = ships.alloc[it];
         ship->Draw(&c_transf);
     }
@@ -237,6 +243,7 @@ void GlobalState::DrawState() {
     char capital_str[14];
     sprintf(capital_str, "%6d.%3d M$", capital / (int)1e6, capital % 1000000 / 1000);
     DrawTextAligned(capital_str, {GetScreenWidth() / 2.0f, 10}, TEXT_ALIGNMENT_HCENTER & TEXT_ALIGNMENT_TOP, MAIN_UI_COLOR);
+    quest_manager.Draw();
 
     // 
     for (entity_id_t planet_id = 0; planet_id < planets.GetPlanetCount(); planet_id++) {
@@ -254,7 +261,7 @@ void GlobalState::DrawState() {
         }
     }
     BuildingConstructionUI();
-    for (auto it = ships.alloc.GetIter(); ships.alloc.IsIterGoing(it); ships.alloc.IncIterator(&it)) {
+    for (auto it = ships.alloc.GetIter(); it.IsIterGoing(); it++) {
         Ship* ship = ships.alloc[it];
         ship->DrawUI(&c_transf);
     }
@@ -274,6 +281,8 @@ void GlobalState::Serialize(DataNode* data) const {
     
     c_transf.Serialize(data->SetChild("coordinate_transform", DataNode()));
     calendar.Serialize(data->SetChild("calendar", DataNode()));
+    quest_manager.Serialize(data->SetChild("quests", DataNode()));
+
     data->SetF("capital", capital);
     // ignore transferplanui for now
     data->SetI("focused_planet", (int) focused_planet);
@@ -289,7 +298,7 @@ void GlobalState::Serialize(DataNode* data) const {
 
     data->SetArrayChild("ships", ships.alloc.Count());
     i=0;
-    for (auto it = ships.alloc.GetIter(); ships.alloc.IsIterGoing(it); ships.alloc.IncIterator(&it)) {
+    for (auto it = ships.alloc.GetIter(); it.IsIterGoing(); it++) {
         Ship* ship = ships.alloc.Get(it);
         DataNode dn2 = DataNode();
         dn2.SetI("id", (int) it.index);
@@ -321,7 +330,6 @@ void GlobalState::Deserialize(const DataNode* data) {
     
     capital = data->GetF("capital", capital);
 
-    //ships.ClearShips();
     ships.alloc.Clear(); 
     planets = Planets();
     planets.Init(data->GetArrayChildLen("planets"));
@@ -338,22 +346,10 @@ void GlobalState::Deserialize(const DataNode* data) {
     for (int i=0; i < data->GetArrayChildLen("planets"); i++) {
         DataNode* planet_data = data->GetArrayChild("planets", i);
         entity_id_t id = planets.AddPlanet(planet_data);
-        //entity_id_t id;
+
         if (planet_data->Has("id")) {
             ASSERT_EQUAL_INT(id, (entity_id_t) planet_data->GetI("id"))
         }
-        //    entity_id_t id_hint = (entity_id_t) planet_data->GetI("id");
-        //    id = registry.create(id_hint);
-        //    if (id != id_hint){
-        //        WARNING(
-        //            "Could not initialize planet %s with intended ID %d. Instead assigned ID %d. This might lead to inconsistencies", 
-        //            planet_data->Get("name", "UNNAMED"),
-        //            id_hint, id
-        //        )
-        //    }
-        //} else {
-        //    id = registry.create();
-        //}
     }
     for (int i=0; i < data->GetArrayChildLen("ships"); i++) {
         DataNode* ship_data = data->GetArrayChild("ships", i);
@@ -362,19 +358,12 @@ void GlobalState::Deserialize(const DataNode* data) {
         if (ship_data->Has("id")) {
             ASSERT_EQUAL_INT(id, (entity_id_t) ship_data->GetI("id"))
         }
+    }
 
-        //entity_id_t id;
-        //if (ship_data->Has("id")) {
-        //    entity_id_t id_hint = (entity_id_t) ship_data->GetI("id");
-        //    if (id != id_hint){
-        //        WARNING(
-        //            "Could not initialize ship %s with intended ID %d. Instead assigned ID %d. This might lead to inconsistencies", 
-        //            ship_data->Get("name", "UNNAMED"),
-        //            id_hint, id
-        //        )
-        //    }
-        //} else {
-        //    id = AddShip(this, ship_data, id);
-        //}
+    // Dependency on planets
+    if (data->Has("quests")) {
+        quest_manager.Deserialize(data->GetChild("quests"));
+    } else {
+        quest_manager.Make();
     }
 }

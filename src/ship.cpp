@@ -305,7 +305,7 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
             text_size, MAIN_UI_COLOR
         );
 
-        UIContextEnclose(2, 2, BG_COLOR, color);
+        UIContextEnclose(BG_COLOR, color);
 
         char name_str[40];
         snprintf(name_str, 40, "%s (%s)", name, GetShipClassByIndex(ship_class)->name);
@@ -355,7 +355,7 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
             // Double Button
             UIContextPushInset(2, UIContextCurrent().GetLineHeight() * 2);
             UIContextPushHSplit(0, -32);
-            UIContextEnclose(0, 0, BG_COLOR, PALETTE_BLUE);
+            UIContextEnclose(BG_COLOR, PALETTE_BLUE);
             UIContextWrite(tp_str[0]);
             UIContextWrite(tp_str[1]);
             ButtonStateFlags button_state = UIContextAsButton();
@@ -372,7 +372,7 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
             if (i != plan_edit_index) {
                 UIContextPushHSplit(-32, -1);
                 UIContextWrite("X");
-                UIContextEnclose(0, 0, BG_COLOR, PALETTE_BLUE);
+                UIContextEnclose(BG_COLOR, PALETTE_BLUE);
                 ButtonStateFlags button_state = UIContextAsButton();
                 HandleButtonSound(button_state & BUTTON_STATE_FLAG_JUST_PRESSED);
                 if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
@@ -553,5 +553,5 @@ const ShipClass* GetShipClassByIndex(shipclass_index_t index) {
 }
 
 int LoadShipClasses(const DataNode* data) {
-    GlobalGetState()->ships.LoadShipClasses(data);
+    return GlobalGetState()->ships.LoadShipClasses(data);
 }

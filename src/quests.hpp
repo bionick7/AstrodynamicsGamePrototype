@@ -5,37 +5,8 @@
 #include "datanode.hpp"
 #include "planetary_economy.hpp"
 #include "time.hpp"
-
-struct Quest;
-struct QuestList {  // List where indicies are preserved
-    Quest* array;
-    int* free_index_array;
-    int alloc_count;
-    int capacity;
-
-    QuestList();
-    ~QuestList();
-    void Push(Quest quest);
-    void Erase(int index);
-};
-
-struct QuestManager {
-    QuestList _quests;
-    
-    QuestManager();
-    void Update(double dt);
-
-    //int GetAvailableQuestCount() const;
-    //const Quest* GetAvailableQuest(int index) const;
-    //int GetActiveQuestCount() const;
-    //const Quest* GetActiveQuest(int index) const;
-
-    void AcceptQuest(int quest);
-    void PickupQuest(int quest);
-    void CompleteQuest(int quest);
-
-    cost_t CollectPayout();
-};
+#include "id_allocator.hpp"
+#include "datanode.hpp"
 
 struct Quest {
     bool is_accepted;
@@ -51,10 +22,36 @@ struct Quest {
     cost_t payout;
 
     Quest();
-    const char* GetDescription() const;
+    void CopyFrom(const Quest* other);
+    void DrawUIGeneral() const;
+    bool IsReadyForCompletion() const;
+
+    void DrawUIActive() const;
+    bool DrawUIAvailable() const;
 };
 
-QuestManager* GetQuestManager();
+#define AVAILABLE_QUESTS_NUM 20
+
+struct QuestManager {
+    Quest _available_quests[AVAILABLE_QUESTS_NUM];
+    IDAllocatorList<Quest> _active_quests;
+
+    bool show_ui;
+    
+    QuestManager();
+    void Serialize(DataNode* data) const;
+    void Deserialize(const DataNode* data);
+
+    void Make();
+    void Update(double dt);
+    void Draw();
+
+    void AcceptQuest(int quest_index);
+    void PickupQuest(int quest_index);
+    void CompleteQuest(int quest_index);
+
+    cost_t CollectPayout();
+};
 
 int LoadQuests(const DataNode*);
 

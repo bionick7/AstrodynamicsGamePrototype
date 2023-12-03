@@ -69,12 +69,12 @@ bool BuildingInstance::UIDraw() {
     HandleButtonSound(button_state & (BUTTON_STATE_FLAG_JUST_PRESSED | BUTTON_STATE_FLAG_JUST_HOVER_IN));
     if (button_state & BUTTON_STATE_FLAG_HOVER) {
         if (!IsValid()) {
-            UIContextEnclose(1, 1, BG_COLOR, PALETTE_RED);
+            UIContextEnclose(BG_COLOR, PALETTE_RED);
         } else if (disabled) {
-            UIContextEnclose(1, 1, BG_COLOR, PALETTE_RED);
+            UIContextEnclose(BG_COLOR, PALETTE_RED);
         } else {
             const BuildingClass* building_class = GetBuildingByIndex(class_index);
-            UIContextEnclose(1, 1, BG_COLOR, MAIN_UI_COLOR);
+            UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
             std::stringstream ss = std::stringstream();
             ss << building_class->name << "\n";
             ss << building_class->description << "\n";
@@ -227,7 +227,7 @@ void BuildingConstructionUI() {
     }
 
     UIContextCreate(16*30 + 20, 10, 4*(32+sprite_margin_tot), 4*(32+sprite_margin_tot), 16, MAIN_UI_COLOR);
-    UIContextEnclose(0, 0, BG_COLOR, MAIN_UI_COLOR);
+    UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
     for (building_index_t i=0; i < building_count && i < 16; i++) {
         const BuildingClass* building_class = GetBuildingByIndex(i);
 
@@ -235,7 +235,8 @@ void BuildingConstructionUI() {
         ButtonStateFlags button_state = UIContextAsButton();
         HandleButtonSound(button_state & (BUTTON_STATE_FLAG_JUST_PRESSED | BUTTON_STATE_FLAG_JUST_HOVER_IN));
         if (button_state & BUTTON_STATE_FLAG_HOVER) {
-            UIContextEnclose(-2, -2, BG_COLOR, MAIN_UI_COLOR);
+            UIContextShrink(2, 2);
+            UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
             std::stringstream ss = std::stringstream();
             ss << building_class->name << "\n";
             ss << building_class->description << "\n";

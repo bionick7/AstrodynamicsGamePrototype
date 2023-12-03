@@ -238,7 +238,7 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
             current_tab = i;
         }
         if (button_state & BUTTON_STATE_FLAG_HOVER || i == current_tab) {
-            UIContextEnclose(0, 0, BG_COLOR, MAIN_UI_COLOR);
+            UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
         }
         UIContextWrite(tab_descriptions[i]);
         UIContextPop();  // HSplit

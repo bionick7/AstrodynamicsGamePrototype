@@ -6,6 +6,7 @@
 #include "transfer_plan.hpp"
 #include "datanode.hpp"
 #include "coordinate_transform.hpp"
+#include "quests.hpp"
 
 enum AgentType {
     TYPE_NONE,
@@ -25,6 +26,7 @@ struct GlobalState {
     CoordinateTransform c_transf;
     Calendar calendar;
     TransferPlanUI active_transfer_plan;
+    QuestManager quest_manager;
     Ships ships;
     Planets planets;
 

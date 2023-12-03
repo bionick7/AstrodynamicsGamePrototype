@@ -6,7 +6,23 @@
 template<typename T>
 struct IDAllocatorList {
     struct Iterator { 
-        int index, iterator;
+        entity_id_t index;
+        int iterator;
+        int count;
+        const IDAllocatorList<T>* list_ptr;
+
+        bool IsIterGoing() const {
+            return iterator < count && index < list_ptr->capacity;
+        }
+
+        operator bool () const { return IsIterGoing(); }
+
+        void operator++(int) {
+            iterator++;
+            do index++; while(index < list_ptr->capacity && 
+                !(list_ptr->verifier_array[index/64] & (1ul << (index % 64)))
+            ); 
+        }
     };
 
     ~IDAllocatorList() {
@@ -46,7 +62,7 @@ struct IDAllocatorList {
     void Erase(entity_id_t index) {
         alloc_count--;
         free_index_array[alloc_count] = index;
-        verifier_array[index/64] &= ~(1 << (index % 64));
+        verifier_array[index/64] &= ~(1ul << (index % 64));
     }
     
     T* Get(entity_id_t index) const { return &array[index]; }
@@ -62,23 +78,19 @@ struct IDAllocatorList {
     }
 
     bool IsValidIndex(entity_id_t index) const {
-        return index < capacity && (verifier_array[index/64] & (1 << (index % 64)));
+        return index < capacity && (verifier_array[index/64] & (1ul << (index % 64)));
     }
 
     Iterator GetIter() const {
-        return { 0, 0 };
-    }
-
-    bool IsIterGoing(Iterator iter) const {
-        return iter.iterator < alloc_count && iter.index < capacity;
-    }
-
-    void IncIterator(Iterator* iter) const {
-        iter->iterator++;
-        //do iter->index++; while(!IsValidIndex(iter->index)); 
-        do iter->index++; while(iter->index < capacity && 
-            !((verifier_array[iter->index/64] & (1 << (iter->index % 64))))
-        ); 
+        int start_index = 0;
+        if (alloc_count != 0)
+            while (!IsValidIndex(start_index)) start_index++;
+        Iterator it;
+        it.index = start_index;
+        it.iterator = 0;
+        it.count = alloc_count;
+        it.list_ptr = this;
+        return it;
     }
 
     void Inpsect() {

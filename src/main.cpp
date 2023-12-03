@@ -8,6 +8,7 @@
 #include "constants.hpp"
 #include "ui.hpp"
 #include "id_allocator.hpp"
+#include "string_builder.hpp"
 
 const char* GetSetting(int argc, const char** argv, const char* find) {
     for (int i=0; i < argc; i++) {
@@ -30,6 +31,7 @@ int UnitTests() {
     RETURN_OR_CONTINUE(DataNodeTests());
     RETURN_OR_CONTINUE(TimeTests());
     RETURN_OR_CONTINUE(IDAllocatorListTests());
+    RETURN_OR_CONTINUE(StringBuilderTests());
     INFO("All tests Sucessfull\n");
     return 0;
 }

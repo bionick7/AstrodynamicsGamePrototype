@@ -53,7 +53,7 @@ void HandleButtonSound(ButtonStateFlags state) {
 
 TextBox::TextBox(int x, int y, int w, int h, int ptext_size, Color color) {
     ASSERT(w > 0)
-    ASSERT(h > 0)
+    ASSERT(h >= 0)
     text_start_x = x;
     text_start_y = y;
     text_margin_x = 2;
@@ -166,19 +166,22 @@ void UIContextCreate(int x, int y, int w, int h, int text_size, Color color) {
     text_box_stack.push(new_text_box);
 }
 
-void UIContextPushInset(int margin, int h) {
+int UIContextPushInset(int margin, int h) {
+    // Returns the actual height
     TextBox& tb = UIContextCurrent();
     tb.EnsureLineBreak();
+    int height = fmin(h, fmax(0, tb.height - tb.y_cursor - 2*margin));
     TextBox new_text_box = TextBox(
         tb.text_start_x + tb.x_cursor + margin,
         tb.text_start_y + tb.y_cursor + margin,
         tb.width - tb.x_cursor - 2*margin,
-        fmin(tb.height - tb.y_cursor - 2*margin, h),
+        height,
         tb.text_size,
         tb.text_color
     );
     tb.y_cursor += h + 2*margin;
     text_box_stack.push(new_text_box);
+    return height;
 }
 
 void UIContextPushInline(int margin) {
@@ -231,8 +234,15 @@ void UIContextPop() {
     text_box_stack.pop();
 }
 
-void UIContextEnclose(int inset_x, int inset_y, Color background_color, Color line_color) {
-    UIContextCurrent().Enclose(inset_x, inset_y, background_color, line_color);
+void UIContextShrink(int dx, int dy) {
+    UIContextCurrent().text_start_x += dx;
+    UIContextCurrent().text_start_y += dy;
+    UIContextCurrent().width -= 2*dx;
+    UIContextCurrent().height -= 2*dy;
+}
+
+void UIContextEnclose(Color background_color, Color line_color) {
+    UIContextCurrent().Enclose(1, 1, background_color, line_color);
 }
 
 void UIContextWrite(const char* text, bool linebreak) {
