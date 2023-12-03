@@ -25,6 +25,9 @@ struct GlobalState {
     CoordinateTransform c_transf;
     Calendar calendar;
     TransferPlanUI active_transfer_plan;
+    Ships ships;
+    Planets planets;
+
     entity_id_t focused_planet;
     entity_id_t focused_ship;
 

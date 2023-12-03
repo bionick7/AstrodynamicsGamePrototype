@@ -4,12 +4,6 @@
 #include "utils.hpp"
 #include "constants.hpp"
 
-static std::map<std::string, PlanetNature> ephemerides = std::map<std::string, PlanetNature>();
-static PlanetNature parent = {0};
-
-Planet* planet_array = NULL;
-int planet_count = 0;
-int planet_array_iter = 0;
 
 Planet::Planet(const char* p_name, double p_mu, double p_radius) {
     strcpy(name, p_name);
@@ -47,12 +41,12 @@ void Planet::Serialize(DataNode* data) const {
     // We assume the orbital info is stored in the ephemerides
 }
 
-void Planet::Deserialize(const DataNode *data) {
+void Planet::Deserialize(Planets* planets, const DataNode *data) {
     //SettingOverridePush("datanode_quite", true);
     //SettingOverridePop("datanode_quite");
     strcpy(name, data->Get("name", name, true));
-    auto find = ephemerides.find(name);
-    if (find == ephemerides.end()) {
+    auto find = planets->ephemerides.find(name);
+    if (find == planets->ephemerides.end()) {
         ERROR("Could not find planet %s in ephemerides", name)
         return;
     }
@@ -267,39 +261,41 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
     UIContextPop();  // Outside
 }
 
-void InitPlanetArray(entity_id_t p_planet_count) {
-    if (planet_array != NULL) {
-        WARNING("Initializing planets array more than once. I will not manage this memory")
-        planet_array_iter = 0;
-    }
-    planet_count = p_planet_count;
-    planet_array = new Planet[planet_count];
-}
-
-entity_id_t AddPlanet(const DataNode* data) {
-    //entity_map.insert({uuid, planet_entity});
-    planet_array[planet_array_iter].Deserialize(data);
-    planet_array[planet_array_iter].Update();
-    planet_array[planet_array_iter].id = (entity_id_t)planet_array_iter;
-    planet_array_iter++;
-    return (entity_id_t) planet_array_iter;
-}
-
-Planet* GetPlanet(entity_id_t id) {
-    return &planet_array[(int)id];
-}
-
-void ClearPlanetList() {
+Planets::Planets() {
     planet_array = NULL;
     planet_count = 0;
     planet_array_iter = 0;
 }
 
-entity_id_t GetPlanetCount() {
+Planets::~Planets() {
+    delete[] planet_array;
+}
+
+void Planets::Init(entity_id_t p_planet_count) {
+    planet_count = p_planet_count;
+    planet_array = new Planet[planet_count];
+    parent = {0};
+    ephemerides = std::map<std::string, PlanetNature>();
+}
+
+entity_id_t Planets::AddPlanet(const DataNode* data) {
+    //entity_map.insert({uuid, planet_entity});
+    entity_id_t id = planet_array_iter++;
+    planet_array[id].Deserialize(this, data);
+    planet_array[id].Update();
+    planet_array[id].id = id;
+    return id;
+}
+
+Planet* Planets::GetPlanet(entity_id_t id) const {
+    return &planet_array[(int)id];
+}
+
+entity_id_t Planets::GetPlanetCount() const {
     return planet_count;
 }
 
-Planet* GetPlanetByName(const char* planet_name) {
+Planet* Planets::GetPlanetByName(const char* planet_name) const {
     // Returns NULL if planet_name not found
     for(int i=0; i < planet_count; i++) {
         if (strcmp(planet_array[i].name, planet_name) == 0) {
@@ -309,11 +305,11 @@ Planet* GetPlanetByName(const char* planet_name) {
     return NULL;
 }
 
-const PlanetNature* GetParentNature() {
+const PlanetNature* Planets::GetParentNature() const {
     return &parent;
 }
 
-int LoadEphemerides(const DataNode* data) {
+int Planets::LoadEphemerides(const DataNode* data) {
     // Init planets
     parent.radius = data->GetF("radius");
     parent.mu = data->GetF("mass") * G;
@@ -343,3 +339,6 @@ int LoadEphemerides(const DataNode* data) {
     }
     return num_planets;
 }
+
+Planet* GetPlanet(entity_id_t id) { return GlobalGetState()->planets.GetPlanet(id); }
+int LoadEphemerides(const DataNode* data) { return GlobalGetState()->planets.LoadEphemerides(data); }

@@ -27,10 +27,6 @@ struct ShipClass {
     double GetFuelRequiredFull(double dv) const;
 };
 
-int LoadShipClasses(const DataNode* data);
-shipclass_index_t GetShipClassIndexById(const char* id);
-const ShipClass* GetShipClassByIndex(shipclass_index_t index);
-
 struct Ship {
     // Inherent properties
     char name[SHIP_NAME_MAX_SIZE];
@@ -84,9 +80,25 @@ struct Ship {
     void _OnClicked();
 };
 
+struct Ships {
+    Ships();
+    entity_id_t AddShip(const DataNode* data);
+    int LoadShipClasses(const DataNode* data);
+    void ClearShips();
+
+    Ship* GetShip(entity_id_t uuid) const;
+    shipclass_index_t GetShipClassIndexById(const char* id) const;
+    const ShipClass* GetShipClassByIndex(shipclass_index_t index) const;
+
+    IDAllocatorList<Ship> alloc;
+private:
+    std::map<std::string, shipclass_index_t> ship_classes_ids;
+    ShipClass* ship_classes;
+    size_t ship_classes_count;
+};
+
 Ship* GetShip(entity_id_t uuid);
-entity_id_t AddShip(const DataNode* data);
-const IDAllocatorList<Ship>* GetShipList() ;
-void ClearShipList();
+const ShipClass* GetShipClassByIndex(shipclass_index_t index);
+int LoadShipClasses(const DataNode* data);
 
 #endif  // SHIP_H

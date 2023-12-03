@@ -72,7 +72,7 @@ double _SolveLambertBetweenBounds(double y, double K, double xl, double xr, int 
     } while (fabs(ym) > 1e-6 * y);
     
     double test_y = _Lambert(xm, K, solution);
-    ASSERT_ALOMST_EQUAL(test_y, y)
+    ASSERT_ALOMST_EQUAL_FLOAT(test_y, y)
     return xm;
 }
 
@@ -94,7 +94,7 @@ double _SolveLambertWithNewton(double y, double K, int solution) {
     } while (fabs(ys) > 1e-6);
     
     double test_y = _Lambert(xs, K, solution);
-    ASSERT_ALOMST_EQUAL(test_y, y)
+    ASSERT_ALOMST_EQUAL_FLOAT(test_y, y)
     return xs;
 }
 
@@ -111,7 +111,7 @@ void TransferPlanSolve(TransferPlan* tp) {
     ASSERT(IsIdValid(tp->arrival_planet))
     const Planet* from = GetPlanet(tp->departure_planet);
     const Planet* to = GetPlanet(tp->arrival_planet);
-    ASSERT_ALOMST_EQUAL(from->orbit.mu, to->orbit.mu)
+    ASSERT_ALOMST_EQUAL_FLOAT(from->orbit.mu, to->orbit.mu)
     double mu = from->orbit.mu;
 
     Time t1 = tp->departure_time;
@@ -164,7 +164,7 @@ void TransferPlanSolve(TransferPlan* tp) {
         case 3: t_f_annomaly = (2*PI - (α - sin(α)) + β - sin(β)); break;
         }
         double t_f = sqrt(aa[i]*aa[i]*aa[i] / mu) * t_f_annomaly;
-        ASSERT_ALOMST_EQUAL(t_f, TimeSecDiff(t2, t1))
+        ASSERT_ALOMST_EQUAL_FLOAT(t_f, TimeSecDiff(t2, t1))
     }
 
     for (int i=0; i < tp->num_solutions; i++) {
@@ -192,8 +192,8 @@ void TransferPlanSolve(TransferPlan* tp) {
 
         tp->dv1[i] = from->GetDVFromExcessVelocity(tp->departure_dvs[i]);
         tp->dv2[i] = to->GetDVFromExcessVelocity(tp->arrival_dvs[i]);
-        //ASSERT_ALOMST_EQUAL(pos1_.r, pos1.r)
-        //ASSERT_ALOMST_EQUAL(pos2_.r, pos2.r)
+        //ASSERT_ALOMST_EQUAL_FLOAT(pos1_.r, pos1.r)
+        //ASSERT_ALOMST_EQUAL_FLOAT(pos2_.r, pos2.r)
     }
 
     if (tp->num_solutions == 1) {

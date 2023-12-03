@@ -1,7 +1,7 @@
 #ifndef ID_ALLOCATOR_H
 #define ID_ALLOCATOR_H
 #include <basic.hpp>
-
+#include "logging.hpp"
 
 template<typename T>
 struct IDAllocatorList {
@@ -9,12 +9,18 @@ struct IDAllocatorList {
         int index, iterator;
     };
 
-    IDAllocatorList() {
-        _Make();
-    }
-
     ~IDAllocatorList() {
         _Destroy();
+    }
+
+    void Init() {
+        alloc_count = 0;
+        capacity = 32;
+        array = (T*)malloc(sizeof(T) * capacity);
+        free_index_array = (entity_id_t*)malloc(sizeof(entity_id_t) * capacity);
+        verifier_array = (uint64_t*)malloc(sizeof(uint64_t) * ceil(capacity / 64.));
+        for(int i = 0; i < capacity; i++) free_index_array[i] = i;
+        for(int i = 0; i < ceil(capacity / 64.); i++) verifier_array[i] = 0;
     }
 
     entity_id_t Allocate(T** ret_ptr) {
@@ -52,7 +58,7 @@ struct IDAllocatorList {
 
     void Clear() {
         _Destroy();
-        _Make();
+        Init();
     }
 
     bool IsValidIndex(entity_id_t index) const {
@@ -75,15 +81,11 @@ struct IDAllocatorList {
         ); 
     }
 
-private:
-    void _Make() {
-        alloc_count = 0;
-        capacity = 32;
-        array = (T*)malloc(sizeof(T) * capacity);
-        free_index_array = (entity_id_t*)malloc(sizeof(entity_id_t) * capacity);
-        verifier_array = (uint64_t*)malloc(sizeof(uint64_t) * ceil(capacity / 64.));
-        for(int i = 0; i < capacity; i++) free_index_array[i] = i;
-        for(int i = 0; i < ceil(capacity / 64.); i++) verifier_array[i] = 0;
+    void Inpsect() {
+        SHOW_I(free_index_array[0])
+        SHOW_I(verifier_array[0])
+        SHOW_I(alloc_count)
+        SHOW_I(capacity)
     }
 
     void _Destroy() {
@@ -98,7 +100,6 @@ private:
     entity_id_t alloc_count;
     entity_id_t capacity;
 };
-
 
 int IDAllocatorListTests();
 

@@ -11,13 +11,14 @@
 
 #define MAX_PLANET_BUILDINGS 20
 
+struct Planets;
+
 struct PlanetNature {
     char name[100];
     double mu;
     double radius;
     Orbit orbit;
 };
-
 
 struct Planet {
     char name[100];
@@ -37,7 +38,7 @@ struct Planet {
     Planet() : Planet("UNNAMED", 0, 0) {};
     Planet(const char* name, double mu, double radius);
     void Serialize(DataNode* data) const;
-    void Deserialize(const DataNode* data);
+    void Deserialize(Planets* planets,const DataNode* data);
 
     void _OnClicked();
     double ScreenRadius() const;
@@ -52,14 +53,27 @@ struct Planet {
     void DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, ResourceTransfer transfer, double fuel_draw);
 };
 
-void InitPlanetArray(entity_id_t p_planet_count);
-entity_id_t AddPlanet(const DataNode* data);
-Planet* GetPlanet(entity_id_t id);
-void ClearPlanetList();
-entity_id_t GetPlanetCount();
-Planet* GetPlanetByName(const char* planet_name);
+struct Planets {
+    std::map<std::string, PlanetNature> ephemerides;
+    PlanetNature parent;
+    Planet* planet_array;
+    int planet_count;
+    int planet_array_iter;
 
-const PlanetNature* GetParentNature();
+    Planets();
+    ~Planets();
+    void Init(entity_id_t p_planet_count);
+    entity_id_t AddPlanet(const DataNode* data);
+    Planet* GetPlanet(entity_id_t id) const;
+    entity_id_t GetPlanetCount() const;
+    Planet* GetPlanetByName(const char* planet_name) const;
+
+    const PlanetNature* GetParentNature() const;
+    int LoadEphemerides(const DataNode* data);
+};
+
+Planet* GetPlanet(entity_id_t id);
 int LoadEphemerides(const DataNode* data);
+
 
 #endif  // PLANET_H

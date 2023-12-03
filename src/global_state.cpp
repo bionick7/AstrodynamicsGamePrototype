@@ -167,7 +167,7 @@ void _UpdateShipsPlanets(GlobalState* gs) {
     Clickable hover = {TYPE_NONE, GetInvalidId()};
     double min_distance = INFINITY;
 
-    for (int planet_id = 0; planet_id < GetPlanetCount(); planet_id++) {
+    for (int planet_id = 0; planet_id < gs->planets.GetPlanetCount(); planet_id++) {
         Planet* planet = GetPlanet((entity_id_t) planet_id);
         planet->Update();
         planet->mouse_hover = false;
@@ -176,8 +176,8 @@ void _UpdateShipsPlanets(GlobalState* gs) {
         }
     }
     int total_ship_count = 0;
-    for (auto it = GetShipList()->GetIter(); GetShipList()->IsIterGoing(it); GetShipList()->IncIterator(&it)) {
-        Ship* ship = GetShipList()->Get(it);
+    for (auto it = gs->ships.alloc.GetIter(); gs->ships.alloc.IsIterGoing(it); gs->ships.alloc.IncIterator(&it)) {
+        Ship* ship = gs->ships.alloc[it];
         ship->Update();
         if (IsIdValid(ship->parent_planet)) {
             ship->index_on_planet = total_ship_count++;
@@ -220,12 +220,12 @@ void GlobalState::UpdateState(double delta_t) {
 // Draw
 void GlobalState::DrawState() {
 
-    DrawCircleV(c_transf.TransformV({0}), c_transf.TransformS(GetParentNature()->radius), MAIN_UI_COLOR);
-    for (entity_id_t planet_id = 0; planet_id < GetPlanetCount(); planet_id++) {
-        GetPlanet(planet_id)->Draw(&c_transf);
+    DrawCircleV(c_transf.TransformV({0}), c_transf.TransformS(planets.GetParentNature()->radius), MAIN_UI_COLOR);
+    for (entity_id_t planet_id = 0; planet_id < planets.GetPlanetCount(); planet_id++) {
+        planets.GetPlanet(planet_id)->Draw(&c_transf);
     }
-    for (auto it = GetShipList()->GetIter(); GetShipList()->IsIterGoing(it); GetShipList()->IncIterator(&it)) {
-        Ship* ship = GetShipList()->Get(it);
+    for (auto it = ships.alloc.GetIter(); ships.alloc.IsIterGoing(it); ships.alloc.IncIterator(&it)) {
+        Ship* ship = ships.alloc[it];
         ship->Draw(&c_transf);
     }
 
@@ -239,8 +239,8 @@ void GlobalState::DrawState() {
     DrawTextAligned(capital_str, {GetScreenWidth() / 2.0f, 10}, TEXT_ALIGNMENT_HCENTER & TEXT_ALIGNMENT_TOP, MAIN_UI_COLOR);
 
     // 
-    for (entity_id_t planet_id = 0; planet_id < GetPlanetCount(); planet_id++) {
-        Planet* planet = GetPlanet(planet_id);
+    for (entity_id_t planet_id = 0; planet_id < planets.GetPlanetCount(); planet_id++) {
+        Planet* planet = planets.GetPlanet(planet_id);
         if (active_transfer_plan.IsActive()){
             if (active_transfer_plan.plan->departure_planet == planet->id) {
                 planet->DrawUI(&c_transf, true, ResourceTransferInvert(active_transfer_plan.plan->resource_transfer), active_transfer_plan.plan->fuel_mass);
@@ -254,8 +254,8 @@ void GlobalState::DrawState() {
         }
     }
     BuildingConstructionUI();
-    for (auto it = GetShipList()->GetIter(); GetShipList()->IsIterGoing(it); GetShipList()->IncIterator(&it)) {
-        Ship* ship = GetShipList()->Get(it);
+    for (auto it = ships.alloc.GetIter(); ships.alloc.IsIterGoing(it); ships.alloc.IncIterator(&it)) {
+        Ship* ship = ships.alloc[it];
         ship->DrawUI(&c_transf);
     }
     active_transfer_plan.DrawUI();
@@ -279,22 +279,22 @@ void GlobalState::Serialize(DataNode* data) const {
     data->SetI("focused_planet", (int) focused_planet);
     data->SetI("focused_ship", (int) focused_ship);
 
-    data->SetArrayChild("planets", GetPlanetCount());
+    data->SetArrayChild("planets", (int) planets.GetPlanetCount());
     int i=0;
-    for (entity_id_t planet_id = 0; planet_id < GetPlanetCount(); planet_id++) {
+    for (entity_id_t planet_id = 0; planet_id < planets.GetPlanetCount(); planet_id++) {
         DataNode dn2 = DataNode();
         dn2.SetI("id", (int) planet_id);
-        GetPlanet(planet_id)->Serialize(data->SetArrayElemChild("planets", i++, dn2));
+        planets.GetPlanet(planet_id)->Serialize(data->SetArrayElemChild("planets", i++, dn2));
     }
 
-    data->SetArrayChild("ships", GetShipList()->Count());
+    data->SetArrayChild("ships", ships.alloc.Count());
     i=0;
-    for (auto it = GetShipList()->GetIter(); GetShipList()->IsIterGoing(it); GetShipList()->IncIterator(&it)) {
-        Ship* ship = GetShipList()->Get(it);
+    for (auto it = ships.alloc.GetIter(); ships.alloc.IsIterGoing(it); ships.alloc.IncIterator(&it)) {
+        Ship* ship = ships.alloc.Get(it);
         DataNode dn2 = DataNode();
         dn2.SetI("id", (int) it.index);
         if (ship->is_parked) {
-            dn2.Set("planet", GetPlanet(ship->parent_planet)->name);
+            dn2.Set("planet", planets.GetPlanet(ship->parent_planet)->name);
         }
         ship->Serialize(data->SetArrayElemChild("ships", i++, dn2));
     }
@@ -318,23 +318,29 @@ void GlobalState::Deserialize(const DataNode* data) {
     }
     // ignore transferplanui for now
 
-    //LoadEphemeridesFromFile("resources/data/ephemerides.yaml");  // if necaissary
     
     capital = data->GetF("capital", capital);
 
-    ClearShipList();
-    ClearPlanetList();
+    //ships.ClearShips();
+    ships.alloc.Clear(); 
+    planets = Planets();
+    planets.Init(data->GetArrayChildLen("planets"));
+
+    DataNode ephem_data;
+    if (DataNode::FromFile(&ephem_data, "resources/data/ephemerides.yaml", FileFormat::YAML, true) != 0) {
+        FAIL("Could not load save %s", "resources/data/ephemerides.yaml");
+    }
+    planets.LoadEphemerides(&ephem_data);  // if necaissary
 
     focused_planet = (entity_id_t) data->GetI("focused_planet", -1, true);
     focused_ship = (entity_id_t) data->GetI("focused_ship", -1, true);
 
-    InitPlanetArray(data->GetArrayChildLen("planets"));
     for (int i=0; i < data->GetArrayChildLen("planets"); i++) {
         DataNode* planet_data = data->GetArrayChild("planets", i);
-        entity_id_t id = AddPlanet(planet_data);
+        entity_id_t id = planets.AddPlanet(planet_data);
         //entity_id_t id;
         if (planet_data->Has("id")) {
-            ASSERT(id == (entity_id_t) planet_data->GetI("id"))
+            ASSERT_EQUAL_INT(id, (entity_id_t) planet_data->GetI("id"))
         }
         //    entity_id_t id_hint = (entity_id_t) planet_data->GetI("id");
         //    id = registry.create(id_hint);
@@ -351,10 +357,10 @@ void GlobalState::Deserialize(const DataNode* data) {
     }
     for (int i=0; i < data->GetArrayChildLen("ships"); i++) {
         DataNode* ship_data = data->GetArrayChild("ships", i);
-        entity_id_t id = AddShip(ship_data);
+        entity_id_t id = ships.AddShip(ship_data);
 
         if (ship_data->Has("id")) {
-            ASSERT(id == (entity_id_t) ship_data->GetI("id"))
+            ASSERT_EQUAL_INT(id, (entity_id_t) ship_data->GetI("id"))
         }
 
         //entity_id_t id;

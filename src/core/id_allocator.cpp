@@ -4,11 +4,13 @@
 
 #define LIST_TEST_ASSERT_WITH_ERROR(expr) if (!(expr)) {ERROR("expression %s not true", #expr); return 1; }
 int IDAllocatorListTests() {
-    IDAllocatorList<Matrix> list = IDAllocatorList<Matrix>();
-    Matrix *mm[40];
+    IDAllocatorList<Matrix> list;
+    list.Init();
+    list.Inpsect();
+    Matrix* mm;
     for(int i=0; i < 40; i++) {
-        list.Allocate(&mm[i]);
-        *mm[i] = MatrixScale((float)i, 1, 1);
+        list.Allocate(&mm);
+        *mm = MatrixScale((float)i, 1, 1);
     }
     LIST_TEST_ASSERT_WITH_ERROR(list[23]->m0 == 23);
     list.Erase(2);
@@ -22,6 +24,14 @@ int IDAllocatorListTests() {
     list.Erase(15);
     list.Allocate(NULL);
     //printf("%016zX\n", *list.verifier_array);
+    for(auto i = list.GetIter(); list.IsIterGoing(i); list.IncIterator(&i)) {
+        printf("%f\n", list[i]->m0);
+    }
+    list.Init();
+    list.Inpsect();
+
+    list.Allocate(&mm);
+    mm->m0 = -1;
     for(auto i = list.GetIter(); list.IsIterGoing(i); list.IncIterator(&i)) {
         printf("%f\n", list[i]->m0);
     }

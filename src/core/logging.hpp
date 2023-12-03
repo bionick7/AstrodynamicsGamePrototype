@@ -16,7 +16,7 @@
 
 #define ASSERT(condition) 
 #define ASSERT_MSG(condition, msg) 
-#define ASSERT_ALOMST_EQUAL(v1, v2) 
+#define ASSERT_ALOMST_EQUAL_FLOAT(v1, v2) 
 
 #else
 
@@ -34,7 +34,8 @@
 #define FAIL(...) {ERROR(__VA_ARGS__) exit(1);}
 
 #define ASSERT(condition) if (!(condition)) { ERROR("Assertion failed: (%s)", #condition); }
-#define ASSERT_ALOMST_EQUAL(v1, v2) if (fabs(v1 - v2) > v1 * 1e-5) { ERROR("Assertion failed: %s (%f) != %s (%f)", #v1, v1, #v2, v2); }
+#define ASSERT_EQUAL_INT(v1, v2) if (v1 != v2) { ERROR("Assertion failed: %s (%d)  != %s (%d)", #v1, v1, #v2, v2); }
+#define ASSERT_ALOMST_EQUAL_FLOAT(v1, v2) if (fabs(v1 - v2) > v1 * 1e-5) { ERROR("Assertion failed: %s (%f) != %s (%f)", #v1, v1, #v2, v2); }
 
 enum LogType{
     LOGTYPE_INFO,

@@ -5,11 +5,6 @@
 #include "constants.hpp"
 #include "id_allocator.hpp"
 
-std::map<std::string, shipclass_index_t> ship_classes_ids = std::map<std::string, shipclass_index_t>();
-ShipClass* ship_classes = NULL;
-size_t ship_classes_count = 0;
-IDAllocatorList<Ship> ship_allocator = IDAllocatorList<Ship>();
-
 double ShipClass::GetFuelRequiredFull(double dv) const {
     // assuming max payload
     double fuel_ratio = (exp(dv/v_e) - 1) / (exp(max_dv/v_e) - 1);
@@ -24,55 +19,6 @@ double ShipClass::GetFuelRequiredEmpty(double dv) const {
     // oem = max_capacity / ((exp(dv_max/V_e) - 1) + 1)
     double oem = max_capacity / ((exp(max_dv/v_e) - 1) + 1);
     return oem * (exp(dv/v_e) - 1);
-}
-
-int LoadShipClasses(const DataNode* data) {
-    if (ship_classes != NULL) {
-        WARNING("Loading ship classes more than once (I'm not freeing this memory)");
-    }
-    ship_classes_count = data->GetArrayChildLen("ship_classes", true);
-    if (ship_classes_count == 0){
-        WARNING("No ship classes loaded")
-        return 0;
-    }
-    ship_classes = (ShipClass*) malloc(sizeof(ShipClass) * ship_classes_count);
-    for (int index=0; index < ship_classes_count; index++) {
-        const DataNode* ship_data = data->GetArrayChild("ship_classes", index);
-        ShipClass sc = {0};
-
-        strncpy(sc.name, ship_data->Get("name", "[NAME MISSING]"), SHIPCLASS_NAME_MAX_SIZE);
-        strncpy(sc.description, ship_data->Get("description", "[DESCRITION MISSING]"), SHIPCLASS_DESCRIPTION_MAX_SIZE);
-
-        sc.max_capacity = ship_data->GetF("capacity", 0) * 1000;  // t -> kg
-        sc.max_dv = ship_data->GetF("dv", 0) * 1000;  // km/s -> m/s
-        sc.v_e = ship_data->GetF("Isp", 0) * 1000;    // km/s -> m/s
-
-        ship_classes[index] = sc;
-        auto pair = ship_classes_ids.insert_or_assign(ship_data->Get("id", "_"), index);
-        ship_classes[index].id = pair.first->first.c_str();  // points to string in dictionary
-    }
-    return ship_classes_count;
-}
-
-shipclass_index_t GetShipClassIndexById(const char *id) {
-    auto find = ship_classes_ids.find(id);
-    if (find == ship_classes_ids.end()) {
-        ERROR("No such ship id '%s'", id)
-        return BUILDING_INDEX_INVALID;
-    }
-    return find->second;
-}
-
-const ShipClass* GetShipClassByIndex(shipclass_index_t index) {
-    if (ship_classes == NULL) {
-        ERROR("Ship Class uninitialized")
-        return NULL;
-    }
-    if (index >= ship_classes_count) {
-        ERROR("Invalid ship class index (%d >= %d or negative)", index, ship_classes_count)
-        return NULL;
-    }
-    return &ship_classes[index];
 }
 
 bool Ship::HasMouseHover(double* min_distance) const {
@@ -147,7 +93,7 @@ void Ship::Deserialize(const DataNode* data) {
     strcpy(name, data->Get("name", "UNNAMED"));
     is_parked = strcmp(data->Get("is_parked", "y", true), "y") == 0;
     plan_edit_index = -1;
-    ship_class = GetShipClassIndexById(data->Get("class_id"));
+    ship_class = GlobalGetState()->ships.GetShipClassIndexById(data->Get("class_id"));
 
     payload_type = (ResourceType) data->GetI("payload_type", payload_type, true);
     payload_quantity = data->GetF("payload_quantity", payload_quantity / 1000, true) * 1000;
@@ -444,13 +390,6 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
 }
 
 void Ship::Inspect() {
-    if (is_parked) {
-        INFO("%s : parked on %s, %f m/s d", name, GetPlanet(parent_planet)->name, GetShipClassByIndex(ship_class)->max_dv);
-    } else {
-        INFO("%s : in transfer[", name);
-        //OrbitPrint(&next_plan.transfer_orbit[next_plan.primary_solution]);
-        INFO("] %f m/s dv", GetShipClassByIndex(ship_class)->max_dv);
-    }
 }
 
 void Ship::_OnDeparture(const TransferPlan& tp) {
@@ -515,24 +454,28 @@ void Ship::_EnsureContinuity() {
     }
 }
 
-Ship* GetShip(entity_id_t id) {
-    ship_allocator.Get((int)id);
-    if ((!ship_allocator.IsValidIndex((int)id))) {
-        FAIL("Invalid id (%d)", id)
-    }
-    return (Ship*) ship_allocator.Get((int)id);
+Ships::Ships() {
+    alloc.Init();
+
+    ship_classes_ids = std::map<std::string, shipclass_index_t>();
+    ship_classes = NULL;
+    ship_classes_count = 0;
 }
 
-entity_id_t AddShip(const DataNode* data) {
+void Ships::ClearShips(){
+    alloc.Clear();
+}
+
+entity_id_t Ships::AddShip(const DataNode* data) {
     //printf("Adding Ship N°%d\n", index)
     //entity_map.insert({uuid, ship_entity});
     Ship *ship;
-    int ship_entity = ship_allocator.Allocate(&ship);
+    int ship_entity = alloc.Allocate(&ship);
     
     ship->Deserialize(data);
     if (ship->is_parked) {
         const char* planet_name = data->Get("planet", "NO NAME SPECIFIED");
-        const Planet* planet = GetPlanetByName(planet_name);
+        const Planet* planet = GlobalGetState()->planets.GetPlanetByName(planet_name);
         if (planet == NULL) {
             FAIL("Error while initializing ship '%s': no such planet '%s'", ship->name, planet_name)
         }
@@ -544,10 +487,71 @@ entity_id_t AddShip(const DataNode* data) {
     return (entity_id_t) ship_entity;
 }
 
-const IDAllocatorList<Ship>* GetShipList() {
-    return &ship_allocator;
+int Ships::LoadShipClasses(const DataNode* data) {
+    if (ship_classes != NULL) {
+        WARNING("Loading ship classes more than once (I'm not freeing this memory)");
+    }
+    ship_classes_count = data->GetArrayChildLen("ship_classes", true);
+    if (ship_classes_count == 0){
+        WARNING("No ship classes loaded")
+        return 0;
+    }
+    ship_classes = (ShipClass*) malloc(sizeof(ShipClass) * ship_classes_count);
+    for (int index=0; index < ship_classes_count; index++) {
+        const DataNode* ship_data = data->GetArrayChild("ship_classes", index);
+        ShipClass sc = {0};
+
+        strncpy(sc.name, ship_data->Get("name", "[NAME MISSING]"), SHIPCLASS_NAME_MAX_SIZE);
+        strncpy(sc.description, ship_data->Get("description", "[DESCRITION MISSING]"), SHIPCLASS_DESCRIPTION_MAX_SIZE);
+
+        sc.max_capacity = ship_data->GetF("capacity", 0) * 1000;  // t -> kg
+        sc.max_dv = ship_data->GetF("dv", 0) * 1000;  // km/s -> m/s
+        sc.v_e = ship_data->GetF("Isp", 0) * 1000;    // km/s -> m/s
+
+        ship_classes[index] = sc;
+        auto pair = ship_classes_ids.insert_or_assign(ship_data->Get("id", "_"), index);
+        ship_classes[index].id = pair.first->first.c_str();  // points to string in dictionary
+    }
+    return ship_classes_count;
 }
 
-void ClearShipList() {
-    ship_allocator.Clear();
+Ship* Ships::GetShip(entity_id_t id) const {
+    alloc.Get((int)id);
+    if ((!alloc.IsValidIndex((int)id))) {
+        FAIL("Invalid id (%d)", id)
+    }
+    return (Ship*) alloc.Get((int)id);
+}
+
+shipclass_index_t Ships::GetShipClassIndexById(const char *id) const { 
+    auto find = ship_classes_ids.find(id);
+    if (find == ship_classes_ids.end()) {
+        ERROR("No such ship id '%s'", id)
+        return BUILDING_INDEX_INVALID;
+    }
+    return find->second;
+}
+
+const ShipClass* Ships::GetShipClassByIndex(shipclass_index_t index) const {
+    if (ship_classes == NULL) {
+        ERROR("Ship Class uninitialized")
+        return NULL;
+    }
+    if (index >= ship_classes_count) {
+        ERROR("Invalid ship class index (%d >= %d or negative)", index, ship_classes_count)
+        return NULL;
+    }
+    return &ship_classes[index];
+}
+
+Ship* GetShip(entity_id_t uuid) {
+    return GlobalGetState()->ships.GetShip(uuid);
+}
+
+const ShipClass* GetShipClassByIndex(shipclass_index_t index) {
+    return GlobalGetState()->ships.GetShipClassByIndex(index);
+}
+
+int LoadShipClasses(const DataNode* data) {
+    GlobalGetState()->ships.LoadShipClasses(data);
 }
