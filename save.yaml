@@ -1,9 +1,10 @@
+capital: 100000.000000
 focused_planet: -1
 focused_ship: -1
 calendar:
   migration_arrrival_planet: 0
   paused: y
-  time_scale: 16384.000000
+  time_scale: 8192.000000
   current_migration_period:
     t: 5356800.000000
 
@@ -11,27 +12,75 @@ calendar:
     t: 5356800.000000
 
   time:
-    t: 130116.266667
+    t: 228556.800000
 
 
 coordinate_transform:
-  focus_x: 204926464.000000
-  focus_y: -60407952.000000
-  log_space_scale: -6.327712
+  focus_x: 3872224.000000
+  focus_y: -4194912.000000
+  log_space_scale: -6.008672
 
 planets:
-- id: 6
-  name: Phoebe
+- id: 0
+  name: Mimas
+  resource_delta:
+    electronics: 0.000000
+    food: 0.000000
+    metal: 0.000000
+    water: 0.000000
+
+  resource_stock:
+    electronics: 0.000000
+    food: 2000.000000
+    metal: 0.000000
+    water: 1000.000000
+
+  buildings: []
+
+- id: 1
+  name: Encelladus
+  resource_delta:
+    electronics: 0.000000
+    food: 0.000000
+    metal: 0.000000
+    water: 0.000000
+
   resource_stock:
     electronics: 0.000000
     food: 0.000000
     metal: 0.000000
     water: 0.000000
 
-  buildings: []
+  buildings:
+  - mod_pop_small
+  - mod_food_mine
 
-- id: 5
-  name: Iaeptus
+- id: 2
+  name: Tethys
+  resource_delta:
+    electronics: 0.000000
+    food: -50.000000
+    metal: 0.000000
+    water: 0.000000
+
+  resource_stock:
+    electronics: 6.000000
+    food: 1019.308562
+    metal: 0.000000
+    water: 848.445500
+
+  buildings:
+  - mod_pop_small
+  - mod_food_mine
+
+- id: 3
+  name: Rhea
+  resource_delta:
+    electronics: 0.000000
+    food: 0.000000
+    metal: 0.000000
+    water: 0.000000
+
   resource_stock:
     electronics: 0.000000
     food: 0.000000
@@ -42,18 +91,12 @@ planets:
 
 - id: 4
   name: Titan
-  resource_stock:
+  resource_delta:
     electronics: 0.000000
-    food: 1548.217750
-    metal: 75.298492
-    water: 1301.205750
+    food: 0.000000
+    metal: 0.000000
+    water: 0.000000
 
-  buildings:
-  - mod_pop_small
-  - mod_water_mine
-
-- id: 3
-  name: Rhea
   resource_stock:
     electronics: 0.000000
     food: 0.000000
@@ -62,21 +105,14 @@ planets:
 
   buildings: []
 
-- id: 2
-  name: Tethys
-  resource_stock:
-    electronics: 600.000000
-    food: 1356.440000
+- id: 5
+  name: Iaeptus
+  resource_delta:
+    electronics: 0.000000
+    food: 0.000000
     metal: 0.000000
-    water: 1095.340750
+    water: 0.000000
 
-  buildings:
-  - mod_pop_small
-  - mod_water_mine
-  - mod_food_mine
-
-- id: 1
-  name: Encelladus
   resource_stock:
     electronics: 0.000000
     food: 0.000000
@@ -85,83 +121,57 @@ planets:
 
   buildings: []
 
-- id: 0
-  name: Mimas
+- id: 6
+  name: Phoebe
+  resource_delta:
+    electronics: 0.000000
+    food: 0.000000
+    metal: 0.000000
+    water: 0.000000
+
   resource_stock:
     electronics: 0.000000
     food: 0.000000
     metal: 0.000000
-    water: 150.596984
+    water: 0.000000
 
   buildings: []
 
 ships:
-- Isp: 30.000000
-  capacity: 1000.000000
-  dv: 30.000000
-  id: 9
+- class_id: shp_bulk_transport
+  id: 0
   is_parked: y
-  name: Express
+  name: Bulk transport
   payload_quantity: 0.000000
   payload_type: 0
   planet: Tethys
-  prepared_plans:
-  - arrival_planet: 4
-    departure_planet: 2
-    fuel_mass: 481.932627
-    primary_solution: 0
-    resource_transfer_id: 2
-    resource_transfer_qtt: 481.932627
-    arrival_time:
-      t: 268786.225292
+  prepared_plans: []
 
-    departure_time:
-      t: 169354.565080
-
-
-
-- Isp: 10.000000
-  capacity: 1000.000000
-  dv: 10.000000
-  id: 8
+- class_id: shp_light_transport
+  id: 1
   is_parked: n
   name: Light transport
-  payload_quantity: 794.134000
+  payload_quantity: 848.445438
   payload_type: 1
   prepared_plans:
-  - arrival_planet: 3
+  - arrival_planet: 1
     departure_planet: 2
-    fuel_mass: 794.134272
+    fuel_mass: 848.445465
     primary_solution: 0
     resource_transfer_id: 1
-    resource_transfer_qtt: 794.134272
+    resource_transfer_qtt: 848.445465
     arrival_time:
-      t: 220747.642780
+      t: 272538.497592
 
     departure_time:
-      t: 86412.162266
-
-
-  - arrival_planet: 2
-    departure_planet: 3
-    fuel_mass: 529.849816
-    primary_solution: 1
-    resource_transfer_id: 0
-    resource_transfer_qtt: 529.849816
-    arrival_time:
-      t: 426529.077510
-
-    departure_time:
-      t: 319626.939911
+      t: 202456.225118
 
 
 
-- Isp: 10.000000
-  capacity: 3000.000000
-  dv: 10.000000
-  id: 7
+- class_id: shp_express
+  id: 2
   is_parked: y
-  name: Bulk transport
+  name: Express
   payload_quantity: 0.000000
   payload_type: 0
   planet: Tethys

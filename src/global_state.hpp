@@ -6,6 +6,7 @@
 #include "transfer_plan.hpp"
 #include "datanode.hpp"
 #include "coordinate_transform.hpp"
+#include "quests.hpp"
 
 enum AgentType {
     TYPE_NONE,
@@ -19,14 +20,20 @@ struct Clickable {
 };
 
 bool IsIdValid(entity_id_t id);
-static inline entity_id_t GetInvalidId() { return entt::null; }
+static inline entity_id_t GetInvalidId() { return UINT32_MAX; }
 
 struct GlobalState {
     CoordinateTransform c_transf;
     Calendar calendar;
     TransferPlanUI active_transfer_plan;
+    QuestManager quest_manager;
+    Ships ships;
+    Planets planets;
+
     entity_id_t focused_planet;
     entity_id_t focused_ship;
+
+    int capital;
 
     // Lifecycle
     void Make(Time time);
@@ -37,11 +44,14 @@ struct GlobalState {
     // Draw
     void DrawState();
 
+    // Interaction
+    bool CompleteTransaction(int delta, const char* message);
+
     // Serialization
     void Serialize(DataNode* dn) const;
     void Deserialize(const DataNode* dn);
 
-    entt::registry registry;
+    //entt::registry registry;
     void _InspectState();
 };
 
@@ -49,9 +59,5 @@ GlobalState* GlobalGetState();
 Time GlobalGetNow();
 Time GlobalGetPreviousFrameTime();
 Planet* GetPlanetByName(const char* planet_name);
-
-#define GetPlanet(uuid) _GetPlanet(uuid, __FILE__, __LINE__)
-Ship& GetShip(entity_id_t uuid);
-Planet& _GetPlanet(entity_id_t uuid, const char* file, int line);
 
 #endif // GLOBAL_STATE_H

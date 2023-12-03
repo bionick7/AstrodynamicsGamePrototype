@@ -6,8 +6,12 @@
 #include "coordinate_transform.hpp"
 #include "logging.hpp"
 #include "buildings.hpp"
+#include "planetary_economy.hpp"
+#include "datanode.hpp"
 
 #define MAX_PLANET_BUILDINGS 20
+
+struct Planets;
 
 struct PlanetNature {
     char name[100];
@@ -21,12 +25,9 @@ struct Planet {
     double mu;
     double radius;
     Orbit orbit;
-
     OrbitPos position;
 
-    resource_count_t resource_stock[RESOURCE_MAX];
-    resource_count_t resource_capacity[RESOURCE_MAX];
-    resource_count_t resource_delta[RESOURCE_MAX];
+    PlanetaryEconomy economy;
 
     resource_count_t stats[STAT_MAX];
     BuildingInstance buildings[MAX_PLANET_BUILDINGS];
@@ -37,14 +38,11 @@ struct Planet {
     Planet() : Planet("UNNAMED", 0, 0) {};
     Planet(const char* name, double mu, double radius);
     void Serialize(DataNode* data) const;
-    void Deserialize(const DataNode* data);
+    void Deserialize(Planets* planets,const DataNode* data);
 
     void _OnClicked();
     double ScreenRadius() const;
     double GetDVFromExcessVelocity(Vector2 vel) const;
-
-    resource_count_t DrawResource(int resource, resource_count_t quantity);
-    resource_count_t GiveResource(int resource, resource_count_t quantity);
 
     void RecalcStats();
     void RequestBuild(int slot, building_index_t building_class);
@@ -55,7 +53,27 @@ struct Planet {
     void DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, ResourceTransfer transfer, double fuel_draw);
 };
 
-const PlanetNature* GetParentNature();
+struct Planets {
+    std::map<std::string, PlanetNature> ephemerides;
+    PlanetNature parent;
+    Planet* planet_array;
+    int planet_count;
+    int planet_array_iter;
+
+    Planets();
+    ~Planets();
+    void Init(entity_id_t p_planet_count);
+    entity_id_t AddPlanet(const DataNode* data);
+    Planet* GetPlanet(entity_id_t id) const;
+    entity_id_t GetPlanetCount() const;
+    Planet* GetPlanetByName(const char* planet_name) const;
+
+    const PlanetNature* GetParentNature() const;
+    int LoadEphemerides(const DataNode* data);
+};
+
+Planet* GetPlanet(entity_id_t id);
 int LoadEphemerides(const DataNode* data);
+
 
 #endif  // PLANET_H

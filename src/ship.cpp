@@ -3,10 +3,7 @@
 #include "global_state.hpp"
 #include "ui.hpp"
 #include "constants.hpp"
-
-std::map<std::string, shipclass_index_t> ship_classes_ids = std::map<std::string, shipclass_index_t>();
-ShipClass* ship_classes = NULL;
-size_t ship_classes_count = 0;
+#include "id_allocator.hpp"
 
 double ShipClass::GetFuelRequiredFull(double dv) const {
     // assuming max payload
@@ -22,55 +19,6 @@ double ShipClass::GetFuelRequiredEmpty(double dv) const {
     // oem = max_capacity / ((exp(dv_max/V_e) - 1) + 1)
     double oem = max_capacity / ((exp(max_dv/v_e) - 1) + 1);
     return oem * (exp(dv/v_e) - 1);
-}
-
-int LoadShipClasses(const DataNode* data) {
-    if (ship_classes != NULL) {
-        WARNING("Loading ship classes more than once (I'm not freeing this memory)");
-    }
-    ship_classes_count = data->GetArrayChildLen("ship_classes", true);
-    if (ship_classes_count == 0){
-        WARNING("No ship classes loaded")
-        return 0;
-    }
-    ship_classes = (ShipClass*) malloc(sizeof(ShipClass) * ship_classes_count);
-    for (int index=0; index < ship_classes_count; index++) {
-        const DataNode* ship_data = data->GetArrayChild("ship_classes", index);
-        ShipClass sc = {0};
-
-        strncpy(sc.name, ship_data->Get("name", "[NAME MISSING]"), SHIPCLASS_NAME_MAX_SIZE);
-        strncpy(sc.description, ship_data->Get("description", "[DESCRITION MISSING]"), SHIPCLASS_DESCRIPTION_MAX_SIZE);
-
-        sc.max_capacity = ship_data->GetF("capacity", 0) * 1000;  // t -> kg
-        sc.max_dv = ship_data->GetF("dv", 0) * 1000;  // km/s -> m/s
-        sc.v_e = ship_data->GetF("Isp", 0) * 1000;    // km/s -> m/s
-
-        ship_classes[index] = sc;
-        auto pair = ship_classes_ids.insert_or_assign(ship_data->Get("id", "_"), index);
-        ship_classes[index].id = pair.first->first.c_str();  // points to string in dictionary
-    }
-    return ship_classes_count;
-}
-
-shipclass_index_t GetShipClassIndexById(const char *id) {
-    auto find = ship_classes_ids.find(id);
-    if (find == ship_classes_ids.end()) {
-        ERROR("No such ship id '%s'", id)
-        return BUILDING_INDEX_INVALID;
-    }
-    return find->second;
-}
-
-const ShipClass* GetShipClassByIndex(shipclass_index_t index) {
-    if (ship_classes == NULL) {
-        ERROR("Ship Class uninitialized")
-        return NULL;
-    }
-    if (index >= ship_classes_count) {
-        ERROR("Invalid ship class index (%d >= %d or negative)", index, ship_classes_count)
-        return NULL;
-    }
-    return &ship_classes[index];
 }
 
 bool Ship::HasMouseHover(double* min_distance) const {
@@ -89,6 +37,7 @@ void Ship::_OnClicked() {
     } else {
         GlobalGetState()->focused_ship = id;
     }
+    HandleButtonSound(BUTTON_STATE_FLAG_JUST_PRESSED);
 }
 
 void Ship::_OnNewPlanClicked() {
@@ -144,9 +93,9 @@ void Ship::Deserialize(const DataNode* data) {
     strcpy(name, data->Get("name", "UNNAMED"));
     is_parked = strcmp(data->Get("is_parked", "y", true), "y") == 0;
     plan_edit_index = -1;
-    ship_class = GetShipClassIndexById(data->Get("class_id"));
+    ship_class = GlobalGetState()->ships.GetShipClassIndexById(data->Get("class_id"));
 
-    payload_type = data->GetI("payload_type", payload_type, true);
+    payload_type = (ResourceType) data->GetI("payload_type", payload_type, true);
     payload_quantity = data->GetF("payload_quantity", payload_quantity / 1000, true) * 1000;
 
 
@@ -224,7 +173,9 @@ void Ship::ConfirmEditedTransferPlan() {
 }
 
 void Ship::CloseEditedTransferPlan() {
-    RemoveTransferPlan(prepared_plans_count - 1);
+    int index = plan_edit_index;
+    plan_edit_index = -1;
+    RemoveTransferPlan(index);
 }
 
 void Ship::RemoveTransferPlan(int index) {
@@ -267,14 +218,14 @@ void Ship::Update() {
     Time now = GlobalGetNow();
 
     if (prepared_plans_count == 0 || (plan_edit_index == 0 && prepared_plans_count == 1)) {
-        position = GetPlanet(parent_planet).position;
+        position = GetPlanet(parent_planet)->position;
     } else {
         const TransferPlan& tp = prepared_plans[0];
         if (is_parked) {
             if (TimeIsEarlier(tp.departure_time, now)) {
                 _OnDeparture(tp);
             } else {
-                position = GetPlanet(parent_planet).position;
+                position = GetPlanet(parent_planet)->position;
             }
         } else {
             if (TimeIsEarlier(tp.arrival_time, now)) {
@@ -287,7 +238,7 @@ void Ship::Update() {
 
     draw_pos = GetScreenTransform()->TransformV(position.cartesian);
     if (is_parked) {
-        double rad = fmax(GetScreenTransform()->TransformS(GetPlanet(parent_planet).radius), 4) + 8.0;
+        double rad = fmax(GetScreenTransform()->TransformS(GetPlanet(parent_planet)->radius), 4) + 8.0;
         double phase = 20.0 /  rad * index_on_planet;
         draw_pos = Vector2Add(FromPolar(rad, phase), draw_pos);
     }
@@ -325,7 +276,7 @@ void Ship::Draw(const CoordinateTransform* c_transf) const {
     if (plan_edit_index >= 0 && IsIdValid(prepared_plans[plan_edit_index].arrival_planet)) {
         const TransferPlan& last_tp = prepared_plans[plan_edit_index];
         OrbitPos last_pos = OrbitGetPosition(
-            &GetPlanet(last_tp.arrival_planet).orbit, 
+            &GetPlanet(last_tp.arrival_planet)->orbit, 
             last_tp.arrival_time
         );
         Vector2 last_draw_pos = c_transf->TransformV(last_pos.cartesian);
@@ -354,7 +305,7 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
             text_size, MAIN_UI_COLOR
         );
 
-        UIContextEnclose(2, 2, BG_COLOR, color);
+        UIContextEnclose(BG_COLOR, color);
 
         char name_str[40];
         snprintf(name_str, 40, "%s (%s)", name, GetShipClassByIndex(ship_class)->name);
@@ -380,15 +331,15 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
             if (prepared_plans[i].resource_transfer.resource_id < 0){
                 resource_name = "EMPTY";
             } else {
-                resource_name = resources_names[prepared_plans[i].resource_transfer.resource_id];
+                resource_name = GetResourceData(prepared_plans[i].resource_transfer.resource_id).name;
             }
             if (IsIdValid(prepared_plans[i].departure_planet)) {
-                departure_planet_name = GetPlanet(prepared_plans[i].departure_planet).name;
+                departure_planet_name = GetPlanet(prepared_plans[i].departure_planet)->name;
             } else {
                 departure_planet_name = "NOT SET";
             }
             if (IsIdValid(prepared_plans[i].arrival_planet)) {
-                arrival_planet_name = GetPlanet(prepared_plans[i].arrival_planet).name;
+                arrival_planet_name = GetPlanet(prepared_plans[i].arrival_planet)->name;
             } else {
                 arrival_planet_name = "NOT SET";
             }
@@ -404,14 +355,16 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
             // Double Button
             UIContextPushInset(2, UIContextCurrent().GetLineHeight() * 2);
             UIContextPushHSplit(0, -32);
-            UIContextEnclose(0, 0, BG_COLOR, PALETTE_BLUE);
+            UIContextEnclose(BG_COLOR, PALETTE_BLUE);
             UIContextWrite(tp_str[0]);
             UIContextWrite(tp_str[1]);
-            ButtonStateFlags button_results = UIContextAsButton();
-            if (button_results & BUTTON_STATE_FLAG_HOVER) {
+            ButtonStateFlags button_state = UIContextAsButton();
+            HandleButtonSound(button_state & BUTTON_STATE_FLAG_JUST_PRESSED);
+            if (button_state & BUTTON_STATE_FLAG_HOVER) {
                 highlighted_plan_index = i;
             }
-            if (button_results & BUTTON_STATE_FLAG_JUST_PRESSED) {
+            if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+                INFO("PRESSED")
                 StartEditingPlan(i);
             }
             UIContextPop();
@@ -419,8 +372,10 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
             if (i != plan_edit_index) {
                 UIContextPushHSplit(-32, -1);
                 UIContextWrite("X");
-                UIContextEnclose(0, 0, BG_COLOR, PALETTE_BLUE);
-                if (UIContextAsButton() & BUTTON_STATE_FLAG_JUST_PRESSED) {
+                UIContextEnclose(BG_COLOR, PALETTE_BLUE);
+                ButtonStateFlags button_state = UIContextAsButton();
+                HandleButtonSound(button_state & BUTTON_STATE_FLAG_JUST_PRESSED);
+                if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
                     RemoveTransferPlan(i);
                 }
                 UIContextPop();
@@ -435,20 +390,13 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
 }
 
 void Ship::Inspect() {
-    if (is_parked) {
-        INFO("%s : parked on %s, %f m/s d", name, GetPlanet(parent_planet).name, GetShipClassByIndex(ship_class)->max_dv);
-    } else {
-        INFO("%s : in transfer[", name);
-        //OrbitPrint(&next_plan.transfer_orbit[next_plan.primary_solution]);
-        INFO("] %f m/s dv", GetShipClassByIndex(ship_class)->max_dv);
-    }
 }
 
 void Ship::_OnDeparture(const TransferPlan& tp) {
     payload_type = tp.resource_transfer.resource_id;
-    payload_quantity = GetPlanet(tp.departure_planet).DrawResource(tp.resource_transfer.resource_id, tp.resource_transfer.quantity);
+    payload_quantity = GetPlanet(tp.departure_planet)->economy.DrawResource(tp.resource_transfer.resource_id, tp.resource_transfer.quantity);
 
-    GetPlanet(tp.departure_planet).DrawResource(RESOURCE_WATER, tp.fuel_mass);
+    GetPlanet(tp.departure_planet)->economy.DrawResource(RESOURCE_WATER, tp.fuel_mass);
 
     char date_buffer[30];
     FormatTime(date_buffer, 30, tp.departure_time);
@@ -456,8 +404,8 @@ void Ship::_OnDeparture(const TransferPlan& tp) {
         date_buffer,
         name,
         payload_quantity,
-        resources_names[payload_type],
-        GetPlanet(parent_planet).name
+        GetResourceData(payload_type).name,
+        GetPlanet(parent_planet)->name
     );
 
     parent_planet = GetInvalidId();
@@ -469,11 +417,11 @@ void Ship::_OnDeparture(const TransferPlan& tp) {
 void Ship::_OnArrival(const TransferPlan& tp) {
     parent_planet = tp.arrival_planet;
     is_parked = true;
-    position = GetPlanet(parent_planet).position;
+    position = GetPlanet(parent_planet)->position;
     payload_type = tp.resource_transfer.resource_id;
-    payload_quantity = GetPlanet(tp.departure_planet).DrawResource(tp.resource_transfer.resource_id, tp.resource_transfer.quantity);
+    payload_quantity = GetPlanet(tp.departure_planet)->economy.DrawResource(tp.resource_transfer.resource_id, tp.resource_transfer.quantity);
 
-    resource_count_t delivered = GetPlanet(tp.arrival_planet).GiveResource(payload_type, payload_quantity);  // Ignore how much actually arrives (for now)
+    resource_count_t delivered = GetPlanet(tp.arrival_planet)->economy.GiveResource(payload_type, payload_quantity);  // Ignore how much actually arrives (for now)
 
     char date_buffer[30];
     FormatTime(date_buffer, 30, tp.arrival_time);
@@ -481,8 +429,8 @@ void Ship::_OnArrival(const TransferPlan& tp) {
         date_buffer,
         name,
         delivered,
-        resources_names[payload_type],
-        GetPlanet(parent_planet).name
+        GetResourceData(payload_type).name,
+        GetPlanet(parent_planet)->name
     );
     RemoveTransferPlan(0);
     Update();
@@ -504,4 +452,106 @@ void Ship::_EnsureContinuity() {
             RemoveTransferPlan(i);
         }
     }
+}
+
+Ships::Ships() {
+    alloc.Init();
+
+    ship_classes_ids = std::map<std::string, shipclass_index_t>();
+    ship_classes = NULL;
+    ship_classes_count = 0;
+}
+
+void Ships::ClearShips(){
+    alloc.Clear();
+}
+
+entity_id_t Ships::AddShip(const DataNode* data) {
+    //printf("Adding Ship N°%d\n", index)
+    //entity_map.insert({uuid, ship_entity});
+    Ship *ship;
+    int ship_entity = alloc.Allocate(&ship);
+    
+    ship->Deserialize(data);
+    if (ship->is_parked) {
+        const char* planet_name = data->Get("planet", "NO NAME SPECIFIED");
+        const Planet* planet = GlobalGetState()->planets.GetPlanetByName(planet_name);
+        if (planet == NULL) {
+            FAIL("Error while initializing ship '%s': no such planet '%s'", ship->name, planet_name)
+        }
+        ship->parent_planet = planet->id;
+    }
+
+    ship->id = (entity_id_t) ship_entity;
+    ship->Update();
+    return (entity_id_t) ship_entity;
+}
+
+int Ships::LoadShipClasses(const DataNode* data) {
+    if (ship_classes != NULL) {
+        WARNING("Loading ship classes more than once (I'm not freeing this memory)");
+    }
+    ship_classes_count = data->GetArrayChildLen("ship_classes", true);
+    if (ship_classes_count == 0){
+        WARNING("No ship classes loaded")
+        return 0;
+    }
+    ship_classes = (ShipClass*) malloc(sizeof(ShipClass) * ship_classes_count);
+    for (int index=0; index < ship_classes_count; index++) {
+        const DataNode* ship_data = data->GetArrayChild("ship_classes", index);
+        ShipClass sc = {0};
+
+        strncpy(sc.name, ship_data->Get("name", "[NAME MISSING]"), SHIPCLASS_NAME_MAX_SIZE);
+        strncpy(sc.description, ship_data->Get("description", "[DESCRITION MISSING]"), SHIPCLASS_DESCRIPTION_MAX_SIZE);
+
+        sc.max_capacity = ship_data->GetF("capacity", 0) * 1000;  // t -> kg
+        sc.max_dv = ship_data->GetF("dv", 0) * 1000;  // km/s -> m/s
+        sc.v_e = ship_data->GetF("Isp", 0) * 1000;    // km/s -> m/s
+
+        ship_classes[index] = sc;
+        auto pair = ship_classes_ids.insert_or_assign(ship_data->Get("id", "_"), index);
+        ship_classes[index].id = pair.first->first.c_str();  // points to string in dictionary
+    }
+    return ship_classes_count;
+}
+
+Ship* Ships::GetShip(entity_id_t id) const {
+    alloc.Get((int)id);
+    if ((!alloc.IsValidIndex((int)id))) {
+        FAIL("Invalid id (%d)", id)
+    }
+    return (Ship*) alloc.Get((int)id);
+}
+
+shipclass_index_t Ships::GetShipClassIndexById(const char *id) const { 
+    auto find = ship_classes_ids.find(id);
+    if (find == ship_classes_ids.end()) {
+        ERROR("No such ship id '%s'", id)
+        return BUILDING_INDEX_INVALID;
+    }
+    return find->second;
+}
+
+const ShipClass* Ships::GetShipClassByIndex(shipclass_index_t index) const {
+    if (ship_classes == NULL) {
+        ERROR("Ship Class uninitialized")
+        return NULL;
+    }
+    if (index >= ship_classes_count) {
+        ERROR("Invalid ship class index (%d >= %d or negative)", index, ship_classes_count)
+        return NULL;
+    }
+    return &ship_classes[index];
+}
+
+Ship* GetShip(entity_id_t uuid) {
+    return GlobalGetState()->ships.GetShip(uuid);
+}
+
+const ShipClass* GetShipClassByIndex(shipclass_index_t index) {
+    return GlobalGetState()->ships.GetShipClassByIndex(index);
+}
+
+int LoadShipClasses(const DataNode* data) {
+    return GlobalGetState()->ships.LoadShipClasses(data);
 }

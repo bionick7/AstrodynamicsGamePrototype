@@ -1,34 +1,43 @@
+capital: 1e5
 planets:
   - name: Mimas
-    resource_stock: []
-    buildings:
+    resource_stock:
+      water: 1000
+      food: 2000
+    resource_delta:
+      water: 0
+      food: 0
+    buildings: 
     - mod_water_extractor
   - name: Encelladus
-    resource_stock: []
-    buildings: []
+    resource_stock: {}
+    buildings: 
+    - mod_pop_small
+    - mod_food_mine
+    - mod_food_mine
   - name: Tethys
     resource_stock:
       water: 1000
       food: 2000
-      electronics: 600
-    buildings:
+      electronics: 6
+    resource_delta:
+      water: 0
+      food: -50
+    buildings: 
     - mod_pop_small
-    - mod_water_mine
     - mod_food_mine
     - mod_food_mine
   - name: Rhea
-    resource_stock: []
+    resource_stock: {}
     buildings: []
   - name: Titan
-    resource_stock:
-      water: 1000
-      food: 2000
+    resource_stock: {}
     buildings: []
   - name: Iaeptus
-    resource_stock: []
+    resource_stock: {}
     buildings: []
   - name: Phoebe
-    resource_stock: []
+    resource_stock: {}
     buildings: []
 
 ships:
@@ -39,7 +48,6 @@ ships:
   capacity: 3000  # t
   planet: Tethys
   tf_plans: []
-
 - name: Light transport
   class_id: shp_light_transport
   dv: 6
@@ -47,7 +55,6 @@ ships:
   capacity: 1000
   planet: Tethys
   tf_plans: []
-  
 - name: Express
   class_id: shp_express
   dv: 25

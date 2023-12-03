@@ -9,7 +9,7 @@ buildings:
   build_conditions: []
   build_cost: 
     metal: 600
-    electronics: 200
+    electronics: 1
 
 - id: mod_water_mine
   name: Water mine
@@ -33,7 +33,7 @@ buildings:
   stat_require:
     workforce: 250
   resource_delta:
-    food: +200  # t/day
+    food: +100  # t/day
   build_conditions: []
   build_cost: 
     metal: 500
@@ -53,13 +53,13 @@ buildings:
 - id: mod_pop_small
   name: Small settlement
   description: |
-    Barely mor compfort than a large ship, these places provide inhabitants with a place to
-    sleep, a place to eat and some public grounds like a cafeteria
+    Barely more compfortable than a large ship, these places provide inhabitants with a place to
+    sleep, a place to eat and some public grounds like a cafeteria.
   stat_increase:
-    population: 1000
-    workforce: 1000
+    population: 100000
+    workforce: 100000
   resource_delta:
-    food: -300  # t/day
+    food: -200  # t/day
   build_conditions: []
   build_cost:
     metal: 1000
@@ -68,13 +68,24 @@ buildings:
   name: Colony
   description: |
     Residential buildings, some commerial areas, an office or two and the odd third place
-    for the essentials for man to live.
+    for the essentials for man to live a livable life.
   stat_increase:
-    population: 5000
-    workforce: 5000
+    population: 5e5
+    workforce: 5e5
   resource_delta:
     water: -1000  # t/day
-    food: -2000  # t/day
+    food: -1000  # t/day
+  build_conditions: []
+  build_cost: 
+    metal: 4000
+    
+- id: mod_shipyard  #  shipyard stuff is hardcoded to this tag
+  name: Shipyard
+  description: |
+    SHIPYARD DESCRIPTION
+  resource_delta:
+    water: -1000  # t/day
+    food:  -2000  # t/day
   build_conditions: []
   build_cost: 
     metal: 4000

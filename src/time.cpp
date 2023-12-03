@@ -52,6 +52,14 @@ double TimeDays(Time x) {
     return x.__t / 86400;
 }
 
+Time GetInvalidTime() {
+    return Time(NAN);
+}
+
+bool IsTimeInvalid(Time x) {
+    isnan(x.__t);
+}
+
 char* FormatTime(char* buffer, int buffer_len, Time time) {
     time_t time_in_s = (time_t) time.__t;
 

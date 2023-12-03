@@ -1,5 +1,6 @@
 #include "app_meta.hpp"
 #include "constants.hpp"
+#include <time.h>
 
 const char* WINDOW_TITLE = "Astro navigation game prototype";
 
@@ -37,9 +38,12 @@ void AppMetaInit() {
     SetConfigFlags(FLAG_MSAA_4X_HINT);
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
+    
     SetExitKey(KEY_NULL);
     SetTargetFPS(60);
     SetWindowState(FLAG_WINDOW_RESIZABLE);
+
+    InitAudioDevice();
 }
 
 void AppMetaStep() {

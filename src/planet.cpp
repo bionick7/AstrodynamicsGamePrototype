@@ -4,18 +4,15 @@
 #include "utils.hpp"
 #include "constants.hpp"
 
-static std::map<std::string, PlanetNature> ephemerides = std::map<std::string, PlanetNature>();
-static PlanetNature parent = {0};
 
 Planet::Planet(const char* p_name, double p_mu, double p_radius) {
     strcpy(name, p_name);
     mu = p_mu;
     radius = p_radius;
     orbit = OrbitFromElements(1, 0, 0, 1, 0, true);
-    for (int i=0; i < RESOURCE_MAX; i++) {
-        resource_stock[i] = 0;
-        resource_delta[i] = 0;
-        resource_capacity[i] = 1e7;
+
+    for (int i = 0; i < MAX_PLANET_BUILDINGS; i++) {
+        buildings[i] = BuildingInstance(BUILDING_INDEX_INVALID);
     }
 }
 
@@ -25,9 +22,12 @@ void Planet::Serialize(DataNode* data) const {
     //data->SetF("radius", radius);
 
     DataNode* resource_node = data->SetChild("resource_stock", DataNode());
+    DataNode* resource_delta_node = data->SetChild("resource_delta", DataNode());
     for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-        resource_node->SetF(resources_names[resource_index], resource_stock[resource_index] / 1000);
+        resource_node->SetF(GetResourceData(resource_index).name, economy.resource_stock[resource_index] / 1000);
+        resource_delta_node->SetF(GetResourceData(resource_index).name, economy.resource_delta[resource_index] / 1000);
     }
+
     int last_building_index = 0;
     for(int i=0; i < MAX_PLANET_BUILDINGS; i++) 
         if (buildings[i].IsValid()) last_building_index = i;
@@ -41,12 +41,12 @@ void Planet::Serialize(DataNode* data) const {
     // We assume the orbital info is stored in the ephemerides
 }
 
-void Planet::Deserialize(const DataNode *data) {
+void Planet::Deserialize(Planets* planets, const DataNode *data) {
     //SettingOverridePush("datanode_quite", true);
     //SettingOverridePop("datanode_quite");
     strcpy(name, data->Get("name", name, true));
-    auto find = ephemerides.find(name);
-    if (find == ephemerides.end()) {
+    auto find = planets->ephemerides.find(name);
+    if (find == planets->ephemerides.end()) {
         ERROR("Could not find planet %s in ephemerides", name)
         return;
     }
@@ -59,7 +59,13 @@ void Planet::Deserialize(const DataNode *data) {
     const DataNode* resource_node = data->GetChild("resource_stock", true);
     if (resource_node != NULL) {
         for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-            resource_stock[resource_index] = resource_node->GetF(resources_names[resource_index], 0, true) * 1000;
+            economy.resource_stock[resource_index] = resource_node->GetF(GetResourceData(resource_index).name, 0, true) * 1000;
+        }
+    }
+    const DataNode* resource_delta_node = data->GetChild("resource_delta", true);
+    if (resource_delta_node != NULL) {
+        for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
+            economy.resource_delta[resource_index] = resource_delta_node->GetF(GetResourceData(resource_index).name, 0, true) * 1000;
         }
     }
 
@@ -74,6 +80,7 @@ void Planet::Deserialize(const DataNode *data) {
             buildings[i] = BuildingInstance(GetBuildingIndexById(building_id));
         }
     }
+    economy.RecalcEconomy();
 }
 
 void Planet::_OnClicked() {
@@ -100,34 +107,10 @@ double Planet::GetDVFromExcessVelocity(Vector2 vel) const {
     return sqrt(mu / (2*radius) + Vector2LengthSqr(vel));
 }
 
-resource_count_t Planet::DrawResource(int resource_id, resource_count_t quantity) {
-    // Returns how much of the resource the planet was able to give
-    if (resource_id < 0 || resource_id >= RESOURCE_MAX) {
-        return 0;
-    }
-    
-    resource_count_t transferred_resources = ClampInt(quantity, 0, resource_stock[resource_id]);
-    resource_stock[resource_id] -= transferred_resources;
-
-    return transferred_resources;
-}
-
-resource_count_t Planet::GiveResource(int resource, resource_count_t quantity) {
-    // Returns how much of the resource the planet was able to take
-    if (resource < 0 || resource >= RESOURCE_MAX) {
-        return 0;
-    }
-
-    resource_count_t transferred_resources = Clamp(quantity, 0, resource_capacity[resource]);
-    resource_stock[resource] += transferred_resources;
-
-    return transferred_resources;
-}
-
 void Planet::RecalcStats() {
     // Just call this every frame tbh
     for (int i = 0; i < RESOURCE_MAX; i++){
-        resource_delta[i] = 0;
+        economy.resource_delta[i] = 0;
     }
     
     for (int i = 0; i < STAT_MAX; i++){
@@ -136,7 +119,7 @@ void Planet::RecalcStats() {
 
     for (int i = 0; i < MAX_PLANET_BUILDINGS; i++) {
         if (buildings[i].IsValid()) {
-            buildings[i].Effect(&resource_delta[0], &stats[0]);
+            buildings[i].Effect(&economy.resource_delta[0], &stats[0]);
         }
     }
 }
@@ -144,10 +127,10 @@ void Planet::RecalcStats() {
 void Planet::RequestBuild(int slot, building_index_t building_class) {
     const BuildingClass* mc = GetBuildingByIndex(building_class);
     for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-        if (mc->build_costs[resource_index] > resource_stock[resource_index]) {
+        if (mc->build_costs[resource_index] > economy.resource_stock[resource_index]) {
             USER_INFO("Not enough %s (%f available, %f required)", 
-                resources_names[resource_index],
-                resource_stock [resource_index],
+                GetResourceData(resource_index).name,
+                economy.resource_stock[resource_index],
                 mc->build_costs[resource_index]
             )
             return;
@@ -157,7 +140,7 @@ void Planet::RequestBuild(int slot, building_index_t building_class) {
     buildings[slot] = instance;
 
     for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-        resource_stock[resource_index] -= mc->build_costs[resource_index];
+        economy.resource_stock[resource_index] -= mc->build_costs[resource_index];
     }
 }
 
@@ -174,13 +157,9 @@ bool Planet::HasMouseHover(double* min_distance) const {
 
 void Planet::Update() {
     Time now = GlobalGetNow();
-    Time prev = GlobalGetPreviousFrameTime();
-    RecalcStats();
     position = OrbitGetPosition(&orbit, now);
-    double delta_T = TimeDays(TimeSub(now, prev));
-    for (int i=0; i < RESOURCE_MAX; i++) {
-        resource_stock[i] = Clamp(resource_stock[i] + resource_delta[i] * delta_T, 0, resource_capacity[i]);
-    }
+    // RecalcStats();
+    economy.Update();
 }
 
 void Planet::Draw(const CoordinateTransform* c_transf) {
@@ -197,44 +176,10 @@ void Planet::Draw(const CoordinateTransform* c_transf) {
 
     if (mouse_hover) {
         // Hover
-        DrawCircleLines(screen_x, screen_y, 10, TRANSFER_UI_COLOR);
+        DrawCircleLines(screen_x, screen_y, 20, TRANSFER_UI_COLOR);
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             _OnClicked();
         }
-    }
-}
-
-void _UIDrawResources(
-    const resource_count_t resource_stock[], const resource_count_t resource_delta[], const resource_count_t resource_cap[], 
-    const ResourceTransfer& transfer, double fuel_draw
-) {
-    for (int i=0; i < RESOURCE_MAX; i++) {
-        char buffer[50];
-        //sprintf(buffer, "%-10s %5d/%5d (%+3d)", resources_names[i], qtt, cap, delta);
-        sprintf(buffer, "%-10s %3.1fT (%+3d T/d)", resources_names[i], resource_stock[i] / 1e3, (int)(resource_delta[i]/1e3));
-        UIContextPushInset(0, 18);
-            if (GlobalGetState()->active_transfer_plan.IsActive()) {
-                // Button
-                if (UIContextDirectButton(transfer.resource_id == i ? "X" : " ", 2) & BUTTON_STATE_FLAG_JUST_PRESSED) {
-                    GlobalGetState()->active_transfer_plan.SetResourceType(i);
-                }
-            }
-            UIContextWrite(buffer, false);
-
-            double qtt = 0;
-            if (transfer.resource_id == i) {
-                qtt += transfer.quantity;
-            }
-            if (fuel_draw > 0 && i == RESOURCE_WATER) {
-                qtt -= fuel_draw;
-            }
-            if (qtt != 0) {
-                sprintf(buffer, "   %+3.1fK", qtt / 1000);
-                UIContextWrite(buffer, false);
-            }
-            UIContextFillline(resource_stock[i] / resource_cap[i], MAIN_UI_COLOR, BG_COLOR);
-        UIContextPop();  // Inset
-        //TextBoxLineBreak(&tb);
     }
 }
 
@@ -247,6 +192,27 @@ void _UIDrawStats(const resource_count_t stats[]) {
     }
 }
 
+void _UIDrawBuildings(Planet* planet) {
+    // Draw buildings
+    int current_width = UIContextCurrent().width;
+    UIContextPushInset(0, UIContextCurrent().height - UIContextCurrent().y_cursor);
+    UIContextPushHSplit(0, current_width/2);
+    for (int i = 0; i < MAX_PLANET_BUILDINGS; i += 2) {
+        if (planet->buildings[i].UIDraw()) {
+            BuildingConstructionOpen(planet->id, i);
+        }
+    }
+    UIContextPop();  // HSplit
+    UIContextPushHSplit(current_width/2, current_width);
+    for (int i = 1; i < MAX_PLANET_BUILDINGS; i += 2) {
+        if (planet->buildings[i].UIDraw()) {
+            BuildingConstructionOpen(planet->id, i);
+        }
+    }
+    UIContextPop();  // HSplit
+}
+
+int current_tab = 0;  // Global variable, I suppose
 void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, ResourceTransfer transfer, double fuel_draw) {
     if (upper_quadrant) {
         UIContextCreate(10, 10, 16*30, GetScreenHeight() / 2 - 20, 16, MAIN_UI_COLOR);
@@ -255,38 +221,95 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
     }
     UIContextCurrent().Enclose(2, 2, BG_COLOR, MAIN_UI_COLOR);
 
-    UIContextWrite(name);
-    UIContextWrite("-------------------------");
-    _UIDrawResources(resource_stock, resource_delta, resource_capacity, transfer, fuel_draw);
-    UIContextWrite("-------------------------");
-    _UIDrawStats(stats);
-    UIContextWrite("-------------------------");
+    UIContextPushInset(4, 20);  // Tab container
+    int w = UIContextCurrent().width;
+    const int n_tabs = 4;
+    const char* tab_descriptions[4] = {
+        "resources",
+        "economy",
+        "buildings",
+        "---"
+    };
+    for (int i=0; i < n_tabs; i++) {
+        UIContextPushHSplit(i * w / n_tabs, (i + 1) * w / n_tabs);
+        ButtonStateFlags button_state = UIContextAsButton();
+        HandleButtonSound(button_state & BUTTON_STATE_FLAG_JUST_PRESSED);
+        if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+            current_tab = i;
+        }
+        if (button_state & BUTTON_STATE_FLAG_HOVER || i == current_tab) {
+            UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
+        }
+        UIContextWrite(tab_descriptions[i]);
+        UIContextPop();  // HSplit
+    }
+    UIContextPop();  // Tab container
 
-    // Draw buildings
-    int current_width = UIContextCurrent().width;
-    UIContextPushInset(0, UIContextCurrent().height - UIContextCurrent().y_cursor);
-    UIContextPushHSplit(0, current_width/2);
-    for (int i = 0; i < MAX_PLANET_BUILDINGS; i += 2) {
-        if (buildings[i].UIDraw()) {
-            BuildingConstructionOpen(id, i);
-        }
+    UIContextWrite(name);
+    UIContextFillline(1, MAIN_UI_COLOR, MAIN_UI_COLOR);
+    //_UIDrawStats(stats);
+    if (current_tab == 0) {
+        economy.UIDrawResources(transfer, fuel_draw);
     }
-    UIContextPop();  // HSplit
-    UIContextPushHSplit(current_width/2, current_width);
-    for (int i = 1; i < MAX_PLANET_BUILDINGS; i += 2) {
-        if (buildings[i].UIDraw()) {
-            BuildingConstructionOpen(id, i);
-        }
+    if (current_tab == 1) {
+        economy.UIDrawEconomy(transfer, fuel_draw);
     }
-    UIContextPop();  // HSplit
-    UIContextPop();  // Inset
+    if (current_tab == 2) {
+        _UIDrawBuildings(this);
+    }
+
+    UIContextPop();  // Outside
 }
 
-const PlanetNature* GetParentNature() {
+Planets::Planets() {
+    planet_array = NULL;
+    planet_count = 0;
+    planet_array_iter = 0;
+}
+
+Planets::~Planets() {
+    delete[] planet_array;
+}
+
+void Planets::Init(entity_id_t p_planet_count) {
+    planet_count = p_planet_count;
+    planet_array = new Planet[planet_count];
+    parent = {0};
+    ephemerides = std::map<std::string, PlanetNature>();
+}
+
+entity_id_t Planets::AddPlanet(const DataNode* data) {
+    //entity_map.insert({uuid, planet_entity});
+    entity_id_t id = planet_array_iter++;
+    planet_array[id].Deserialize(this, data);
+    planet_array[id].Update();
+    planet_array[id].id = id;
+    return id;
+}
+
+Planet* Planets::GetPlanet(entity_id_t id) const {
+    return &planet_array[(int)id];
+}
+
+entity_id_t Planets::GetPlanetCount() const {
+    return planet_count;
+}
+
+Planet* Planets::GetPlanetByName(const char* planet_name) const {
+    // Returns NULL if planet_name not found
+    for(int i=0; i < planet_count; i++) {
+        if (strcmp(planet_array[i].name, planet_name) == 0) {
+            return &planet_array[i];
+        }
+    }
+    return NULL;
+}
+
+const PlanetNature* Planets::GetParentNature() const {
     return &parent;
 }
 
-int LoadEphemerides(const DataNode* data) {
+int Planets::LoadEphemerides(const DataNode* data) {
     // Init planets
     parent.radius = data->GetF("radius");
     parent.mu = data->GetF("mass") * G;
@@ -316,3 +339,6 @@ int LoadEphemerides(const DataNode* data) {
     }
     return num_planets;
 }
+
+Planet* GetPlanet(entity_id_t id) { return GlobalGetState()->planets.GetPlanet(id); }
+int LoadEphemerides(const DataNode* data) { return GlobalGetState()->planets.LoadEphemerides(data); }

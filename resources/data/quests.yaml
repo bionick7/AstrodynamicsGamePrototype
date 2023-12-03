@@ -1,0 +1,15 @@
+contractors:
+- Lagrange labs
+- Bayer Bosch
+- The enclave
+- General Cosmonautics
+
+# (Bulk) Transfer XXX T of cargo from AAA to BBB (people, special payload)
+# (Reach) Transfer XXX T of cargo from AAA to BBB (people, special payload)
+# (Time) Transfer XXX T of cargo from AAA to BBB (people, special payload)
+# Deliver XXX T of YYY to BBB
+resource_missions:
+- qtt: [20 50]
+  resc: food
+  from: any
+  to: any

@@ -4,6 +4,7 @@
 #include "planet.hpp"
 #include "transfer_plan.hpp"
 #include "datanode.hpp"
+#include "id_allocator.hpp"
 
 #define SHIP_MAX_PREPARED_PLANS 10
 #define SHIPCLASS_NAME_MAX_SIZE 64
@@ -26,10 +27,6 @@ struct ShipClass {
     double GetFuelRequiredFull(double dv) const;
 };
 
-int LoadShipClasses(const DataNode* data);
-shipclass_index_t GetShipClassIndexById(const char* id);
-const ShipClass* GetShipClassByIndex(shipclass_index_t index);
-
 struct Ship {
     // Inherent properties
     char name[SHIP_NAME_MAX_SIZE];
@@ -48,7 +45,7 @@ struct Ship {
     int highlighted_plan_index;
 
     // Payload
-    int payload_type = 0;
+    ResourceType payload_type = RESOURCE_NONE;
     resource_count_t payload_quantity = 0;
 
     // UI state
@@ -75,7 +72,6 @@ struct Ship {
     void RemoveTransferPlan(int index);
     void StartEditingPlan(int index);
 
-private:
     TransferPlan* _NewTransferPlan();
     void _OnDeparture(const TransferPlan &tp);
     void _OnArrival(const TransferPlan &tp);
@@ -83,5 +79,26 @@ private:
     void _OnNewPlanClicked();
     void _OnClicked();
 };
+
+struct Ships {
+    Ships();
+    entity_id_t AddShip(const DataNode* data);
+    int LoadShipClasses(const DataNode* data);
+    void ClearShips();
+
+    Ship* GetShip(entity_id_t uuid) const;
+    shipclass_index_t GetShipClassIndexById(const char* id) const;
+    const ShipClass* GetShipClassByIndex(shipclass_index_t index) const;
+
+    IDAllocatorList<Ship> alloc;
+private:
+    std::map<std::string, shipclass_index_t> ship_classes_ids;
+    ShipClass* ship_classes;
+    size_t ship_classes_count;
+};
+
+Ship* GetShip(entity_id_t uuid);
+const ShipClass* GetShipClassByIndex(shipclass_index_t index);
+int LoadShipClasses(const DataNode* data);
 
 #endif  // SHIP_H

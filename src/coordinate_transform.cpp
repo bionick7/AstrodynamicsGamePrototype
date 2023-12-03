@@ -78,7 +78,7 @@ void Calendar::DrawUI() const {
     if (CheckCollisionPointRec(GetMousePosition(), mouse_collider) || GetMousePosition().y < 4) {
         char buffer[30];
         char* buffer2 = FormatTime(buffer, 30, TimeSub(migration_arrrival_time, GlobalGetNow()));
-        strncpy(buffer2, GetPlanet(migration_arrrival_planet).name, 30 - (buffer2 - buffer));
+        strncpy(buffer2, GetPlanet(migration_arrrival_planet)->name, 30 - (buffer2 - buffer));
         Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), buffer, 16, 1);
         if (progress_x > GetScreenWidth() - text_size.x - 200) {
             progress_x = GetScreenWidth() - text_size.x - 200;

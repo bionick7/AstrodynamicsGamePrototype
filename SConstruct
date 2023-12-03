@@ -7,7 +7,7 @@ platform = "linux"
 build = "debug"
 
 # Define variables
-src_dirs = ['src']
+src_dirs = ['src', 'src/core']
 include_dirs = ['include']
 lib_dir = 'lib'
 
@@ -42,9 +42,9 @@ def main():
     flags = []
     defines = []
     flags += ['-Wall', '-Wno-narrowing', '-Wno-sign-compare']  # Warnings we care about
-    if build == "debug":
-        flags.append("-ggdb")
-    elif build == "release":
+    if build == 'debug':
+        flags.append('-ggdb')
+    elif build == 'release':
         defines.append('LOGGING_DISABLE')
 
     env.Append(CPPPATH = src_dirs + include_dirs)

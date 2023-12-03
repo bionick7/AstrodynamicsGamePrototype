@@ -80,7 +80,7 @@ int _YamlParse(DataNode* node, const char* filepath, bool quiet) {
         if (event.type == YAML_MAPPING_START_EVENT) break;
     }
     yaml_event_delete(&event);
-    int status = DataNode::FromYaml(node, &parser, false, 0);
+    int status = DataNode::FromYaml(node, filepath, &parser, false, 0);
     if (status != 0) {
         FAIL("Error when reading '%s'", filepath)
     }
@@ -161,7 +161,7 @@ const char* _GetSpaces(int indent_level) {
     return &INDENTS[MAX_INDENT - indent_level];
 }
 
-int DataNode::FromYaml(DataNode* node, yaml_parser_t* parser, bool is_readonly, int recursion_depth) {
+int DataNode::FromYaml(DataNode* node, const char* filename, yaml_parser_t* parser, bool is_readonly, int recursion_depth) {
     node->IsReadOnly = false;
     yaml_event_t event;
 
@@ -175,7 +175,7 @@ int DataNode::FromYaml(DataNode* node, yaml_parser_t* parser, bool is_readonly, 
 
         // Get the next event.
         if (!yaml_parser_parse(parser, &event)){
-            ERROR("Parsing error at pos %s: '%s'", parser->problem_mark, parser->problem);
+            ERROR("Parsing error at %s:%d : '%s %s'", filename, parser->problem_mark.line, parser->problem, parser->context);
             goto error;
         }
 
@@ -225,7 +225,7 @@ int DataNode::FromYaml(DataNode* node, yaml_parser_t* parser, bool is_readonly, 
                 // Recurse
                 DataNode child_node = DataNode();
                 // Consumes everything up to and inlcuding the corresponding end event
-                int status = DataNode::FromYaml(&child_node, parser, is_readonly, recursion_depth+1);
+                int status = DataNode::FromYaml(&child_node, filename, parser, is_readonly, recursion_depth+1);
                 //INFO("%sChild constructed\n", indent);
                 if (status != 0) {
                     ERROR("Error occured in child '%s'\n", key_name);

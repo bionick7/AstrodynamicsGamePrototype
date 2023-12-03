@@ -1,6 +1,7 @@
 #include "ui.hpp"
 #include "logging.hpp"
 #include "constants.hpp"
+#include "audio_server.hpp"
 #include <stack>
 
 Font default_font;
@@ -15,30 +16,44 @@ void DrawTextAligned(const char* text, Vector2 pos, TextAlignment alignment, Col
         // Do nothing
     }
     if (alignment & TEXT_ALIGNMENT_VCENTER) {
-        pos.x -= size.x / 2;
+        pos.y -= size.y / 2;
     } else if (alignment & TEXT_ALIGNMENT_BOTTOM) {
-        pos.x -= size.x;
-    } else {  // left - aligned
+        pos.y -= size.y;
+    } else {  // top - aligned
         // Do nothing
     }
     Vector2 bottom_left = Vector2Subtract(pos, Vector2Scale(size, 0.5));
     DrawTextEx(GetCustomDefaultFont(), text, bottom_left, 16, 1, c);
 }
 
-ButtonStateFlags _GetButtonState(bool is_in_area) {
+ButtonStateFlags _GetButtonState(bool is_in_area, bool was_in_area) {
     ButtonStateFlags res = BUTTON_STATE_FLAG_NONE;
     if (is_in_area) {
         SetMouseCursor(MOUSE_CURSOR_CROSSHAIR);
         res |= BUTTON_STATE_FLAG_HOVER;
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) res |= BUTTON_STATE_FLAG_PRESSED;
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) res |= BUTTON_STATE_FLAG_JUST_PRESSED;
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))     res |= BUTTON_STATE_FLAG_PRESSED;
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))  res |= BUTTON_STATE_FLAG_JUST_PRESSED;
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) res |= BUTTON_STATE_FLAG_JUST_UNPRESSED;
+
+        if (!was_in_area) res |= BUTTON_STATE_FLAG_JUST_HOVER_IN;
     }
+    if (was_in_area && !is_in_area) res |= BUTTON_STATE_FLAG_JUST_HOVER_OUT;
+
     return res;
+}
+
+void HandleButtonSound(ButtonStateFlags state) {
+    if (state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+        PlaySFX(SFX_CLICK_BUTTON);
+    }
+    if (state & BUTTON_STATE_FLAG_JUST_HOVER_IN) {
+        PlaySFX(SFX_CLICK_SHORT);
+    }
 }
 
 TextBox::TextBox(int x, int y, int w, int h, int ptext_size, Color color) {
     ASSERT(w > 0)
-    ASSERT(h > 0)
+    ASSERT(h >= 0)
     text_start_x = x;
     text_start_y = y;
     text_margin_x = 2;
@@ -118,20 +133,27 @@ ButtonStateFlags TextBox::WriteButton(const char* text, int inset) {
     if (inset >= 0) {
         size.x += 2*inset;
         size.y += 2*inset;
-        DrawRectangleLines(pos.x, pos.y, size.x, size.y, PALETTE_BLUE);
         pos.x += inset;
         pos.y += inset;
     }
-    x_cursor += size.x + text_margin_x;
-    DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, PALETTE_BLUE);
     bool is_in_area = CheckCollisionPointRec(GetMousePosition(), {pos.x, pos.y, size.x, size.y});
+    ButtonStateFlags res = _GetButtonState(
+        is_in_area,
+        CheckCollisionPointRec(Vector2Subtract(GetMousePosition(), GetMouseDelta()), {pos.x, pos.y, size.x, size.y})
+    );
+    Color c = is_in_area ? MAIN_UI_COLOR : PALETTE_BLUE;
+    DrawRectangleLines(pos.x - inset, pos.y - inset, size.x, size.y, c);
+    DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, c);
     _Advance(size);
-    return _GetButtonState(is_in_area);
+    return res;
 }
 
 ButtonStateFlags TextBox::AsButton() {
     bool is_in_area = CheckCollisionPointRec(GetMousePosition(), {(float)text_start_x, (float)text_start_y, (float)width, (float)height});
-    return _GetButtonState(is_in_area);
+    return _GetButtonState(
+        CheckCollisionPointRec(GetMousePosition(), {(float)text_start_x, (float)text_start_y, (float)width, (float)height}),
+        CheckCollisionPointRec(Vector2Subtract(GetMousePosition(), GetMouseDelta()), {(float)text_start_x, (float)text_start_y, (float)width, (float)height})
+    );
 }
 
 std::stack<TextBox> text_box_stack = std::stack<TextBox>();
@@ -144,18 +166,35 @@ void UIContextCreate(int x, int y, int w, int h, int text_size, Color color) {
     text_box_stack.push(new_text_box);
 }
 
-void UIContextPushInset(int margin, int h) {
+int UIContextPushInset(int margin, int h) {
+    // Returns the actual height
     TextBox& tb = UIContextCurrent();
     tb.EnsureLineBreak();
+    int height = fmin(h, fmax(0, tb.height - tb.y_cursor - 2*margin));
     TextBox new_text_box = TextBox(
         tb.text_start_x + tb.x_cursor + margin,
         tb.text_start_y + tb.y_cursor + margin,
         tb.width - tb.x_cursor - 2*margin,
-        fmin(tb.height - tb.y_cursor - 2*margin, h),
+        height,
         tb.text_size,
         tb.text_color
     );
     tb.y_cursor += h + 2*margin;
+    text_box_stack.push(new_text_box);
+    return height;
+}
+
+void UIContextPushInline(int margin) {
+    TextBox& tb = UIContextCurrent();
+    TextBox new_text_box = TextBox(
+        tb.text_start_x + tb.x_cursor + margin,
+        tb.text_start_y,
+        tb.width - tb.x_cursor - 2*margin,
+        tb.height,
+        tb.text_size,
+        tb.text_color
+    );
+    tb.x_cursor = tb.width;
     text_box_stack.push(new_text_box);
 }
 
@@ -195,8 +234,15 @@ void UIContextPop() {
     text_box_stack.pop();
 }
 
-void UIContextEnclose(int inset_x, int inset_y, Color background_color, Color line_color) {
-    UIContextCurrent().Enclose(inset_x, inset_y, background_color, line_color);
+void UIContextShrink(int dx, int dy) {
+    UIContextCurrent().text_start_x += dx;
+    UIContextCurrent().text_start_y += dy;
+    UIContextCurrent().width -= 2*dx;
+    UIContextCurrent().height -= 2*dy;
+}
+
+void UIContextEnclose(Color background_color, Color line_color) {
+    UIContextCurrent().Enclose(1, 1, background_color, line_color);
 }
 
 void UIContextWrite(const char* text, bool linebreak) {
@@ -219,7 +265,9 @@ void UIContextFillline(double value, Color fill_color, Color background_color) {
 
 ButtonStateFlags UIContextDirectButton(const char* text, int inset) {
     TextBox& tb = UIContextCurrent();
-    return tb.WriteButton(text, inset);
+    ButtonStateFlags button_state = tb.WriteButton(text, inset);
+    HandleButtonSound(button_state);
+    return button_state;
 }
 
 
@@ -269,7 +317,10 @@ ButtonStateFlags DrawTriangleButton(Vector2 point, Vector2 base, double width, C
     } else {
         DrawTriangleLines(side_1, point, side_2, PALETTE_BLUE);
     }
-    return _GetButtonState(is_in_area);
+    return _GetButtonState(
+        is_in_area,
+        CheckCollisionPointTriangle(Vector2Subtract(GetMousePosition(), GetMouseDelta()), side_1, point, side_2)
+    );
 }
 
 ButtonStateFlags DrawCircleButton(Vector2 midpoint, double radius, Color color) {
@@ -279,5 +330,8 @@ ButtonStateFlags DrawCircleButton(Vector2 midpoint, double radius, Color color) 
     } else {
         DrawCircleLines(midpoint.x, midpoint.y, radius, PALETTE_BLUE);
     }
-    return _GetButtonState(is_in_area);
+    return _GetButtonState(
+        is_in_area,
+        CheckCollisionPointCircle(Vector2Subtract(GetMousePosition(), GetMouseDelta()), midpoint, radius)
+    );
 }

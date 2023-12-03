@@ -1,11 +1,14 @@
 #include "transfer_plan.hpp"
 #include "datanode.hpp"
 #include "app_meta.hpp"
+#include "audio_server.hpp"
 
 // For tests
 #include "global_state.hpp"
 #include "constants.hpp"
 #include "ui.hpp"
+#include "id_allocator.hpp"
+#include "string_builder.hpp"
 
 const char* GetSetting(int argc, const char** argv, const char* find) {
     for (int i=0; i < argc; i++) {
@@ -23,23 +26,29 @@ const char* GetSetting(int argc, const char** argv, const char* find) {
 }
 
 int UnitTests() {
-    printf("Running Tests\n");
+    INFO("Running Tests");
     RETURN_OR_CONTINUE(TransferPlanTests());
     RETURN_OR_CONTINUE(DataNodeTests());
     RETURN_OR_CONTINUE(TimeTests());
-    printf("All tests Sucessfull\n");
+    RETURN_OR_CONTINUE(IDAllocatorListTests());
+    RETURN_OR_CONTINUE(StringBuilderTests());
+    INFO("All tests Sucessfull\n");
     return 0;
 }
 
 void Load(int argc, const char** argv) {
-    INFO("Init complete");
+    INFO("Init from working directory: '%s'", GetWorkingDirectory());
+    SetRandomSeed(0);  // For consistency
+
     UIInit();
+    GetAudioServer()->LoadSFX("unused string input :)");
+    GetAudioServer()->StartMusic();
 
     GlobalState* app = GlobalGetState();
-    INFO("cwd: '%s'", GetWorkingDirectory());
     app->Make(1e6);
     app->LoadData();
     app->LoadGame("resources/data/start_state.yaml");
+
 
     // Interpreting cmdline
     const char* building_outp_fp = GetSetting(argc, argv, "--building_outp");
@@ -74,6 +83,6 @@ int main(int argc, const char** argv) {
         MainLoopStep(app);
     }
 
-    CloseWindow();                  // Close window and OpenGL context
+    CloseWindow();  // Close window and OpenGL context
     return 0;
 }
