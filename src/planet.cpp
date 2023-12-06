@@ -329,7 +329,7 @@ int Planets::LoadEphemerides(const DataNode* data) {
         
         double sma = planet_data->GetF("SMA");
         double ann = planet_data->GetF("Ann") * DEG2RAD;
-        timemath::Time epoch = timemath::TimeSub(GlobalGetNow(), timemath::Time(ann / sqrt(parent.mu / (sma*sma*sma))));
+        timemath::Time epoch = timemath::Time(PosMod(ann, 2*PI) / sqrt(parent.mu / (sma*sma*sma)));
 
         nature->mu = planet_data->GetF("mass") * G;
         nature->radius = planet_data->GetF("radius");
