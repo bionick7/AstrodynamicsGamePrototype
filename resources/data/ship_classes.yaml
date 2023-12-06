@@ -4,8 +4,8 @@ ship_classes:
   description: >
     A larger variant that carries tripple the fuel and triple the engines
     of a traditional C1K-998. 
-  dv: 4  # km/s
-  Isp: 4  # km/s
+  dv: 6  # km/s
+  Isp: 4.5  # km/s
   capacity: 3000  # t
   
 - id: shp_light_transport
@@ -19,13 +19,13 @@ ship_classes:
     popularity due to their large maintenancy ecosystem and their independance 
     of nuclear fuel.
   dv: 6
-  Isp: 4
+  Isp: 4.5
   capacity: 1000
   
 - id: shp_express
   name: Express
   description: >
     High-end ship
-  dv: 25
-  Isp: 20
+  dv: 12
+  Isp: 10
   capacity: 1000

@@ -142,9 +142,14 @@ void _HandleDeselect(GlobalState* gs) {
 
     // Cancel out of next layer
     PlaySFX(SFX_CANCEL);
+    if(false);
 
+    // out of quest menu
+    else if (gs->quest_manager.show_ui) {
+        gs->quest_manager.show_ui = false;
+    } 
     // cancel out of focused planet and ship
-    if (BuildingConstructionIsOpen()) {
+    else if (BuildingConstructionIsOpen()) {
         BuildingConstructionClose();
     } 
 
@@ -152,16 +157,13 @@ void _HandleDeselect(GlobalState* gs) {
     else if (gs->active_transfer_plan.IsActive() || gs->active_transfer_plan.IsSelectingDestination()) {
         gs->active_transfer_plan.Abort();
     } 
+    
     // cancel out of focused planet and ship
     else if (IsIdValid(gs->focused_planet) || IsIdValid(gs->focused_ship)) {
         gs->focused_planet = GetInvalidId();
         gs->focused_ship = GetInvalidId();
     } 
 
-    // out of quest menu
-    else if (gs->quest_manager.show_ui) {
-        gs->quest_manager.show_ui = false;
-    } 
     // toggle pause
     else {
         is_in_pause_menu = !is_in_pause_menu;
@@ -196,7 +198,7 @@ void _UpdateShipsPlanets(GlobalState* gs) {
     }
     switch (hover.type) {
     case TYPE_PLANET: GetPlanet(hover.id)->mouse_hover = true; break;
-    case TYPE_SHIP: GetShip(hover.id)->mouse_hover = true; break;
+    case TYPE_SHIP: gs->ships.GetShip(hover.id)->mouse_hover = true; break;
     case TYPE_NONE:
     default: break;
     }
@@ -243,7 +245,6 @@ void GlobalState::DrawState() {
     char capital_str[14];
     sprintf(capital_str, "%6d.%3d M$", capital / (int)1e6, capital % 1000000 / 1000);
     DrawTextAligned(capital_str, {GetScreenWidth() / 2.0f, 10}, TEXT_ALIGNMENT_HCENTER & TEXT_ALIGNMENT_TOP, MAIN_UI_COLOR);
-    quest_manager.Draw();
 
     // 
     for (entity_id_t planet_id = 0; planet_id < planets.GetPlanetCount(); planet_id++) {
@@ -266,6 +267,7 @@ void GlobalState::DrawState() {
         ship->DrawUI(&c_transf);
     }
     active_transfer_plan.DrawUI();
+    quest_manager.Draw();
 
     if (is_in_pause_menu){
         _PauseMenu();

@@ -44,9 +44,24 @@ StringBuilder& StringBuilder::AddLine(const char *add_str) {
     return *this;
 }
 
+StringBuilder& StringBuilder::AddFormat(const char* fmt, ...) {
+    char buffer[100];  // How much is enough?
+    va_list args;
+    va_start(args, fmt);
+    vsprintf(buffer, fmt, args);
+    va_end(args);
+
+    int write_offset = length - 1;
+    length += strlen(buffer);
+    c_str = (char*)realloc(c_str, length);
+    strcpy(c_str + write_offset, buffer);
+    c_str[length - 1] = '\0';
+    return *this;
+}
+
 StringBuilder& StringBuilder::AddF(double num) {
     char buffer[12];  // How much is enough?
-    if (abs(num) > 1e3 || abs(num) < 1e-3) {
+    if (abs(num) > 1e4 || abs(num) < 1e-4) {
         sprintf(buffer, "%.4e", num);
     } else {
         sprintf(buffer, "%.7f", num);
@@ -107,6 +122,13 @@ int StringBuilderTests() {
     const char* test_str = "-1.0000e+10 - 15.8400000 -  0M 14D 13H - 2080Y  1M 15D 13H";
     if (strcmp(sb.c_str, test_str) != 0) {
         ERROR("Expected '%s', got '%s'", test_str, sb.c_str);
+        return 1;
+    }
+    sb.Clear();
+    sb.AddFormat("%05d %X , %s", 17, 32, "Trololo");
+    const char* test_str2 = "00017 20 , Trololo";
+    if (strcmp(sb.c_str, test_str2) != 0) {
+        ERROR("Expected '%s', got '%s'", test_str2, sb.c_str);
         return 1;
     }
 }

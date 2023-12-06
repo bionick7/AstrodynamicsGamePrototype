@@ -228,7 +228,7 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
         "resources",
         "economy",
         "buildings",
-        "---"
+        "quests"
     };
     for (int i=0; i < n_tabs; i++) {
         UIContextPushHSplit(i * w / n_tabs, (i + 1) * w / n_tabs);
@@ -248,14 +248,16 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
     UIContextWrite(name);
     UIContextFillline(1, MAIN_UI_COLOR, MAIN_UI_COLOR);
     //_UIDrawStats(stats);
-    if (current_tab == 0) {
+    switch (current_tab) {
+    case 0:
         economy.UIDrawResources(transfer, fuel_draw);
-    }
-    if (current_tab == 1) {
+        break;
+    case 1:
         economy.UIDrawEconomy(transfer, fuel_draw);
-    }
-    if (current_tab == 2) {
+        break;
+    case 2:
         _UIDrawBuildings(this);
+        break;
     }
 
     UIContextPop();  // Outside

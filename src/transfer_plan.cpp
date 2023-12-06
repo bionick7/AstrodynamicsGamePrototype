@@ -170,8 +170,6 @@ void TransferPlanSolve(TransferPlan* tp) {
     for (int i=0; i < tp->num_solutions; i++) {
         //double r1_r2_outer_prod = Determinant(pos1.cartesian, pos2.cartesian);
         // Direct orbit is retrograde
-        //DEBUG_SHOW_F(r1_r2_outer_prod)
-        //DEBUG_SHOW_I(first_solution[i])
         bool is_prograde;
         if (is_ellipse[i]) {
             bool direct_solution = TimeSecDiff(t2, t1) < PI * sqrt(fabs(aa[i])*aa[i]*aa[i] / mu);
@@ -287,17 +285,17 @@ void TransferPlanUI::Update() {
 
     if (IsIdValid(plan->departure_planet) && IsIdValid(plan->arrival_planet) && redraw_queued) {
         TransferPlanSolve(plan);
-        is_valid = plan->num_solutions > 0 && plan->tot_dv <= ship_class->max_dv;
+        is_valid = plan->num_solutions > 0 && plan->tot_dv <= ship_instance->GetCapableDV();
         is_valid = is_valid && TimeIsEarlier(GetTime(), plan->departure_time);
 
         redraw_queued = false;
     }
 
     if (is_valid) {
-        if (plan->resource_transfer.resource_id == RESOURCE_NONE) {
-            SetLogistics(0, ship_class->GetFuelRequiredEmpty(plan->tot_dv));
+        if (plan->resource_transfer.resource_id != RESOURCE_NONE) {
+            SetLogistics(0, ship_instance->GetFuelRequiredEmpty(plan->tot_dv));
         } else {
-            resource_count_t payload = ship_class->GetPayloadCapacity(plan->tot_dv);
+            resource_count_t payload = ship_instance->GetRemainingPayloadCapacity(plan->tot_dv);
             SetLogistics(payload, ship_class->max_capacity - payload);
         }
     } else {
@@ -350,16 +348,6 @@ void _DrawTransferOrbit(const TransferPlan* plan, int solution, bool is_secondar
     OrbitPos pos2 = OrbitGetPosition(&plan->transfer_orbit[solution], plan->arrival_time);
     _DrawSweep(&from->orbit, t0, plan->departure_time, orbit_color);
     _DrawSweep(&to->orbit,   t0, plan->arrival_time,   orbit_color);
-    /*DrawLineV(
-        departure_handle_pos,
-        Vector2Add(departure_handle_pos, Vector2Scale(tp->departure_dvs[solution], 0.01)),
-        velocity_color
-    );
-    DrawLineV(
-        arrival_handle_pos,
-        Vector2Add(arrival_handle_pos, Vector2Scale(tp->arrival_dvs[solution], 0.01)),
-        velocity_color
-    );*/
     DrawOrbitBounded(&plan->transfer_orbit[solution], pos1, pos2, 0, orbit_color);
 }
 
@@ -460,7 +448,6 @@ void TransferPlanUI::DrawUI() {
     }
     
     Ship* ship_instance = GetShip(ship);
-    const ShipClass* ship_class = GetShipClassByIndex(ship_instance->ship_class);
     
     const int y_margin = 5+50;
     UIContextCreate(
@@ -485,12 +472,16 @@ void TransferPlanUI::DrawUI() {
     snprintf(dv1_str,   40, "DV 1      %5.3f km/s", plan->dv1[plan->primary_solution]/1000.0);
     snprintf(dv2_str,   40, "DV 2      %5.3f km/s", plan->dv2[plan->primary_solution]/1000.0);
     snprintf(dvtot_str, 40, "DV Tot    %5.3f km/s", total_dv/1000.0);
-    double capacity = ship_class->GetPayloadCapacity(total_dv);
+
+    double capacity = ship_instance->GetRemainingPayloadCapacity(total_dv);
+    double max_capacity = ship_instance->GetRemainingPayloadCapacity(0);
+    DEBUG_SHOW_F(max_capacity + ship_instance->GetPayloadMass())
+
     if (capacity >= 0) {
         snprintf(payload_str, 40, "Payload cap.  %3.0f %% (%.0f / %.0f t)", 
-            capacity / ship_class->max_capacity * 100,
+            capacity / max_capacity * 100,
             capacity / 1000.0,
-            ship_class->max_capacity / 1000.0
+            max_capacity / 1000.0
         );
     } else {
         snprintf(payload_str, 40, "Cannot make transfer");
@@ -504,17 +495,12 @@ void TransferPlanUI::DrawUI() {
             TRANSFER_UI_COLOR, BG_COLOR
         );
     UIContextPop();  // Inset
-    //UIContextWrite("=====================");
-    //UIContextWrite(dv1_str);
-    //UIContextWrite(dv2_str);
     UIContextPushInset(0, 18);
         UIContextWrite(dvtot_str);
-        //UIContextFillline(total_dv / ship.max_dv, TRANSFER_UI_COLOR, BG_COLOR);
     UIContextPop();  // Inset
-    //UIContextWrite("=====================");
     UIContextPushInset(0, 18);
         UIContextWrite(payload_str);
-        UIContextFillline(fmax(0, capacity / ship_class->max_capacity), capacity >= 0 ? TRANSFER_UI_COLOR : PALETTE_RED, BG_COLOR);
+        UIContextFillline(fmax(0, capacity / max_capacity), capacity >= 0 ? TRANSFER_UI_COLOR : PALETTE_RED, BG_COLOR);
     UIContextPop();  // Inset
 }
 

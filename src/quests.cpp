@@ -10,12 +10,19 @@
 void _GenerateRandomQuest(Quest* quest) {
     Time now = GlobalGetNow();
 
-    quest->payload_mass = GetRandomValue(0, 1000);
-    quest->payout = GetRandomValue(0, 1000);
+    // There are always N accessible, plausibly profitable  quests
+    // ... And M taunting ones
+    // Transport quests: Payouts in cash are proportional to the players tech, dv involved and payload
+    // Research quests: payouts in tech/items when reaching far away places (more interesting with refueling)
+
+    quest->payload_mass = GetRandomValue(0, 1e6);
+    quest->payout = GetRandomValue(0, 1e6);
     quest->pickup_expiration_time = TimeAddSec(now, 86400 * 5);
     quest->delivery_expiration_time = TimeAddSec(now, 86400 * 10);
     quest->departure_planet = GetRandomValue(0, GlobalGetState()->planets.planet_count - 1);
-    quest->arrival_planet = GetRandomValue(0, GlobalGetState()->planets.planet_count - 1);
+    do quest->arrival_planet = GetRandomValue(0, GlobalGetState()->planets.planet_count - 1);
+    while (quest->arrival_planet == quest->departure_planet);
+
 }
 
 
@@ -56,40 +63,8 @@ bool Quest::IsReadyForCompletion() const {
     return false;
 }
 
-void Quest::DrawUIGeneral() const {
-    StringBuilder sb;
-    sb.Add(GetPlanet(departure_planet)->name).Add(" >> ").Add(GetPlanet(arrival_planet)->name).Add("  ").AddF(payload_mass).AddLine("kT");
-    sb.Add("Expires in ").AddTime(TimeSub(pickup_expiration_time, GlobalGetNow()));
-    sb.Add("(").AddTime(TimeSub(delivery_expiration_time, GlobalGetNow())).AddLine(")");
 
-    //std::stringstream ss;
-    //ss << GetPlanet(departure_planet)->name << " >> " << GetPlanet(arrival_planet)->name << "   " << payload_mass << "kT\n";
-    //ss << "Expires" <<  << GetPlanet(arrival_planet)->name << "   " << payload_mass << "kT\n";
-    //ss << GetPlanet(departure_planet)->name << " >> " << GetPlanet(arrival_planet)->name << "   " << payload_mass << "kT\n";
-    UIContextWrite(sb.c_str);
-}
-
-
-void Quest::DrawUIActive() const {
-    // Assumes parent UI Context exists
-    int height = UIContextPushInset(3, 50);
-    if (height == 0) {
-        UIContextPop(); return;
-    }
-    if (is_ins_transit) {
-        UIContextEnclose(BG_COLOR, TRANSFER_UI_COLOR);
-    } else {
-        UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
-    }
-    if (height != 50) {
-        UIContextPop(); return;
-    }
-
-    DrawUIGeneral();
-    UIContextPop();
-}
-
-bool Quest::DrawUIAvailable() const {
+ButtonStateFlags Quest::DrawUI(bool show_as_button, bool highlinght) const {
     // Assumes parent UI Context exists
     // Resturns if player wants to accept
     int height = UIContextPushInset(3, 50);
@@ -97,18 +72,28 @@ bool Quest::DrawUIAvailable() const {
         UIContextPop();
         return false;
     }
-    UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
+    if (highlinght) {
+        UIContextEnclose(BG_COLOR, TRANSFER_UI_COLOR);
+    } else {
+        UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
+    }
     ButtonStateFlags button_state = UIContextAsButton();
-    HandleButtonSound(button_state & (BUTTON_STATE_FLAG_JUST_HOVER_IN | BUTTON_STATE_FLAG_JUST_PRESSED));
+    if (show_as_button) {
+        HandleButtonSound(button_state & (BUTTON_STATE_FLAG_JUST_HOVER_IN | BUTTON_STATE_FLAG_JUST_PRESSED));
+    }
     if (height != 50) {
         UIContextPop();
         return button_state & BUTTON_STATE_FLAG_JUST_PRESSED;
     }
 
-    DrawUIGeneral();
+    StringBuilder sb;
+    sb.Add(GetPlanet(departure_planet)->name).Add(" >> ").Add(GetPlanet(arrival_planet)->name).Add("  ").AddF(payload_mass / 1e6).AddLine("kT");
+    sb.Add("Expires in ").AddTime(TimeSub(pickup_expiration_time, GlobalGetNow()));
+    sb.Add("(").AddTime(TimeSub(delivery_expiration_time, GlobalGetNow())).AddLine(")");
+    UIContextWrite(sb.c_str);
 
     UIContextPop();
-    return button_state & BUTTON_STATE_FLAG_JUST_PRESSED;
+    return button_state;
 }
 
 // ========================================
@@ -175,7 +160,7 @@ void QuestManager::Draw() {
         UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
     }
     for(auto i = _active_quests.GetIter(); i; i++) {
-        _active_quests[i]->DrawUIActive();
+        _active_quests[i]->DrawUI(false, _available_quests[i].is_ins_transit);
     }
     UIContextPop();  // HSplit
 
@@ -183,7 +168,7 @@ void QuestManager::Draw() {
     UIContextShrink(5, 5);
     // Available Quests
     for(int i=0; i < AVAILABLE_QUESTS_NUM; i++) {
-        if(_available_quests[i].DrawUIAvailable()) {
+        if(_available_quests[i].DrawUI(true, _available_quests[i].is_ins_transit) & BUTTON_STATE_FLAG_JUST_PRESSED) {
             AcceptQuest(i);
         }
     }
@@ -191,7 +176,7 @@ void QuestManager::Draw() {
     UIContextPop();  // HSplit
 }
 
-void QuestManager::AcceptQuest(int quest_index){
+void QuestManager::AcceptQuest(entity_id_t quest_index) {
     Quest* q;
     _active_quests.Allocate(&q);
     q->CopyFrom(&_available_quests[quest_index]);
@@ -199,17 +184,36 @@ void QuestManager::AcceptQuest(int quest_index){
     _GenerateRandomQuest(&_available_quests[quest_index]);
 }
 
-void QuestManager::PickupQuest(int quest_index){
+void QuestManager::PickupQuest(entity_id_t ship_index, entity_id_t quest_index) {
+    Ship* ship = GetShip(ship_index);
     _active_quests[quest_index]->is_ins_transit = true;
+    ship->payload.push_back(TransportContainer(quest_index));
 }
 
-void QuestManager::CompleteQuest(int quest_index){
+void QuestManager::PutbackQuest(entity_id_t ship_index, entity_id_t quest_index) {
+    Ship* ship = GetShip(ship_index);
+    auto quest_in_cargo = ship->payload.end();
+    for(auto it2=ship->payload.begin(); it2 != ship->payload.end(); it2++) {
+        if (it2->type == TransportContainer::QUEST && it2->content.quest == quest_index) {
+            quest_in_cargo = it2;
+        }
+    }
+    if (quest_in_cargo == ship->payload.end()) {
+        ERROR("Quest %d not currently on ship '%s'", quest_index, ship->name)
+    }
+    ship->payload.erase(quest_in_cargo);
+    _active_quests[quest_index]->is_ins_transit = false;
+}
+
+void QuestManager::CompleteQuest(entity_id_t quest_index) {
     NOT_IMPLEMENTED
 }
 
 cost_t QuestManager::CollectPayout() {
     NOT_IMPLEMENTED
 }
+
+
 // ========================================
 //                  General
 // ========================================

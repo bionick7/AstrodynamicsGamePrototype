@@ -65,10 +65,10 @@ struct IDAllocatorList {
         verifier_array[index/64] &= ~(1ul << (index % 64));
     }
     
-    T* Get(entity_id_t index) const { return &array[index]; }
-    T* operator[] (entity_id_t index) { return &array[index]; }
-    T* Get(Iterator iter) const { return &array[iter.index]; }
-    T* operator[] (Iterator iter) { return &array[iter.index]; }
+    inline T* Get(entity_id_t index) const { return &array[index]; }
+    inline T* operator[] (entity_id_t index) { return &array[index]; }
+    inline T* Get(Iterator iter) const { return &array[iter.index]; }
+    inline T* operator[] (Iterator iter) { return &array[iter.index]; }
 
     entity_id_t Count() const { return alloc_count; }
 

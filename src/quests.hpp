@@ -7,6 +7,9 @@
 #include "time.hpp"
 #include "id_allocator.hpp"
 #include "datanode.hpp"
+#include "ui.hpp"
+
+struct Ship;
 
 struct Quest {
     bool is_accepted;
@@ -14,6 +17,8 @@ struct Quest {
 
     entity_id_t departure_planet;
     entity_id_t arrival_planet;
+
+    entity_id_t ship;
 
     double payload_mass;
     Time pickup_expiration_time;
@@ -23,11 +28,9 @@ struct Quest {
 
     Quest();
     void CopyFrom(const Quest* other);
-    void DrawUIGeneral() const;
     bool IsReadyForCompletion() const;
 
-    void DrawUIActive() const;
-    bool DrawUIAvailable() const;
+    ButtonStateFlags DrawUI(bool show_as_button, bool highlight) const;
 };
 
 #define AVAILABLE_QUESTS_NUM 20
@@ -46,9 +49,10 @@ struct QuestManager {
     void Update(double dt);
     void Draw();
 
-    void AcceptQuest(int quest_index);
-    void PickupQuest(int quest_index);
-    void CompleteQuest(int quest_index);
+    void AcceptQuest(entity_id_t quest_index);
+    void PickupQuest(entity_id_t ship_index, entity_id_t quest_index);
+    void PutbackQuest(entity_id_t ship_index, entity_id_t quest_index);
+    void CompleteQuest(entity_id_t quest_index);
 
     cost_t CollectPayout();
 };

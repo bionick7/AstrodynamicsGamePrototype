@@ -12,6 +12,7 @@ struct StringBuilder {
     ~StringBuilder();
     void Clear();
     StringBuilder& Add(const char* add_str);
+    StringBuilder& AddFormat(const char* fmt, ...);
     StringBuilder& AddLine(const char* add_str);
     StringBuilder& AddF(double num);
     StringBuilder& AddI(int num);

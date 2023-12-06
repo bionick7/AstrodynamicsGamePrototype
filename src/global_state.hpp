@@ -20,7 +20,7 @@ struct Clickable {
 };
 
 bool IsIdValid(entity_id_t id);
-static inline entity_id_t GetInvalidId() { return UINT32_MAX; }
+constexpr entity_id_t GetInvalidId() { return UINT32_MAX; }
 
 struct GlobalState {
     CoordinateTransform c_transf;

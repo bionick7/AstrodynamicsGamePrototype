@@ -5,6 +5,7 @@
 #include "transfer_plan.hpp"
 #include "datanode.hpp"
 #include "id_allocator.hpp"
+#include "quests.hpp"
 
 #define SHIP_MAX_PREPARED_PLANS 10
 #define SHIPCLASS_NAME_MAX_SIZE 64
@@ -12,6 +13,20 @@
 #define SHIP_NAME_MAX_SIZE 64
 
 typedef uint16_t shipclass_index_t;
+
+struct TransportContainer {
+    enum { NONE, QUEST, RESOURCE } type;
+    union ContainerUnion {
+        entity_id_t quest;
+        ResourceTransfer resource_transfer;
+    } content;
+
+    TransportContainer();
+    TransportContainer(entity_id_t quest);
+    TransportContainer(ResourceTransfer resource_transfer);
+    resource_count_t GetMass() const;
+    Quest* GetQuestPtr() const;
+};
 
 struct ShipClass {
     char name[SHIPCLASS_NAME_MAX_SIZE];
@@ -45,8 +60,7 @@ struct Ship {
     int highlighted_plan_index;
 
     // Payload
-    ResourceType payload_type = RESOURCE_NONE;
-    resource_count_t payload_quantity = 0;
+    std::vector<TransportContainer> payload;
 
     // UI state
     Vector2 draw_pos;
@@ -66,13 +80,19 @@ struct Ship {
     void DrawUI(const CoordinateTransform* c_transf);
     void Inspect();
 
+    resource_count_t GetPayloadMass() const;
+    resource_count_t GetMaxCapacity() const;
+    double GetRemainingPayloadCapacity(double dv) const;
+    double GetFuelRequiredEmpty(double dv) const;
+    double GetCapableDV() const;
+
     TransferPlan* GetEditedTransferPlan();
     void ConfirmEditedTransferPlan();
     void CloseEditedTransferPlan();
     void RemoveTransferPlan(int index);
     void StartEditingPlan(int index);
-
     TransferPlan* _NewTransferPlan();
+
     void _OnDeparture(const TransferPlan &tp);
     void _OnArrival(const TransferPlan &tp);
     void _EnsureContinuity();
