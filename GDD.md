@@ -138,7 +138,8 @@ Target period: ???
 
 ## Known Bugs
 - Deleting a transfer plan while editing it is a problem  (Done)
-- GetCapableDV does not align with GetAvailablePayload (which is prob. right)
+- GetCapableDV does not align with GetAvailablePayload (which is prob. right)  (Done)
+- Loadsaving loads default wphemerides
 
 ## UX improvements wishlist
 Near-term, realizable only

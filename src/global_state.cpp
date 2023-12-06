@@ -18,11 +18,11 @@ GlobalState* GlobalGetState() {
     return &global_state;
 }
 
-Time GlobalGetPreviousFrameTime() {
+timemath::Time GlobalGetPreviousFrameTime() {
     return global_state.calendar.prev_time;
 }
 
-Time GlobalGetNow() {
+timemath::Time GlobalGetNow() {
     return global_state.calendar.time;
 }
 
@@ -71,7 +71,7 @@ void _PauseMenu() {
     }
 }
 
-void GlobalState::Make(Time p_time) {
+void GlobalState::Make(timemath::Time p_time) {
     calendar.Make(p_time);
     active_transfer_plan.Make();
     c_transf.Make();
@@ -325,7 +325,7 @@ void GlobalState::Deserialize(const DataNode* data) {
     if (data->Has("calendar")) {
         calendar.Deserialize(data->GetChild("calendar"));
     } else {
-        calendar.Make(Time(data->GetF("start_time", 0, true)));
+        calendar.Make(timemath::Time(data->GetF("start_time", 0, true)));
     }
     // ignore transferplanui for now
 

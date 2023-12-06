@@ -1,66 +1,70 @@
 #include "time.hpp"
 #include "logging.hpp"
+#include "datanode.hpp"
+
 #include <time.h>
+
+using namespace timemath;
 
 Time::Time(double seconds) {
     __t = seconds;
 }
 
-Time TimeAdd(Time lhs, Time rhs) {
+Time timemath::TimeAdd(Time lhs, Time rhs) {
     return Time(lhs.__t + rhs.__t);
 }
 
-Time TimeAddSec(Time x, double seconds) {
+Time timemath::TimeAddSec(Time x, double seconds) {
     return Time(x.__t + seconds);
 }
 
-Time TimeSub(Time lhs, Time rhs) {
+Time timemath::TimeSub(Time lhs, Time rhs) {
     return Time(lhs.__t - rhs.__t);
 }
 
-double TimeSecDiff(Time lhs, Time rhs) {
+double timemath::TimeSecDiff(Time lhs, Time rhs) {
     return lhs.__t - rhs.__t;
 }
 
-Time TimePosMod(Time x, Time mod) {
+Time timemath::TimePosMod(Time x, Time mod) {
     double __t = fmod(x.__t, mod.__t);
     if (__t < 0) __t += mod.__t;
     return Time(__t);
 }
 
-Time TimeEarliest(Time lhs, Time rhs) {
+Time timemath::TimeEarliest(Time lhs, Time rhs) {
     return TimeIsEarlier(lhs, rhs) ? lhs : rhs;
 }
 
-Time TimeLatest(Time lhs, Time rhs) {
+Time timemath::TimeLatest(Time lhs, Time rhs) {
     return TimeIsEarlier(lhs, rhs) ? rhs : lhs;
 }
 
-bool TimeIsEarlier(Time lhs, Time rhs) {
+bool timemath::TimeIsEarlier(Time lhs, Time rhs) {
     return lhs.__t < rhs.__t;
 }
 
-bool TimeIsPos(Time x) {
+bool timemath::TimeIsPos(Time x) {
     return x.__t > 0;
 }
 
-double TimeSeconds(Time x) {
+double timemath::TimeSeconds(Time x) {
     return x.__t;
 }
 
-double TimeDays(Time x) {
+double timemath::TimeDays(Time x) {
     return x.__t / 86400;
 }
 
-Time GetInvalidTime() {
+Time timemath::GetInvalidTime() {
     return Time(NAN);
 }
 
-bool IsTimeInvalid(Time x) {
-    isnan(x.__t);
+bool timemath::IsTimeInvalid(Time x) {
+    
 }
 
-char* FormatTime(char* buffer, int buffer_len, Time time) {
+char* timemath::FormatTime(char* buffer, int buffer_len, Time time) {
     time_t time_in_s = (time_t) time.__t;
 
     tm time_tm = *gmtime(&time_in_s);
@@ -74,7 +78,7 @@ char* FormatTime(char* buffer, int buffer_len, Time time) {
     return buffer + char_count;
 }
 
-char* FormatDate(char* buffer, int buffer_len, Time time){
+char* timemath::FormatDate(char* buffer, int buffer_len, Time time){
     int start_year = 2080 - 1970;
     //time_t epoch_in_s = 65744l*86400l;  // 1900 - 2080
     time_t time_in_s = time.__t;  // + epoch_in_s;
@@ -85,11 +89,11 @@ char* FormatDate(char* buffer, int buffer_len, Time time){
     return buffer + char_count;
 }
 
-void TimeSerialize(Time x, DataNode* data) {
+void timemath::TimeSerialize(Time x, DataNode* data) {
     data->SetF("t", x.__t);
 }
 
-void TimeDeserialize(Time* x, const DataNode* data) {
+void timemath::TimeDeserialize(Time* x, const DataNode* data) {
     *x = Time(data->GetF("t", x->__t));
 }
 

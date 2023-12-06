@@ -5,21 +5,21 @@
 #include "time.hpp"
 
 struct Calendar {
-    Time time;
-    Time prev_time;
+    timemath::Time time;
+    timemath::Time prev_time;
 
-    Time current_migration_period;
-    Time migration_arrrival_time;
+    timemath::Time current_migration_period;
+    timemath::Time migration_arrrival_time;
     entity_id_t migration_arrrival_planet;  // Doesn't really fit anywhere right now ...
 
     double time_scale;
     bool paused;
 
-    void Make(Time t0);
+    void Make(timemath::Time t0);
     void Serialize(DataNode* data) const;
     void Deserialize(const DataNode* data);
 
-    Time AdvanceTime(double delta_t);
+    timemath::Time AdvanceTime(double delta_t);
     void HandleInput(double delta_t);
     void DrawUI() const;
 };

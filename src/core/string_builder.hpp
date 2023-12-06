@@ -16,8 +16,8 @@ struct StringBuilder {
     StringBuilder& AddLine(const char* add_str);
     StringBuilder& AddF(double num);
     StringBuilder& AddI(int num);
-    StringBuilder& AddTime(Time t);
-    StringBuilder& AddDate(Time t);
+    StringBuilder& AddTime(timemath::Time t);
+    StringBuilder& AddDate(timemath::Time t);
 };
 
 int StringBuilderTests();

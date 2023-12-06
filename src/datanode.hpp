@@ -2,6 +2,7 @@
 #define DATA_NODE_H
 
 #include "basic.hpp"
+#include "time.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -44,6 +45,7 @@ struct DataNode {
     void Set(const char* key, const char* value);
     void SetI(const char* key, int value);
     void SetF(const char* key, double value);
+    void SetDate(const char* key, timemath::Time value);
     DataNode* SetChild(const char* key, const DataNode& child);
 
     void SetArray(const char* key, size_t size);
@@ -60,6 +62,7 @@ struct DataNode {
     const char* Get(const char* key, const char* def="", bool quiet=false) const;
     int GetI(const char* key, int def=0, bool quiet=false) const;
     double GetF(const char* key, double def=0, bool quiet=false) const;
+    timemath::Time GetDate(const char* key, timemath::Time def=0, bool quiet=false) const;
     DataNode* GetChild(const char* key, bool quiet=false) const;
 
     size_t GetArrayLen(const char* key, bool quiet=false) const;

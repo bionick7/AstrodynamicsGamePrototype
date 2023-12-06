@@ -12,32 +12,32 @@
 struct Ship;
 
 struct Quest {
-    bool is_accepted;
-    bool is_ins_transit;
-
     entity_id_t departure_planet;
     entity_id_t arrival_planet;
+    entity_id_t current_planet;
 
     entity_id_t ship;
 
     double payload_mass;
-    Time pickup_expiration_time;
-    Time delivery_expiration_time;
+    timemath::Time pickup_expiration_time;
+    timemath::Time delivery_expiration_time;
 
     cost_t payout;
 
     Quest();
     void CopyFrom(const Quest* other);
-    bool IsReadyForCompletion() const;
+    void Serialize(DataNode* data) const;
+    void Deserialize(const DataNode* data);
 
+    bool IsReadyForCompletion() const;
     ButtonStateFlags DrawUI(bool show_as_button, bool highlight) const;
 };
 
 #define AVAILABLE_QUESTS_NUM 20
 
 struct QuestManager {
-    Quest _available_quests[AVAILABLE_QUESTS_NUM];
-    IDAllocatorList<Quest> _active_quests;
+    Quest available_quests[AVAILABLE_QUESTS_NUM];
+    IDAllocatorList<Quest> active_quests;
 
     bool show_ui;
     
@@ -52,6 +52,8 @@ struct QuestManager {
     void AcceptQuest(entity_id_t quest_index);
     void PickupQuest(entity_id_t ship_index, entity_id_t quest_index);
     void PutbackQuest(entity_id_t ship_index, entity_id_t quest_index);
+    void QuestDepartedFrom(entity_id_t quest_index, entity_id_t planet_index);
+    void QuestArrivedAt(entity_id_t quest_index, entity_id_t planet_index);
     void CompleteQuest(entity_id_t quest_index);
 
     cost_t CollectPayout();

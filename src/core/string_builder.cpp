@@ -85,7 +85,7 @@ StringBuilder& StringBuilder::AddI(int num) {
     return *this;
 }
 
-StringBuilder& StringBuilder::AddTime(Time t) {
+StringBuilder& StringBuilder::AddTime(timemath::Time t) {
     char buffer[20];
     FormatTime(buffer, 20, t);
     int write_offset = length - 1;
@@ -97,7 +97,7 @@ StringBuilder& StringBuilder::AddTime(Time t) {
 }
 
 
-StringBuilder& StringBuilder::AddDate(Time t) {
+StringBuilder& StringBuilder::AddDate(timemath::Time t) {
     char buffer[20];
     FormatDate(buffer, 20, t);
     int write_offset = length - 1;
@@ -116,7 +116,7 @@ int StringBuilderTests() {
         ERROR("Expected '%s', got '%s'", "abcd01234ÄÄÖÜ-175", sb.c_str);
         return 1;
     }
-    Time t = Time(1258254);
+    timemath::Time t = timemath::Time(1258254);
     sb.Clear();
     sb.AddF(-1e10).Add(" - ").AddF(15.84).Add(" - ").AddTime(t).Add(" - ").AddDate(t);
     const char* test_str = "-1.0000e+10 - 15.8400000 -  0M 14D 13H - 2080Y  1M 15D 13H";

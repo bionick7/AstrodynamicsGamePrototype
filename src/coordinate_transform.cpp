@@ -5,40 +5,40 @@
 #include "constants.hpp"
 
 
-void Calendar::Make(Time t0) {
+void Calendar::Make(timemath::Time t0) {
     time_scale = 2048;
     paused = true;
     time = t0;
     prev_time = t0;
-    current_migration_period = Time(86400 * 31 * 2);
-    migration_arrrival_time = TimeAdd(t0, current_migration_period);
+    current_migration_period = timemath::Time(86400 * 31 * 2);
+    migration_arrrival_time = timemath::TimeAdd(t0, current_migration_period);
 }
 
 void Calendar::Serialize(DataNode* data) const {
-    TimeSerialize(time, data->SetChild("time", DataNode()));
-    TimeSerialize(current_migration_period, data->SetChild("current_migration_period", DataNode()));
-    TimeSerialize(migration_arrrival_time, data->SetChild("migration_arrrival_time", DataNode()));
+    timemath::TimeSerialize(time, data->SetChild("time", DataNode()));
+    timemath::TimeSerialize(current_migration_period, data->SetChild("current_migration_period", DataNode()));
+    timemath::TimeSerialize(migration_arrrival_time, data->SetChild("migration_arrrival_time", DataNode()));
     data->SetI("migration_arrrival_planet", (int) migration_arrrival_planet);
     data->SetF("time_scale", time_scale);
     data->Set("paused", paused ? "y": "n");
 }
 
 void Calendar::Deserialize(const DataNode* data) {
-    TimeDeserialize(&time, data->GetChild("time"));
-    TimeDeserialize(&current_migration_period, data->GetChild("current_migration_period"));
-    TimeDeserialize(&migration_arrrival_time, data->GetChild("migration_arrrival_time"));
+    timemath::TimeDeserialize(&time, data->GetChild("time"));
+    timemath::TimeDeserialize(&current_migration_period, data->GetChild("current_migration_period"));
+    timemath::TimeDeserialize(&migration_arrrival_time, data->GetChild("migration_arrrival_time"));
     migration_arrrival_planet = (entity_id_t) data->GetI("migration_arrrival_planet", (int) migration_arrrival_planet);
     time_scale = data->GetF("time_scale", time_scale);
     paused = strcmp(data->Get("paused", paused ? "y": "n"), "y") == 0;
 }
 
-Time Calendar::AdvanceTime(double delta_t) {
+timemath::Time Calendar::AdvanceTime(double delta_t) {
     prev_time = time;
     if (paused) return time;
     
-    time = TimeAddSec(time, delta_t * time_scale);
+    time = timemath::TimeAddSec(time, delta_t * time_scale);
     if (TimeIsEarlier(migration_arrrival_time, GlobalGetNow())){
-        migration_arrrival_time = TimeAdd(migration_arrrival_time, current_migration_period);
+        migration_arrrival_time = timemath::TimeAdd(migration_arrrival_time, current_migration_period);
         USER_INFO("New migrants arrive")
     }
 
@@ -58,9 +58,9 @@ void Calendar::HandleInput(double delta_t) {
 }
 
 void Calendar::DrawUI() const {
-    // Time scale (top-right corner)
+    // timemath::Time scale (top-right corner)
     const int FONT_SIZE = 16;
-    const char* text = TextFormat("II Time x %.1f", time_scale);
+    const char* text = TextFormat("II timemath::Time x %.1f", time_scale);
     if (!paused) text += 3;
     Vector2 pos = { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(), text, FONT_SIZE, 1).x - 10, 10 };
     DrawTextEx(GetCustomDefaultFont(), text, pos, FONT_SIZE, 1, MAIN_UI_COLOR);
@@ -70,14 +70,14 @@ void Calendar::DrawUI() const {
     DrawTextEx(GetCustomDefaultFont(), text_date, pos, FONT_SIZE, 1, MAIN_UI_COLOR);
 
     // Migration progress
-    double t_val = 1.0 - TimeSecDiff(migration_arrrival_time, GlobalGetNow()) / TimeSeconds(current_migration_period);
+    double t_val = 1.0 - timemath::TimeSecDiff(migration_arrrival_time, GlobalGetNow()) / timemath::TimeSeconds(current_migration_period);
     int progress_x = t_val * GetScreenWidth();
     DrawRectangle(0, 1, progress_x, 2, MAIN_UI_COLOR);
     const int collider_rec_width = 16;
     Rectangle mouse_collider = { progress_x - collider_rec_width/2, 0, collider_rec_width, collider_rec_width};
     if (CheckCollisionPointRec(GetMousePosition(), mouse_collider) || GetMousePosition().y < 4) {
         char buffer[30];
-        char* buffer2 = FormatTime(buffer, 30, TimeSub(migration_arrrival_time, GlobalGetNow()));
+        char* buffer2 = FormatTime(buffer, 30, timemath::TimeSub(migration_arrrival_time, GlobalGetNow()));
         strncpy(buffer2, GetPlanet(migration_arrrival_planet)->name, 30 - (buffer2 - buffer));
         Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), buffer, 16, 1);
         if (progress_x > GetScreenWidth() - text_size.x - 200) {

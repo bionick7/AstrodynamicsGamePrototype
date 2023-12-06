@@ -7,64 +7,20 @@
 #include "string_builder.hpp"
 #include "debug_drawing.hpp"
 
-TransportContainer::TransportContainer() {
-    type = NONE;
-    content.quest = GetInvalidId();
-}
-
-TransportContainer::TransportContainer(entity_id_t quest) {
-    type = QUEST;
-    content.quest = quest;
-}
-
-TransportContainer::TransportContainer(ResourceTransfer resource_transfer) {
-    type = RESOURCE;
-    content.resource_transfer = resource_transfer;
-}
-
-resource_count_t TransportContainer::GetMass() const {
-    switch (type) {
-    case TransportContainer::NONE: break;
-    case QUEST:
-        return GetQuestPtr()->payload_mass;
-    case RESOURCE:
-        return content.resource_transfer.quantity;
-    }
-    return 0;
-}
-
-Quest* TransportContainer::GetQuestPtr() const {
-    if (type != QUEST) return NULL;
-    return GlobalGetState()->quest_manager._active_quests[content.quest];
-}
-
 double ShipClass::GetPayloadCapacity(double dv) const {
-    // dv = v_e * ln(1 + m_fuel/m_dry)
-    // fuel_ratio = (exp(dv/v_e) - 1) / (exp(dv_max/v_e) - 1)
-    // MOTM * fuel_ratio - OEM
+    //          dv = v_e * ln((max_cap + eom) / (x + eom))
+    // <=> x + eom = (max_cap + eom) / exp(dv/v_e)
 
-    // v_e
-    // dv_max
-    // m_fuel_max = cargo_cap
-    // OEM = cargo_cap/(exp(dv_max/v_e) -1)
-    //double oem = max_capacity/max_fuel_ratio;
-    double fuel_ratio = (exp(dv/v_e) - 1) / (exp(max_dv/v_e) - 1);
-    return (1 - fuel_ratio) * max_capacity;
+    return (max_capacity + oem) / exp(dv/v_e) - oem;
 }
 
 double ShipClass::GetFuelRequiredFull(double dv) const {
     // assuming max payload
-    double fuel_ratio = (exp(dv/v_e) - 1) / (exp(max_dv/v_e) - 1);
-    return fuel_ratio * max_capacity;
+    return max_capacity - GetPayloadCapacity(dv);
 }
 
 double ShipClass::GetFuelRequiredEmpty(double dv) const {
     // assuming no payload
-    // dv = v_e * ln(1 + m_fuel/m_dry)
-    // m_fuel = oem * (exp(dv/V_e) - 1)
-    // max_capacity = oem * (exp(dv_max/V_e) - 1)
-    // oem = max_capacity / (exp(dv_max/V_e) - 1)
-    double oem = max_capacity / (exp(max_dv/v_e) - 1);
     return oem * (exp(dv/v_e) - 1);
 }
 
@@ -106,7 +62,7 @@ void Ship::_OnNewPlanClicked() {
     prepared_plans[prepared_plans_count] = TransferPlan();
     plan_edit_index = prepared_plans_count;
 
-    Time min_time = 0;
+    timemath::Time min_time = 0;
     if (plan_edit_index == 0) {
         prepared_plans[plan_edit_index].departure_planet = parent_planet;
         min_time = GlobalGetNow();
@@ -121,7 +77,7 @@ void Ship::_OnNewPlanClicked() {
 }
 
 void Ship::CreateFrom(const ShipClass *sc) {
-    payload = std::vector<TransportContainer>();
+    
 }
 
 void Ship::Serialize(DataNode *data) const {
@@ -129,24 +85,6 @@ void Ship::Serialize(DataNode *data) const {
     data->Set("is_parked", is_parked ? "y" : "n");
     
     data->Set("class_id", GetShipClassByIndex(ship_class)->id);
-
-    // Not necaissarily the same as ammount specified in the transfer
-    if (payload.size() > 0) {
-        data->SetArray("payload", payload.size());
-    }
-    for (int i=0; i < payload.size(); i++) {
-        data->SetArrayElemI("payload_type", i, payload[i].type);
-        switch (payload[i].type) {
-        case TransportContainer::NONE: break;
-        case TransportContainer::QUEST:
-            data->SetArrayElemI("quest", i, payload[i].content.quest);
-            break;
-        case TransportContainer::RESOURCE:
-            data->SetArrayElemI("resource_type", i, payload[i].content.resource_transfer.resource_id);
-            data->SetArrayElemF("quantity", i, payload[i].content.resource_transfer.quantity / 1000);
-            break;
-        }
-    }
 
     data->SetArrayChild("prepared_plans", prepared_plans_count);
     for (int i=0; i < prepared_plans_count; i++) {
@@ -160,20 +98,6 @@ void Ship::Deserialize(const DataNode* data) {
     plan_edit_index = -1;
     ship_class = GlobalGetState()->ships.GetShipClassIndexById(data->Get("class_id"));
 
-    payload.resize(data->GetArrayLen("payload", true));
-    for (int i=0; i < payload.size(); i++) {
-        switch (payload[i].type) {
-        case TransportContainer::NONE: break;
-        case TransportContainer::QUEST:
-            payload[i].content.quest = (entity_id_t) data->GetArrayI("quest", i);
-            break;
-        case TransportContainer::RESOURCE:
-            payload[i].content.resource_transfer.resource_id = (ResourceType) data->GetArrayI("type", i);
-            payload[i].content.resource_transfer.quantity = data->GetArrayF("quantity", i) * 1000;
-            break;
-        }
-    }
-
     color = PALETTE_GREEN;
 
     prepared_plans_count = data->GetArrayChildLen("prepared_plans", true);
@@ -185,8 +109,12 @@ void Ship::Deserialize(const DataNode* data) {
 
 resource_count_t Ship::GetPayloadMass() const{
     resource_count_t res = 0;
-    for(TransportContainer cont : payload) {
-        res += cont.GetMass();
+
+    QuestManager* qm = &GlobalGetState()->quest_manager;
+    for(auto i = qm->active_quests.GetIter(); i; i++) {
+        if (qm->active_quests[i]->ship == id) {
+            res += qm->active_quests[i]->payload_mass;
+        }
     }
     return res;
 }
@@ -196,23 +124,19 @@ resource_count_t Ship::GetMaxCapacity() const {
 }
 
 double Ship::GetRemainingPayloadCapacity(double dv) const {
-    resource_count_t capacity = GetShipClassByIndex(ship_class)->GetPayloadCapacity(dv);
-    //DEBUG_SHOW_F(GetShipClassByIndex(ship_class)->GetPayloadCapacity(0))
-    //DEBUG_SHOW_F(capacity)
+    const ShipClass* sc = GetShipClassByIndex(ship_class);
+    resource_count_t capacity = sc->GetPayloadCapacity(dv);
     return capacity - GetPayloadMass();
 }
 
 double Ship::GetFuelRequiredEmpty(double dv) const {
     const ShipClass* sc = GetShipClassByIndex(ship_class);
-    double oem = sc->max_capacity / (exp(sc->max_dv/sc->v_e) - 1);
-    return (oem + GetPayloadMass()) * (exp(dv/sc->v_e) - 1);
+    return (sc->oem + GetPayloadMass()) * (exp(dv/sc->v_e) - 1);
 }
 
 double Ship::GetCapableDV() const {
-    // >> BUG IN HERE <<
     const ShipClass* sc = GetShipClassByIndex(ship_class);
-    double oem = sc->max_capacity / (exp(sc->max_dv/sc->v_e) - 1);
-    return sc->v_e * log((sc->max_capacity + oem) / (GetPayloadMass() + oem));
+    return sc->v_e * log((sc->max_capacity + sc->oem) / (GetPayloadMass() + sc->oem));
 
     // max_dv = v_e * log(max_capacity / oem + 1)
     // exp(max_dv / v_e) - 1
@@ -243,7 +167,7 @@ void Ship::ConfirmEditedTransferPlan() {
         ERROR("Not enough DV %f > %f", dv_tot, GetShipClassByIndex(ship_class));
         return;
     }
-    payload.push_back(TransportContainer(tp.resource_transfer));
+    //payload.push_back(TransportContainer(tp.resource_transfer));
     INFO("Assigning transfer plan %f to ship %s", tp.arrival_time, name);
     plan_edit_index = -1;
 }
@@ -277,7 +201,7 @@ void Ship::RemoveTransferPlan(int index) {
 
 void Ship::StartEditingPlan(int index) {
     TransferPlanUI& tp_ui = GlobalGetState()->active_transfer_plan;
-    Time min_time = 0;
+    timemath::Time min_time = 0;
     if (prepared_plans_count == 0) {
         prepared_plans[prepared_plans_count].departure_planet = parent_planet;
         min_time = GlobalGetNow();
@@ -291,7 +215,7 @@ void Ship::StartEditingPlan(int index) {
 }
 
 void Ship::Update() {
-    Time now = GlobalGetNow();
+    timemath::Time now = GlobalGetNow();
 
     if (prepared_plans_count == 0 || (plan_edit_index == 0 && prepared_plans_count == 1)) {
         position = GetPlanet(parent_planet)->position;
@@ -334,7 +258,7 @@ void Ship::Draw(const CoordinateTransform* c_transf) const {
         const TransferPlan& plan = prepared_plans[i];
         OrbitPos to_departure = OrbitGetPosition(
             &plan.transfer_orbit[plan.primary_solution], 
-            TimeLatest(plan.departure_time, GlobalGetNow())
+            timemath::TimeLatest(plan.departure_time, GlobalGetNow())
         );
         OrbitPos to_arrival = OrbitGetPosition(
             &plan.transfer_orbit[plan.primary_solution], 
@@ -359,7 +283,7 @@ void Ship::Draw(const CoordinateTransform* c_transf) const {
 }
 
 void _UIDrawTransferplans(Ship* ship) {
-    Time now = GlobalGetNow();
+    timemath::Time now = GlobalGetNow();
     for (int i=0; i < ship->prepared_plans_count; i++) {
         char tp_str[2][40];
         const char* resource_name;
@@ -384,8 +308,8 @@ void _UIDrawTransferplans(Ship* ship) {
 
         snprintf(tp_str[0], 40, "- %s (%3d D %2d H)",
             resource_name,
-            (int) TimeDays(TimeSub(ship->prepared_plans[i].arrival_time, now)),
-            ((int) TimeSeconds(TimeSub(ship->prepared_plans[i].arrival_time, now)) % 86400) / 3600
+            (int) timemath::TimeDays(TimeSub(ship->prepared_plans[i].arrival_time, now)),
+            ((int) timemath::TimeSeconds(TimeSub(ship->prepared_plans[i].arrival_time, now)) % 86400) / 3600
         );
 
         snprintf(tp_str[1], 40, "  %s >> %s", departure_planet_name, arrival_planet_name);
@@ -427,33 +351,25 @@ void _UIDrawTransferplans(Ship* ship) {
 
 void _UIDrawQuests(Ship* ship) {
     QuestManager* qm = &GlobalGetState()->quest_manager;
-
     resource_count_t max_mass = ship->GetMaxCapacity() - ship->GetPayloadMass();
-    if (ship->is_parked) {
-        for(auto it = qm->_active_quests.GetIter(); it; it++) {
-            Quest* quest = qm->_active_quests.Get(it);
-            if (quest->departure_planet != ship->parent_planet) continue;
-            bool can_accept = quest->payload_mass <= max_mass;
-            auto quest_in_cargo = ship->payload.end();
-            for(auto it2=ship->payload.begin(); it2 != ship->payload.end(); it2++) {
-                if (it2->type == TransportContainer::QUEST && it2->content.quest == it.index) {
-                    quest_in_cargo = it2;
-                }
-            }
-            ButtonStateFlags button_state = quest->DrawUI(true, quest_in_cargo != ship->payload.end());
-            if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED && can_accept) {
-                if (quest_in_cargo != ship->payload.end()) {
-                    qm->PutbackQuest(ship, it.index);
-                } else {
-                    qm->PickupQuest(ship, it.index);
-                }
+    
+    for(auto it = qm->active_quests.GetIter(); it; it++) {
+        Quest* quest = qm->active_quests.Get(it);
+        bool is_quest_in_cargo = quest->ship == ship->id;
+        if (quest->current_planet != ship->parent_planet && !is_quest_in_cargo) continue;
+        bool can_accept = quest->payload_mass <= max_mass;
+        ButtonStateFlags button_state = quest->DrawUI(true, is_quest_in_cargo);
+        if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED && can_accept) {
+            if (is_quest_in_cargo) {
+                qm->PutbackQuest(ship->id, it.index);
+            } else {
+                qm->PickupQuest(ship->id, it.index);
             }
         }
     }
 }
 
 void Ship::DrawUI(const CoordinateTransform* c_transf) {
-    //float mouse_dist_sqr = Vector2DistanceSqr(GetMousePosition(), draw_pos);
     if (mouse_hover) {
         // Hover
         DrawCircleLines(draw_pos.x, draw_pos.y, 10, RED);
@@ -494,27 +410,9 @@ void Ship::Inspect() {
 void Ship::_OnDeparture(const TransferPlan& tp) {
     GetPlanet(tp.departure_planet)->economy.DrawResource(RESOURCE_WATER, tp.fuel_mass);
 
-    char date_buffer[30];
-    FormatTime(date_buffer, 30, tp.departure_time);
-    for(TransportContainer cont : payload) {
-        switch (cont.type) {
-        case TransportContainer::NONE: break;
-        case TransportContainer::QUEST:
-            USER_INFO(":: On %s, \"%s\" picked up quest on %s", 
-                date_buffer,
-                name,
-                GetPlanet(parent_planet)->name
-            );
-            break;
-        case TransportContainer::RESOURCE:
-            USER_INFO(":: On %s, \"%s\" picked up %f kg of %s on %s", 
-                date_buffer,
-                name,
-                cont.content.resource_transfer.quantity,
-                GetResourceData(cont.content.resource_transfer.resource_id).name,
-                GetPlanet(parent_planet)->name
-            );
-            break;
+    for(auto i = GlobalGetState()->quest_manager.active_quests.GetIter(); i; i++) {
+        if (GlobalGetState()->quest_manager.active_quests[i]->ship == id) {
+            GlobalGetState()->quest_manager.QuestDepartedFrom(i.index, parent_planet);
         }
     }
 
@@ -528,32 +426,10 @@ void Ship::_OnArrival(const TransferPlan& tp) {
     parent_planet = tp.arrival_planet;
     is_parked = true;
     position = GetPlanet(parent_planet)->position;
-    for(int i=0; i < payload.size(); i++) {
-        TransportContainer cont = payload[i];
-        switch (cont.type) {
-        case TransportContainer::NONE: break;
-        case TransportContainer::QUEST:{
-            const Quest* quest = GlobalGetState()->quest_manager._active_quests.Get(cont.content.quest);
-            if (quest->arrival_planet == tp.arrival_planet) {
-                payload.erase(payload.begin() + i--);
-                GlobalGetState()->quest_manager.CompleteQuest(cont.content.quest);
-            }
-        break;}
-        case TransportContainer::RESOURCE:{
-            ResourceTransfer rt = cont.content.resource_transfer;
-            payload.erase(payload.begin() + i--);
-            resource_count_t delivered = GetPlanet(tp.arrival_planet)->economy.GiveResource(rt.resource_id, rt.quantity);  // Ignore how much actually arrives (for now)
-
-            char date_buffer[30];
-            FormatTime(date_buffer, 30, tp.arrival_time);
-            USER_INFO(":: On %s, \"%s\" delivered %f kg of %s to %s", 
-                date_buffer,
-                name,
-                delivered,
-                GetResourceData(rt.resource_id).name,
-                GetPlanet(parent_planet)->name
-            );
-        break;}
+    for(auto i = GlobalGetState()->quest_manager.active_quests.GetIter(); i; i++) {
+        const Quest* quest = GlobalGetState()->quest_manager.active_quests[i];
+        if (quest->ship == id && quest->arrival_planet == tp.arrival_planet) {
+            GlobalGetState()->quest_manager.QuestArrivedAt(i.index, tp.arrival_planet);
         }
     }
 
@@ -592,8 +468,6 @@ void Ships::ClearShips(){
 }
 
 entity_id_t Ships::AddShip(const DataNode* data) {
-    //printf("Adding Ship N°%d\n", index)
-    //entity_map.insert({uuid, ship_entity});
     Ship *ship;
     int ship_entity = alloc.Allocate(&ship);
     
@@ -632,6 +506,8 @@ int Ships::LoadShipClasses(const DataNode* data) {
         sc.max_capacity = ship_data->GetF("capacity", 0) * 1000;  // t -> kg
         sc.max_dv = ship_data->GetF("dv", 0) * 1000;  // km/s -> m/s
         sc.v_e = ship_data->GetF("Isp", 0) * 1000;    // km/s -> m/s
+        sc.oem = sc.max_capacity / (exp(sc.max_dv/sc.v_e) - 1);
+        ASSERT_ALOMST_EQUAL_FLOAT(sc.v_e * log((sc.max_capacity + sc.oem) / sc.oem), sc.max_dv)   // Remove when we're sure thisworks
 
         ship_classes[index] = sc;
         auto pair = ship_classes_ids.insert_or_assign(ship_data->Get("id", "_"), index);

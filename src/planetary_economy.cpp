@@ -59,9 +59,9 @@ void PlanetaryEconomy::Update() {
     if (global_resource_data[0].name == 0) {
         FAIL("Resources uninititalized")
     }
-    Time now = GlobalGetNow();
-    Time prev = GlobalGetPreviousFrameTime();
-    double delta_T = TimeDays(TimeSub(now, prev));
+    timemath::Time now = GlobalGetNow();
+    timemath::Time prev = GlobalGetPreviousFrameTime();
+    double delta_T = timemath::TimeDays(TimeSub(now, prev));
     for (int i=0; i < RESOURCE_MAX; i++) {
         resource_stock[i] = Clamp(resource_stock[i] + resource_delta[i] * delta_T, 0, resource_capacity[i]);
     }

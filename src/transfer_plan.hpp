@@ -12,8 +12,8 @@ struct TransferPlan {
     // Inputs
     entity_id_t departure_planet;
     entity_id_t arrival_planet;
-    Time departure_time;
-    Time arrival_time;
+    timemath::Time departure_time;
+    timemath::Time arrival_time;
 
     // Outputs
     int num_solutions;
@@ -28,8 +28,8 @@ struct TransferPlan {
     int primary_solution;
 
     // Cached
-    Time hohmann_departure_time;
-    Time hohmann_arrival_time;
+    timemath::Time hohmann_departure_time;
+    timemath::Time hohmann_arrival_time;
 
     TransferPlan();
 
@@ -53,7 +53,7 @@ struct TransferPlanUI {
     Vector2 arrival_handle_pos;
     bool redraw_queued;
 
-    Time time_bounds[2];
+    timemath::Time time_bounds[2];
 
     TransferPlanUI() { Make(); }
     void Make();
@@ -61,7 +61,7 @@ struct TransferPlanUI {
     void Update();
     void Draw(const CoordinateTransform* c_transf);
     void DrawUI();
-    void SetPlan(TransferPlan* plan, entity_id_t ship, Time min_time, Time pos_time);
+    void SetPlan(TransferPlan* plan, entity_id_t ship, timemath::Time min_time, timemath::Time pos_time);
     void SetResourceType(ResourceType resource_type);
     void SetLogistics(resource_count_t payload_mass, resource_count_t fuel_mass);
     void SetDestination(entity_id_t planet);

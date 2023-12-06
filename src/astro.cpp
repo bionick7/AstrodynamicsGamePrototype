@@ -90,7 +90,7 @@ double _Mean2TrueHyp(double M, double e) {
     return _Ecc2TrueHyp(_Mean2EccHyp(M, e), e);
 }
 
-Orbit OrbitFromElements(double semi_major_axis, double eccenetricity, double longuitude_of_periapsis, double mu, Time epoch, bool is_prograde) {
+Orbit OrbitFromElements(double semi_major_axis, double eccenetricity, double longuitude_of_periapsis, double mu, timemath::Time epoch, bool is_prograde) {
     Orbit res = {0};
     res.mu = mu;
     res.sma = semi_major_axis;
@@ -101,7 +101,7 @@ Orbit OrbitFromElements(double semi_major_axis, double eccenetricity, double lon
     return res;
 }
 
-Orbit OrbitFromCartesian(Vector2 pos, Vector2 vel, Time t, double mu) {
+Orbit OrbitFromCartesian(Vector2 pos, Vector2 vel, timemath::Time t, double mu) {
     double r = Vector2Length(pos);
     double energy = Vector2LengthSqr(vel) / 2 - mu / r;
     double ang_mom = fabs(pos.x*vel.y - pos.y*vel.x);
@@ -114,11 +114,11 @@ Orbit OrbitFromCartesian(Vector2 pos, Vector2 vel, Time t, double mu) {
     double lop = atan2(ecc_vector.y, ecc_vector.x) + ecc_vector.x > 0 ? PI : 0;
     double angular_pos = (atan2(pos.y, pos.x) + pos.x > 0 ? PI : 0);
     double mean_motion = sqrt(mu / (a*a*a)) * (ang_mom > 0.0 ? 1.0 : -1.0);
-    Time period = TimeAddSec(t, (angular_pos - lop) / mean_motion);
+    timemath::Time period = timemath::TimeAddSec(t, (angular_pos - lop) / mean_motion);
     return OrbitFromElements(a, e, lop, mu, period, ang_mom > 0);
 }
 
-Orbit OrbitFrom2PointsAndSMA(OrbitPos pos1, OrbitPos pos2, Time time_at_pos1, double sma, double mu, bool is_prograde, bool cut_focus) {
+Orbit OrbitFrom2PointsAndSMA(OrbitPos pos1, OrbitPos pos2, timemath::Time time_at_pos1, double sma, double mu, bool is_prograde, bool cut_focus) {
     // https://en.wikipedia.org/wiki/Lambert%27s_problem
     // goes from pos1 to pos2
     //if (!is_prograde) Swap(&pos1, &pos2);
@@ -156,14 +156,14 @@ Orbit OrbitFrom2PointsAndSMA(OrbitPos pos1, OrbitPos pos2, Time time_at_pos1, do
     double M_1 = sma < 0 ? _True2MeanHyp(θ_1, e) : _True2Mean(θ_1, e);
     // TODO: what happens if the orbit is retrograde
 
-    Time period = TimeSub(time_at_pos1, Time(M_1 * sqrt(fabs(sma)*sma*sma / mu) * (is_prograde ? 1.0 : -1.0)));
+    timemath::Time period = timemath::TimeSub(time_at_pos1, timemath::Time(M_1 * sqrt(fabs(sma)*sma*sma / mu) * (is_prograde ? 1.0 : -1.0)));
     //period = fmod(period, sqrt(sma*sma*sma / mu) * 2*PI);
     return OrbitFromElements(sma, e, lop, mu, period, is_prograde);
 }
 
-OrbitPos OrbitGetPosition(const Orbit* orbit, Time time) {
+OrbitPos OrbitGetPosition(const Orbit* orbit, timemath::Time time) {
     OrbitPos res = {0};
-    res.M = TimeSeconds(TimeSub(time, orbit->epoch)) * OrbitGetMeanMotion(orbit);
+    res.M = timemath::TimeSeconds(TimeSub(time, orbit->epoch)) * OrbitGetMeanMotion(orbit);
     if (orbit->sma > 0) {
         res.M = fmod(res.M, PI*2);
         res.θ = _Mean2True(res.M, orbit->ecc);
@@ -188,16 +188,16 @@ Vector2 OrbitGetVelocity(const Orbit* orbit, OrbitPos pos) {
     return Vector2Rotate(local_vel, -pos.θ - orbit->lop);
 }
 
-Time OrbitGetTimeUntilFocalAnomaly(const Orbit* orbit, double θ, Time start_time) {
+timemath::Time OrbitGetTimeUntilFocalAnomaly(const Orbit* orbit, double θ, timemath::Time start_time) {
     // TODO for hyperbolic orbits
     if (orbit->sma < 0) {
         NOT_IMPLEMENTED
     }
     double mean_motion = OrbitGetMeanMotion(orbit);  // 1/s
-    Time period = Time(fabs(2 * PI /mean_motion));
+    timemath::Time period = timemath::Time(fabs(2 * PI /mean_motion));
     double M = _True2Mean(θ, orbit->ecc);
     double M0 = fmod(TimeSeconds(TimeSub(start_time, orbit->epoch)) * mean_motion, 2*PI);
-    Time diff = TimePosMod(Time((M - M0) / mean_motion), period);
+    timemath::Time diff = timemath::TimePosMod(timemath::Time((M - M0) / mean_motion), period);
     return diff;
 }
 
@@ -205,7 +205,7 @@ double OrbitGetMeanMotion(const Orbit* orbit) {
     return sqrt(orbit->mu / (fabs(orbit->sma)*orbit->sma*orbit->sma)) * (orbit->prograde ? 1.0 : -1.0);
 }
 
-Time OrbitGetPeriod(const Orbit* orbit) {
+timemath::Time OrbitGetPeriod(const Orbit* orbit) {
     if (orbit->sma < 0) return INFINITY;
     return 2 * PI * sqrt(orbit->sma*orbit->sma*orbit->sma / orbit->mu);
 }
@@ -214,7 +214,7 @@ void OrbitPrint(const Orbit* orbit) {
     printf("%s a = %f m, e = %f, lop = %f", (orbit->prograde ? "" : "R"), orbit->sma, orbit->ecc, orbit->lop);
 }
 
-void UpdateOrbit(const Orbit* orbit, Time time, Vector2* position, Vector2* velocity) {
+void UpdateOrbit(const Orbit* orbit, timemath::Time time, Vector2* position, Vector2* velocity) {
     OrbitPos orbit_position = OrbitGetPosition(orbit, time);
 
     *position = orbit_position.cartesian;
@@ -281,7 +281,7 @@ void DrawOrbitBounded(const Orbit* orbit, OrbitPos bound1, OrbitPos bound2, doub
     DrawLineStrip(&orbit_draw_buffer[0], ORBIT_BUFFER_SIZE, color);
 }
 
-void HohmannTransfer(const Orbit* from, const Orbit* to, Time t0, Time* departure, Time* arrival, double* dv1, double* dv2) {
+void HohmannTransfer(const Orbit* from, const Orbit* to, timemath::Time t0, timemath::Time* departure, timemath::Time* arrival, double* dv1, double* dv2) {
     double mu = from->mu;
     double hohmann_a = (from->sma + to->sma) * 0.5;
     double hohmann_flight_time = sqrt(hohmann_a*hohmann_a*hohmann_a / mu) * PI;
@@ -293,8 +293,8 @@ void HohmannTransfer(const Orbit* from, const Orbit* to, Time t0, Time* departur
     double departure_wait_time = (target_relative_anomaly - current_relative_annomaly) / relative_mean_motion;
     double relative_period = fabs(2 * PI / relative_mean_motion);
     departure_wait_time = PosMod(departure_wait_time, relative_period);
-    if (departure != NULL) *departure = TimeAdd(t0, departure_wait_time);
-    if (arrival   != NULL) *arrival = TimeAdd(t0, departure_wait_time + hohmann_flight_time);
+    if (departure != NULL) *departure = timemath::TimeAdd(t0, departure_wait_time);
+    if (arrival   != NULL) *arrival = timemath::TimeAdd(t0, departure_wait_time + hohmann_flight_time);
     if (dv1       != NULL) *dv1 = sqrt(mu * (2 / from->sma - 1 / hohmann_a)) - sqrt(mu / from->sma);
     if (dv2       != NULL) *dv2 = sqrt(mu / to->sma) - sqrt(mu * (2 / to->sma - 1 / hohmann_a));
 }

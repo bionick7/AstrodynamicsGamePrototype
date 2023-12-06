@@ -156,7 +156,7 @@ bool Planet::HasMouseHover(double* min_distance) const {
 }
 
 void Planet::Update() {
-    Time now = GlobalGetNow();
+    timemath::Time now = GlobalGetNow();
     position = OrbitGetPosition(&orbit, now);
     // RecalcStats();
     economy.Update();
@@ -290,6 +290,9 @@ entity_id_t Planets::AddPlanet(const DataNode* data) {
 }
 
 Planet* Planets::GetPlanet(entity_id_t id) const {
+    if (id >= planet_count) {
+        FAIL("Invalid planet id (%d)", id)
+    }
     return &planet_array[(int)id];
 }
 
@@ -326,7 +329,7 @@ int Planets::LoadEphemerides(const DataNode* data) {
         
         double sma = planet_data->GetF("SMA");
         double ann = planet_data->GetF("Ann") * DEG2RAD;
-        Time epoch = TimeSub(GlobalGetNow(), Time(ann / sqrt(parent.mu / (sma*sma*sma))));
+        timemath::Time epoch = timemath::TimeSub(GlobalGetNow(), timemath::Time(ann / sqrt(parent.mu / (sma*sma*sma))));
 
         nature->mu = planet_data->GetF("mass") * G;
         nature->radius = planet_data->GetF("radius");

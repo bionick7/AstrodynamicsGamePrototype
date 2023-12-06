@@ -36,7 +36,7 @@ struct GlobalState {
     int capital;
 
     // Lifecycle
-    void Make(Time time);
+    void Make(timemath::Time time);
     void LoadData();
     void LoadGame(const char* file_path);
     // Update
@@ -56,8 +56,8 @@ struct GlobalState {
 };
 
 GlobalState* GlobalGetState();
-Time GlobalGetNow();
-Time GlobalGetPreviousFrameTime();
+timemath::Time GlobalGetNow();
+timemath::Time GlobalGetPreviousFrameTime();
 Planet* GetPlanetByName(const char* planet_name);
 
 #endif // GLOBAL_STATE_H

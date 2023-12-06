@@ -114,8 +114,8 @@ void TransferPlanSolve(TransferPlan* tp) {
     ASSERT_ALOMST_EQUAL_FLOAT(from->orbit.mu, to->orbit.mu)
     double mu = from->orbit.mu;
 
-    Time t1 = tp->departure_time;
-    Time t2 = tp->arrival_time;
+    timemath::Time t1 = tp->departure_time;
+    timemath::Time t2 = tp->arrival_time;
     OrbitPos pos1 = OrbitGetPosition(&from->orbit, t1);
     OrbitPos pos2 = OrbitGetPosition(&to->orbit, t2);
     
@@ -123,7 +123,7 @@ void TransferPlanSolve(TransferPlan* tp) {
     double r_sum = pos1.r + pos2.r;
     double a_min = 0.25 * (r_sum + c);
     double K = sqrt((r_sum - c) / (r_sum + c));
-    double y = TimeSecDiff(t2, t1) * sqrt(mu / (a_min*a_min*a_min));
+    double y = timemath::TimeSecDiff(t2, t1) * sqrt(mu / (a_min*a_min*a_min));
 
     bool is_ellipse[2] =  {y > _Lambert(1e-3, K, 0), y > _Lambert(1e-3, K, 2)};
     bool first_solution[2] = { y < _Lambert(1, K, 0), y < _Lambert(1, K, 2) };
@@ -164,7 +164,7 @@ void TransferPlanSolve(TransferPlan* tp) {
         case 3: t_f_annomaly = (2*PI - (α - sin(α)) + β - sin(β)); break;
         }
         double t_f = sqrt(aa[i]*aa[i]*aa[i] / mu) * t_f_annomaly;
-        ASSERT_ALOMST_EQUAL_FLOAT(t_f, TimeSecDiff(t2, t1))
+        ASSERT_ALOMST_EQUAL_FLOAT(t_f, timemath::TimeSecDiff(t2, t1))
     }
 
     for (int i=0; i < tp->num_solutions; i++) {
@@ -172,7 +172,7 @@ void TransferPlanSolve(TransferPlan* tp) {
         // Direct orbit is retrograde
         bool is_prograde;
         if (is_ellipse[i]) {
-            bool direct_solution = TimeSecDiff(t2, t1) < PI * sqrt(fabs(aa[i])*aa[i]*aa[i] / mu);
+            bool direct_solution = timemath::TimeSecDiff(t2, t1) < PI * sqrt(fabs(aa[i])*aa[i]*aa[i] / mu);
             is_prograde = direct_solution ^ (i == 1);
         } else {
             is_prograde = i == 1;
@@ -216,8 +216,8 @@ void TransferPlan::Serialize(DataNode* data) const {
     data->SetF("fuel_mass", resource_transfer.quantity / 1000);
     data->SetI("departure_planet", (int)departure_planet);
     data->SetI("arrival_planet", (int)arrival_planet);
-    TimeSerialize(departure_time, data->SetChild("departure_time", DataNode()));
-    TimeSerialize(arrival_time, data->SetChild("arrival_time", DataNode()));
+    timemath::TimeSerialize(departure_time, data->SetChild("departure_time", DataNode()));
+    timemath::TimeSerialize(arrival_time, data->SetChild("arrival_time", DataNode()));
     data->SetI("primary_solution", primary_solution);
 }
 
@@ -227,8 +227,8 @@ void TransferPlan::Deserialize(const DataNode* data) {
     fuel_mass = data->GetF("fuel_mass", resource_transfer.quantity) * 1000;
     departure_planet = (entity_id_t) data->GetI("departure_planet", (int)departure_planet);
     arrival_planet = (entity_id_t) data->GetI("arrival_planet", (int)arrival_planet);
-    TimeDeserialize(&departure_time, data->GetChild("departure_time"));
-    TimeDeserialize(&arrival_time, data->GetChild("arrival_time"));
+    timemath::TimeDeserialize(&departure_time, data->GetChild("departure_time"));
+    timemath::TimeDeserialize(&arrival_time, data->GetChild("arrival_time"));
     primary_solution = data->GetI("primary_solution", primary_solution);
 
     GetPlanet(departure_planet);
@@ -286,7 +286,7 @@ void TransferPlanUI::Update() {
     if (IsIdValid(plan->departure_planet) && IsIdValid(plan->arrival_planet) && redraw_queued) {
         TransferPlanSolve(plan);
         is_valid = plan->num_solutions > 0 && plan->tot_dv <= ship_instance->GetCapableDV();
-        is_valid = is_valid && TimeIsEarlier(GetTime(), plan->departure_time);
+        is_valid = is_valid && timemath::TimeIsEarlier(GetTime(), plan->departure_time);
 
         redraw_queued = false;
     }
@@ -308,7 +308,7 @@ void TransferPlanUI::Update() {
     }
 }
 
-void _TransferPlanInitialize(TransferPlan* tp, Time t0) {
+void _TransferPlanInitialize(TransferPlan* tp, timemath::Time t0) {
     // Sets departure and arrival time to the dv-cheapest values (assuming hohmann transfer)
     ASSERT(IsIdValid(tp->departure_planet))
     ASSERT(IsIdValid(tp->arrival_planet))
@@ -323,11 +323,11 @@ void _TransferPlanInitialize(TransferPlan* tp, Time t0) {
     tp->arrival_time = tp->hohmann_arrival_time;
 }
 
-void _DrawSweep(const Orbit* orbit, Time from, Time to, Color color) {
+void _DrawSweep(const Orbit* orbit, timemath::Time from, timemath::Time to, Color color) {
     OrbitPos from_pos = OrbitGetPosition(orbit, from);
     OrbitPos to_pos = OrbitGetPosition(orbit, to);
 
-    int full_orbits = floor(TimeSecDiff(to, from) / TimeSeconds(OrbitGetPeriod(orbit)));
+    int full_orbits = floor(TimeSecDiff(to, from) / timemath::TimeSeconds(OrbitGetPeriod(orbit)));
     double offset_per_pixel = GetScreenTransform()->InvTransformS(1);
     for (int i=1; i <= full_orbits; i++) {
         DrawOrbitWithOffset(orbit, offset_per_pixel * -3 * i, color);
@@ -335,7 +335,7 @@ void _DrawSweep(const Orbit* orbit, Time from, Time to, Color color) {
     DrawOrbitBounded(orbit, from_pos, to_pos, offset_per_pixel*3, color);
 }
 
-void _DrawTransferOrbit(const TransferPlan* plan, int solution, bool is_secondary, Time t0) {
+void _DrawTransferOrbit(const TransferPlan* plan, int solution, bool is_secondary, timemath::Time t0) {
     const Planet* from = GetPlanet(plan->departure_planet);
     const Planet* to = GetPlanet(plan->arrival_planet);
     Color velocity_color = YELLOW;
@@ -351,9 +351,9 @@ void _DrawTransferOrbit(const TransferPlan* plan, int solution, bool is_secondar
     DrawOrbitBounded(&plan->transfer_orbit[solution], pos1, pos2, 0, orbit_color);
 }
 
-Time _DrawHandle(
+timemath::Time _DrawHandle(
     const CoordinateTransform* c_transf, Vector2 pos, const Orbit* orbit, 
-    Time current, Time t0, bool* is_dragging
+    timemath::Time current, timemath::Time t0, bool* is_dragging
 ) {
     Color c = PALETTE_BLUE;
 
@@ -366,8 +366,8 @@ Time _DrawHandle(
     Vector2 plus_pos = Vector2Add(node_pos, Vector2Scale(tangent_dir, -23));
     Vector2 minus_pos = Vector2Add(node_pos, Vector2Scale(tangent_dir, 23));
 
-    Time period = OrbitGetPeriod(orbit);
-    int full_orbits = floor(TimeSecDiff(current, t0) / TimeSeconds(period));
+    timemath::Time period = OrbitGetPeriod(orbit);
+    int full_orbits = floor(TimeSecDiff(current, t0) / timemath::TimeSeconds(period));
     if (full_orbits > 0) {
         char text_content[4];
         sprintf(text_content, "%+3d", full_orbits);
@@ -394,20 +394,20 @@ Time _DrawHandle(
     );
     ButtonStateFlags button_state_plus  = DrawCircleButton(plus_pos, 10, c);
     ButtonStateFlags button_state_minus = DrawCircleButton(minus_pos, 10, c);
-    if (button_state_plus & BUTTON_STATE_FLAG_JUST_PRESSED)  current = TimeAdd(current, period);
-    if (button_state_minus & BUTTON_STATE_FLAG_JUST_PRESSED) current = TimeSub(current, period);
+    if (button_state_plus & BUTTON_STATE_FLAG_JUST_PRESSED)  current = timemath::TimeAdd(current, period);
+    if (button_state_minus & BUTTON_STATE_FLAG_JUST_PRESSED) current = timemath::TimeSub(current, period);
     HandleButtonSound(button_state_plus);
     HandleButtonSound(button_state_minus);
     if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
         *is_dragging = false;
     }
     if (*is_dragging) {
-        Time t0_2 = TimeAddSec(t0, full_orbits * TimeSeconds(period));
+        timemath::Time t0_2 = timemath::TimeAddSec(t0, full_orbits * timemath::TimeSeconds(period));
 
         Vector2 mouse_pos_world = GetMousePositionInWorld();
         double longuitude = atan2(mouse_pos_world.y, mouse_pos_world.x);
         double θ = longuitude - orbit->lop;
-        current = TimeAdd(t0_2, OrbitGetTimeUntilFocalAnomaly(orbit, θ, t0_2));
+        current = timemath::TimeAdd(t0_2, OrbitGetTimeUntilFocalAnomaly(orbit, θ, t0_2));
         ASSERT(TimeIsEarlier(t0, current));
     }
     return current;
@@ -423,9 +423,9 @@ void TransferPlanUI::Draw(const CoordinateTransform* c_transf) {
     departure_handle_pos = c_transf->TransformV(OrbitGetPosition(&from->orbit, plan->departure_time).cartesian);
     arrival_handle_pos = c_transf->TransformV(OrbitGetPosition(&to->orbit, plan->arrival_time).cartesian);
 
-    Time new_departure_time = _DrawHandle(c_transf, departure_handle_pos, &from->orbit, plan->departure_time, time_bounds[0], &is_dragging_departure);
-    Time new_arrival_time = _DrawHandle(c_transf, arrival_handle_pos, &to->orbit, plan->arrival_time, time_bounds[0], &is_dragging_arrival);
-    if (TimeIsEarlier(time_bounds[0], new_departure_time) && TimeIsEarlier(new_departure_time, plan->arrival_time)){
+    timemath::Time new_departure_time = _DrawHandle(c_transf, departure_handle_pos, &from->orbit, plan->departure_time, time_bounds[0], &is_dragging_departure);
+    timemath::Time new_arrival_time = _DrawHandle(c_transf, arrival_handle_pos, &to->orbit, plan->arrival_time, time_bounds[0], &is_dragging_arrival);
+    if (TimeIsEarlier(time_bounds[0], new_departure_time) && timemath::TimeIsEarlier(new_departure_time, plan->arrival_time)){
         plan->departure_time = new_departure_time;
         redraw_queued = true;
     }
@@ -467,15 +467,14 @@ void TransferPlanUI::DrawUI() {
     char payload_str[40];
 
     double total_dv = plan->dv1[plan->primary_solution] + plan->dv2[plan->primary_solution];
-    FormatTime(departure_time_outpstr, 30, TimeSub(plan->departure_time, time_bounds[0]));
-    FormatTime(arrival_time_outpstr, 30, TimeSub(plan->arrival_time, time_bounds[0]));
+    FormatTime(departure_time_outpstr, 30, timemath::TimeSub(plan->departure_time, time_bounds[0]));
+    FormatTime(arrival_time_outpstr, 30, timemath::TimeSub(plan->arrival_time, time_bounds[0]));
     snprintf(dv1_str,   40, "DV 1      %5.3f km/s", plan->dv1[plan->primary_solution]/1000.0);
     snprintf(dv2_str,   40, "DV 2      %5.3f km/s", plan->dv2[plan->primary_solution]/1000.0);
     snprintf(dvtot_str, 40, "DV Tot    %5.3f km/s", total_dv/1000.0);
 
     double capacity = ship_instance->GetRemainingPayloadCapacity(total_dv);
     double max_capacity = ship_instance->GetRemainingPayloadCapacity(0);
-    DEBUG_SHOW_F(max_capacity + ship_instance->GetPayloadMass())
 
     if (capacity >= 0) {
         snprintf(payload_str, 40, "Payload cap.  %3.0f %% (%.0f / %.0f t)", 
@@ -491,7 +490,7 @@ void TransferPlanUI::DrawUI() {
     UIContextPushInset(0, 18);
         UIContextWrite(strcat(arrival_time_str, arrival_time_outpstr));
         UIContextFillline(
-            fmin(TimeSecDiff(plan->arrival_time, time_bounds[0]) / TimeSecDiff(plan->hohmann_arrival_time, time_bounds[0]), 1.0), 
+            fmin(TimeSecDiff(plan->arrival_time, time_bounds[0]) / timemath::TimeSecDiff(plan->hohmann_arrival_time, time_bounds[0]), 1.0), 
             TRANSFER_UI_COLOR, BG_COLOR
         );
     UIContextPop();  // Inset
@@ -504,7 +503,7 @@ void TransferPlanUI::DrawUI() {
     UIContextPop();  // Inset
 }
 
-void TransferPlanUI::SetPlan(TransferPlan* pplan, entity_id_t pship, Time pmin_time, Time pmax_time) {
+void TransferPlanUI::SetPlan(TransferPlan* pplan, entity_id_t pship, timemath::Time pmin_time, timemath::Time pmax_time) {
     if (is_dragging_departure || is_dragging_arrival) {
         return;
     }

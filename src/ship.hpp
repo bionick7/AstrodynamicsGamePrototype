@@ -14,20 +14,6 @@
 
 typedef uint16_t shipclass_index_t;
 
-struct TransportContainer {
-    enum { NONE, QUEST, RESOURCE } type;
-    union ContainerUnion {
-        entity_id_t quest;
-        ResourceTransfer resource_transfer;
-    } content;
-
-    TransportContainer();
-    TransportContainer(entity_id_t quest);
-    TransportContainer(ResourceTransfer resource_transfer);
-    resource_count_t GetMass() const;
-    Quest* GetQuestPtr() const;
-};
-
 struct ShipClass {
     char name[SHIPCLASS_NAME_MAX_SIZE];
     char description[SHIPCLASS_DESCRIPTION_MAX_SIZE];
@@ -36,6 +22,9 @@ struct ShipClass {
     double max_dv;
     double v_e;
     resource_count_t max_capacity;
+
+    // Ease-of-use variables
+    double oem;
 
     double GetPayloadCapacity(double dv) const;
     double GetFuelRequiredEmpty(double dv) const;
@@ -46,7 +35,6 @@ struct Ship {
     // Inherent properties
     char name[SHIP_NAME_MAX_SIZE];
     shipclass_index_t ship_class;
-    //const ShipClass* ship_class;
 
     // Current state
     bool is_parked;
@@ -58,9 +46,6 @@ struct Ship {
     TransferPlan prepared_plans[SHIP_MAX_PREPARED_PLANS];
     int plan_edit_index;
     int highlighted_plan_index;
-
-    // Payload
-    std::vector<TransportContainer> payload;
 
     // UI state
     Vector2 draw_pos;

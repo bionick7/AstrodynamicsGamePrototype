@@ -1,4 +1,5 @@
 #include "datanode.hpp"
+#include "time.hpp"
 #include "logging.hpp"
 
 const DataNode DataNode::Empty = DataNode();
@@ -418,6 +419,11 @@ double DataNode::GetF(const char* key, double def, bool quiet) const {
     return res;
 }
 
+timemath::Time DataNode::GetDate(const char *key, timemath::Time def, bool quiet) const {
+    timemath::TimeDeserialize(&def, GetChild(key, quiet));
+    return def;
+}
+
 DataNode* DataNode::GetChild(const char* key, bool quiet) const {
     auto it = Children.find(key);
     if (it != Children.end()) {
@@ -551,15 +557,19 @@ void DataNode::Set(const char* key, const char* value) {
 }
 
 void DataNode::SetI(const char* key, int value) {
-    char buffer[100];
+    char buffer[20];
     sprintf(buffer, "%d", value);
     Set(key, buffer);
 }
 
 void DataNode::SetF(const char* key, double value) {
-    char buffer[100];
+    char buffer[30];
     sprintf(buffer, "%f", value);
     Set(key, buffer);
+}
+
+void DataNode::SetDate(const char* key, timemath::Time value) {
+    timemath::TimeSerialize(value, SetChild(key, DataNode()));
 }
 
 DataNode* DataNode::SetChild(const char* key, const DataNode& val) {

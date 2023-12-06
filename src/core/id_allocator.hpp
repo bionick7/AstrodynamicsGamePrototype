@@ -39,7 +39,7 @@ struct IDAllocatorList {
         for(int i = 0; i < ceil(capacity / 64.); i++) verifier_array[i] = 0;
     }
 
-    entity_id_t Allocate(T** ret_ptr) {
+    entity_id_t Allocate(T** ret_ptr=NULL) {
         if (alloc_count >= capacity) {
             capacity += 32;
             array = (T*)realloc(array, sizeof(T) * capacity);
@@ -55,11 +55,13 @@ struct IDAllocatorList {
         if (ret_ptr != NULL) {
             *ret_ptr = Get(free_index);
         }
+        *Get(free_index) = T();
         alloc_count++;
         return free_index;
     }
 
     void Erase(entity_id_t index) {
+        Get(index)->~T();
         alloc_count--;
         free_index_array[alloc_count] = index;
         verifier_array[index/64] &= ~(1ul << (index % 64));
