@@ -24,6 +24,13 @@ void _GenerateRandomQuest(Quest* quest, const QuestTemplate* quest_template) {
     quest->arrival_planet = quest_template->GetRandomArrivalPlanet(quest->departure_planet);
 }
 
+void _ClearQuest(Quest* quest) {
+    quest->payload_mass = 0;
+    quest->payout = 0;
+    quest->departure_planet = GetInvalidId();
+    quest->arrival_planet = GetInvalidId();
+}
+
 
 // ========================================
 //              Quest Templat
@@ -113,13 +120,17 @@ void Quest::Deserialize(const DataNode* data) {
     payout =                    data->GetF("payout", payout);
 }
 
-bool Quest::IsReadyForCompletion() const {
-    return false;
+bool Quest::IsValid() const {
+    return IsIdValid(departure_planet) && IsIdValid(arrival_planet);
 }
 
 ButtonStateFlags Quest::DrawUI(bool show_as_button, bool highlinght) const {
     // Assumes parent UI Context exists
     // Resturns if player wants to accept
+    if (!IsValid()) {
+        return BUTTON_STATE_FLAG_NONE;
+    }
+
     int height = UIContextPushInset(3, 50);
     if (height == 0) {
         UIContextPop();
@@ -221,13 +232,15 @@ void QuestManager::Update(double dt) {
         if (TimeIsEarlier(quest->delivery_expiration_time, now)) {
             active_quests.Erase(i);
         }
-        if (quest->IsReadyForCompletion()) {
-            CompleteQuest(i.index);
-            active_quests.Erase(i);
-        }
     }
     for(int i=0; i < AVAILABLE_QUESTS_NUM; i++) {
         if (TimeIsEarlier(available_quests[i].pickup_expiration_time, now)) {
+            _GenerateRandomQuest(&available_quests[i], &templates[RandomTemplateIndex()]);
+        }
+    }
+
+    if (GlobalGetState()->calendar.IsNewDay()) {
+        for(int i=0; i < AVAILABLE_QUESTS_NUM; i++) {
             _GenerateRandomQuest(&available_quests[i], &templates[RandomTemplateIndex()]);
         }
     }
@@ -270,7 +283,7 @@ void QuestManager::AcceptQuest(entity_id_t quest_index) {
     active_quests.Allocate(&q);
     q->CopyFrom(&available_quests[quest_index]);
     q->current_planet = q->departure_planet;
-    _GenerateRandomQuest(&available_quests[quest_index], &templates[RandomTemplateIndex()]);
+    _ClearQuest(&available_quests[quest_index]);
 }
 
 void QuestManager::PickupQuest(entity_id_t ship_index, entity_id_t quest_index) {
@@ -354,7 +367,8 @@ int QuestManager::LoadQuests(const DataNode* data) {
 }
 
 int QuestManager::RandomTemplateIndex() {
-    return GetRandomValue(0, template_count - 1);
+    int res = GetRandomValue(0, template_count - 1);
+    return res;
 }
 
 

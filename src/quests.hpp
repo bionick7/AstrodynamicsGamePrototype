@@ -40,7 +40,7 @@ struct Quest {
     void Serialize(DataNode* data) const;
     void Deserialize(const DataNode* data);
 
-    bool IsReadyForCompletion() const;
+    bool IsValid() const;
     ButtonStateFlags DrawUI(bool show_as_button, bool highlight) const;
 };
 

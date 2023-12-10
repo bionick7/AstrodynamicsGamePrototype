@@ -5,6 +5,7 @@
 #include "constants.hpp"
 #include "audio_server.hpp"
 #include "quests.hpp"
+#include "timeline.hpp"
 
 GlobalState global_state;
 
@@ -20,10 +21,6 @@ GlobalState* GlobalGetState() {
 
 timemath::Time GlobalGetNow() {
     return global_state.calendar.time;
-}
-
-timemath::Time GlobalGetPreviousFrameTime() {
-    return global_state.calendar.prev_time;
 }
 
 void GlobalState::_InspectState() {
@@ -269,6 +266,8 @@ void GlobalState::DrawState() {
     active_transfer_plan.DrawUI();
     quest_manager.Draw();
 
+    DrawTimeLine();
+    
     if (is_in_pause_menu){
         _PauseMenu();
     }

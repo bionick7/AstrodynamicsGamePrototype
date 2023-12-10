@@ -22,6 +22,9 @@ struct Calendar {
     timemath::Time AdvanceTime(double delta_t);
     void HandleInput(double delta_t);
     void DrawUI() const;
+
+    bool IsNewDay() const;
+    timemath::Time GetFrameElapsedGameTime() const;
 };
 
 Calendar* GetCalendar();

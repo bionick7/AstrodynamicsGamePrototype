@@ -87,6 +87,14 @@ void Calendar::DrawUI() const {
     }
 }
 
+bool Calendar::IsNewDay() const {
+    return (int)TimeDays(prev_time) != (int)TimeDays(time);
+}
+
+timemath::Time Calendar::GetFrameElapsedGameTime() const {
+    return timemath::TimeSub(time, prev_time);
+}
+
 Calendar* GetCalendar() {
     return &GlobalGetState()->calendar;
 }

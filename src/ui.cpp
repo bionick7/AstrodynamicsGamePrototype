@@ -22,8 +22,8 @@ void DrawTextAligned(const char* text, Vector2 pos, TextAlignment alignment, Col
     } else {  // top - aligned
         // Do nothing
     }
-    Vector2 bottom_left = Vector2Subtract(pos, Vector2Scale(size, 0.5));
-    DrawTextEx(GetCustomDefaultFont(), text, bottom_left, 16, 1, c);
+    //Vector2 bottom_left = Vector2Subtract(pos, Vector2Scale(size, 0.5));
+    DrawTextEx(GetCustomDefaultFont(), text, pos, 16, 1, c);
 }
 
 ButtonStateFlags _GetButtonState(bool is_in_area, bool was_in_area) {

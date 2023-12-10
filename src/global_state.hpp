@@ -57,6 +57,5 @@ struct GlobalState {
 
 GlobalState* GlobalGetState();
 timemath::Time GlobalGetNow();
-timemath::Time GlobalGetPreviousFrameTime();
 
 #endif // GLOBAL_STATE_H
