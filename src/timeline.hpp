@@ -3,6 +3,8 @@
 
 #include "ui.hpp"
 
-void DrawTimeLine();
+bool TimelineShown();
+void TimelineHide();
+void DrawTimeline();
 
 #endif  // TIMELINE_H

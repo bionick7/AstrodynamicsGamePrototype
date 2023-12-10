@@ -41,7 +41,7 @@ resource_missions:
   departure: [Mimas, Encelladus, Tethys, Rhea]
   destination: [Mimas, Encelladus, Tethys, Rhea]
   ship_accesibilty: [shp_bulk_transport]
-  payout: 1000_000
+  payout: 1.e+6
 
 - payload: 1000
   flavour: Bring half a ton of fertilizer to {{destination}}

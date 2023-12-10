@@ -437,7 +437,7 @@ void TransferPlanUI::Draw(const CoordinateTransform* c_transf) {
         _DrawTransferOrbit(plan, plan->primary_solution, false, time_bounds[0]);
     } else if (plan->num_solutions == 2) {
         _DrawTransferOrbit(plan, plan->primary_solution, false, time_bounds[0]);
-        _DrawTransferOrbit(plan, 1 - plan->primary_solution, true, time_bounds[0]);
+        //_DrawTransferOrbit(plan, 1 - plan->primary_solution, true, time_bounds[0]);
     }
 }
 
@@ -459,7 +459,7 @@ void TransferPlanUI::DrawUI() {
     
     StringBuilder sb = StringBuilder();
     sb.Add("Departs in ").AddTime(timemath::TimeSub(plan->departure_time, time_bounds[0]));
-    sb.Add("\nArrives in ").AddTime(timemath::TimeSub(plan->departure_time, time_bounds[0]));
+    sb.Add("\nArrives in ").AddTime(timemath::TimeSub(plan->arrival_time, time_bounds[0]));
     UIContextWrite(sb.c_str);
     UIContextPushInset(0, 18);
     UIContextFillline(

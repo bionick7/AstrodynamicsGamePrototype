@@ -1,10 +1,10 @@
-capital: 1000000.000000
+capital: 0.000000
 focused_planet: -1
 focused_ship: -1
 calendar:
   migration_arrrival_planet: 0
   paused: y
-  time_scale: 2048.000000
+  time_scale: 32768.000000
   current_migration_period:
     t: 5356800.000000
 
@@ -12,119 +12,106 @@ calendar:
     t: 5356800.000000
 
   time:
-    t: 0.000000
+    t: 205448.533333
 
 
 coordinate_transform:
-  focus_x: -155966512.000000
-  focus_y: 64698032.000000
-  log_space_scale: -6.173575
+  focus_x: 111987072.000000
+  focus_y: -99572448.000000
+  log_space_scale: -6.060701
 
 quests:
   active_quests:
+  - arrival_planet: 0
+    current_planet: 2
+    departure_planet: 2
+    payload_mass: 100000.000000
+    payout: 200000.000
+    ship: 1
+    delivery_expiration_time:
+      t: 950826.666667
+
+    pickup_expiration_time:
+      t: 691626.666667
+
+
+  - arrival_planet: 1
+    current_planet: 2
+    departure_planet: 2
+    payload_mass: 500000.000000
+    payout: 1000000.000
+    ship: 0
+    delivery_expiration_time:
+      t: 950826.666667
+
+    pickup_expiration_time:
+      t: 518826.666667
+
+
+  available_quests:
+  - arrival_planet: -1
+    current_planet: -1
+    departure_planet: -1
+    payload_mass: 0.000000
+    payout: 0.000000
+    ship: -1
+    delivery_expiration_time:
+      t: 950826.666667
+
+    pickup_expiration_time:
+      t: 691626.666667
+
+
   - arrival_planet: 2
-    current_planet: 1
+    current_planet: -1
+    departure_planet: 0
+    payload_mass: 100000.000000
+    payout: 200000.000
+    ship: -1
+    delivery_expiration_time:
+      t: 1080426.666667
+
+    pickup_expiration_time:
+      t: 605226.666667
+
+
+  - arrival_planet: 3
+    current_planet: -1
+    departure_planet: 4
+    payload_mass: 100000.000000
+    payout: 200000.000000
+    ship: -1
+    delivery_expiration_time:
+      t: 1102026.666667
+
+    pickup_expiration_time:
+      t: 691626.666667
+
+
+  - arrival_planet: -1
+    current_planet: -1
+    departure_planet: -1
+    payload_mass: 0.000000
+    payout: 0.000000
+    ship: -1
+    delivery_expiration_time:
+      t: 950826.666667
+
+    pickup_expiration_time:
+      t: 518826.666667
+
+
+  - arrival_planet: 2
+    current_planet: -1
     departure_planet: 1
     payload_mass: 1000000.000000
     payout: 1500000.000000
     ship: -1
     delivery_expiration_time:
-      t: 864000.000000
+      t: 994026.666667
 
     pickup_expiration_time:
-      t: 432000.000000
-
-
-  - arrival_planet: 0
-    current_planet: 5
-    departure_planet: 5
-    payload_mass: 100000.000000
-    payout: 1000000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 864000.000000
-
-    pickup_expiration_time:
-      t: 432000.000000
-
-
-  - arrival_planet: 4
-    current_planet: 5
-    departure_planet: 5
-    payload_mass: 100000.000000
-    payout: 1000000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 864000.000000
-
-    pickup_expiration_time:
-      t: 432000.000000
-
-
-  available_quests:
-  - arrival_planet: 2
-    current_planet: -1
-    departure_planet: 5
-    payload_mass: 100000.000000
-    payout: 1000000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 864000.000000
-
-    pickup_expiration_time:
-      t: 432000.000000
-
-
-  - arrival_planet: 0
-    current_planet: -1
-    departure_planet: 5
-    payload_mass: 100000.000000
-    payout: 1000000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 864000.000000
-
-    pickup_expiration_time:
-      t: 432000.000000
-
-
-  - arrival_planet: -1
-    current_planet: -1
-    departure_planet: -1
-    payload_mass: 0.000000
-    payout: 0.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 864000.000000
-
-    pickup_expiration_time:
-      t: 432000.000000
-
-
-  - arrival_planet: -1
-    current_planet: -1
-    departure_planet: -1
-    payload_mass: 0.000000
-    payout: 0.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 864000.000000
-
-    pickup_expiration_time:
-      t: 432000.000000
-
-
-  - arrival_planet: -1
-    current_planet: -1
-    departure_planet: -1
-    payload_mass: 0.000000
-    payout: 0.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 864000.000000
-
-    pickup_expiration_time:
-      t: 432000.000000
+      t: 648426.666667
 
 
 
@@ -163,6 +150,7 @@ planets:
 
   buildings:
   - mod_pop_small
+  - mod_food_mine
 
 - id: 2
   name: Tethys
@@ -177,10 +165,11 @@ planets:
     electronics: 6.000000
     food: 0.000000
     metal: 0.000000
-    water: 1000.000000
+    water: 1979.882625
 
   buildings:
   - mod_pop_small
+  - mod_food_mine
 
 - id: 3
   name: Rhea
@@ -258,7 +247,20 @@ ships:
   planet: Tethys
   resource_id: -1
   resource_qtt: 0.000000
-  prepared_plans: []
+  prepared_plans:
+  - arrival_planet: 1
+    departure_planet: 2
+    fuel_mass: 0.000000
+    primary_solution: 0
+    resource_transfer_id: -1
+    resource_transfer_qtt: 0.000000
+    arrival_time:
+      t: 703437.448544
+
+    departure_time:
+      t: 633355.176070
+
+
 
 - class_id: shp_light_transport
   id: 1
@@ -268,17 +270,17 @@ ships:
   resource_id: -1
   resource_qtt: 0.000000
   prepared_plans:
-  - arrival_planet: 1
+  - arrival_planet: 0
     departure_planet: 2
     fuel_mass: 0.000000
-    primary_solution: 0
+    primary_solution: 1
     resource_transfer_id: -1
     resource_transfer_qtt: 0.000000
     arrival_time:
-      t: 272100.035842
+      t: 280271.039120
 
     departure_time:
-      t: 202017.763368
+      t: 217878.801378
 
 
 

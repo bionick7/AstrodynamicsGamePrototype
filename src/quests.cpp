@@ -18,8 +18,10 @@ void _GenerateRandomQuest(Quest* quest, const QuestTemplate* quest_template) {
 
     quest->payload_mass = quest_template->payload;
     quest->payout = quest_template->payout;
-    quest->pickup_expiration_time = timemath::TimeAddSec(now, 86400 * 5);
-    quest->delivery_expiration_time = timemath::TimeAddSec(now, 86400 * 10);
+    int start_quarter_days = (int) GetRandomValue(4*4, 6*4);
+    int end_quarter_days = (int) GetRandomValue(9*4, 11*4);
+    quest->pickup_expiration_time = timemath::TimeAddSec(now, 21600 * start_quarter_days);
+    quest->delivery_expiration_time = timemath::TimeAddSec(now, 21600 * end_quarter_days);
     quest->departure_planet = quest_template->GetRandomDeparturePlanet();
     quest->arrival_planet = quest_template->GetRandomArrivalPlanet(quest->departure_planet);
 }
@@ -33,7 +35,7 @@ void _ClearQuest(Quest* quest) {
 
 
 // ========================================
-//              Quest Templat
+//              Quest Template
 // ========================================
 
 
@@ -324,8 +326,9 @@ void QuestManager::QuestArrivedAt(entity_id_t quest_index, entity_id_t planet_in
 }
 
 void QuestManager::CompleteQuest(entity_id_t quest_index) {
-    INFO("Quest completed")
-    NOT_IMPLEMENTED
+    Quest* q = active_quests[quest_index];
+    INFO("Quest completed (%f $$)", q->payout)
+    GlobalGetState()->CompleteTransaction(q->payout, "Completed quest");
 }
 
 cost_t QuestManager::CollectPayout() {

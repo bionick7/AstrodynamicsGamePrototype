@@ -145,6 +145,12 @@ void _HandleDeselect(GlobalState* gs) {
     else if (gs->quest_manager.show_ui) {
         gs->quest_manager.show_ui = false;
     } 
+
+    // out of timeline
+    else if (TimelineShown()) {
+        TimelineHide();
+    } 
+
     // cancel out of focused planet and ship
     else if (BuildingConstructionIsOpen()) {
         BuildingConstructionClose();
@@ -264,9 +270,8 @@ void GlobalState::DrawState() {
         ship->DrawUI(&c_transf);
     }
     active_transfer_plan.DrawUI();
+    DrawTimeline();
     quest_manager.Draw();
-
-    DrawTimeLine();
     
     if (is_in_pause_menu){
         _PauseMenu();
@@ -310,6 +315,7 @@ void GlobalState::Serialize(DataNode* data) const {
     }
 }
 
+// delta is the ammount of capital transferred TO the player
 bool GlobalState::CompleteTransaction(int delta, const char *message) {
     capital += delta;
     return true;

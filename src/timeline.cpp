@@ -195,7 +195,15 @@ void _DrawShips(TimeLineCoordinateData* tcd, const Ships* ships) {
 
 bool show_timeline = true;
 
-void DrawTimeLine() {
+bool TimelineShown() {
+    return show_timeline;
+}
+
+void TimelineHide() {
+    show_timeline = false;
+}
+
+void DrawTimeline() {
     // Manage viewing
     if (IsKeyPressed(KEY_W)) {
         show_timeline = !show_timeline;
