@@ -9,7 +9,6 @@ Planet::Planet(const char* p_name, double p_mu, double p_radius) {
     strcpy(name, p_name);
     mu = p_mu;
     radius = p_radius;
-    orbit = OrbitFromElements(1, 0, 0, 1, 0, true);
 
     for (int i = 0; i < MAX_PLANET_BUILDINGS; i++) {
         buildings[i] = BuildingInstance(BUILDING_INDEX_INVALID);
@@ -162,7 +161,7 @@ bool Planet::HasMouseHover(double* min_distance) const {
 
 void Planet::Update() {
     timemath::Time now = GlobalGetNow();
-    position = OrbitGetPosition(&orbit, now);
+    position = orbit.GetPosition(now);
     // RecalcStats();
     economy.Update();
 }
@@ -172,7 +171,7 @@ void Planet::Draw(const CoordinateTransform* c_transf) {
     Vector2 screen_pos = c_transf->TransformV(position.cartesian);
     DrawCircleV(screen_pos, ScreenRadius(), MAIN_UI_COLOR);
     
-    DrawOrbit(&orbit, MAIN_UI_COLOR);
+    orbit.Draw(MAIN_UI_COLOR);
 
     int screen_x = (int)screen_pos.x, screen_y = (int)screen_pos.y;
     int text_h = 16;
@@ -348,7 +347,7 @@ int Planets::LoadEphemerides(const DataNode* data) {
 
         nature->mu = planet_data->GetF("mass") * G;
         nature->radius = planet_data->GetF("radius");
-        nature->orbit = OrbitFromElements(
+        nature->orbit = Orbit(
             sma,
             planet_data->GetF("Ecc"),
             (planet_data->GetF("LoA") + planet_data->GetF("AoP")) * DEG2RAD,

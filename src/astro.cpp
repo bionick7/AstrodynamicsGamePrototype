@@ -90,18 +90,18 @@ double _Mean2TrueHyp(double M, double e) {
     return _Ecc2TrueHyp(_Mean2EccHyp(M, e), e);
 }
 
-Orbit OrbitFromElements(double semi_major_axis, double eccenetricity, double longuitude_of_periapsis, double mu, timemath::Time epoch, bool is_prograde) {
-    Orbit res = {0};
-    res.mu = mu;
-    res.sma = semi_major_axis;
-    res.ecc = eccenetricity;
-    res.lop = longuitude_of_periapsis;
-    res.epoch = epoch;
-    res.prograde = is_prograde;
-    return res;
+Orbit::Orbit() : Orbit(1, 0, 0, 1, 0, false) { }
+
+Orbit::Orbit(double semi_major_axis, double eccenetricity, double longuitude_of_periapsis, double mu, timemath::Time epoch, bool is_prograde) {
+    this->mu = mu;
+    sma = semi_major_axis;
+    ecc = eccenetricity;
+    lop = longuitude_of_periapsis;
+    this->epoch = epoch;
+    prograde = is_prograde;
 }
 
-Orbit OrbitFromCartesian(Vector2 pos, Vector2 vel, timemath::Time t, double mu) {
+Orbit::Orbit(Vector2 pos, Vector2 vel, timemath::Time t, double mu) {
     double r = Vector2Length(pos);
     double energy = Vector2LengthSqr(vel) / 2 - mu / r;
     double ang_mom = fabs(pos.x*vel.y - pos.y*vel.x);
@@ -109,16 +109,17 @@ Orbit OrbitFromCartesian(Vector2 pos, Vector2 vel, timemath::Time t, double mu) 
         Vector2Scale(pos, Vector2LengthSqr(vel) / mu - 1.0 / r),
         Vector2Scale(vel, Vector2DotProduct(pos, vel) / mu)
     );
-    double e = Vector2Length(ecc_vector);
-    double a = -mu / (2 * energy);
-    double lop = atan2(ecc_vector.y, ecc_vector.x) + ecc_vector.x > 0 ? PI : 0;
+    ecc = Vector2Length(ecc_vector);
+    sma = -mu / (2 * energy);
+    lop = atan2(ecc_vector.y, ecc_vector.x) + ecc_vector.x > 0 ? PI : 0;
     double angular_pos = (atan2(pos.y, pos.x) + pos.x > 0 ? PI : 0);
-    double mean_motion = sqrt(mu / (a*a*a)) * (ang_mom > 0.0 ? 1.0 : -1.0);
-    timemath::Time period = timemath::TimeAddSec(t, (angular_pos - lop) / mean_motion);
-    return OrbitFromElements(a, e, lop, mu, period, ang_mom > 0);
+    double mean_motion = sqrt(mu / (sma*sma*sma)) * (ang_mom > 0.0 ? 1.0 : -1.0);
+    epoch = timemath::TimeAddSec(t, (angular_pos - lop) / mean_motion);
+    this->mu = mu;
+    prograde = ang_mom > 0;
 }
 
-Orbit OrbitFrom2PointsAndSMA(OrbitPos pos1, OrbitPos pos2, timemath::Time time_at_pos1, double sma, double mu, bool is_prograde, bool cut_focus) {
+Orbit::Orbit(OrbitPos pos1, OrbitPos pos2, timemath::Time time_at_pos1, double sma, double mu, bool is_prograde, bool cut_focus) {
     // https://en.wikipedia.org/wiki/Lambert%27s_problem
     // goes from pos1 to pos2
     //if (!is_prograde) Swap(&pos1, &pos2);
@@ -132,8 +133,8 @@ Orbit OrbitFrom2PointsAndSMA(OrbitPos pos1, OrbitPos pos2, timemath::Time time_a
     double x_f = x_0 + 2*sma / E;
     double y_f = sqrt(B_sqr * (x_f*x_f / (A*A) - 1));
     if (cut_focus) y_f = -y_f;  // For a hyperbola this means, it's the more direct way
-    double e = hypot(x_0 - x_f, y_0 - y_f) / (2 * fabs(sma));
-    ASSERT(!isnan(e))
+    ecc = hypot(x_0 - x_f, y_0 - y_f) / (2 * fabs(sma));
+    ASSERT(!isnan(ecc))
 
     Vector2 canon_x = Vector2Normalize(Vector2Scale(Vector2Subtract(pos2.cartesian, pos1.cartesian), .5));
     Vector2 canon_y = Vector2Rotate(canon_x, PI/2);
@@ -141,116 +142,109 @@ Orbit OrbitFrom2PointsAndSMA(OrbitPos pos1, OrbitPos pos2, timemath::Time time_a
     periapsis_dir = Vector2Scale(periapsis_dir, Sign(sma));
 
     // DEBUG DRAWING
-    
-    //SHOW_F(sma) SHOW_F(d) SHOW_F(A) SHOW_F(E) SHOW_F(B_sqr) SHOW_F(x_0) SHOW_F(x_f) SHOW_F(y_0) SHOW_F(y_f) SHOW_F(e) SHOW_F(p)
-    // Vector2 canon_center = Vector2Scale(Vector2Add(pos1.cartesian, pos2.cartesian), .5);
-    // DebugDrawLine(pos1.cartesian, pos2.cartesian);
-    // DebugDrawConic(pos1.cartesian, Vector2Scale(Vector2Normalize(Vector2Subtract(pos2.cartesian, pos1.cartesian)), fabs(E)), -fabs(A));
-    // DebugDrawLine(
-    //     Apply2DTransform(canon_center, canon_x, canon_y, {x_0, y_0}),
-    //     Apply2DTransform(canon_center, canon_x, canon_y, {x_f, y_f})
-    // );
 
-    double lop = atan2(periapsis_dir.y, periapsis_dir.x);
+    lop = atan2(periapsis_dir.y, periapsis_dir.x);
     double θ_1 = pos1.longuitude - lop;
-    double M_1 = sma < 0 ? _True2MeanHyp(θ_1, e) : _True2Mean(θ_1, e);
+    double M_1 = sma < 0 ? _True2MeanHyp(θ_1, ecc) : _True2Mean(θ_1, ecc);
     // TODO: what happens if the orbit is retrograde
 
-    timemath::Time period = timemath::TimeSub(time_at_pos1, timemath::Time(M_1 * sqrt(fabs(sma)*sma*sma / mu) * (is_prograde ? 1.0 : -1.0)));
+    epoch = timemath::TimeSub(time_at_pos1, timemath::Time(M_1 * sqrt(fabs(sma)*sma*sma / mu) * (is_prograde ? 1.0 : -1.0)));
     //period = fmod(period, sqrt(sma*sma*sma / mu) * 2*PI);
-    return OrbitFromElements(sma, e, lop, mu, period, is_prograde);
+    this->sma = sma;
+    this->mu = mu;
+    this->prograde = is_prograde;
 }
 
-OrbitPos OrbitGetPosition(const Orbit* orbit, timemath::Time time) {
+OrbitPos Orbit::GetPosition(timemath::Time time) const {
     OrbitPos res = {0};
-    res.M = timemath::TimeSeconds(TimeSub(time, orbit->epoch)) * OrbitGetMeanMotion(orbit);
-    if (orbit->sma > 0) {
+    res.M = timemath::TimeSeconds(TimeSub(time, epoch)) * GetMeanMotion();
+    if (sma > 0) {
         res.M = fmod(res.M, PI*2);
-        res.θ = _Mean2True(res.M, orbit->ecc);
+        res.θ = _Mean2True(res.M, ecc);
     } else {
-        res.θ = _Mean2TrueHyp(res.M, orbit->ecc);
+        res.θ = _Mean2TrueHyp(res.M, ecc);
     }
-    double p = orbit->sma * (1 - orbit->ecc*orbit->ecc);
-    res.r = p / (1 + orbit->ecc * cos(res.θ));
-    // printf("M = %f ; E = %f ; θ = %f r = %f\n", M, E, θ, r);
-    // printf("pos.x %f pos.y 5f\n", postion->x, postion->y);
-    res.longuitude = res.θ + orbit->lop;
+    double p = sma * (1 - ecc*ecc);
+    res.r = p / (1 + ecc * cos(res.θ));
+    //INFO("M = %f ; θ = %f r = %f", res.M, res.θ, res.r);
+    //INFO("pos.x %f pos.y 5f", res.cartesian.x, res.cartesian.y);
+    res.longuitude = res.θ + lop;
     res.cartesian = FromPolar(res.r, res.longuitude);
     return res;
 }
 
-Vector2 OrbitGetVelocity(const Orbit* orbit, OrbitPos pos) {
-    double cot_ɣ = -orbit->ecc * sin(pos.θ) / (1 + orbit->ecc * cos(pos.θ));
+Vector2 Orbit::GetVelocity(OrbitPos pos) const {
+    double cot_ɣ = -ecc * sin(pos.θ) / (1 + ecc * cos(pos.θ));
     Vector2 local_vel = Vector2Scale(
         Vector2Normalize({(float) cot_ɣ, 1}),
-         sqrt((2*orbit->mu) / pos.r - orbit->mu/orbit->sma) * (orbit->prograde ? -1 : 1)
+         sqrt((2*mu) / pos.r - mu/sma) * (prograde ? -1 : 1)
     );
-    return Vector2Rotate(local_vel, -pos.θ - orbit->lop);
+    return Vector2Rotate(local_vel, -pos.θ - lop);
 }
 
-timemath::Time OrbitGetTimeUntilFocalAnomaly(const Orbit* orbit, double θ, timemath::Time start_time) {
+timemath::Time Orbit::GetTimeUntilFocalAnomaly(double θ, timemath::Time start_time) const {
     // TODO for hyperbolic orbits
-    if (orbit->sma < 0) {
+    if (sma < 0) {
         NOT_IMPLEMENTED
     }
-    double mean_motion = OrbitGetMeanMotion(orbit);  // 1/s
+    double mean_motion = GetMeanMotion();  // 1/s
     timemath::Time period = timemath::Time(fabs(2 * PI /mean_motion));
-    double M = _True2Mean(θ, orbit->ecc);
-    double M0 = fmod(TimeSeconds(TimeSub(start_time, orbit->epoch)) * mean_motion, 2*PI);
+    double M = _True2Mean(θ, ecc);
+    double M0 = fmod(TimeSeconds(TimeSub(start_time, epoch)) * mean_motion, 2*PI);
     timemath::Time diff = timemath::TimePosMod(timemath::Time((M - M0) / mean_motion), period);
     return diff;
 }
 
-double OrbitGetMeanMotion(const Orbit* orbit) {
-    return sqrt(orbit->mu / (fabs(orbit->sma)*orbit->sma*orbit->sma)) * (orbit->prograde ? 1.0 : -1.0);
+double Orbit::GetMeanMotion() const {
+    return sqrt(mu / (fabs(sma)*sma*sma)) * (prograde ? 1.0 : -1.0);
 }
 
-timemath::Time OrbitGetPeriod(const Orbit* orbit) {
-    if (orbit->sma < 0) return INFINITY;
-    return 2 * PI * sqrt(orbit->sma*orbit->sma*orbit->sma / orbit->mu);
+timemath::Time Orbit::GetPeriod() const {
+    if (sma < 0) return INFINITY;
+    return 2 * PI * sqrt(sma*sma*sma / mu);
 }
 
-void OrbitPrint(const Orbit* orbit) {
-    printf("%s a = %f m, e = %f, lop = %f", (orbit->prograde ? "" : "R"), orbit->sma, orbit->ecc, orbit->lop);
+void Orbit::Inspect() const {
+    printf("%s a = %f m, e = %f, lop = %f", (prograde ? "" : "R"), sma, ecc, lop);
 }
 
-void UpdateOrbit(const Orbit* orbit, timemath::Time time, Vector2* position, Vector2* velocity) {
-    OrbitPos orbit_position = OrbitGetPosition(orbit, time);
+void Orbit::Update(timemath::Time time, Vector2* position, Vector2* velocity) const {
+    OrbitPos orbit_position = GetPosition(time);
 
     *position = orbit_position.cartesian;
-    *velocity = OrbitGetVelocity(orbit, orbit_position);
+    *velocity = GetVelocity(orbit_position);
 }
 
-void SampleOrbit(const Orbit* orbit, Vector2* buffer, int buffer_size) {
-    double p = orbit->sma * (1 - orbit->ecc*orbit->ecc);
+void Orbit::Sample(Vector2* buffer, int buffer_size) const {
+    double p = sma * (1 - ecc*ecc);
     for (int i=0; i < buffer_size; i++) {
         double θ = (double) i / (double) buffer_size * PI * 2.0;
-        double r = p / (1 + orbit->ecc*cos(θ));
-        buffer[i] = FromPolar(r, θ + orbit->lop);
+        double r = p / (1 + ecc*cos(θ));
+        buffer[i] = FromPolar(r, θ + lop);
     }
 
     buffer[buffer_size - 1] = buffer[0];
 }
 
-void SampleOrbitWithOffset(const Orbit* orbit, Vector2* buffer, int buffer_size, double offset) {
-    if (orbit->sma < 0) {
-        SampleOrbitBounded(orbit, -acos(-1/orbit->ecc), acos(-1/orbit->ecc), buffer, buffer_size, offset);
+void Orbit::SampleWithOffset(Vector2* buffer, int buffer_size, double offset) const {
+    if (sma < 0) {
+        SampleBounded(-acos(-1/ecc), acos(-1/ecc), buffer, buffer_size, offset);
     } else {
-        SampleOrbitBounded(orbit, 0, 2*PI, buffer, buffer_size, offset);
+        SampleBounded(0, 2*PI, buffer, buffer_size, offset);
         buffer[buffer_size - 1] = buffer[0];
     }
 }
 
-void SampleOrbitBounded(const Orbit* orbit, double θ_1, double θ_2, Vector2* buffer, int buffer_size, double offset) {
-    if (orbit->prograde && θ_2 < θ_1) θ_2 += PI * 2.0;
-    if (!orbit->prograde && θ_2 > θ_1) θ_2 -= PI * 2.0;
-    double p = orbit->sma * (1 - orbit->ecc*orbit->ecc);
+void Orbit::SampleBounded(double θ_1, double θ_2, Vector2* buffer, int buffer_size, double offset) const {
+    if (prograde && θ_2 < θ_1) θ_2 += PI * 2.0;
+    if (!prograde && θ_2 > θ_1) θ_2 -= PI * 2.0;
+    double p = sma * (1 - ecc*ecc);
     for (int i=0; i < buffer_size; i++) {
         double θ = Lerp(θ_1, θ_2, (double) i / (double) (buffer_size - 1));
-        double r = p / (1 + orbit->ecc*cos(θ));
-        double cot_ɣ = -orbit->ecc * sin(θ) / (1 + orbit->ecc * cos(θ));
-        Vector2 normal = Vector2Rotate(Vector2Normalize({1, -(float)cot_ɣ}), θ + orbit->lop);
-        buffer[i] = Vector2Add(FromPolar(r, θ + orbit->lop), Vector2Scale(normal, offset));
+        double r = p / (1 + ecc*cos(θ));
+        double cot_ɣ = -ecc * sin(θ) / (1 + ecc * cos(θ));
+        Vector2 normal = Vector2Rotate(Vector2Normalize({1, -(float)cot_ɣ}), θ + lop);
+        buffer[i] = Vector2Add(FromPolar(r, θ + lop), Vector2Scale(normal, offset));
     }
 }
 
@@ -259,20 +253,20 @@ void SampleOrbitBounded(const Orbit* orbit, double θ_1, double θ_2, Vector2* b
 #endif
 static Vector2 orbit_draw_buffer[ORBIT_BUFFER_SIZE];
 
-void DrawOrbit(const Orbit* orbit, Color color) {
-    SampleOrbit(orbit, orbit_draw_buffer, ORBIT_BUFFER_SIZE);
+void Orbit::Draw(Color color) const {
+    Sample(orbit_draw_buffer, ORBIT_BUFFER_SIZE);
     GetScreenTransform()->TransformBuffer(orbit_draw_buffer, ORBIT_BUFFER_SIZE);
     DrawLineStrip(&orbit_draw_buffer[0], ORBIT_BUFFER_SIZE, color);
 }
 
-void DrawOrbitWithOffset(const Orbit* orbit, double offset, Color color) {
-    SampleOrbitWithOffset(orbit, orbit_draw_buffer, ORBIT_BUFFER_SIZE, offset);
+void Orbit::DrawWithOffset(double offset, Color color) const {
+    SampleWithOffset(orbit_draw_buffer, ORBIT_BUFFER_SIZE, offset);
     GetScreenTransform()->TransformBuffer(orbit_draw_buffer, ORBIT_BUFFER_SIZE);
     DrawLineStrip(&orbit_draw_buffer[0], ORBIT_BUFFER_SIZE, color);
 }
 
-void DrawOrbitBounded(const Orbit* orbit, OrbitPos bound1, OrbitPos bound2, double offset, Color color) {
-    SampleOrbitBounded(orbit, bound1.θ, bound2.θ, orbit_draw_buffer, ORBIT_BUFFER_SIZE, offset);
+void Orbit::DrawBounded(OrbitPos bound1, OrbitPos bound2, double offset, Color color) const {
+    SampleBounded(bound1.θ, bound2.θ, orbit_draw_buffer, ORBIT_BUFFER_SIZE, offset);
     if (ORBIT_BUFFER_SIZE >= 2) {
         orbit_draw_buffer[0] = bound1.cartesian;
         orbit_draw_buffer[ORBIT_BUFFER_SIZE-1] = bound2.cartesian;
@@ -285,10 +279,10 @@ void HohmannTransfer(const Orbit* from, const Orbit* to, timemath::Time t0, time
     double mu = from->mu;
     double hohmann_a = (from->sma + to->sma) * 0.5;
     double hohmann_flight_time = sqrt(hohmann_a*hohmann_a*hohmann_a / mu) * PI;
-    double p1_mean_motion = OrbitGetMeanMotion(from);
-    double p2_mean_motion = OrbitGetMeanMotion(to);
+    double p1_mean_motion = from->GetMeanMotion();
+    double p2_mean_motion = to->GetMeanMotion();
     double relative_mean_motion = p2_mean_motion - p1_mean_motion;
-    double current_relative_annomaly = OrbitGetPosition(to, t0).longuitude - OrbitGetPosition(from, t0).longuitude;
+    double current_relative_annomaly = to->GetPosition(t0).longuitude - from->GetPosition(t0).longuitude;
     double target_relative_anomaly = PosMod(PI - p2_mean_motion * hohmann_flight_time, 2*PI);
     double departure_wait_time = (target_relative_anomaly - current_relative_annomaly) / relative_mean_motion;
     double relative_period = fabs(2 * PI / relative_mean_motion);

@@ -44,10 +44,10 @@ struct Quest {
     ButtonStateFlags DrawUI(bool show_as_button, bool highlight) const;
 };
 
-#define AVAILABLE_QUESTS_NUM 5
+#define _AVAILABLE_QUESTS 20
 
 struct QuestManager {
-    Quest available_quests[AVAILABLE_QUESTS_NUM];
+    Quest available_quests[_AVAILABLE_QUESTS];
     IDAllocatorList<Quest> active_quests;
 
     QuestTemplate* templates;
@@ -70,11 +70,10 @@ struct QuestManager {
     void QuestDepartedFrom(entity_id_t quest_index, entity_id_t planet_index);
     void QuestArrivedAt(entity_id_t quest_index, entity_id_t planet_index);
     void CompleteQuest(entity_id_t quest_index);
+    int GetAvailableQuests() const;
 
     int LoadQuests(const DataNode*);
     int RandomTemplateIndex();
-
-    cost_t CollectPayout();
 };
 
 int LoadQuests(const DataNode*);

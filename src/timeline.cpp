@@ -111,7 +111,7 @@ void  _QuestDrawLine(TimeLineCoordinateData* tcd, const Quest* q, bool active) {
 }
 
 void _DrawQuests(TimeLineCoordinateData* tcd, const QuestManager* qm) {
-    for(int i=0; i < AVAILABLE_QUESTS_NUM; i++) {
+    for(int i=0; i < qm->GetAvailableQuests(); i++) {
         const Quest* q = &qm->available_quests[i];
         if (!q->IsValid()) {
             continue;

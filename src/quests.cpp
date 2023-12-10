@@ -18,12 +18,17 @@ void _GenerateRandomQuest(Quest* quest, const QuestTemplate* quest_template) {
 
     quest->payload_mass = quest_template->payload;
     quest->payout = quest_template->payout;
-    int start_quarter_days = (int) GetRandomValue(4*4, 6*4);
-    int end_quarter_days = (int) GetRandomValue(9*4, 11*4);
-    quest->pickup_expiration_time = timemath::TimeAddSec(now, 21600 * start_quarter_days);
-    quest->delivery_expiration_time = timemath::TimeAddSec(now, 21600 * end_quarter_days);
     quest->departure_planet = quest_template->GetRandomDeparturePlanet();
     quest->arrival_planet = quest_template->GetRandomArrivalPlanet(quest->departure_planet);
+    double period_1 = timemath::TimeSeconds(GetPlanet(quest->departure_planet)->orbit.GetPeriod());
+    double period_2 = timemath::TimeSeconds(GetPlanet(quest->arrival_planet  )->orbit.GetPeriod());
+    double characteristic_period = fmax(1.0 / fabs(1.0 / period_1 - 1.0 / period_2), fmax(period_1, period_2) * 0.5);
+    //int start_quarter_days = (int) GetRandomValue(4*4, 6*4);
+    double add_time = GetRandomGaussian(characteristic_period * 2.0, characteristic_period);
+    if (add_time < characteristic_period * 0.5)
+        add_time = characteristic_period;
+    quest->pickup_expiration_time = timemath::TimeAddSec(now, GetRandomGaussian(characteristic_period * 2.0, characteristic_period));
+    quest->delivery_expiration_time = quest->pickup_expiration_time;
 }
 
 void _ClearQuest(Quest* quest) {
@@ -168,8 +173,12 @@ ButtonStateFlags Quest::DrawUI(bool show_as_button, bool highlinght) const {
         sb.Add("  Now: [").Add(GetPlanet(current_planet)->name).AddLine("]");
     } else sb.AddLine("");
     // Line 2
-    sb.Add("Expires in ").AddTime(TimeSub(pickup_expiration_time, GlobalGetNow()));
-    sb.Add("(").AddTime(TimeSub(delivery_expiration_time, GlobalGetNow())).Add(")");
+    bool is_in_transit = IsIdValid(ship) && !GetShip(ship)->is_parked;
+    if (is_in_transit) {
+        sb.Add("Expires in ").AddTime(TimeSub(delivery_expiration_time, GlobalGetNow()));
+    } else {
+        sb.Add("Expires in ").AddTime(TimeSub(pickup_expiration_time, GlobalGetNow()));
+    }
     sb.AddFormat("  => %.3f k §MM \n", payout / 1000);
     UIContextWrite(sb.c_str);
 
@@ -194,8 +203,8 @@ void QuestManager::Serialize(DataNode* data) const {
     for(auto it = active_quests.GetIter(); it; it++) {
         active_quests.Get(it)->Serialize(data->SetArrayElemChild("active_quests", it.iterator, DataNode()));
     }
-    data->SetArrayChild("available_quests", AVAILABLE_QUESTS_NUM);
-    for(int i=0; i < AVAILABLE_QUESTS_NUM; i++) {
+    data->SetArrayChild("available_quests", GetAvailableQuests());
+    for(int i=0; i < GetAvailableQuests(); i++) {
         available_quests[i].Serialize(data->SetArrayElemChild("available_quests", i, DataNode()));
     }
 }
@@ -205,16 +214,16 @@ void QuestManager::Deserialize(const DataNode* data) {
     for(int i=0; i < data->GetArrayChildLen("active_quests"); i++) {
         active_quests.Get(active_quests.Allocate())->Deserialize(data->GetArrayChild("active_quests", i));
     }
-    for(int i=0; i < data->GetArrayChildLen("available_quests") && i < AVAILABLE_QUESTS_NUM; i++) {
+    for(int i=0; i < data->GetArrayChildLen("available_quests") && i < GetAvailableQuests(); i++) {
         available_quests[i].Deserialize(data->GetArrayChild("available_quests", i));
     }
-    for(int i=data->GetArrayChildLen("available_quests"); i < AVAILABLE_QUESTS_NUM; i++) {
+    for(int i=data->GetArrayChildLen("available_quests"); i < GetAvailableQuests(); i++) {
         available_quests[i] = Quest();  // Just in case
     }
 }
 
 void QuestManager::Make() {
-    for(int i=0; i < AVAILABLE_QUESTS_NUM; i++) {
+    for(int i=0; i < GetAvailableQuests(); i++) {
         _GenerateRandomQuest(&available_quests[i], &templates[RandomTemplateIndex()]);
     }
 }
@@ -235,14 +244,14 @@ void QuestManager::Update(double dt) {
             active_quests.Erase(i);
         }
     }
-    for(int i=0; i < AVAILABLE_QUESTS_NUM; i++) {
+    for(int i=0; i < GetAvailableQuests(); i++) {
         if (TimeIsEarlier(available_quests[i].pickup_expiration_time, now)) {
             _GenerateRandomQuest(&available_quests[i], &templates[RandomTemplateIndex()]);
         }
     }
 
     if (GlobalGetState()->calendar.IsNewDay()) {
-        for(int i=0; i < AVAILABLE_QUESTS_NUM; i++) {
+        for(int i=0; i < GetAvailableQuests(); i++) {
             _GenerateRandomQuest(&available_quests[i], &templates[RandomTemplateIndex()]);
         }
     }
@@ -271,7 +280,7 @@ void QuestManager::Draw() {
     UIContextPushHSplit(w/2, w);
     UIContextShrink(5, 5);
     // Available Quests
-    for(int i=0; i < AVAILABLE_QUESTS_NUM; i++) {
+    for(int i=0; i < GetAvailableQuests(); i++) {
         if(available_quests[i].DrawUI(true, IsIdValid(available_quests[i].ship)) & BUTTON_STATE_FLAG_JUST_PRESSED) {
             AcceptQuest(i);
         }
@@ -331,8 +340,8 @@ void QuestManager::CompleteQuest(entity_id_t quest_index) {
     GlobalGetState()->CompleteTransaction(q->payout, "Completed quest");
 }
 
-cost_t QuestManager::CollectPayout() {
-    NOT_IMPLEMENTED
+int QuestManager::GetAvailableQuests() const {
+    return _AVAILABLE_QUESTS;
 }
 
 int QuestManager::LoadQuests(const DataNode* data) {

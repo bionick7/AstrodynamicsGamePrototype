@@ -235,7 +235,7 @@ void Ship::Update() {
             if (TimeIsEarlier(tp.arrival_time, now)) {
                 _OnArrival(tp);
             } else {
-                position = OrbitGetPosition(&tp.transfer_orbit[tp.primary_solution], now);
+                position = tp.transfer_orbit[tp.primary_solution].GetPosition(now);
             }
         }
     }
@@ -260,25 +260,22 @@ void Ship::Draw(const CoordinateTransform* c_transf) const {
             continue;
         }
         const TransferPlan& plan = prepared_plans[i];
-        OrbitPos to_departure = OrbitGetPosition(
-            &plan.transfer_orbit[plan.primary_solution], 
+        OrbitPos to_departure = plan.transfer_orbit[plan.primary_solution].GetPosition(
             timemath::TimeLatest(plan.departure_time, GlobalGetNow())
         );
-        OrbitPos to_arrival = OrbitGetPosition(
-            &plan.transfer_orbit[plan.primary_solution], 
+        OrbitPos to_arrival = plan.transfer_orbit[plan.primary_solution].GetPosition( 
             plan.arrival_time
         );
-        DrawOrbitBounded(&plan.transfer_orbit[plan.primary_solution], to_departure, to_arrival, 0, 
+        plan.transfer_orbit[plan.primary_solution].DrawBounded(to_departure, to_arrival, 0, 
             ColorAlpha(color, i == highlighted_plan_index ? 1 : 0.5)
         );
         if (i == plan_edit_index){
-            DrawOrbitBounded(&plan.transfer_orbit[plan.primary_solution], to_departure, to_arrival, 0, MAIN_UI_COLOR);
+            plan.transfer_orbit[plan.primary_solution].DrawBounded(to_departure, to_arrival, 0, MAIN_UI_COLOR);
         }
     }
     if (plan_edit_index >= 0 && IsIdValid(prepared_plans[plan_edit_index].arrival_planet)) {
         const TransferPlan& last_tp = prepared_plans[plan_edit_index];
-        OrbitPos last_pos = OrbitGetPosition(
-            &GetPlanet(last_tp.arrival_planet)->orbit, 
+        OrbitPos last_pos = GetPlanet(last_tp.arrival_planet)->orbit.GetPosition(
             last_tp.arrival_time
         );
         Vector2 last_draw_pos = c_transf->TransformV(last_pos.cartesian);
