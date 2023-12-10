@@ -43,7 +43,6 @@ int TransferPlanTests();
 struct TransferPlanUI {
     TransferPlan* plan;
     entity_id_t ship;
-    int resource_type;
     bool is_valid;
 
     // UI

@@ -18,12 +18,12 @@ GlobalState* GlobalGetState() {
     return &global_state;
 }
 
-timemath::Time GlobalGetPreviousFrameTime() {
-    return global_state.calendar.prev_time;
-}
-
 timemath::Time GlobalGetNow() {
     return global_state.calendar.time;
+}
+
+timemath::Time GlobalGetPreviousFrameTime() {
+    return global_state.calendar.prev_time;
 }
 
 void GlobalState::_InspectState() {
@@ -251,7 +251,7 @@ void GlobalState::DrawState() {
         Planet* planet = planets.GetPlanet(planet_id);
         if (active_transfer_plan.IsActive()){
             if (active_transfer_plan.plan->departure_planet == planet->id) {
-                planet->DrawUI(&c_transf, true, ResourceTransferInvert(active_transfer_plan.plan->resource_transfer), active_transfer_plan.plan->fuel_mass);
+                planet->DrawUI(&c_transf, true, active_transfer_plan.plan->resource_transfer.Inverted(), active_transfer_plan.plan->fuel_mass);
             }
             if (active_transfer_plan.plan->arrival_planet == planet->id) {
                 planet->DrawUI(&c_transf, false, active_transfer_plan.plan->resource_transfer, -1);
@@ -334,7 +334,6 @@ void GlobalState::Deserialize(const DataNode* data) {
 
     ships.alloc.Clear(); 
     planets = Planets();
-    planets.Init(data->GetArrayChildLen("planets"));
 
     DataNode ephem_data;
     if (DataNode::FromFile(&ephem_data, "resources/data/ephemerides.yaml", FileFormat::YAML, true) != 0) {

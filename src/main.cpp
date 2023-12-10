@@ -38,11 +38,13 @@ int UnitTests() {
 
 void Load(int argc, const char** argv) {
     INFO("Init from working directory: '%s'", GetWorkingDirectory());
-    SetRandomSeed(0);  // For consistency
+    if (!GetSetting(argc, argv, "-randseed")) {
+        SetRandomSeed(0);  // For consistency
+    }
 
     UIInit();
     GetAudioServer()->LoadSFX("unused string input :)");
-    GetAudioServer()->StartMusic();
+    //GetAudioServer()->StartMusic();
 
     GlobalState* app = GlobalGetState();
     app->Make(1e6);

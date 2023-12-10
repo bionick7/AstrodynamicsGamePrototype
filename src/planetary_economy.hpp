@@ -18,6 +18,18 @@ enum ResourceType {
 struct ResourceTransfer {
     ResourceType resource_id;
     resource_count_t quantity;
+
+    ResourceTransfer() {
+        resource_id = ResourceType::RESOURCE_NONE; 
+        quantity = 0;
+    }
+
+    ResourceTransfer(ResourceType p_resource_id, resource_count_t p_quantity) { 
+        resource_id = p_resource_id; 
+        quantity = p_quantity; 
+    }
+
+    ResourceTransfer Inverted();
 };
 
 #define EMPTY_TRANSFER (ResourceTransfer) {RESOURCE_NONE, 0}
@@ -40,9 +52,6 @@ static const char stat_names[STAT_MAX][RESOURCE_NAME_MAX_SIZE] = {
     "workforce" // STAT_WORKFORCE
 };
 
-
-ResourceTransfer ResourceTransferInvert(ResourceTransfer rt);
-
 struct ResourceData {
     char name[RESOURCE_NAME_MAX_SIZE];
     char descrption[RESOURCE_DESCRIPTION_MAX_SIZE];
@@ -63,14 +72,6 @@ static const char resource_names[RESOURCE_MAX][RESOURCE_NAME_MAX_SIZE] = {
 
 
 struct PlanetaryEconomy {
-    PlanetaryEconomy();
-
-    resource_count_t DrawResource(ResourceType resource, resource_count_t quantity);
-    resource_count_t GiveResource(ResourceType resource, resource_count_t quantity);
-    void TryPlayerTransaction(ResourceTransfer tf);
-    cost_t GetPrice(ResourceType resource, resource_count_t quantity) const;
-    resource_count_t GetForPrice(ResourceType resource, cost_t quantity) const;
-
     resource_count_t resource_stock[RESOURCE_MAX];
     resource_count_t resource_capacity[RESOURCE_MAX];
     resource_count_t resource_delta[RESOURCE_MAX];
@@ -79,12 +80,21 @@ struct PlanetaryEconomy {
     cost_t resource_noise[RESOURCE_MAX];
 
     cost_t price_history[RESOURCE_MAX*PRICE_TREND_SIZE];
+    bool trading_acessible;
+
+    PlanetaryEconomy();
 
     void Update();
     void AdvanceEconomy();
     void RecalcEconomy();
     void UIDrawResources(const ResourceTransfer& transfer, double fuel_draw);
     void UIDrawEconomy(const ResourceTransfer& transfer, double fuel_draw);
+
+    ResourceTransfer DrawResource(ResourceTransfer transfer);
+    ResourceTransfer GiveResource(ResourceTransfer transfer);
+    void TryPlayerTransaction(ResourceTransfer tf);
+    cost_t GetPrice(ResourceType resource, resource_count_t quantity) const;
+    resource_count_t GetForPrice(ResourceType resource, cost_t quantity) const;
 };
 
 int LoadResources(const DataNode* data);

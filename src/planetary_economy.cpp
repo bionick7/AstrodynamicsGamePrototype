@@ -6,6 +6,10 @@
 
 static ResourceData global_resource_data[RESOURCE_MAX] = {{""}};
 
+ResourceTransfer ResourceTransfer::Inverted() {
+    return ResourceTransfer(resource_id, -quantity);
+}
+
 PlanetaryEconomy::PlanetaryEconomy(){
     for (int i=0; i < RESOURCE_MAX; i++) {
         resource_stock[i] = 0;
@@ -16,35 +20,32 @@ PlanetaryEconomy::PlanetaryEconomy(){
     for (int i=0; i < RESOURCE_MAX*PRICE_TREND_SIZE; i++) {
         price_history[i] = resource_price[i % RESOURCE_MAX];
     }
-    for (int i=0; i < PRICE_TREND_SIZE; i++) {
-        AdvanceEconomy();
-    }
 }
 
-resource_count_t PlanetaryEconomy::DrawResource(ResourceType resource, resource_count_t quantity) {
+ResourceTransfer PlanetaryEconomy::DrawResource(ResourceTransfer request) {
     // Returns how much of the resource the planet was able to give
-    if (resource < 0 || resource >= RESOURCE_MAX) {
-        return 0;
+    if (request.resource_id < 0 || request.resource_id >= RESOURCE_MAX) {
+        return EMPTY_TRANSFER;
     }
     
-    resource_count_t transferred_resources = Clamp(quantity, 0, resource_stock[resource]);
-    resource_stock[resource] -= transferred_resources;
+    resource_count_t transferred_resources = Clamp(request.quantity, 0, resource_stock[request.resource_id]);
+    resource_stock[request.resource_id] -= transferred_resources;
     //GlobalGetState()->CompleteTransaction(-GetPrice(resource, quantity), "purchased resource");
 
-    return transferred_resources;
+    return ResourceTransfer(request.resource_id, transferred_resources);
 }
 
-resource_count_t PlanetaryEconomy::GiveResource(ResourceType resource, resource_count_t quantity) {
+ResourceTransfer PlanetaryEconomy::GiveResource(ResourceTransfer request) {
     // Returns how much of the resource the planet was able to take
-    if (resource < 0 || resource >= RESOURCE_MAX) {
-        return 0;
+    if (request.resource_id < 0 || request.resource_id >= RESOURCE_MAX) {
+        return EMPTY_TRANSFER;
     }
 
-    resource_count_t transferred_resources = Clamp(quantity, 0, resource_capacity[resource]);
-    resource_stock[resource] += transferred_resources;
+    resource_count_t transferred_resources = Clamp(request.quantity, 0, resource_capacity[request.resource_id]);
+    resource_stock[request.resource_id] += transferred_resources;
     //GlobalGetState()->CompleteTransaction(-GetPrice(resource, quantity), "sold resource");
 
-    return transferred_resources;
+    return ResourceTransfer(request.resource_id, transferred_resources);
 }
 
 cost_t PlanetaryEconomy::GetPrice(ResourceType resource, resource_count_t quantity) const {
@@ -115,7 +116,10 @@ void PlanetaryEconomy::UIDrawResources(const ResourceTransfer& transfer, double 
         if (GlobalGetState()->active_transfer_plan.IsActive()) {
             // Button
             if (UIContextDirectButton(transfer.resource_id == i ? "X" : " ", 2) & BUTTON_STATE_FLAG_JUST_PRESSED) {
-                GlobalGetState()->active_transfer_plan.SetResourceType((ResourceType) i);
+                if (transfer.resource_id == i) 
+                    GlobalGetState()->active_transfer_plan.SetResourceType(ResourceType::RESOURCE_NONE);
+                else
+                    GlobalGetState()->active_transfer_plan.SetResourceType((ResourceType) i);
             }
         }
         UIContextWrite(buffer, false);
@@ -160,13 +164,13 @@ void _UIDrawResourceGrpah(const double price_history[], int resource_index) {
 
 void PlanetaryEconomy::TryPlayerTransaction(ResourceTransfer tf) {
     if (tf.quantity < 0) {  // Sell
-        resource_count_t actual_ammount = DrawResource(tf.resource_id, -tf.quantity);
-        GlobalGetState()->CompleteTransaction(GetPrice(tf.resource_id, actual_ammount), "Sold on market");
+        ResourceTransfer actual = DrawResource(tf.Inverted());
+        GlobalGetState()->CompleteTransaction(GetPrice(actual.resource_id, actual.quantity), "Sold on market");
     }
     else if (tf.quantity > 0) {  // Buy
         tf.quantity = fmin(GetForPrice(tf.resource_id, GlobalGetState()->capital), tf.quantity);
-        resource_count_t actual_ammount = GiveResource(tf.resource_id, tf.quantity);
-        GlobalGetState()->CompleteTransaction(-GetPrice(tf.resource_id, actual_ammount), "Bought on market");
+        ResourceTransfer actual = GiveResource(tf);
+        GlobalGetState()->CompleteTransaction(-GetPrice(actual.resource_id, actual.quantity), "Bought on market");
     }
 }
 

@@ -85,6 +85,8 @@ void Ship::Serialize(DataNode *data) const {
     data->Set("is_parked", is_parked ? "y" : "n");
     
     data->Set("class_id", GetShipClassByIndex(ship_class)->id);
+    data->SetF("resource_qtt", transporing.quantity);
+    data->SetI("resource_id", transporing.resource_id);
 
     data->SetArrayChild("prepared_plans", prepared_plans_count);
     for (int i=0; i < prepared_plans_count; i++) {
@@ -97,6 +99,8 @@ void Ship::Deserialize(const DataNode* data) {
     is_parked = strcmp(data->Get("is_parked", "y", true), "y") == 0;
     plan_edit_index = -1;
     ship_class = GlobalGetState()->ships.GetShipClassIndexById(data->Get("class_id"));
+    transporing.quantity = data->GetF("resource_qtt", 0);
+    transporing.resource_id = (ResourceType) data->GetI("resource_id", RESOURCE_NONE);
 
     color = PALETTE_GREEN;
 
@@ -392,13 +396,17 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
 
     UIContextEnclose(BG_COLOR, color);
 
+    UIContextWrite(name);
     StringBuilder sb;
-    sb.AddLine(name);
-    sb.AddFormat("Payload %2.3f / %2.3f kT\n", GetPayloadMass() / 1e6, GetMaxCapacity() / 1e6);
+    sb.AddFormat("Payload %2.3f / %2.3f kT", GetPayloadMass() / 1e6, GetMaxCapacity() / 1e6);
+    UIContextWrite(sb.c_str);
+    UIContextPushInset(0, 3);
+    UIContextFillline(GetPayloadMass() / GetMaxCapacity(), MAIN_UI_COLOR, BG_COLOR);
+    UIContextPop();  // Inset
+    sb.Clear();
     sb.AddFormat("I_sp        %2.2f km/s\n", GetShipClassByIndex(ship_class)->v_e / 1000);
     sb.AddFormat("dv  left    %2.2f km/s\n", GetCapableDV());
     UIContextWrite(sb.c_str);
-    UIContextFillline(GetPayloadMass() / GetMaxCapacity(), MAIN_UI_COLOR, BG_COLOR);
 
     _UIDrawTransferplans(this);
     _UIDrawQuests(this);
@@ -408,7 +416,8 @@ void Ship::Inspect() {
 }
 
 void Ship::_OnDeparture(const TransferPlan& tp) {
-    GetPlanet(tp.departure_planet)->economy.DrawResource(RESOURCE_WATER, tp.fuel_mass);
+    transporing = GetPlanet(tp.departure_planet)->economy.DrawResource(tp.resource_transfer);
+    GetPlanet(tp.departure_planet)->economy.DrawResource(ResourceTransfer(RESOURCE_WATER, tp.fuel_mass));
 
     for(auto i = GlobalGetState()->quest_manager.active_quests.GetIter(); i; i++) {
         if (GlobalGetState()->quest_manager.active_quests[i]->ship == id) {
@@ -423,6 +432,7 @@ void Ship::_OnDeparture(const TransferPlan& tp) {
 }
 
 void Ship::_OnArrival(const TransferPlan& tp) {
+    GetPlanet(tp.arrival_planet)->economy.GiveResource(tp.resource_transfer);
     parent_planet = tp.arrival_planet;
     is_parked = true;
     position = GetPlanet(parent_planet)->position;
@@ -474,11 +484,11 @@ entity_id_t Ships::AddShip(const DataNode* data) {
     ship->Deserialize(data);
     if (ship->is_parked) {
         const char* planet_name = data->Get("planet", "NO NAME SPECIFIED");
-        const Planet* planet = GlobalGetState()->planets.GetPlanetByName(planet_name);
-        if (planet == NULL) {
+        entity_id_t index = GlobalGetState()->planets.GetIndexByName(planet_name);
+        if (index < 0) {
             FAIL("Error while initializing ship '%s': no such planet '%s'", ship->name, planet_name)
         }
-        ship->parent_planet = planet->id;
+        ship->parent_planet = index;
     }
 
     ship->id = (entity_id_t) ship_entity;

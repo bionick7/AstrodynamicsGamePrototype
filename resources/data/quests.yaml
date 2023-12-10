@@ -1,15 +1,58 @@
 contractors:
 - Lagrange labs
 - Bayer Bosch
-- The enclave
+- The Enclave
 - General Cosmonautics
 
 # (Bulk) Transfer XXX T of cargo from AAA to BBB (people, special payload)
 # (Reach) Transfer XXX T of cargo from AAA to BBB (people, special payload)
 # (Time) Transfer XXX T of cargo from AAA to BBB (people, special payload)
 # Deliver XXX T of YYY to BBB
+
+# dv = ve * ln((cap + oem) / (PL + oem))
+# (cap + oem) = exp(max_dv/v_e) * (oem)
+# oem * (1 - exp(max_dv/v_e)) = cap
+# oem = cap / (exp(max_dv/v_e) - 1);
+# dv = ve * ln(cap + oem) - ve * ln(PL + oem)
+# dv = ve * ln(PL / cap * (exp(max_dv/ve) - 1) + 1)
+# bulk    : 32.46 - 4.5 * ln(PL +  358)
+# light   : 37.41 - 4.5 * ln(PL + 1074)
+# express : 72.66 - 10  * ln(PL +  431)
+
+# 0: Mimas
+# 1: Encelladus
+# 2: Tethys
+# 3: Rhea
+# 4: Titan
+# 5: Iaeptus
+# 6: Phoebe
+
+
 resource_missions:
-- qtt: [20 50]
-  resc: food
-  from: any
-  to: any
+- payload: 100
+  flavour: Bring 100 t of Coffee from {{departure}} to {{destination}}
+  departure: [Mimas, Encelladus, Tethys, Rhea, Titan]
+  destination: [Mimas, Encelladus, Tethys, Rhea, Titan]
+  ship_accesibilty: [shp_bulk_transport, shp_light_transport, shp_express]
+  payout: 200_000
+
+- payload: 500
+  flavour: Bring half a kiloton of fertilizer to {{destination}}
+  departure: [Mimas, Encelladus, Tethys, Rhea]
+  destination: [Mimas, Encelladus, Tethys, Rhea]
+  ship_accesibilty: [shp_bulk_transport]
+  payout: 1000_000
+
+- payload: 1000
+  flavour: Bring half a ton of fertilizer to {{destination}}
+  departure: [Encelladus]
+  destination: [Mimas, Encelladus, Tethys, Rhea]
+  ship_accesibilty: [shp_bulk_transport]
+  payout: 1.5e+6
+
+- payload: 100
+  flavour: Bring 100 t of Ammunition from Iaeptus to {{destination}}
+  departure: [Iaeptus]
+  destination: [Mimas, Encelladus, Tethys, Rhea, Titan]
+  ship_accesibilty: [shp_express]
+  payout: 1.e+6

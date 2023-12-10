@@ -7,24 +7,59 @@
 #include "constants.hpp"
 #include "string_builder.hpp"
 
-void _GenerateRandomQuest(Quest* quest) {
+void _GenerateRandomQuest(Quest* quest, const QuestTemplate* quest_template) {
     timemath::Time now = GlobalGetNow();
 
     // There are always N accessible, plausibly profitable  quests
     // ... And M taunting ones
     // Transport quests: Payouts in cash are proportional to the players tech, dv involved and payload
     // Research quests: payouts in tech/items when reaching far away places (more interesting with refueling)
+    // Quests appear unpredictably and player is forced to consider them in a short timeframe
 
-    quest->payload_mass = GetRandomValue(0, 1e6);
-    quest->payout = GetRandomValue(0, 1e6);
+    quest->payload_mass = quest_template->payload;
+    quest->payout = quest_template->payout;
     quest->pickup_expiration_time = timemath::TimeAddSec(now, 86400 * 5);
     quest->delivery_expiration_time = timemath::TimeAddSec(now, 86400 * 10);
-    quest->departure_planet = GetRandomValue(0, GlobalGetState()->planets.planet_count - 1);
-    do quest->arrival_planet = GetRandomValue(0, GlobalGetState()->planets.planet_count - 1);
-    while (quest->arrival_planet == quest->departure_planet);
-
+    quest->departure_planet = quest_template->GetRandomDeparturePlanet();
+    quest->arrival_planet = quest_template->GetRandomArrivalPlanet(quest->departure_planet);
 }
 
+
+// ========================================
+//              Quest Templat
+// ========================================
+
+
+entity_id_t QuestTemplate::GetRandomDeparturePlanet() const {
+    int selector = GetRandomValue(0, departure_options.size() - 1);
+    return departure_options[selector];
+}
+
+entity_id_t QuestTemplate::GetRandomArrivalPlanet(entity_id_t departure_planet) const {
+    entity_id_t destination_planet;
+    double dv1, dv2;
+    int iter_count = 0;
+    do {
+        int selector = GetRandomValue(0, destination_options.size() - 1);
+        destination_planet = destination_options[selector];
+        HohmannTransfer(
+            &GetPlanet(departure_planet)->orbit,
+            &GetPlanet(destination_planet)->orbit,
+            GlobalGetNow(),
+            NULL, NULL,
+            &dv1, &dv2
+        );
+        if (iter_count++ > 1000) {
+            ERROR("Quest Generation: Arrival planet finding exceeds iteration Count (>1000)")
+            INFO("%f + %f ><? %f", dv1, dv2, max_dv)
+            return departure_planet;  // Better broken quest than infinite freeze
+        }
+    } while (
+        destination_planet == departure_planet || dv1 + dv2 > max_dv
+    );
+    //INFO("%d => %d :: %f + %f < %f", departure_planet, destination_planet, dv1, dv2, max_dv)
+    return destination_planet;
+}
 
 // ========================================
 //                  Quest
@@ -104,16 +139,25 @@ ButtonStateFlags Quest::DrawUI(bool show_as_button, bool highlinght) const {
         return button_state & BUTTON_STATE_FLAG_JUST_PRESSED;
     }
 
+
+    StringBuilder sb_mouse;
+    double dv1, dv2;
+    HohmannTransfer(&GetPlanet(departure_planet)->orbit, &GetPlanet(arrival_planet)->orbit, GlobalGetNow(), NULL, NULL, &dv1, &dv2);
+    sb_mouse.AddFormat("DV: %.3f km/s\n", (dv1 + dv2) / 1000);
+
     StringBuilder sb;
     // Line 1
-    sb.Add(GetPlanet(departure_planet)->name).Add(" >> ").Add(GetPlanet(arrival_planet)->name).Add("  ").AddF(payload_mass / 1e6).AddLine("kT");
+    sb.AddFormat("%s >> %s  %.3f kT", GetPlanet(departure_planet)->name, GetPlanet(arrival_planet)->name, payload_mass / 1e6);
+    if (button_state == BUTTON_STATE_FLAG_HOVER) {
+        UISetMouseHint(sb_mouse.c_str);
+    }
+    if (IsIdValid(current_planet)) {
+        sb.Add("  Now: [").Add(GetPlanet(current_planet)->name).AddLine("]");
+    } else sb.AddLine("");
     // Line 2
     sb.Add("Expires in ").AddTime(TimeSub(pickup_expiration_time, GlobalGetNow()));
-    sb.Add("(").AddTime(TimeSub(delivery_expiration_time, GlobalGetNow())).AddLine(")");
-    // Line 3
-    if (IsIdValid(current_planet)) {
-        sb.Add("[").Add(GetPlanet(current_planet)->name).AddLine("]");
-    }
+    sb.Add("(").AddTime(TimeSub(delivery_expiration_time, GlobalGetNow())).Add(")");
+    sb.AddFormat("  => %.3f k §MM \n", payout / 1000);
     UIContextWrite(sb.c_str);
 
     UIContextPop();
@@ -126,6 +170,10 @@ ButtonStateFlags Quest::DrawUI(bool show_as_button, bool highlinght) const {
 
 QuestManager::QuestManager() {
     active_quests.Init();
+}
+
+QuestManager::~QuestManager() {
+    delete[] templates;
 }
 
 void QuestManager::Serialize(DataNode* data) const {
@@ -154,7 +202,7 @@ void QuestManager::Deserialize(const DataNode* data) {
 
 void QuestManager::Make() {
     for(int i=0; i < AVAILABLE_QUESTS_NUM; i++) {
-        _GenerateRandomQuest(&available_quests[i]);
+        _GenerateRandomQuest(&available_quests[i], &templates[RandomTemplateIndex()]);
     }
 }
 
@@ -180,7 +228,7 @@ void QuestManager::Update(double dt) {
     }
     for(int i=0; i < AVAILABLE_QUESTS_NUM; i++) {
         if (TimeIsEarlier(available_quests[i].pickup_expiration_time, now)) {
-            _GenerateRandomQuest(&available_quests[i]);
+            _GenerateRandomQuest(&available_quests[i], &templates[RandomTemplateIndex()]);
         }
     }
 }
@@ -222,7 +270,7 @@ void QuestManager::AcceptQuest(entity_id_t quest_index) {
     active_quests.Allocate(&q);
     q->CopyFrom(&available_quests[quest_index]);
     q->current_planet = q->departure_planet;
-    _GenerateRandomQuest(&available_quests[quest_index]);
+    _GenerateRandomQuest(&available_quests[quest_index], &templates[RandomTemplateIndex()]);
 }
 
 void QuestManager::PickupQuest(entity_id_t ship_index, entity_id_t quest_index) {
@@ -257,7 +305,7 @@ void QuestManager::QuestDepartedFrom(entity_id_t quest_index, entity_id_t planet
 void QuestManager::QuestArrivedAt(entity_id_t quest_index, entity_id_t planet_index) {
     Quest* q = active_quests[quest_index];
     q->current_planet = planet_index;
-    if (q->arrival_planet = planet_index) {
+    if (q->arrival_planet == planet_index) {
         CompleteQuest(quest_index);
     }
 }
@@ -271,11 +319,49 @@ cost_t QuestManager::CollectPayout() {
     NOT_IMPLEMENTED
 }
 
+int QuestManager::LoadQuests(const DataNode* data) {
+    delete[] templates;
+
+    template_count = data->GetArrayChildLen("resource_missions");
+    templates = new QuestTemplate[template_count];
+    for(int i=0; i < template_count; i++) {
+        const DataNode* mission_data = data->GetArrayChild("resource_missions", i);
+
+        templates[i].payload = mission_data->GetF("payload", 0.0) * 1000;
+        mission_data->Get("flavour", "UNFLAVOURED");
+        for (int j=0; j < mission_data->GetArrayLen("departure"); j++) {
+            entity_id_t planet = GlobalGetState()->planets.GetIndexByName(mission_data->GetArray("departure", j));
+            templates[i].departure_options.push_back(planet);
+        }
+
+        for (int j=0; j < mission_data->GetArrayLen("destination"); j++) {
+            entity_id_t planet = GlobalGetState()->planets.GetIndexByName(mission_data->GetArray("destination", j));
+            templates[i].destination_options.push_back(planet);
+        }
+        templates[i].max_dv = INFINITY;
+        for (int j=0; j < mission_data->GetArrayLen("ship_accesibilty"); j++) {
+            entity_id_t ship_class = GlobalGetState()->ships.GetShipClassIndexById(mission_data->GetArray("ship_accesibilty", j));
+            const ShipClass* sc = GetShipClassByIndex(ship_class);
+            double max_dv_class = sc->v_e * log(sc->max_capacity + sc->oem) - sc->v_e * log(templates[i].payload + sc->oem);
+            if (max_dv_class < templates[i].max_dv) templates[i].max_dv = max_dv_class;
+        }
+
+        // TODO: Check if quest is possible for each startere planet
+
+        templates[i].payout = mission_data->GetF("payout", 0.0);
+    }
+    return template_count;
+}
+
+int QuestManager::RandomTemplateIndex() {
+    return GetRandomValue(0, template_count - 1);
+}
+
 
 // ========================================
 //                  General
 // ========================================
 
-int LoadQuests(const DataNode*) {
-    return 0;
+int LoadQuests(const DataNode* data) {
+    return GlobalGetState()->quest_manager.LoadQuests(data);
 }

@@ -295,6 +295,6 @@ void HohmannTransfer(const Orbit* from, const Orbit* to, timemath::Time t0, time
     departure_wait_time = PosMod(departure_wait_time, relative_period);
     if (departure != NULL) *departure = timemath::TimeAdd(t0, departure_wait_time);
     if (arrival   != NULL) *arrival = timemath::TimeAdd(t0, departure_wait_time + hohmann_flight_time);
-    if (dv1       != NULL) *dv1 = sqrt(mu * (2 / from->sma - 1 / hohmann_a)) - sqrt(mu / from->sma);
-    if (dv2       != NULL) *dv2 = sqrt(mu / to->sma) - sqrt(mu * (2 / to->sma - 1 / hohmann_a));
+    if (dv1       != NULL) *dv1 = fabs(sqrt(mu * (2 / from->sma - 1 / hohmann_a)) - sqrt(mu / from->sma));
+    if (dv2       != NULL) *dv2 = fabs(sqrt(mu / to->sma) - sqrt(mu * (2 / to->sma - 1 / hohmann_a)));
 }

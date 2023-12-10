@@ -18,6 +18,7 @@ Planet::Planet(const char* p_name, double p_mu, double p_radius) {
 
 void Planet::Serialize(DataNode* data) const {
     data->Set("name", name);
+    data->Set("trading_acessible", economy.trading_acessible ? "y" : "n");
     //data->SetF("mass", mu / G);
     //data->SetF("radius", radius);
 
@@ -45,16 +46,16 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
     //SettingOverridePush("datanode_quite", true);
     //SettingOverridePop("datanode_quite");
     strcpy(name, data->Get("name", name, true));
-    auto find = planets->ephemerides.find(name);
-    if (find == planets->ephemerides.end()) {
-        ERROR("Could not find planet %s in ephemerides", name)
+    int index = planets->GetIndexByName(name);
+    if (index < 0) {
         return;
     }
     //*this = *((Planet*) (void*) &find->second);
-    PlanetNature nature = find->second;
-    mu = nature.mu;
-    radius = nature.radius;
-    orbit = nature.orbit;
+    const PlanetNature* nature = planets->GetPlanetNature(index);
+    mu = nature->mu;
+    radius = nature->radius;
+    orbit = nature->orbit;
+    economy.trading_acessible = strcmp(data->Get("trading_acessible", economy.trading_acessible ? "y" : "n", true), "y") == 0;
 
     const DataNode* resource_node = data->GetChild("resource_stock", true);
     if (resource_node != NULL) {
@@ -80,7 +81,11 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
             buildings[i] = BuildingInstance(GetBuildingIndexById(building_id));
         }
     }
+
     economy.RecalcEconomy();
+    for (int i=0; i < PRICE_TREND_SIZE; i++) {
+        economy.AdvanceEconomy();
+    }
 }
 
 void Planet::_OnClicked() {
@@ -227,13 +232,18 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
     const char* tab_descriptions[4] = {
         "resources",
         "economy",
-        "buildings",
-        "quests"
+        "~buildings~",
+        "~quests~"
     };
     for (int i=0; i < n_tabs; i++) {
         UIContextPushHSplit(i * w / n_tabs, (i + 1) * w / n_tabs);
         ButtonStateFlags button_state = UIContextAsButton();
         HandleButtonSound(button_state & BUTTON_STATE_FLAG_JUST_PRESSED);
+        if (i == 1 && economy.trading_acessible) {
+            UIContextWrite("~economy~");
+            UIContextPop();
+            continue;
+        }
         if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
             current_tab = i;
         }
@@ -265,24 +275,19 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
 
 Planets::Planets() {
     planet_array = NULL;
+    ephemerides = NULL;
     planet_count = 0;
-    planet_array_iter = 0;
 }
 
 Planets::~Planets() {
     delete[] planet_array;
-}
-
-void Planets::Init(entity_id_t p_planet_count) {
-    planet_count = p_planet_count;
-    planet_array = new Planet[planet_count];
-    parent = {0};
-    ephemerides = std::map<std::string, PlanetNature>();
+    delete[] ephemerides;
 }
 
 entity_id_t Planets::AddPlanet(const DataNode* data) {
     //entity_map.insert({uuid, planet_entity});
-    entity_id_t id = planet_array_iter++;
+    entity_id_t id = GetIndexByName(data->Get("name", "UNNAMED"));
+    if (id < 0);
     planet_array[id].Deserialize(this, data);
     planet_array[id].Update();
     planet_array[id].id = id;
@@ -296,18 +301,26 @@ Planet* Planets::GetPlanet(entity_id_t id) const {
     return &planet_array[(int)id];
 }
 
+const PlanetNature* Planets::GetPlanetNature(entity_id_t id) const {
+    if (id >= planet_count) {
+        FAIL("Invalid planet id (%d)", id)
+    }
+    return &ephemerides[(int)id];
+}
+
 entity_id_t Planets::GetPlanetCount() const {
     return planet_count;
 }
 
-Planet* Planets::GetPlanetByName(const char* planet_name) const {
+entity_id_t Planets::GetIndexByName(const char* planet_name) const {
     // Returns NULL if planet_name not found
     for(int i=0; i < planet_count; i++) {
-        if (strcmp(planet_array[i].name, planet_name) == 0) {
-            return &planet_array[i];
+        if (strcmp(ephemerides[i].name, planet_name) == 0) {
+            return i;
         }
     }
-    return NULL;
+    ERROR("No such planet '%s' ", planet_name)
+    return -1;
 }
 
 const PlanetNature* Planets::GetParentNature() const {
@@ -316,16 +329,18 @@ const PlanetNature* Planets::GetParentNature() const {
 
 int Planets::LoadEphemerides(const DataNode* data) {
     // Init planets
+    parent = {0};
     parent.radius = data->GetF("radius");
     parent.mu = data->GetF("mass") * G;
-    int num_planets = data->GetArrayChildLen("satellites");
+    planet_count = data->GetArrayChildLen("satellites");
+    ephemerides = new PlanetNature[planet_count];
+    planet_array = new Planet[planet_count];
     //if (num_planets > 100) num_planets = 100;
     //entity_id_t planets[100];
-    for(int i=0; i < num_planets; i++) {
+    for(int i=0; i < planet_count; i++) {
         const DataNode* planet_data = data->GetArrayChild("satellites", i);
-        const char* name = planet_data->Get("name");
-        ephemerides.insert_or_assign(name, PlanetNature());
-        PlanetNature* nature = &ephemerides.at(name);
+        PlanetNature* nature = &ephemerides[i];
+        strcpy(nature->name, planet_data->Get("name"));
         
         double sma = planet_data->GetF("SMA");
         double ann = planet_data->GetF("Ann") * DEG2RAD;
@@ -342,7 +357,7 @@ int Planets::LoadEphemerides(const DataNode* data) {
             strcmp(planet_data->Get("retrograde", "y", true), "y") != 0
         );
     }
-    return num_planets;
+    return planet_count;
 }
 
 Planet* GetPlanet(entity_id_t id) { return GlobalGetState()->planets.GetPlanet(id); }

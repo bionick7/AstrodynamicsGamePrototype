@@ -11,6 +11,17 @@
 
 struct Ship;
 
+struct QuestTemplate {
+    std::vector<entity_id_t> departure_options = std::vector<entity_id_t>();
+    std::vector<entity_id_t> destination_options = std::vector<entity_id_t>();
+    double max_dv;
+    double payload;
+    double payout;
+
+    entity_id_t GetRandomDeparturePlanet() const;
+    entity_id_t GetRandomArrivalPlanet(entity_id_t departure_planet) const;
+};
+
 struct Quest {
     entity_id_t departure_planet;
     entity_id_t arrival_planet;
@@ -33,15 +44,19 @@ struct Quest {
     ButtonStateFlags DrawUI(bool show_as_button, bool highlight) const;
 };
 
-#define AVAILABLE_QUESTS_NUM 20
+#define AVAILABLE_QUESTS_NUM 5
 
 struct QuestManager {
     Quest available_quests[AVAILABLE_QUESTS_NUM];
     IDAllocatorList<Quest> active_quests;
 
+    QuestTemplate* templates;
+    int template_count;
+
     bool show_ui;
     
     QuestManager();
+    ~QuestManager();
     void Serialize(DataNode* data) const;
     void Deserialize(const DataNode* data);
 
@@ -55,6 +70,9 @@ struct QuestManager {
     void QuestDepartedFrom(entity_id_t quest_index, entity_id_t planet_index);
     void QuestArrivedAt(entity_id_t quest_index, entity_id_t planet_index);
     void CompleteQuest(entity_id_t quest_index);
+
+    int LoadQuests(const DataNode*);
+    int RandomTemplateIndex();
 
     cost_t CollectPayout();
 };

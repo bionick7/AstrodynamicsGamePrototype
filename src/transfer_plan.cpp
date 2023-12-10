@@ -6,8 +6,8 @@
 #include "ui.hpp"
 #include "logging.hpp"
 #include "constants.hpp"
+#include "string_builder.hpp"
 
-#include <time.h>
 
 double _Lambert(double x, double K, int solution) {
     // x² = a_min/a
@@ -261,11 +261,11 @@ int TransferPlanTests() {
     plan = NULL;
     ship = GetInvalidId();
     is_dragging_departure = false;
-    is_dragging_arrival = false;
-    departure_handle_pos = {0};
-    arrival_handle_pos = {0};
-    redraw_queued = false;
-    time_bounds[0] = 0;
+    is_dragging_arrival   = false;
+    departure_handle_pos  = {0};
+    arrival_handle_pos    = {0};
+    redraw_queued         = false;
+    time_bounds[0]        = 0;
 }
 
 void TransferPlanUI::Abort() {
@@ -281,7 +281,6 @@ void TransferPlanUI::Update() {
     }
 
     Ship* ship_instance = GetShip(ship);
-    const ShipClass* ship_class = GetShipClassByIndex(ship_instance->ship_class);
 
     if (IsIdValid(plan->departure_planet) && IsIdValid(plan->arrival_planet) && redraw_queued) {
         TransferPlanSolve(plan);
@@ -292,11 +291,11 @@ void TransferPlanUI::Update() {
     }
 
     if (is_valid) {
-        if (plan->resource_transfer.resource_id != RESOURCE_NONE) {
+        if (plan->resource_transfer.resource_id == RESOURCE_NONE) {
             SetLogistics(0, ship_instance->GetFuelRequiredEmpty(plan->tot_dv));
         } else {
             resource_count_t payload = ship_instance->GetRemainingPayloadCapacity(plan->tot_dv);
-            SetLogistics(payload, ship_class->max_capacity - payload);
+            SetLogistics(payload, ship_instance->GetRemainingPayloadCapacity(0) - payload);
         }
     } else {
         SetLogistics(0, 0);
@@ -457,48 +456,36 @@ void TransferPlanUI::DrawUI() {
     );
 
     UIContextCurrent().Enclose(2, 2, BG_COLOR, is_valid ? TRANSFER_UI_COLOR : PALETTE_RED);
-    char departure_time_outpstr[30];
-    char arrival_time_outpstr[30];
-    char departure_time_str[40] = "Departs in ";
-    char arrival_time_str[40]   = "Arrives in ";
-    char dv1_str[40];
-    char dv2_str[40];
-    char dvtot_str[40];
-    char payload_str[40];
+    
+    StringBuilder sb = StringBuilder();
+    sb.Add("Departs in ").AddTime(timemath::TimeSub(plan->departure_time, time_bounds[0]));
+    sb.Add("\nArrives in ").AddTime(timemath::TimeSub(plan->departure_time, time_bounds[0]));
+    UIContextWrite(sb.c_str);
+    UIContextPushInset(0, 18);
+    UIContextFillline(
+        fmin(TimeSecDiff(plan->arrival_time, time_bounds[0]) / timemath::TimeSecDiff(plan->hohmann_arrival_time, time_bounds[0]), 1.0), 
+        TRANSFER_UI_COLOR, BG_COLOR
+    );
+    UIContextPop();  // Inset
+    sb.Clear();
 
     double total_dv = plan->dv1[plan->primary_solution] + plan->dv2[plan->primary_solution];
-    FormatTime(departure_time_outpstr, 30, timemath::TimeSub(plan->departure_time, time_bounds[0]));
-    FormatTime(arrival_time_outpstr, 30, timemath::TimeSub(plan->arrival_time, time_bounds[0]));
-    snprintf(dv1_str,   40, "DV 1      %5.3f km/s", plan->dv1[plan->primary_solution]/1000.0);
-    snprintf(dv2_str,   40, "DV 2      %5.3f km/s", plan->dv2[plan->primary_solution]/1000.0);
-    snprintf(dvtot_str, 40, "DV Tot    %5.3f km/s", total_dv/1000.0);
-
+    sb.AddFormat("DV Tot    %5.3f km/s\n", total_dv/1000.0);
     double capacity = ship_instance->GetRemainingPayloadCapacity(total_dv);
     double max_capacity = ship_instance->GetRemainingPayloadCapacity(0);
 
     if (capacity >= 0) {
-        snprintf(payload_str, 40, "Payload cap.  %3.0f %% (%.0f / %.0f t)", 
+        sb.AddFormat("Payload cap.  %3.0f %% (%.0f / %.0f t)", 
             capacity / max_capacity * 100,
             capacity / 1000.0,
             max_capacity / 1000.0
         );
     } else {
-        snprintf(payload_str, 40, "Cannot make transfer");
+        sb.Add("Cannot make transfer");
     }
 
-    UIContextWrite(strcat(departure_time_str, departure_time_outpstr));
+    UIContextWrite(sb.c_str);
     UIContextPushInset(0, 18);
-        UIContextWrite(strcat(arrival_time_str, arrival_time_outpstr));
-        UIContextFillline(
-            fmin(TimeSecDiff(plan->arrival_time, time_bounds[0]) / timemath::TimeSecDiff(plan->hohmann_arrival_time, time_bounds[0]), 1.0), 
-            TRANSFER_UI_COLOR, BG_COLOR
-        );
-    UIContextPop();  // Inset
-    UIContextPushInset(0, 18);
-        UIContextWrite(dvtot_str);
-    UIContextPop();  // Inset
-    UIContextPushInset(0, 18);
-        UIContextWrite(payload_str);
         UIContextFillline(fmax(0, capacity / max_capacity), capacity >= 0 ? TRANSFER_UI_COLOR : PALETTE_RED, BG_COLOR);
     UIContextPop();  // Inset
 }

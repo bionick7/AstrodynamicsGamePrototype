@@ -105,82 +105,19 @@ Goal is to expand by acquiring new colonies and sustain the existing ones.
 Loop A << current  focus
 
 Target period: ???
-- evaluate situation
-- prioritize connections
-- plan transfer
+- receive quest
+- evaluate quest
+- plan transfers
+- consider placement of additional ships
 
-//
-- evaluate economy
-- trade
-
+Progression vague rn. 
+How does loop A play into B in a way that the player can plan? (look: urbek, dredge)
 Loop B (main)
-
-Target period: ???
-- aquire colony << motivation what?
-- supply colony
+- implement tech  << more player agency here
+- 
 
 //
 - take quests
 
 //
 - build up fleet
-
-# TODO/Wishlists
-
-## Immediate
-- build buildings (Done)
-- water as fuel (Done)
-- saving state  (Done)
-- virtual economy
-- quest system (with wren?)
-- Sound
-- build ships in shipyard
-
-## Known Bugs
-- Deleting a transfer plan while editing it is a problem  (Done)
-- GetCapableDV does not align with GetAvailablePayload (which is prob. right)  (Done)
-- Loadsaving loads default wphemerides (Done)
-
-## UX improvements wishlist
-Near-term, realizable only
-- modules => buildings (Done)
-- "loading"bars to show resource scarcity V
-- departure time adjusts automatically to the optimum (with option to turn it off)
-- "ASAP" button for transfer UI
-- front-end info and error log
-- different icons for different ships
-- icons for buildings
-- make clear which buildings are buildable
-- warn before committing to an empty transform ("empty" in red or required to choose it explicitly)
-- highlight more important statistics
-
-## Graphics improvements wishlist
-- UI labels as underlined by thin lines pointing to the thing
-- preview small 3D models for flavor
-- Post-processing shader
-
-## Tech wishlist
-- global settings (with push_override etc.)
-- debug console
-- Hot reloading
-- Integrate buildings into ECS
-
-## Gameplay wishlist
-Regardless of implementability
-- planet modifiers
-- disruption events (can be tied to morale)
-- ship buildings
-- aerobreaking
-- ship maintenance
-- tanker fleets
-- gravity assists
-- segment planets into regions
-- crew & population morale
-- construct new stations
-- combat
-- "policies"
-- expand to 3D
-- tech tree ?
-- need for first colony ships
-- expand to planets + moons
-- lagrange points & 3-body mechanics

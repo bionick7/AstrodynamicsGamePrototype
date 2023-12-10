@@ -58,6 +58,5 @@ struct GlobalState {
 GlobalState* GlobalGetState();
 timemath::Time GlobalGetNow();
 timemath::Time GlobalGetPreviousFrameTime();
-Planet* GetPlanetByName(const char* planet_name);
 
 #endif // GLOBAL_STATE_H

@@ -10,11 +10,6 @@ std::map<std::string, building_index_t> building_ids = std::map<std::string, bui
 BuildingClass* buildings = NULL;
 size_t building_count = 0;
 
-ResourceTransfer ResourceTransferInvert(ResourceTransfer rt) {
-    rt.quantity = -rt.quantity;
-    return rt;
-}
-
 BuildingInstance::BuildingInstance(building_index_t p_class_index) {
     class_index = p_class_index;
     disabled = false;
@@ -57,7 +52,7 @@ void _DrawRelevantStatsFromArray(
     for (int i=0; i < array_size; i++) {
         if (array[i] > 0) {
             char temp[1024];
-            sprintf(&temp[0], "%s: %+3.0f%s", array_names, array[i] / scaler, suffix);
+            sprintf(&temp[0], "%s: %+3.0f%s", array_names[i], array[i] / scaler, suffix);
             ss << std::string(temp) << "\n";
         }
     }

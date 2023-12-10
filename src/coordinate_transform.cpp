@@ -60,7 +60,7 @@ void Calendar::HandleInput(double delta_t) {
 void Calendar::DrawUI() const {
     // timemath::Time scale (top-right corner)
     const int FONT_SIZE = 16;
-    const char* text = TextFormat("II timemath::Time x %.1f", time_scale);
+    const char* text = TextFormat("II Time x %.1f", time_scale);
     if (!paused) text += 3;
     Vector2 pos = { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(), text, FONT_SIZE, 1).x - 10, 10 };
     DrawTextEx(GetCustomDefaultFont(), text, pos, FONT_SIZE, 1, MAIN_UI_COLOR);

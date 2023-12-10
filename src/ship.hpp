@@ -55,6 +55,9 @@ struct Ship {
     // Identifier
     entity_id_t id;
 
+    // transporting
+    ResourceTransfer transporing;
+
     void CreateFrom(const ShipClass* sc);
     void Serialize(DataNode* data) const;
     void Deserialize(const DataNode* data);

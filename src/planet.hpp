@@ -54,7 +54,7 @@ struct Planet {
 };
 
 struct Planets {
-    std::map<std::string, PlanetNature> ephemerides;
+    PlanetNature* ephemerides;
     PlanetNature parent;
     Planet* planet_array;
     int planet_count;
@@ -62,11 +62,11 @@ struct Planets {
 
     Planets();
     ~Planets();
-    void Init(entity_id_t p_planet_count);
     entity_id_t AddPlanet(const DataNode* data);
+    entity_id_t GetIndexByName(const char* planet_name) const;
     Planet* GetPlanet(entity_id_t id) const;
+    const PlanetNature* GetPlanetNature(entity_id_t id) const;
     entity_id_t GetPlanetCount() const;
-    Planet* GetPlanetByName(const char* planet_name) const;
 
     const PlanetNature* GetParentNature() const;
     int LoadEphemerides(const DataNode* data);

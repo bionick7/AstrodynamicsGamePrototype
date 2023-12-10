@@ -1,28 +1,27 @@
-capital: 1e5
+capital: 1e6
 planets:
   - name: Mimas
+    trading_acessible: n
     resource_stock:
       water: 1000
-      food: 2000
     resource_delta:
       water: 0
       food: 0
     buildings: 
     - mod_water_extractor
   - name: Encelladus
+    trading_acessible: y
     resource_stock: {}
     buildings: 
     - mod_pop_small
     - mod_food_mine
     - mod_food_mine
   - name: Tethys
+    trading_acessible: n
     resource_stock:
       water: 1000
-      food: 2000
       electronics: 6
-    resource_delta:
-      water: 0
-      food: -50
+    resource_delta: {}
     buildings: 
     - mod_pop_small
     - mod_food_mine
@@ -31,12 +30,15 @@ planets:
     resource_stock: {}
     buildings: []
   - name: Titan
+    trading_acessible: y
     resource_stock: {}
     buildings: []
   - name: Iaeptus
+    trading_acessible: n
     resource_stock: {}
     buildings: []
   - name: Phoebe
+    trading_acessible: n
     resource_stock: {}
     buildings: []
 
