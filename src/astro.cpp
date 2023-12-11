@@ -114,7 +114,7 @@ Orbit::Orbit(Vector2 pos, Vector2 vel, timemath::Time t, double mu) {
     lop = atan2(ecc_vector.y, ecc_vector.x) + ecc_vector.x > 0 ? PI : 0;
     double angular_pos = (atan2(pos.y, pos.x) + pos.x > 0 ? PI : 0);
     double mean_motion = sqrt(mu / (sma*sma*sma)) * (ang_mom > 0.0 ? 1.0 : -1.0);
-    epoch = timemath::TimeAddSec(t, (angular_pos - lop) / mean_motion);
+    epoch = t + (angular_pos - lop) / mean_motion;
     this->mu = mu;
     prograde = ang_mom > 0;
 }
@@ -148,7 +148,7 @@ Orbit::Orbit(OrbitPos pos1, OrbitPos pos2, timemath::Time time_at_pos1, double s
     double M_1 = sma < 0 ? _True2MeanHyp(θ_1, ecc) : _True2Mean(θ_1, ecc);
     // TODO: what happens if the orbit is retrograde
 
-    epoch = timemath::TimeSub(time_at_pos1, timemath::Time(M_1 * sqrt(fabs(sma)*sma*sma / mu) * (is_prograde ? 1.0 : -1.0)));
+    epoch = time_at_pos1 - timemath::Time(M_1 * sqrt(fabs(sma)*sma*sma / mu) * (is_prograde ? 1.0 : -1.0));
     //period = fmod(period, sqrt(sma*sma*sma / mu) * 2*PI);
     this->sma = sma;
     this->mu = mu;
@@ -157,7 +157,7 @@ Orbit::Orbit(OrbitPos pos1, OrbitPos pos2, timemath::Time time_at_pos1, double s
 
 OrbitPos Orbit::GetPosition(timemath::Time time) const {
     OrbitPos res = {0};
-    res.M = timemath::TimeSeconds(TimeSub(time, epoch)) * GetMeanMotion();
+    res.M = timemath::Time:: SecDiff(time, epoch) * GetMeanMotion();
     if (sma > 0) {
         res.M = fmod(res.M, PI*2);
         res.θ = _Mean2True(res.M, ecc);
@@ -190,8 +190,8 @@ timemath::Time Orbit::GetTimeUntilFocalAnomaly(double θ, timemath::Time start_t
     double mean_motion = GetMeanMotion();  // 1/s
     timemath::Time period = timemath::Time(fabs(2 * PI /mean_motion));
     double M = _True2Mean(θ, ecc);
-    double M0 = fmod(TimeSeconds(TimeSub(start_time, epoch)) * mean_motion, 2*PI);
-    timemath::Time diff = timemath::TimePosMod(timemath::Time((M - M0) / mean_motion), period);
+    double M0 = fmod(timemath::Time::SecDiff(start_time, epoch) * mean_motion, 2.0*PI);
+    timemath::Time diff = timemath::Time((M - M0) / mean_motion).PosMod(period);
     return diff;
 }
 
@@ -287,8 +287,8 @@ void HohmannTransfer(const Orbit* from, const Orbit* to, timemath::Time t0, time
     double departure_wait_time = (target_relative_anomaly - current_relative_annomaly) / relative_mean_motion;
     double relative_period = fabs(2 * PI / relative_mean_motion);
     departure_wait_time = PosMod(departure_wait_time, relative_period);
-    if (departure != NULL) *departure = timemath::TimeAdd(t0, departure_wait_time);
-    if (arrival   != NULL) *arrival = timemath::TimeAdd(t0, departure_wait_time + hohmann_flight_time);
+    if (departure != NULL) *departure = t0 + departure_wait_time;
+    if (arrival   != NULL) *arrival = t0 + departure_wait_time + hohmann_flight_time;
     if (dv1       != NULL) *dv1 = fabs(sqrt(mu * (2 / from->sma - 1 / hohmann_a)) - sqrt(mu / from->sma));
     if (dv2       != NULL) *dv2 = fabs(sqrt(mu / to->sma) - sqrt(mu * (2 / to->sma - 1 / hohmann_a)));
 }

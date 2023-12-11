@@ -20,14 +20,14 @@ void _GenerateRandomQuest(Quest* quest, const QuestTemplate* quest_template) {
     quest->payout = quest_template->payout;
     quest->departure_planet = quest_template->GetRandomDeparturePlanet();
     quest->arrival_planet = quest_template->GetRandomArrivalPlanet(quest->departure_planet);
-    double period_1 = timemath::TimeSeconds(GetPlanet(quest->departure_planet)->orbit.GetPeriod());
-    double period_2 = timemath::TimeSeconds(GetPlanet(quest->arrival_planet  )->orbit.GetPeriod());
+    double period_1 = GetPlanet(quest->departure_planet)->orbit.GetPeriod().Seconds();
+    double period_2 = GetPlanet(quest->arrival_planet  )->orbit.GetPeriod().Seconds();
     double characteristic_period = fmax(1.0 / fabs(1.0 / period_1 - 1.0 / period_2), fmax(period_1, period_2) * 0.5);
     //int start_quarter_days = (int) GetRandomValue(4*4, 6*4);
     double add_time = GetRandomGaussian(characteristic_period * 2.0, characteristic_period);
     if (add_time < characteristic_period * 0.5)
         add_time = characteristic_period;
-    quest->pickup_expiration_time = timemath::TimeAddSec(now, GetRandomGaussian(characteristic_period * 2.0, characteristic_period));
+    quest->pickup_expiration_time = now + GetRandomGaussian(characteristic_period * 2.0, characteristic_period);
     quest->delivery_expiration_time = quest->pickup_expiration_time;
 }
 
@@ -87,8 +87,8 @@ Quest::Quest() {
     ship = GetInvalidId();
 
     payload_mass = 0;
-    pickup_expiration_time = timemath::GetInvalidTime();
-    delivery_expiration_time = timemath::GetInvalidTime();
+    pickup_expiration_time = timemath::Time::GetInvalid();
+    delivery_expiration_time = timemath::Time::GetInvalid();
 
     payout = 0;
 }
@@ -175,9 +175,9 @@ ButtonStateFlags Quest::DrawUI(bool show_as_button, bool highlinght) const {
     // Line 2
     bool is_in_transit = IsIdValid(ship) && !GetShip(ship)->is_parked;
     if (is_in_transit) {
-        sb.Add("Expires in ").AddTime(TimeSub(delivery_expiration_time, GlobalGetNow()));
+        sb.Add("Expires in ").AddTime(delivery_expiration_time - GlobalGetNow());
     } else {
-        sb.Add("Expires in ").AddTime(TimeSub(pickup_expiration_time, GlobalGetNow()));
+        sb.Add("Expires in ").AddTime(pickup_expiration_time - GlobalGetNow());
     }
     sb.AddFormat("  => %.3f k §MM \n", payout / 1000);
     UIContextWrite(sb.c_str);
@@ -237,15 +237,15 @@ void QuestManager::Update(double dt) {
     for(auto i = active_quests.GetIter(); i; i++) {
         Quest* quest = active_quests[i];
         bool is_in_transit = IsIdValid(quest->ship) && !GetShip(quest->ship)->is_parked;
-        if (TimeIsEarlier(quest->pickup_expiration_time, now) && !is_in_transit) {
+        if (quest->pickup_expiration_time < now && !is_in_transit) {
             active_quests.Erase(i);
         }
-        if (TimeIsEarlier(quest->delivery_expiration_time, now)) {
+        if (quest->delivery_expiration_time < now) {
             active_quests.Erase(i);
         }
     }
     for(int i=0; i < GetAvailableQuests(); i++) {
-        if (TimeIsEarlier(available_quests[i].pickup_expiration_time, now)) {
+        if (available_quests[i].pickup_expiration_time < now) {
             _GenerateRandomQuest(&available_quests[i], &templates[RandomTemplateIndex()]);
         }
     }

@@ -10,62 +10,58 @@ Time::Time(double seconds) {
     __t = seconds;
 }
 
-Time timemath::TimeAdd(Time lhs, Time rhs) {
-    return Time(lhs.__t + rhs.__t);
+Time Time::operator+(Time other) const {
+    return Time(__t + other.__t);
 }
 
-Time timemath::TimeAddSec(Time x, double seconds) {
-    return Time(x.__t + seconds);
+Time Time::operator+(double seconds) const {
+    return Time(__t + seconds);
 }
 
-Time timemath::TimeSub(Time lhs, Time rhs) {
-    return Time(lhs.__t - rhs.__t);
+Time Time::operator-(Time other) const {
+    return Time(__t - other.__t);
 }
 
-double timemath::TimeSecDiff(Time lhs, Time rhs) {
-    return lhs.__t - rhs.__t;
+bool Time::operator<(Time other) const {
+    return __t < other.__t;
 }
 
-Time timemath::TimePosMod(Time x, Time mod) {
-    double __t = fmod(x.__t, mod.__t);
-    if (__t < 0) __t += mod.__t;
-    return Time(__t);
+bool Time::operator>(Time other) const {
+    return !(__t < other.__t);
 }
 
-Time timemath::TimeEarliest(Time lhs, Time rhs) {
-    return TimeIsEarlier(lhs, rhs) ? lhs : rhs;
+Time Time::PosMod(Time mod) const {
+    double t2 = fmod(__t, mod.__t);
+    if (t2 < 0) t2 += mod.__t;
+    return Time(t2);
 }
 
-Time timemath::TimeLatest(Time lhs, Time rhs) {
-    return TimeIsEarlier(lhs, rhs) ? rhs : lhs;
+bool Time::IsPos() const {
+    return __t > 0;
 }
 
-bool timemath::TimeIsEarlier(Time lhs, Time rhs) {
-    return lhs.__t < rhs.__t;
+double Time::Seconds() const {
+    return __t;
 }
 
-bool timemath::TimeIsPos(Time x) {
-    return x.__t > 0;
+double Time::Days() const {
+    return __t / 86400;
 }
 
-double timemath::TimeSeconds(Time x) {
-    return x.__t;
+void Time::Serialize(DataNode* data) const {
+    data->SetF("t", __t);
 }
 
-double timemath::TimeDays(Time x) {
-    return x.__t / 86400;
+void Time::Deserialize(const DataNode* data) {
+    __t = data->GetF("t", __t);
 }
 
-Time timemath::GetInvalidTime() {
-    return Time(NAN);
+bool Time::IsInvalid() const {
+    return isnan(__t);
 }
 
-bool timemath::IsTimeInvalid(Time x) {
-    
-}
-
-char* timemath::FormatTime(char* buffer, int buffer_len, Time time) {
-    time_t time_in_s = (time_t) time.__t;
+char* Time::FormatAsTime(char* buffer, int buffer_len) const {
+    time_t time_in_s = (time_t) __t;
 
     tm time_tm = *gmtime(&time_in_s);
     time_tm.tm_year -= 70;
@@ -78,10 +74,10 @@ char* timemath::FormatTime(char* buffer, int buffer_len, Time time) {
     return buffer + char_count;
 }
 
-char* timemath::FormatDate(char* buffer, int buffer_len, Time time){
+char* Time::FormatAsDate(char* buffer, int buffer_len) const {
     int start_year = 2080 - 1970;
     //time_t epoch_in_s = 65744l*86400l;  // 1900 - 2080
-    time_t time_in_s = time.__t;  // + epoch_in_s;
+    time_t time_in_s = __t;  // + epoch_in_s;
     tm time_tm = *gmtime(&time_in_s);
     time_tm.tm_year += start_year;
     const int char_count = 17;
@@ -89,16 +85,24 @@ char* timemath::FormatDate(char* buffer, int buffer_len, Time time){
     return buffer + char_count;
 }
 
-void timemath::TimeSerialize(Time x, DataNode* data) {
-    data->SetF("t", x.__t);
+double Time::SecDiff(Time lhs, Time rhs) {
+    return lhs.__t - rhs.__t;
 }
 
-void timemath::TimeDeserialize(Time* x, const DataNode* data) {
-    *x = Time(data->GetF("t", x->__t));
+Time Time::Earliest(Time lhs, Time rhs) {
+    return lhs < rhs ? lhs : rhs;
 }
 
-#define TIMETEST_EQUAL(expr, seconds_res) if (fabs(TimeSeconds(expr) - (seconds_res)) > 1e-10) { \
-    ERROR("'%s' returned unexpected value: %f instead of %f", #expr, TimeSeconds(expr), (seconds_res)) \
+Time Time::Latest(Time lhs, Time rhs) {
+    return lhs < rhs ? rhs : lhs;
+}
+
+Time Time::GetInvalid() {
+    return Time(NAN);
+}
+
+#define TIMETEST_EQUAL(expr, seconds_res) if (fabs((expr).Seconds() - (seconds_res)) > 1e-10) { \
+    ERROR("'%s' returned unexpected value: %f instead of %f", #expr, (expr).Seconds(), (seconds_res)) \
     return 1; \
 }
 
@@ -107,27 +111,27 @@ int TimeTests() {
     Time t1 = Time(v1);
     Time t2 = Time(v2);
 
-    TIMETEST_EQUAL(TimeAdd(t1, t2), v1 + v2)
-    TIMETEST_EQUAL(TimeSub(t1, t2), v1 - v2)
-    TIMETEST_EQUAL(TimeSub(t2, t1), v2 - v1)
-    TIMETEST_EQUAL(TimePosMod(Time(-340), Time(100)), 60)
-    if (fabs(TimeSeconds(TimeSub(t1, t2)) - TimeSecDiff(t1, t2)) > 1e-10) {
+    TIMETEST_EQUAL(t1 + t2, v1 + v2)
+    TIMETEST_EQUAL(t1 - t2, v1 - v2)
+    TIMETEST_EQUAL(t2 - t1, v2 - v1)
+    TIMETEST_EQUAL(Time(-340).PosMod(Time(100)), 60)
+    if (fabs((t1 - t2).Seconds() - Time::SecDiff(t1, t2)) > 1e-10) {
         ERROR("TimeSub != TimeSecDiff")
         return 1;
     }
-    if (fabs(TimeSecDiff(TimeSeconds(TimeAddSec(t1, v2)), TimeAdd(t1, t2))) > 1e-10) {
+    if (fabs(Time::SecDiff((t1 + v2).Seconds(), (t1 + t2))) > 1e-10) {
         ERROR("TimeAdd != TimeAddSec")
         return 1;
     }
     DataNode dn = DataNode();
-    TimeSerialize(t1, &dn);
+    t1.Serialize(&dn);
     Time t1_prime;
-    TimeDeserialize(&t1_prime, &dn);
-    if (fabs(TimeSecDiff(t1, t1_prime) > 1e-10)) {
+    t1_prime.Deserialize(&dn);
+    if (fabs(Time::SecDiff(t1, t1_prime) > 1e-10)) {
         ERROR("Serialization is not the proper inverse of deserialization")
         return 1;
     }
-    if (!TimeIsEarlier(t1, t2)) return 1;
+    if (t1 > t2) return 1;
 
     return 0;
 }

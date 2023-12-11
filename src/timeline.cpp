@@ -21,15 +21,12 @@ int GetPlanetCoord(const TimeLineCoordinateData* tcd, entity_id_t planet) {
 
 int GetTimeCoord(const TimeLineCoordinateData* tcd, timemath::Time t) {
     timemath::Time ref_time = GlobalGetNow();
-    return tcd->y0 + 24 + timemath::TimeSecDiff(t, ref_time) * PIXELS_PER_DAY / 86400;
+    return tcd->y0 + 24 + (t - ref_time).Seconds() * PIXELS_PER_DAY / 86400;
 }
 
 timemath::Time GetEndTime(const TimeLineCoordinateData* tcd) {
     timemath::Time ref_time = GlobalGetNow();
-    return timemath::TimeAdd(
-        ref_time,
-        timemath::Time(((float)tcd->h - 24.f) / (float) PIXELS_PER_DAY * 86400)
-    );
+    return ref_time + timemath::Time(((float)tcd->h - 24.f) / (float) PIXELS_PER_DAY * 86400);
 }
 
 void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
@@ -164,8 +161,8 @@ void _DrawShips(TimeLineCoordinateData* tcd, const Ships* ships) {
             ASSERT(ship->prepared_plans_count > 0)
             const TransferPlan* tp = &ship->prepared_plans[0];
             double travel_progress = 1 - 
-                timemath::TimeSecDiff(tp->arrival_time, GlobalGetNow()) / 
-                timemath::TimeSecDiff(tp->arrival_time, tp->departure_time);
+                (tp->arrival_time - GlobalGetNow()).Seconds() / 
+                (tp->arrival_time - tp->departure_time).Seconds();
             
             DEBUG_SHOW_F(travel_progress)
 

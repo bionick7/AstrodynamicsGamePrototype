@@ -123,7 +123,7 @@ void TransferPlanSolve(TransferPlan* tp) {
     double r_sum = pos1.r + pos2.r;
     double a_min = 0.25 * (r_sum + c);
     double K = sqrt((r_sum - c) / (r_sum + c));
-    double y = timemath::TimeSecDiff(t2, t1) * sqrt(mu / (a_min*a_min*a_min));
+    double y = timemath::Time::SecDiff(t2, t1) * sqrt(mu / (a_min*a_min*a_min));
 
     bool is_ellipse[2] =  {y > _Lambert(1e-3, K, 0), y > _Lambert(1e-3, K, 2)};
     bool first_solution[2] = { y < _Lambert(1, K, 0), y < _Lambert(1, K, 2) };
@@ -164,7 +164,7 @@ void TransferPlanSolve(TransferPlan* tp) {
         case 3: t_f_annomaly = (2*PI - (α - sin(α)) + β - sin(β)); break;
         }
         double t_f = sqrt(aa[i]*aa[i]*aa[i] / mu) * t_f_annomaly;
-        ASSERT_ALOMST_EQUAL_FLOAT(t_f, timemath::TimeSecDiff(t2, t1))
+        ASSERT_ALOMST_EQUAL_FLOAT(t_f, timemath::Time::SecDiff(t2, t1))
     }
 
     for (int i=0; i < tp->num_solutions; i++) {
@@ -172,7 +172,7 @@ void TransferPlanSolve(TransferPlan* tp) {
         // Direct orbit is retrograde
         bool is_prograde;
         if (is_ellipse[i]) {
-            bool direct_solution = timemath::TimeSecDiff(t2, t1) < PI * sqrt(fabs(aa[i])*aa[i]*aa[i] / mu);
+            bool direct_solution = timemath::Time::SecDiff(t2, t1) < PI * sqrt(fabs(aa[i])*aa[i]*aa[i] / mu);
             is_prograde = direct_solution ^ (i == 1);
         } else {
             is_prograde = i == 1;
@@ -216,8 +216,8 @@ void TransferPlan::Serialize(DataNode* data) const {
     data->SetF("fuel_mass", resource_transfer.quantity / 1000);
     data->SetI("departure_planet", (int)departure_planet);
     data->SetI("arrival_planet", (int)arrival_planet);
-    timemath::TimeSerialize(departure_time, data->SetChild("departure_time", DataNode()));
-    timemath::TimeSerialize(arrival_time, data->SetChild("arrival_time", DataNode()));
+    departure_time.Serialize(data->SetChild("departure_time", DataNode()));
+    arrival_time.Serialize(data->SetChild("arrival_time", DataNode()));
     data->SetI("primary_solution", primary_solution);
 }
 
@@ -227,8 +227,8 @@ void TransferPlan::Deserialize(const DataNode* data) {
     fuel_mass = data->GetF("fuel_mass", resource_transfer.quantity) * 1000;
     departure_planet = (entity_id_t) data->GetI("departure_planet", (int)departure_planet);
     arrival_planet = (entity_id_t) data->GetI("arrival_planet", (int)arrival_planet);
-    timemath::TimeDeserialize(&departure_time, data->GetChild("departure_time"));
-    timemath::TimeDeserialize(&arrival_time, data->GetChild("arrival_time"));
+    departure_time.Deserialize(data->GetChild("departure_time"));
+    arrival_time.Deserialize(data->GetChild("arrival_time"));
     primary_solution = data->GetI("primary_solution", primary_solution);
 
     GetPlanet(departure_planet);
@@ -285,7 +285,7 @@ void TransferPlanUI::Update() {
     if (IsIdValid(plan->departure_planet) && IsIdValid(plan->arrival_planet) && redraw_queued) {
         TransferPlanSolve(plan);
         is_valid = plan->num_solutions > 0 && plan->tot_dv <= ship_instance->GetCapableDV();
-        is_valid = is_valid && timemath::TimeIsEarlier(GetTime(), plan->departure_time);
+        is_valid = is_valid && GlobalGetNow() < plan->departure_time;
 
         redraw_queued = false;
     }
@@ -326,7 +326,7 @@ void _DrawSweep(const Orbit* orbit, timemath::Time from, timemath::Time to, Colo
     OrbitPos from_pos = orbit->GetPosition(from);
     OrbitPos to_pos = orbit->GetPosition(to);
 
-    int full_orbits = floor(TimeSecDiff(to, from) / timemath::TimeSeconds(orbit->GetPeriod()));
+    int full_orbits = floor(timemath::Time::SecDiff(to, from) / orbit->GetPeriod().Seconds());
     double offset_per_pixel = GetScreenTransform()->InvTransformS(1);
     for (int i=1; i <= full_orbits; i++) {
         orbit->DrawWithOffset(offset_per_pixel * -3 * i, color);
@@ -366,7 +366,7 @@ timemath::Time _DrawHandle(
     Vector2 minus_pos = Vector2Add(node_pos, Vector2Scale(tangent_dir, 23));
 
     timemath::Time period = orbit->GetPeriod();
-    int full_orbits = floor(TimeSecDiff(current, t0) / timemath::TimeSeconds(period));
+    int full_orbits = floor(timemath::Time::SecDiff(current, t0) / period.Seconds());
     if (full_orbits > 0) {
         char text_content[4];
         sprintf(text_content, "%+3d", full_orbits);
@@ -393,21 +393,21 @@ timemath::Time _DrawHandle(
     );
     ButtonStateFlags button_state_plus  = DrawCircleButton(plus_pos, 10, c);
     ButtonStateFlags button_state_minus = DrawCircleButton(minus_pos, 10, c);
-    if (button_state_plus & BUTTON_STATE_FLAG_JUST_PRESSED)  current = timemath::TimeAdd(current, period);
-    if (button_state_minus & BUTTON_STATE_FLAG_JUST_PRESSED) current = timemath::TimeSub(current, period);
+    if (button_state_plus & BUTTON_STATE_FLAG_JUST_PRESSED)  current = current + period;
+    if (button_state_minus & BUTTON_STATE_FLAG_JUST_PRESSED) current = current - period;
     HandleButtonSound(button_state_plus);
     HandleButtonSound(button_state_minus);
     if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
         *is_dragging = false;
     }
     if (*is_dragging) {
-        timemath::Time t0_2 = timemath::TimeAddSec(t0, full_orbits * timemath::TimeSeconds(period));
+        timemath::Time t0_2 = t0 + full_orbits * period.Seconds();
 
         Vector2 mouse_pos_world = GetMousePositionInWorld();
         double longuitude = atan2(mouse_pos_world.y, mouse_pos_world.x);
         double θ = longuitude - orbit->lop;
-        current = timemath::TimeAdd(t0_2, orbit->GetTimeUntilFocalAnomaly(θ, t0_2));
-        ASSERT(TimeIsEarlier(t0, current));
+        current = t0_2 + orbit->GetTimeUntilFocalAnomaly(θ, t0_2);
+        ASSERT(t0 < current);
     }
     return current;
 }
@@ -424,11 +424,11 @@ void TransferPlanUI::Draw(const CoordinateTransform* c_transf) {
 
     timemath::Time new_departure_time = _DrawHandle(c_transf, departure_handle_pos, &from->orbit, plan->departure_time, time_bounds[0], &is_dragging_departure);
     timemath::Time new_arrival_time = _DrawHandle(c_transf, arrival_handle_pos, &to->orbit, plan->arrival_time, time_bounds[0], &is_dragging_arrival);
-    if (TimeIsEarlier(time_bounds[0], new_departure_time) && timemath::TimeIsEarlier(new_departure_time, plan->arrival_time)){
+    if (time_bounds[0] < new_departure_time && new_departure_time < plan->arrival_time) {
         plan->departure_time = new_departure_time;
         redraw_queued = true;
     }
-    if (TimeIsEarlier(plan->departure_time, new_arrival_time)){
+    if (plan->departure_time < new_arrival_time) {
         plan->arrival_time = new_arrival_time;
         redraw_queued = true;
     }
@@ -458,12 +458,12 @@ void TransferPlanUI::DrawUI() {
     UIContextCurrent().Enclose(2, 2, BG_COLOR, is_valid ? TRANSFER_UI_COLOR : PALETTE_RED);
     
     StringBuilder sb = StringBuilder();
-    sb.Add("Departs in ").AddTime(timemath::TimeSub(plan->departure_time, time_bounds[0]));
-    sb.Add("\nArrives in ").AddTime(timemath::TimeSub(plan->arrival_time, time_bounds[0]));
+    sb.Add("Departs in ").AddTime(plan->departure_time - time_bounds[0]);
+    sb.Add("\nArrives in ").AddTime(plan->arrival_time - time_bounds[0]);
     UIContextWrite(sb.c_str);
     UIContextPushInset(0, 18);
     UIContextFillline(
-        fmin(TimeSecDiff(plan->arrival_time, time_bounds[0]) / timemath::TimeSecDiff(plan->hohmann_arrival_time, time_bounds[0]), 1.0), 
+        fmin(timemath::Time::SecDiff(plan->arrival_time, time_bounds[0]) / timemath::Time::SecDiff(plan->hohmann_arrival_time, time_bounds[0]), 1.0), 
         TRANSFER_UI_COLOR, BG_COLOR
     );
     UIContextPop();  // Inset

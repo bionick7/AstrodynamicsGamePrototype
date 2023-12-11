@@ -226,13 +226,13 @@ void Ship::Update() {
     } else {
         const TransferPlan& tp = prepared_plans[0];
         if (is_parked) {
-            if (TimeIsEarlier(tp.departure_time, now)) {
+            if (tp.departure_time < now) {
                 _OnDeparture(tp);
             } else {
                 position = GetPlanet(parent_planet)->position;
             }
         } else {
-            if (TimeIsEarlier(tp.arrival_time, now)) {
+            if (tp.arrival_time < now) {
                 _OnArrival(tp);
             } else {
                 position = tp.transfer_orbit[tp.primary_solution].GetPosition(now);
@@ -261,7 +261,7 @@ void Ship::Draw(const CoordinateTransform* c_transf) const {
         }
         const TransferPlan& plan = prepared_plans[i];
         OrbitPos to_departure = plan.transfer_orbit[plan.primary_solution].GetPosition(
-            timemath::TimeLatest(plan.departure_time, GlobalGetNow())
+            timemath::Time::Latest(plan.departure_time, GlobalGetNow())
         );
         OrbitPos to_arrival = plan.transfer_orbit[plan.primary_solution].GetPosition( 
             plan.arrival_time
@@ -309,8 +309,8 @@ void _UIDrawTransferplans(Ship* ship) {
 
         snprintf(tp_str[0], 40, "- %s (%3d D %2d H)",
             resource_name,
-            (int) timemath::TimeDays(TimeSub(ship->prepared_plans[i].arrival_time, now)),
-            ((int) timemath::TimeSeconds(TimeSub(ship->prepared_plans[i].arrival_time, now)) % 86400) / 3600
+            (int) (ship->prepared_plans[i].arrival_time - now).Seconds(),
+            ((int) (ship->prepared_plans[i].arrival_time - now).Seconds() % 86400) / 3600
         );
 
         snprintf(tp_str[1], 40, "  %s >> %s", departure_planet_name, arrival_planet_name);

@@ -60,7 +60,7 @@ void PlanetaryEconomy::Update() {
     if (global_resource_data[0].name == 0) {
         FAIL("Resources uninititalized")
     }
-    double delta_T = TimeSeconds(GetCalendar()->GetFrameElapsedGameTime());
+    double delta_T = GetCalendar()->GetFrameElapsedGameTime().Seconds();
     for (int i=0; i < RESOURCE_MAX; i++) {
         resource_stock[i] = Clamp(resource_stock[i] + resource_delta[i] * delta_T, 0, resource_capacity[i]);
     }

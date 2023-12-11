@@ -11,22 +11,22 @@ void Calendar::Make(timemath::Time t0) {
     time = t0;
     prev_time = t0;
     current_migration_period = timemath::Time(86400 * 31 * 2);
-    migration_arrrival_time = timemath::TimeAdd(t0, current_migration_period);
+    migration_arrrival_time = t0 + current_migration_period;
 }
 
 void Calendar::Serialize(DataNode* data) const {
-    timemath::TimeSerialize(time, data->SetChild("time", DataNode()));
-    timemath::TimeSerialize(current_migration_period, data->SetChild("current_migration_period", DataNode()));
-    timemath::TimeSerialize(migration_arrrival_time, data->SetChild("migration_arrrival_time", DataNode()));
+    time.Serialize(data->SetChild("time", DataNode()));
+    current_migration_period.Serialize(data->SetChild("current_migration_period", DataNode()));
+    migration_arrrival_time.Serialize(data->SetChild("migration_arrrival_time", DataNode()));
     data->SetI("migration_arrrival_planet", (int) migration_arrrival_planet);
     data->SetF("time_scale", time_scale);
     data->Set("paused", paused ? "y": "n");
 }
 
 void Calendar::Deserialize(const DataNode* data) {
-    timemath::TimeDeserialize(&time, data->GetChild("time"));
-    timemath::TimeDeserialize(&current_migration_period, data->GetChild("current_migration_period"));
-    timemath::TimeDeserialize(&migration_arrrival_time, data->GetChild("migration_arrrival_time"));
+    time.Deserialize(data->GetChild("time"));
+    current_migration_period.Deserialize(data->GetChild("current_migration_period"));
+    migration_arrrival_time.Deserialize(data->GetChild("migration_arrrival_time"));
     migration_arrrival_planet = (entity_id_t) data->GetI("migration_arrrival_planet", (int) migration_arrrival_planet);
     time_scale = data->GetF("time_scale", time_scale);
     paused = strcmp(data->Get("paused", paused ? "y": "n"), "y") == 0;
@@ -36,9 +36,9 @@ timemath::Time Calendar::AdvanceTime(double delta_t) {
     prev_time = time;
     if (paused) return time;
     
-    time = timemath::TimeAddSec(time, delta_t * time_scale);
-    if (TimeIsEarlier(migration_arrrival_time, GlobalGetNow())){
-        migration_arrrival_time = timemath::TimeAdd(migration_arrrival_time, current_migration_period);
+    time = time + delta_t * time_scale;
+    if (migration_arrrival_time < GlobalGetNow()){
+        migration_arrrival_time = migration_arrrival_time + current_migration_period;
         USER_INFO("New migrants arrive")
     }
 
@@ -65,19 +65,19 @@ void Calendar::DrawUI() const {
     Vector2 pos = { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(), text, FONT_SIZE, 1).x - 10, 10 };
     DrawTextEx(GetCustomDefaultFont(), text, pos, FONT_SIZE, 1, MAIN_UI_COLOR);
     char text_date[100];
-    FormatDate(text_date, 100, GlobalGetNow());
+    GlobalGetNow().FormatAsDate(text_date, 100);
     pos = { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(), text_date, FONT_SIZE, 1).x - 10, 30 };
     DrawTextEx(GetCustomDefaultFont(), text_date, pos, FONT_SIZE, 1, MAIN_UI_COLOR);
 
     // Migration progress
-    double t_val = 1.0 - timemath::TimeSecDiff(migration_arrrival_time, GlobalGetNow()) / timemath::TimeSeconds(current_migration_period);
+    double t_val = 1.0 - (migration_arrrival_time - GlobalGetNow()).Seconds() / current_migration_period.Seconds();
     int progress_x = t_val * GetScreenWidth();
     DrawRectangle(0, 1, progress_x, 2, MAIN_UI_COLOR);
     const int collider_rec_width = 16;
     Rectangle mouse_collider = { progress_x - collider_rec_width/2, 0, collider_rec_width, collider_rec_width};
     if (CheckCollisionPointRec(GetMousePosition(), mouse_collider) || GetMousePosition().y < 4) {
         char buffer[30];
-        char* buffer2 = FormatTime(buffer, 30, timemath::TimeSub(migration_arrrival_time, GlobalGetNow()));
+        char* buffer2 = (migration_arrrival_time - GlobalGetNow()).FormatAsTime(buffer, 30);
         strncpy(buffer2, GetPlanet(migration_arrrival_planet)->name, 30 - (buffer2 - buffer));
         Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), buffer, 16, 1);
         if (progress_x > GetScreenWidth() - text_size.x - 200) {
@@ -88,11 +88,11 @@ void Calendar::DrawUI() const {
 }
 
 bool Calendar::IsNewDay() const {
-    return (int)TimeDays(prev_time) != (int)TimeDays(time);
+    return (int) prev_time.Days() != (int) time.Days();
 }
 
 timemath::Time Calendar::GetFrameElapsedGameTime() const {
-    return timemath::TimeSub(time, prev_time);
+    return time - prev_time;
 }
 
 Calendar* GetCalendar() {

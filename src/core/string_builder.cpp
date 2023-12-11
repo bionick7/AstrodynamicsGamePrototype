@@ -87,7 +87,7 @@ StringBuilder& StringBuilder::AddI(int num) {
 
 StringBuilder& StringBuilder::AddTime(timemath::Time t) {
     char buffer[20];
-    FormatTime(buffer, 20, t);
+    t.FormatAsTime(buffer, 20);
     int write_offset = length - 1;
     length += strlen(buffer);
     c_str = (char*)realloc(c_str, length);
@@ -99,7 +99,7 @@ StringBuilder& StringBuilder::AddTime(timemath::Time t) {
 
 StringBuilder& StringBuilder::AddDate(timemath::Time t) {
     char buffer[20];
-    FormatDate(buffer, 20, t);
+    t.FormatAsDate(buffer, 20);
     int write_offset = length - 1;
     length += strlen(buffer);
     c_str = (char*)realloc(c_str, length);
