@@ -16,7 +16,7 @@ struct QuestTemplate {
     std::vector<entity_id_t> destination_options = std::vector<entity_id_t>();
     double max_dv;
     double payload;
-    double payout;
+    cost_t payout;
 
     entity_id_t GetRandomDeparturePlanet() const;
     entity_id_t GetRandomArrivalPlanet(entity_id_t departure_planet) const;
@@ -44,7 +44,7 @@ struct Quest {
     ButtonStateFlags DrawUI(bool show_as_button, bool highlight) const;
 };
 
-#define _AVAILABLE_QUESTS 15
+#define _AVAILABLE_QUESTS 20
 
 struct QuestManager {
     Quest available_quests[_AVAILABLE_QUESTS];

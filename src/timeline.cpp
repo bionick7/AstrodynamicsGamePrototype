@@ -4,9 +4,10 @@
 #include "constants.hpp"
 #include "debug_drawing.hpp"
 #include "string_builder.hpp"
+#include "utils.hpp"
 
 bool show_timeline = false;
-const int PIXELS_PER_DAY = 60;
+int pixels_per_day_vscale = 60;
 
 struct TimeLineCoordinateData {
     int x0;
@@ -24,12 +25,12 @@ int GetPlanetCoord(const TimeLineCoordinateData* tcd, entity_id_t planet) {
 
 int GetTimeCoord(const TimeLineCoordinateData* tcd, timemath::Time t) {
     timemath::Time ref_time = GlobalGetNow();
-    return tcd->y0 + 24 + (t - ref_time).Seconds() * PIXELS_PER_DAY / 86400;
+    return tcd->y0 + 24 + (t - ref_time).Seconds() * pixels_per_day_vscale / 86400;
 }
 
 timemath::Time GetEndTime(const TimeLineCoordinateData* tcd) {
     timemath::Time ref_time = GlobalGetNow();
-    return ref_time + timemath::Time(((float)tcd->h - 24.f) / (float) PIXELS_PER_DAY * 86400);
+    return ref_time + timemath::Time(((float)tcd->h - 24.f) / (float) pixels_per_day_vscale * 86400);
 }
 
 void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
@@ -45,7 +46,7 @@ void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
         min_planet_spacing = tcd->w / (planets->planet_count + 2);
     }
 
-    int previous_x = 0;
+    int previous_x = 40;
     for (int planet_index = 0; planet_index < planets->planet_count; planet_index++) {
         const Planet* planet = &planets->planet_array[planet_index];
         double ratio = log(planet->orbit.sma/min_sma) / log(max_sma/min_sma);
@@ -59,9 +60,42 @@ void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
         previous_x = x;
         tcd->planet_coords[planet_index] = x;
     }
+
+    Color alt = ColorAlphaBlend(BG_COLOR, MAIN_UI_COLOR, GetColor(0x50505050u));
+    Color alt2 = ColorAlphaBlend(BG_COLOR, MAIN_UI_COLOR, GetColor(0x80808080u));
+
+    // Draw 'y-backticks'
+    int t_indx = 0;
+    StringBuilder sb;
+    timemath::Time day_start = timemath::Time(((int)GlobalGetNow().Days() + 1) * 86400);
+    int time_interval = 1;
+    if (pixels_per_day_vscale < 40) time_interval = 7;
+    if (pixels_per_day_vscale < 4) time_interval = 31;
+    for (timemath::Time t = day_start; t < GetEndTime(tcd); t = t + timemath::Time::Day()) {
+        int y = GetTimeCoord(tcd, t);
+        DrawLine(tcd->x0 - 2, y, tcd->x0 + 15, y, MAIN_UI_COLOR);
+        if (t_indx++ % time_interval == 0) {
+            DrawTextAligned(
+                sb.Clear().AddDate(t, true).c_str, 
+                { (float) tcd->x0 + 20, (float) y },
+                TEXT_ALIGNMENT_BOTTOM | TEXT_ALIGNMENT_LEFT,
+                alt2
+            );
+        }
+        DrawLine(tcd->x0 + 40, y, tcd->x0 + tcd->w - 10, y, alt);
+    }
 }
 
-void  _QuestDrawLine(TimeLineCoordinateData* tcd, const Quest* q, bool active) {
+
+float _SDSegment(Vector2 p, Vector2 a, Vector2 b) {
+    Vector2 pa = Vector2Subtract(p, a);
+    Vector2 ba = Vector2Subtract(b, a);
+    float h = Clamp(Vector2DotProduct(pa, ba) / Vector2DotProduct(ba, ba), 0.0, 1.0 );
+    return Vector2Distance(pa, Vector2Scale(ba, h));
+}
+
+float  _QuestDrawLine(TimeLineCoordinateData* tcd, const Quest* q, bool active) {
+    // returns the mouse distance to the line (in pixels)
     entity_id_t from = q->departure_planet;
     entity_id_t to = q->arrival_planet;
     timemath::Time pickup_time = q->pickup_expiration_time;
@@ -105,6 +139,8 @@ void  _QuestDrawLine(TimeLineCoordinateData* tcd, const Quest* q, bool active) {
     DrawLineV(helper_start, helper_end, c);
     DrawLineV(helper_end, end_pos, c);
 
+    return _SDSegment(GetMousePosition(), start_pos, end_pos);
+
     /*Vector2 start_control = start_pos;
     start_control.x = (start_pos.x * 2 + end_pos.x) / 3;
     Vector2 end_control = end_pos;
@@ -116,15 +152,38 @@ void  _QuestDrawLine(TimeLineCoordinateData* tcd, const Quest* q, bool active) {
 }
 
 void _DrawQuests(TimeLineCoordinateData* tcd, const QuestManager* qm) {
+    float closest_mouse_dist = INFINITY;
+    entity_id_t closest_mouse_dist_quest = -1;
+    bool closest_mouse_dist_quest_is_active = false;
     for(int i=0; i < qm->GetAvailableQuests(); i++) {
         const Quest* q = &qm->available_quests[i];
         if (!q->IsValid()) {
             continue;
         }
-        _QuestDrawLine(tcd, q, false);
+        float mouse_dist = _QuestDrawLine(tcd, q, false);
+        if (mouse_dist < closest_mouse_dist) {
+            closest_mouse_dist = mouse_dist;
+            closest_mouse_dist_quest = i;
+            closest_mouse_dist_quest_is_active = false;
+        }
     }
     for(auto it = qm->active_quests.GetIter(); it; it++) {
-        _QuestDrawLine(tcd, qm->active_quests.Get(it), true);
+        float mouse_dist = _QuestDrawLine(tcd, qm->active_quests.Get(it), true);
+        if (mouse_dist < closest_mouse_dist) {
+            closest_mouse_dist = mouse_dist;
+            closest_mouse_dist_quest = it.index;
+            closest_mouse_dist_quest_is_active = true;
+        }
+    }
+    if (closest_mouse_dist < 15) {
+        UIContextPushAligned(400, 100, TEXT_ALIGNMENT_TOP | TEXT_ALIGNMENT_RIGHT);
+        if (closest_mouse_dist_quest_is_active) {
+            qm->active_quests.Get(closest_mouse_dist_quest)->DrawUI(false, false);
+        } else {
+            qm->available_quests[closest_mouse_dist_quest].DrawUI(false, false);
+        }
+        //UIContextCurrent().DebugDrawRenderRec();
+        UIContextPop();
     }
 }
 
@@ -198,15 +257,16 @@ void _DrawShips(TimeLineCoordinateData* tcd, const Ships* ships) {
     }
 }
 
-bool TimelineShown() {
+bool TimelineIsOpen() {
     return show_timeline;
 }
 
-void TimelineHide() {
+void TimelineClose() {
     show_timeline = false;
 }
 
 void DrawTimeline() {
+
     // Manage viewing
     if (IsKeyPressed(KEY_W)) {
         show_timeline = !show_timeline;
@@ -225,6 +285,16 @@ void DrawTimeline() {
     tcd.w  = UIContextCurrent().width;
     tcd.h  = UIContextCurrent().height;
     tcd.planet_coords = new int[gs->planets.planet_count];
+
+    // Scrolling
+    if (GlobalGetState()->current_focus == GlobalState::TIMELINE) {
+        float scroll_ratio = 1 + 0.1 * GetMouseWheelMove();
+        if (scroll_ratio > 1) {
+            pixels_per_day_vscale = ClampInt(pixels_per_day_vscale * scroll_ratio, pixels_per_day_vscale + 1, tcd.h);
+        } else  if (scroll_ratio < 1) {
+            pixels_per_day_vscale = ClampInt(pixels_per_day_vscale * scroll_ratio, 3, pixels_per_day_vscale - 1);
+        }
+    }
 
     _DrawPlanets(&tcd, &gs->planets);
     _DrawQuests(&tcd, &gs->quest_manager);

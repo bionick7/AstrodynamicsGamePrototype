@@ -58,6 +58,12 @@ TextBox::TextBox(int x, int y, int w, int h, int ptext_size, Color color) {
     text_start_y = y;
     text_margin_x = 2;
     text_margin_y = 2;
+
+    render_rec.x = x;
+    render_rec.y = y;
+    render_rec.width = w;
+    render_rec.height = h;
+
     text_size = ptext_size;
     text_counter = 0;
     text_color = color;
@@ -98,18 +104,32 @@ void TextBox::Enclose(int inset_x, int inset_y, Color background_color, Color li
     rect.width = width + inset_x*2;
     rect.height = height + inset_y*2;
     int corner_radius = 0;//inset_x < inset_y ? inset_x : inset_y;
+    rect = GetCollisionRec(rect, render_rec);
     DrawRectangleRounded(rect, corner_radius, 16, background_color);
     DrawRectangleRoundedLines(rect, corner_radius, 16, 1, line_color);
 }
 
-int TextBox::GetLineHeight() {
+void TextBox::DebugDrawRenderRec() const {
+    DrawRectangleRec(render_rec, BLACK);
+    DrawRectangleLinesEx(render_rec, 4, PURPLE);
+}
+
+
+int TextBox::GetLineHeight() const {
     return text_size + text_margin_y;
 }
 
 void TextBox::Write(const char* text) {
     Vector2 pos = {text_start_x + x_cursor, text_start_y + y_cursor};
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
-    if (text_background.a != 0) {
+    // text fully in render rectangle
+    if (
+        !CheckCollisionPointRec(pos, render_rec)
+        || !CheckCollisionPointRec(Vector2Add(pos, size), render_rec)
+    ) return;
+
+    // avoid drawing if the bg is fully transparent (most cases)
+    if(text_background.a != 0) {
         DrawRectangleV(pos, size, text_background);
     }
     DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color);
@@ -119,6 +139,12 @@ void TextBox::Write(const char* text) {
 void TextBox::WriteLine(const char* text) {
     Vector2 pos = {text_start_x + x_cursor, text_start_y + y_cursor};
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
+    // text fully in render rectangle
+    if (
+        !CheckCollisionPointRec(pos, render_rec)
+        || !CheckCollisionPointRec(Vector2Add(pos, size), render_rec)
+    ) return;
+
     if (text_background.a != 0) {
         DrawRectangleV(pos, size, text_background);
     }
@@ -130,6 +156,12 @@ void TextBox::WriteLine(const char* text) {
 ButtonStateFlags TextBox::WriteButton(const char* text, int inset) {
     Vector2 pos = {text_start_x + x_cursor, text_start_y + y_cursor + text_margin_y};
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
+    // text fully in render rectangle
+    if (
+        !CheckCollisionPointRec(pos, render_rec)
+        || !CheckCollisionPointRec(Vector2Add(pos, size), render_rec)
+    ) return BUTTON_STATE_FLAG_DISABLED;
+
     if (inset >= 0) {
         size.x += 2*inset;
         size.y += 2*inset;
@@ -148,8 +180,7 @@ ButtonStateFlags TextBox::WriteButton(const char* text, int inset) {
     return res;
 }
 
-ButtonStateFlags TextBox::AsButton() {
-    bool is_in_area = CheckCollisionPointRec(GetMousePosition(), {(float)text_start_x, (float)text_start_y, (float)width, (float)height});
+ButtonStateFlags TextBox::AsButton() const {
     return _GetButtonState(
         CheckCollisionPointRec(GetMousePosition(), {(float)text_start_x, (float)text_start_y, (float)width, (float)height}),
         CheckCollisionPointRec(Vector2Subtract(GetMousePosition(), GetMouseDelta()), {(float)text_start_x, (float)text_start_y, (float)width, (float)height})
@@ -179,6 +210,42 @@ int UIContextPushInset(int margin, int h) {
         tb.text_size,
         tb.text_color
     );
+    new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb.render_rec);
+
+    tb.y_cursor += h + 2*margin;
+    text_box_stack.push(new_text_box);
+    return height;
+}
+
+int UIContextPushScrollInset(int margin, int h, int allocated_height, int scroll) {
+    // Returns the actual height
+    const int buildin_scrollbar_margin = 3;
+    const int buildin_scrollbar_width = 6;
+
+    TextBox& tb = UIContextCurrent();
+    tb.EnsureLineBreak();
+    int height = fmin(h, fmax(0, tb.height - tb.y_cursor - 2*margin));
+    float scroll_progress = Clamp((float)scroll / (allocated_height - h), 0, 1);
+    int scrollbar_height = h * h / allocated_height;
+    DrawRectangleRounded({
+        (float) tb.text_start_x + tb.width - buildin_scrollbar_margin,
+        (float) tb.text_start_y + scroll_progress * (h - scrollbar_height),
+        (float) buildin_scrollbar_width,
+        (float) scrollbar_height},
+         buildin_scrollbar_width/2,
+        4, tb.text_color
+    );
+    TextBox new_text_box = TextBox(
+        tb.text_start_x + tb.x_cursor + margin,
+        tb.text_start_y + tb.y_cursor + margin - scroll,
+        tb.width - tb.x_cursor - 2*margin - 2*buildin_scrollbar_margin - buildin_scrollbar_width,
+        allocated_height,
+        tb.text_size,
+        tb.text_color
+    );
+    new_text_box.render_rec.y = tb.text_start_y + tb.y_cursor + margin;
+    new_text_box.render_rec.height = height;
+
     tb.y_cursor += h + 2*margin;
     text_box_stack.push(new_text_box);
     return height;
@@ -194,7 +261,40 @@ void UIContextPushInline(int margin) {
         tb.text_size,
         tb.text_color
     );
+    new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb.render_rec);
+
     tb.x_cursor = tb.width;
+    text_box_stack.push(new_text_box);
+}
+
+void UIContextPushAligned(int width, int height, TextAlignment alignment) {
+    TextBox& tb = UIContextCurrent();
+    tb.EnsureLineBreak();
+
+    int x = tb.text_start_x;
+    int y = tb.text_start_y;
+    if (alignment & TEXT_ALIGNMENT_HCENTER) {
+        x += (tb.width - width) / 2;
+    } else if (alignment & TEXT_ALIGNMENT_RIGHT) {
+        x += tb.width - width;
+    } else {  // left - aligned
+        // Do nothing
+    }
+    if (alignment & TEXT_ALIGNMENT_VCENTER) {
+        y += (tb.height - height) / 2;
+    } else if (alignment & TEXT_ALIGNMENT_BOTTOM) {
+        y += (tb.height - height);
+    } else {  // top - aligned
+        // Do nothing
+    }
+
+    TextBox new_text_box = TextBox(
+        x, y, width, height,
+        tb.text_size,
+        tb.text_color
+    );
+
+    new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb.render_rec);
     text_box_stack.push(new_text_box);
 }
 
@@ -210,6 +310,8 @@ void UIContextPushHSplit(int x_start, int x_end) {
         tb.text_size,
         tb.text_color
     );
+    new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb.render_rec);
+
     text_box_stack.push(new_text_box);
 }
 
@@ -223,6 +325,8 @@ void UIContextPushGridCell(int columns, int rows, int column, int row) {
         tb.text_size,
         tb.text_color
     );
+    new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb.render_rec);
+
     text_box_stack.push(new_text_box);
 }
 
@@ -232,6 +336,13 @@ ButtonStateFlags UIContextAsButton() {
 
 void UIContextPop() {
     text_box_stack.pop();
+}
+
+Vector2 UIContextGetRelMousePos() {
+    return {
+        GetMousePosition().x - UIContextCurrent().text_start_x,
+        GetMousePosition().y - UIContextCurrent().text_start_y
+    };
 }
 
 void UIContextShrink(int dx, int dy) {

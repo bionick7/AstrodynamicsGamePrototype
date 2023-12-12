@@ -23,6 +23,17 @@ bool IsIdValid(entity_id_t id);
 constexpr entity_id_t GetInvalidId() { return UINT32_MAX; }
 
 struct GlobalState {
+    enum FocusablesPanels {
+        QUEST_MANAGER,
+        TIMELINE,
+        BUILDING_CONSTRUCTION,
+        TRANSFER_PLAN_UI,
+        PLANET_SHIP_DETAILS,
+        MAP
+    };
+
+    FocusablesPanels current_focus;
+
     CoordinateTransform c_transf;
     Calendar calendar;
     TransferPlanUI active_transfer_plan;
@@ -45,6 +56,7 @@ struct GlobalState {
     void DrawState();
 
     // Interaction
+    FocusablesPanels GetCurrentFocus();
     bool CompleteTransaction(int delta, const char* message);
 
     // Serialization

@@ -416,10 +416,10 @@ void Ship::_OnDeparture(const TransferPlan& tp) {
     PlanetaryEconomy* local_economy = &GetPlanet(tp.departure_planet)->economy;
 
     ResourceTransfer fuel_tf = local_economy->DrawResource(ResourceTransfer(RESOURCE_WATER, tp.fuel_mass));
-    if (fuel_tf.quantity <= tp.fuel_mass) {
+    if (fuel_tf.quantity < tp.fuel_mass) {
         resource_count_t remaining_fuel = tp.fuel_mass - fuel_tf.quantity;
         if (local_economy->trading_accessible && local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) < GlobalGetState()->capital) {
-            USER_INFO("Automatically purchased %d of water for %f k$$", remaining_fuel, local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) / 1e3)
+            USER_INFO("Automatically purchased %d of water for M§M %ld K", remaining_fuel, local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) / 1e3)
             local_economy->TryPlayerTransaction(ResourceTransfer(RESOURCE_WATER, remaining_fuel));
             local_economy->DrawResource(ResourceTransfer(RESOURCE_WATER, remaining_fuel));
         } else {

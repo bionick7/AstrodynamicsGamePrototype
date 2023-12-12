@@ -157,9 +157,16 @@ void CoordinateTransform::TransformBuffer(Vector2* buffer, int buffer_size) cons
 }
 
 void CoordinateTransform::HandleInput(double delta_t) {
-    float scroll_ratio = 1 - atan(-0.1 * GetMouseWheelMove());
+    float scroll_ratio = 1 + 0.1 * GetMouseWheelMove();
 
-    if (scroll_ratio != 1) {
+    auto current_focus = GlobalGetState()->current_focus;
+    bool in_focus = false
+        || current_focus == GlobalState::MAP
+        || current_focus == GlobalState::PLANET_SHIP_DETAILS
+        || current_focus == GlobalState::TRANSFER_PLAN_UI
+    ;
+
+    if (scroll_ratio != 1 && in_focus) {
         // ((P - c) / s1)*v + f1 = ((P - c) / s2)*v + f2
         // ((P - c) / s1)*v - ((P - c) / s2) + f1 = f2
         focus = Vector2Subtract(

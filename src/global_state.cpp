@@ -131,6 +131,33 @@ void GlobalState::LoadGame(const char* file_path) {
     Deserialize(&game_data);
 }
 
+GlobalState::FocusablesPanels _GetCurrentFocus(GlobalState* gs) {
+    // out of quest menu
+    if (gs->quest_manager.show_ui) {
+        return GlobalState::QUEST_MANAGER;
+    } 
+
+    // out of timeline
+    if (TimelineIsOpen()) {
+        return GlobalState::TIMELINE;
+    } 
+
+    // cancel out of focused planet and ship
+    if (BuildingConstructionIsOpen()) {
+        return GlobalState::BUILDING_CONSTRUCTION;
+    } 
+
+    // transfer plan UI
+    if (gs->active_transfer_plan.IsActive() || gs->active_transfer_plan.IsSelectingDestination()) {
+        return GlobalState::TRANSFER_PLAN_UI;
+    } 
+    
+    // cancel out of focused planet and ship
+    if (IsIdValid(gs->focused_planet) || IsIdValid(gs->focused_ship)) {
+        return GlobalState::PLANET_SHIP_DETAILS;
+    } 
+    return GlobalState::MAP;
+}
 
 void _HandleDeselect(GlobalState* gs) {
     if (!IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !IsKeyPressed(KEY_ESCAPE)) {
@@ -139,38 +166,30 @@ void _HandleDeselect(GlobalState* gs) {
 
     // Cancel out of next layer
     PlaySFX(SFX_CANCEL);
-    if(false);
 
-    // out of quest menu
-    else if (gs->quest_manager.show_ui) {
+    switch (gs->current_focus) {
+    case GlobalState::QUEST_MANAGER:{
         gs->quest_manager.show_ui = false;
-    } 
-
-    // out of timeline
-    else if (TimelineShown()) {
-        TimelineHide();
-    } 
-
-    // cancel out of focused planet and ship
-    else if (BuildingConstructionIsOpen()) {
+        break;}
+    case GlobalState::TIMELINE:{
+        TimelineClose();
+        break;}
+    case GlobalState::BUILDING_CONSTRUCTION:{
         BuildingConstructionClose();
-    } 
-
-    // transfer plan UI
-    else if (gs->active_transfer_plan.IsActive() || gs->active_transfer_plan.IsSelectingDestination()) {
+        break;}
+    case GlobalState::TRANSFER_PLAN_UI:{
         gs->active_transfer_plan.Abort();
-    } 
-    
-    // cancel out of focused planet and ship
-    else if (IsIdValid(gs->focused_planet) || IsIdValid(gs->focused_ship)) {
+        break;}
+    case GlobalState::PLANET_SHIP_DETAILS:{
         gs->focused_planet = GetInvalidId();
         gs->focused_ship = GetInvalidId();
-    } 
-
-    // toggle pause
-    else {
+        break;}
+    case GlobalState::MAP:{
         is_in_pause_menu = !is_in_pause_menu;
-        if (is_in_pause_menu) gs->calendar.paused = true;
+        if (is_in_pause_menu) 
+            gs->calendar.paused = true;
+        break;}
+    default: NOT_REACHABLE;
     }
 }
 
@@ -221,7 +240,8 @@ void GlobalState::UpdateState(double delta_t) {
     c_transf.HandleInput(delta_t);
     calendar.HandleInput(delta_t);
     GetAudioServer()->Update(delta_t);
-
+    
+    current_focus = _GetCurrentFocus(this);
     _HandleDeselect(this);
     calendar.AdvanceTime(delta_t);
     active_transfer_plan.Update();
@@ -245,8 +265,8 @@ void GlobalState::DrawState() {
     // UI
     UIStart();
     calendar.DrawUI();
-    char capital_str[14];
-    sprintf(capital_str, "%6ld.%3ld M$", capital / (int)1e6, capital % 1000000 / 1000);
+    char capital_str[21];
+    sprintf(capital_str, "M§M %6ld.%3ld .mil", capital / (int)1e6, capital % 1000000 / 1000);
     DrawTextAligned(capital_str, {GetScreenWidth() / 2.0f, 10}, TEXT_ALIGNMENT_HCENTER & TEXT_ALIGNMENT_TOP, MAIN_UI_COLOR);
 
     // 
@@ -279,7 +299,7 @@ void GlobalState::DrawState() {
     UIEnd();
 
     DebugFlushText();
-    //DrawFPS(0, 0);
+    DrawFPS(0, 0);
 }
 
 void GlobalState::Serialize(DataNode* data) const {

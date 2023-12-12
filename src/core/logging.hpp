@@ -12,6 +12,7 @@
 #define SHOW_V2(var)
 
 #define NOT_IMPLEMENTED {exit(1);}
+#define NOT_REACHABLE {exit(1);}
 #define FAIL(...) {exit(1);}
 
 #define ASSERT(condition) 
@@ -31,6 +32,7 @@
 #define SHOW_V2(var) LogImpl(__FILE__, __LINE__, LOGTYPE_INFO, "%s = (%f, %f)", #var, (var).x, (var).y);
 
 #define NOT_IMPLEMENTED {ERROR("Not Implemented") exit(1);}
+#define NOT_REACHABLE {ERROR("Should not be reachable") exit(1);}
 #define FAIL(...) {ERROR(__VA_ARGS__) exit(1);}
 
 #define ASSERT(condition) if (!(condition)) { ERROR("Assertion failed: (%s)", #condition); }

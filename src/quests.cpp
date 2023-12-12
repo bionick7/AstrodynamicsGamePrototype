@@ -7,6 +7,8 @@
 #include "constants.hpp"
 #include "string_builder.hpp"
 
+const int QUEST_PANEL_HEIGHT = 64;
+
 void _GenerateRandomQuest(Quest* quest, const QuestTemplate* quest_template) {
     timemath::Time now = GlobalGetNow();
 
@@ -138,7 +140,7 @@ ButtonStateFlags Quest::DrawUI(bool show_as_button, bool highlinght) const {
         return BUTTON_STATE_FLAG_NONE;
     }
 
-    int height = UIContextPushInset(3, 50);
+    int height = UIContextPushInset(3, QUEST_PANEL_HEIGHT);
     if (height == 0) {
         UIContextPop();
         return false;
@@ -148,11 +150,12 @@ ButtonStateFlags Quest::DrawUI(bool show_as_button, bool highlinght) const {
     } else {
         UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
     }
+    UIContextShrink(6, 6);
     ButtonStateFlags button_state = UIContextAsButton();
     if (show_as_button) {
         HandleButtonSound(button_state & (BUTTON_STATE_FLAG_JUST_HOVER_IN | BUTTON_STATE_FLAG_JUST_PRESSED));
     }
-    if (height != 50) {
+    if (height != QUEST_PANEL_HEIGHT) {
         UIContextPop();
         return button_state & BUTTON_STATE_FLAG_JUST_PRESSED;
     }
@@ -179,7 +182,7 @@ ButtonStateFlags Quest::DrawUI(bool show_as_button, bool highlinght) const {
     } else {
         sb.Add("Expires in ").AddTime(pickup_expiration_time - GlobalGetNow());
     }
-    sb.AddFormat("  => %.3f k §MM \n", payout / 1000);
+    sb.AddFormat("  => ").AddCost(payout);
     UIContextWrite(sb.c_str);
 
     UIContextPop();
@@ -257,6 +260,7 @@ void QuestManager::Update(double dt) {
     }
 }
 
+int current_available_quests_scroll = 0;
 void QuestManager::Draw() {
     if (!show_ui) return;
     
@@ -279,12 +283,20 @@ void QuestManager::Draw() {
 
     UIContextPushHSplit(w/2, w);
     UIContextShrink(5, 5);
+
+    if (GlobalGetState()->current_focus == GlobalState::QUEST_MANAGER) {
+        int max_scroll = MaxInt(QUEST_PANEL_HEIGHT * GetAvailableQuests() - UIContextCurrent().height, 0);
+        current_available_quests_scroll = ClampInt(current_available_quests_scroll - GetMouseWheelMove() * 10, 0, max_scroll);
+    }
+
+    UIContextPushScrollInset(0, UIContextCurrent().height, QUEST_PANEL_HEIGHT * GetAvailableQuests(), current_available_quests_scroll);
     // Available Quests
     for(int i=0; i < GetAvailableQuests(); i++) {
         if(available_quests[i].DrawUI(true, IsIdValid(available_quests[i].ship)) & BUTTON_STATE_FLAG_JUST_PRESSED) {
             AcceptQuest(i);
         }
     }
+    UIContextPop();  // ScrollInseet
 
     UIContextPop();  // HSplit
 }
@@ -336,7 +348,7 @@ void QuestManager::QuestArrivedAt(entity_id_t quest_index, entity_id_t planet_in
 
 void QuestManager::CompleteQuest(entity_id_t quest_index) {
     Quest* q = active_quests[quest_index];
-    INFO("Quest completed (%f $$)", q->payout)
+    INFO("Quest completed (M§M %f)", q->payout)
     GlobalGetState()->CompleteTransaction(q->payout, "Completed quest");
 }
 
@@ -373,7 +385,7 @@ int QuestManager::LoadQuests(const DataNode* data) {
 
         // TODO: Check if quest is possible for each startere planet
 
-        templates[i].payout = mission_data->GetF("payout", 0.0);
+        templates[i].payout = (int) mission_data->GetF("payout", 0.0);  // to allow for exponential notation etc.
     }
     return template_count;
 }

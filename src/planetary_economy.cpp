@@ -3,6 +3,7 @@
 #include "ui.hpp"
 #include "utils.hpp"
 #include "constants.hpp"
+#include "string_builder.hpp"
 
 static ResourceData global_resource_data[RESOURCE_MAX] = {{""}};
 
@@ -182,7 +183,7 @@ void PlanetaryEconomy::TryPlayerTransaction(ResourceTransfer rt) {
 
 void PlanetaryEconomy::UIDrawEconomy(const ResourceTransfer& transfer, double fuel_draw) {
     for (int i=0; i < RESOURCE_MAX; i++) {
-        char buffer[50];
+        //char buffer[50];
         //sprintf(buffer, "%-10s %5d/%5d (%+3d)", GetResourceData(i).name, qtt, cap, delta);
         UIContextPushInset(0, 18);
         ResourceType resource = (ResourceType) i;
@@ -193,8 +194,11 @@ void PlanetaryEconomy::UIDrawEconomy(const ResourceTransfer& transfer, double fu
                 GlobalGetState()->active_transfer_plan.SetResourceType(resource);
             }
         }
-        sprintf(buffer, "%-10s %+3fK $$/cnt", GetResourceData(i).name, resource_price[i]/1e3);
-        UIContextWrite(buffer, false);
+
+        StringBuilder sb = StringBuilder();
+        sb.AddFormat("%-10s", GetResourceData(i).name).AddCost(resource_price[i]);
+        //sprintf(buffer, "%-10sM§M  %+3fK /cnt", GetResourceData(i).name, resource_price[i]/1e3);
+        UIContextWrite(sb.c_str, false);
 
         resource_count_t qtt = 0;
         if (transfer.resource_id == i) {
@@ -204,8 +208,9 @@ void PlanetaryEconomy::UIDrawEconomy(const ResourceTransfer& transfer, double fu
             qtt -= fuel_draw;
         }
         if (qtt != 0) {
-            sprintf(buffer, "   %+3d (%3ld K$)", qtt, GetPrice(resource, qtt) / 1000);
-            UIContextWrite(buffer, false);
+            sb.Clear().AddI(qtt).Add("(").AddCost(GetPrice(resource, qtt)).Add(")");
+            //sprintf(buffer, "   %+3d (M§M %3ld K)", qtt, GetPrice(resource, qtt) / 1000);
+            UIContextWrite(sb.c_str, false);
         }
 
         resource_count_t trade_ammount = 0;

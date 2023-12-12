@@ -6,30 +6,34 @@
 static inline Vector2 GetScreenCenter() { return {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f}; }
 
 typedef uint8_t TextAlignment;
-const TextAlignment TEXT_ALIGNMENT_LEFT = 0x00;
-const TextAlignment TEXT_ALIGNMENT_HCENTER = 0x01;
-const TextAlignment TEXT_ALIGNMENT_RIGHT = 0x02;
-const TextAlignment TEXT_ALIGNMENT_TOP = 0x00;
-const TextAlignment TEXT_ALIGNMENT_VCENTER = 0x04;
-const TextAlignment TEXT_ALIGNMENT_BOTTOM = 0x08;
+const TextAlignment TEXT_ALIGNMENT_LEFT      = 0x00;
+const TextAlignment TEXT_ALIGNMENT_HCENTER   = 0x01;
+const TextAlignment TEXT_ALIGNMENT_RIGHT     = 0x02;
+const TextAlignment TEXT_ALIGNMENT_TOP       = 0x00;
+const TextAlignment TEXT_ALIGNMENT_VCENTER   = 0x04;
+const TextAlignment TEXT_ALIGNMENT_BOTTOM    = 0x08;
 
 void DrawTextAligned(const char* text, Vector2 pos, TextAlignment alignment, Color c);
 
 typedef uint8_t ButtonStateFlags;
-const ButtonStateFlags BUTTON_STATE_FLAG_NONE = 0x00;
-const ButtonStateFlags BUTTON_STATE_FLAG_HOVER = 0x01;
-const ButtonStateFlags BUTTON_STATE_FLAG_PRESSED = 0x02;
-const ButtonStateFlags BUTTON_STATE_FLAG_DISABLED = 0x04;
-const ButtonStateFlags BUTTON_STATE_FLAG_JUST_PRESSED = 0x08;
-const ButtonStateFlags BUTTON_STATE_FLAG_JUST_UNPRESSED = 0x10;
-const ButtonStateFlags BUTTON_STATE_FLAG_JUST_HOVER_IN = 0x20;
-const ButtonStateFlags BUTTON_STATE_FLAG_JUST_HOVER_OUT = 0x40;
+const ButtonStateFlags BUTTON_STATE_FLAG_NONE            = 0x00;
+const ButtonStateFlags BUTTON_STATE_FLAG_HOVER           = 0x01;
+const ButtonStateFlags BUTTON_STATE_FLAG_PRESSED         = 0x02;
+const ButtonStateFlags BUTTON_STATE_FLAG_DISABLED        = 0x04;
+const ButtonStateFlags BUTTON_STATE_FLAG_JUST_PRESSED    = 0x08;
+const ButtonStateFlags BUTTON_STATE_FLAG_JUST_UNPRESSED  = 0x10;
+const ButtonStateFlags BUTTON_STATE_FLAG_JUST_HOVER_IN   = 0x20;
+const ButtonStateFlags BUTTON_STATE_FLAG_JUST_HOVER_OUT  = 0x40;
 
 struct TextBox {
     // Rect
     int text_start_x;
     int text_start_y;
-    int width, height;
+    int width;
+    int height;
+
+    // Render Rect
+    Rectangle render_rec;
 
     // Layout
     int text_margin_x;
@@ -51,22 +55,28 @@ struct TextBox {
     void Enclose(int inset_x, int inset_y, Color background_color, Color line_color);
     void Write(const char* text);
     void WriteLine(const char* text);
-    int GetLineHeight();
+    void DebugDrawRenderRec() const;
+    int GetLineHeight() const;
     ButtonStateFlags WriteButton(const char* text, int inset);
-    ButtonStateFlags AsButton();
+    ButtonStateFlags AsButton() const;
 
 private:
     void _Advance(Vector2 size);
 };
 
 void UIContextCreate(int x, int y, int w, int h, int text_size, Color color);
+
 int UIContextPushInset(int margin, int h);
+int UIContextPushScrollInset(int margin, int h, int allocated_height, int scroll);
 void UIContextPushInline(int x_margin);
+void UIContextPushAligned(int width, int height, TextAlignment align);
 void UIContextPushHSplit(int x_start, int x_end);
 void UIContextPushGridCell(int columns, int rows, int column, int row);
+void UIContextPop();
+Vector2 UIContextGetRelMousePos();
+
 ButtonStateFlags UIContextAsButton();
 void HandleButtonSound(ButtonStateFlags button_state_flags);
-void UIContextPop();
 void UIContextEnclose(Color background_color, Color line_color);
 void UIContextShrink(int dx, int dy);
 void UIContextWrite(const char* text, bool linebreak=true);

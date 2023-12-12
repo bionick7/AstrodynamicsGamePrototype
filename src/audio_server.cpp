@@ -9,6 +9,7 @@ int AudioServer::LoadSFX(const char* directory_name) {
     sound_array[SFX_CLICK_SHORT]  = LoadSound("resources/sound/SFX/ClickMechanic1.wav");
     sound_array[SFX_CANCEL]       = LoadSound("resources/sound/SFX/Click_Electronic_14.wav");
     SetSoundVolume(sound_array[SFX_CLICK_SHORT], 0.3);
+    return 4;
 }
 
 void AudioServer::StartMusic() {
