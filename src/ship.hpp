@@ -24,11 +24,11 @@ struct ShipClass {
     resource_count_t max_capacity;
 
     // Ease-of-use variables
-    double oem;
+    double oem;  // kg
 
-    double GetPayloadCapacity(double dv) const;
-    double GetFuelRequiredEmpty(double dv) const;
-    double GetFuelRequiredFull(double dv) const;
+    double GetPayloadCapacityMass(double dv) const;
+    resource_count_t GetFuelRequiredEmpty(double dv) const;
+    resource_count_t GetFuelRequiredFull(double dv) const;
 };
 
 struct Ship {
@@ -68,10 +68,10 @@ struct Ship {
     void DrawUI(const CoordinateTransform* c_transf);
     void Inspect();
 
-    resource_count_t GetPayloadMass() const;
+    double GetPayloadMass() const;
     resource_count_t GetMaxCapacity() const;
-    double GetRemainingPayloadCapacity(double dv) const;
-    double GetFuelRequiredEmpty(double dv) const;
+    resource_count_t GetRemainingPayloadCapacity(double dv) const;
+    resource_count_t GetFuelRequiredEmpty(double dv) const;
     double GetCapableDV() const;
 
     TransferPlan* GetEditedTransferPlan();

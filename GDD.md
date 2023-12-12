@@ -88,6 +88,15 @@ gov. RP \
 
 => Allow for trading non-essential items, but end-goal is to sustain colonies
 
+## Design parameters
+Scarcity of quests
+lots of quests => pick quests to optimize trajectory
+few quests => get inventive with quests
+
+Price of fuel
+cheap => encourage frequent use of ships
+expensive => plan trips carefully. Plays into scarcity
+
 ## Gameplay ideas
 Player plays a company/org spanning various colonies.
 Other colonies exist.
@@ -121,3 +130,4 @@ Loop B (main)
 
 //
 - build up fleet
+

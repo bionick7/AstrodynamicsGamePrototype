@@ -17,15 +17,15 @@ Planet::Planet(const char* p_name, double p_mu, double p_radius) {
 
 void Planet::Serialize(DataNode* data) const {
     data->Set("name", name);
-    data->Set("trading_acessible", economy.trading_acessible ? "y" : "n");
+    data->Set("trading_accessible", economy.trading_accessible ? "y" : "n");
     //data->SetF("mass", mu / G);
     //data->SetF("radius", radius);
 
     DataNode* resource_node = data->SetChild("resource_stock", DataNode());
     DataNode* resource_delta_node = data->SetChild("resource_delta", DataNode());
     for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-        resource_node->SetF(GetResourceData(resource_index).name, economy.resource_stock[resource_index] / 1000);
-        resource_delta_node->SetF(GetResourceData(resource_index).name, economy.resource_delta[resource_index] / 1000);
+        resource_node->SetI(GetResourceData(resource_index).name, economy.resource_stock[resource_index]);
+        resource_delta_node->SetI(GetResourceData(resource_index).name, economy.resource_delta[resource_index]);
     }
 
     int last_building_index = 0;
@@ -54,18 +54,18 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
     mu = nature->mu;
     radius = nature->radius;
     orbit = nature->orbit;
-    economy.trading_acessible = strcmp(data->Get("trading_acessible", economy.trading_acessible ? "y" : "n", true), "y") == 0;
+    economy.trading_accessible = strcmp(data->Get("trading_accessible", economy.trading_accessible ? "y" : "n", true), "y") == 0;
 
     const DataNode* resource_node = data->GetChild("resource_stock", true);
     if (resource_node != NULL) {
         for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-            economy.resource_stock[resource_index] = resource_node->GetF(GetResourceData(resource_index).name, 0, true) * 1000;
+            economy.resource_stock[resource_index] = resource_node->GetI(GetResourceData(resource_index).name, 0, true);
         }
     }
     const DataNode* resource_delta_node = data->GetChild("resource_delta", true);
     if (resource_delta_node != NULL) {
         for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-            economy.resource_delta[resource_index] = resource_delta_node->GetF(GetResourceData(resource_index).name, 0, true) * 1000;
+            economy.resource_delta[resource_index] = resource_delta_node->GetI(GetResourceData(resource_index).name, 0, true);
         }
     }
 
@@ -190,7 +190,7 @@ void Planet::Draw(const CoordinateTransform* c_transf) {
 void _UIDrawStats(const resource_count_t stats[]) {
     for (int i=0; i < STAT_MAX; i++) {
         char buffer[50];
-        sprintf(buffer, "%-10s %3.1f", stat_names[i], stats[i]);
+        sprintf(buffer, "%-10s %3d", stat_names[i], stats[i]);
         UIContextWrite(buffer);
         //TextBoxLineBreak(&tb);
     }
@@ -238,7 +238,7 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
         UIContextPushHSplit(i * w / n_tabs, (i + 1) * w / n_tabs);
         ButtonStateFlags button_state = UIContextAsButton();
         HandleButtonSound(button_state & BUTTON_STATE_FLAG_JUST_PRESSED);
-        if (i == 1 && economy.trading_acessible) {
+        if (i == 1 && !economy.trading_accessible) {
             UIContextWrite("~economy~");
             UIContextPop();
             continue;

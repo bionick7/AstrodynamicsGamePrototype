@@ -212,8 +212,8 @@ void TransferPlanSolve(TransferPlan* tp) {
 
 void TransferPlan::Serialize(DataNode* data) const {
     data->SetI("resource_transfer_id", resource_transfer.resource_id);
-    data->SetF("resource_transfer_qtt", resource_transfer.quantity / 1000);
-    data->SetF("fuel_mass", resource_transfer.quantity / 1000);
+    data->SetI("resource_transfer_qtt", resource_transfer.quantity);
+    data->SetI("fuel_mass", fuel_mass);
     data->SetI("departure_planet", (int)departure_planet);
     data->SetI("arrival_planet", (int)arrival_planet);
     departure_time.Serialize(data->SetChild("departure_time", DataNode()));
@@ -223,8 +223,8 @@ void TransferPlan::Serialize(DataNode* data) const {
 
 void TransferPlan::Deserialize(const DataNode* data) {
     resource_transfer.resource_id = (ResourceType) data->GetI("resource_transfer_id", resource_transfer.resource_id);
-    resource_transfer.quantity = data->GetF("resource_transfer_qtt", resource_transfer.quantity) * 1000;
-    fuel_mass = data->GetF("fuel_mass", resource_transfer.quantity) * 1000;
+    resource_transfer.quantity = data->GetI("resource_transfer_qtt", resource_transfer.quantity);
+    fuel_mass = data->GetI("fuel_mass", fuel_mass);
     departure_planet = (entity_id_t) data->GetI("departure_planet", (int)departure_planet);
     arrival_planet = (entity_id_t) data->GetI("arrival_planet", (int)arrival_planet);
     departure_time.Deserialize(data->GetChild("departure_time"));
@@ -471,14 +471,15 @@ void TransferPlanUI::DrawUI() {
 
     double total_dv = plan->dv1[plan->primary_solution] + plan->dv2[plan->primary_solution];
     sb.AddFormat("DV Tot    %5.3f km/s\n", total_dv/1000.0);
-    double capacity = ship_instance->GetRemainingPayloadCapacity(total_dv);
-    double max_capacity = ship_instance->GetRemainingPayloadCapacity(0);
+    resource_count_t capacity = ship_instance->GetRemainingPayloadCapacity(total_dv);
+    resource_count_t max_capacity = ship_instance->GetRemainingPayloadCapacity(0);
+    double capacity_ratio = (float)capacity / (float)max_capacity;
 
     if (capacity >= 0) {
-        sb.AddFormat("Payload cap.  %3.0f %% (%.0f / %.0f t)", 
-            capacity / max_capacity * 100,
-            capacity / 1000.0,
-            max_capacity / 1000.0
+        sb.AddFormat("Payload cap.  %3.0f %% (%d / %d)", 
+            capacity_ratio * 100,
+            capacity,
+            max_capacity
         );
     } else {
         sb.Add("Cannot make transfer");
@@ -486,7 +487,7 @@ void TransferPlanUI::DrawUI() {
 
     UIContextWrite(sb.c_str);
     UIContextPushInset(0, 18);
-        UIContextFillline(fmax(0, capacity / max_capacity), capacity >= 0 ? TRANSFER_UI_COLOR : PALETTE_RED, BG_COLOR);
+        UIContextFillline(fmax(0, capacity_ratio), capacity >= 0 ? TRANSFER_UI_COLOR : PALETTE_RED, BG_COLOR);
     UIContextPop();  // Inset
 }
 

@@ -6,6 +6,14 @@
 
 static ResourceData global_resource_data[RESOURCE_MAX] = {{""}};
 
+double ResourceCountsToKG(resource_count_t counts) {
+    return counts * KG_PER_COUNT;
+}
+
+resource_count_t KGToResourceCounts(double mass) {
+    return mass / KG_PER_COUNT;
+}
+
 ResourceTransfer ResourceTransfer::Inverted() {
     return ResourceTransfer(resource_id, -quantity);
 }
@@ -14,7 +22,7 @@ PlanetaryEconomy::PlanetaryEconomy(){
     for (int i=0; i < RESOURCE_MAX; i++) {
         resource_stock[i] = 0;
         resource_delta[i] = 0;
-        resource_capacity[i] = 1e7;
+        resource_capacity[i] = 100;
         resource_price[i] = GetResourceData(i).default_cost;
     }
     for (int i=0; i < RESOURCE_MAX*PRICE_TREND_SIZE; i++) {
@@ -28,7 +36,7 @@ ResourceTransfer PlanetaryEconomy::DrawResource(ResourceTransfer request) {
         return EMPTY_TRANSFER;
     }
     
-    resource_count_t transferred_resources = Clamp(request.quantity, 0, resource_stock[request.resource_id]);
+    resource_count_t transferred_resources = ClampInt(request.quantity, 0, resource_stock[request.resource_id]);
     resource_stock[request.resource_id] -= transferred_resources;
     //GlobalGetState()->CompleteTransaction(-GetPrice(resource, quantity), "purchased resource");
 
@@ -41,7 +49,7 @@ ResourceTransfer PlanetaryEconomy::GiveResource(ResourceTransfer request) {
         return EMPTY_TRANSFER;
     }
 
-    resource_count_t transferred_resources = Clamp(request.quantity, 0, resource_capacity[request.resource_id]);
+    resource_count_t transferred_resources = ClampInt(request.quantity, 0, resource_capacity[request.resource_id] - resource_stock[request.resource_id]);
     resource_stock[request.resource_id] += transferred_resources;
     //GlobalGetState()->CompleteTransaction(-GetPrice(resource, quantity), "sold resource");
 
@@ -109,7 +117,7 @@ void PlanetaryEconomy::UIDrawResources(const ResourceTransfer& transfer, double 
     for (int i=0; i < RESOURCE_MAX; i++) {
         char buffer[50];
         //sprintf(buffer, "%-10s %5d/%5d (%+3d)", GetResourceData(i).name, qtt, cap, delta);
-        sprintf(buffer, "%-10s %3.1fT (%+3d T/d)", GetResourceData(i).name, resource_stock[i] / 1e3, (int)(resource_delta[i]/1e3));
+        sprintf(buffer, "%-10s %3d (%+3.3f /d)", GetResourceData(i).name, resource_stock[i], (double)resource_delta[i]/1e3);
         UIContextPushInset(0, 18);
         if (GlobalGetState()->active_transfer_plan.IsActive()) {
             // Button
@@ -122,7 +130,7 @@ void PlanetaryEconomy::UIDrawResources(const ResourceTransfer& transfer, double 
         }
         UIContextWrite(buffer, false);
 
-        double qtt = 0;
+        resource_count_t qtt = 0;
         if (transfer.resource_id == i) {
             qtt += transfer.quantity;
         }
@@ -130,7 +138,7 @@ void PlanetaryEconomy::UIDrawResources(const ResourceTransfer& transfer, double 
             qtt -= fuel_draw;
         }
         if (qtt != 0) {
-            sprintf(buffer, "   %+3.1fK", qtt / 1000);
+            sprintf(buffer, "   %+3d", qtt);
             UIContextWrite(buffer, false);
         }
         UIContextFillline(resource_stock[i] / resource_capacity[i], MAIN_UI_COLOR, BG_COLOR);
@@ -139,7 +147,7 @@ void PlanetaryEconomy::UIDrawResources(const ResourceTransfer& transfer, double 
     }
 }
 
-void _UIDrawResourceGrpah(const double price_history[], int resource_index) {
+void _UIDrawResourceGrpah(const cost_t price_history[], int resource_index) {
     TextBox& box = UIContextCurrent();
     ResourceData& r_data = global_resource_data[resource_index];
     int graph_height =  r_data.max_cost - r_data.min_cost;
@@ -160,14 +168,14 @@ void _UIDrawResourceGrpah(const double price_history[], int resource_index) {
     DrawLine(current_draw_x, current_draw_y, box.text_start_x, current_draw_y, PALETTE_BLUE);
 }
 
-void PlanetaryEconomy::TryPlayerTransaction(ResourceTransfer tf) {
-    if (tf.quantity < 0) {  // Sell
-        ResourceTransfer actual = DrawResource(tf.Inverted());
+void PlanetaryEconomy::TryPlayerTransaction(ResourceTransfer rt) {
+    if (rt.quantity < 0) {  // Sell
+        ResourceTransfer actual = DrawResource(rt.Inverted());
         GlobalGetState()->CompleteTransaction(GetPrice(actual.resource_id, actual.quantity), "Sold on market");
     }
-    else if (tf.quantity > 0) {  // Buy
-        tf.quantity = fmin(GetForPrice(tf.resource_id, GlobalGetState()->capital), tf.quantity);
-        ResourceTransfer actual = GiveResource(tf);
+    else if (rt.quantity > 0) {  // Buy
+        rt.quantity = fmin(GetForPrice(rt.resource_id, GlobalGetState()->capital), rt.quantity);
+        ResourceTransfer actual = GiveResource(rt);
         GlobalGetState()->CompleteTransaction(-GetPrice(actual.resource_id, actual.quantity), "Bought on market");
     }
 }
@@ -185,10 +193,10 @@ void PlanetaryEconomy::UIDrawEconomy(const ResourceTransfer& transfer, double fu
                 GlobalGetState()->active_transfer_plan.SetResourceType(resource);
             }
         }
-        sprintf(buffer, "%-10s %+3f $/T", GetResourceData(i).name, resource_price[i]);
+        sprintf(buffer, "%-10s %+3fK $$/cnt", GetResourceData(i).name, resource_price[i]/1e3);
         UIContextWrite(buffer, false);
 
-        double qtt = 0;
+        resource_count_t qtt = 0;
         if (transfer.resource_id == i) {
             qtt += transfer.quantity;
         }
@@ -196,15 +204,15 @@ void PlanetaryEconomy::UIDrawEconomy(const ResourceTransfer& transfer, double fu
             qtt -= fuel_draw;
         }
         if (qtt != 0) {
-            sprintf(buffer, "   %+3.1fT (%3.1f K$)", qtt / 1000, GetPrice(resource, qtt) / 1000);
+            sprintf(buffer, "   %+3d (%3ld K$)", qtt, GetPrice(resource, qtt) / 1000);
             UIContextWrite(buffer, false);
         }
 
-        double trade_ammount = 0;
-        if (UIContextDirectButton("-100T", 0) & BUTTON_STATE_FLAG_JUST_PRESSED) trade_ammount =-1e5;
-        if (UIContextDirectButton( "-10T", 0) & BUTTON_STATE_FLAG_JUST_PRESSED) trade_ammount =-1e4;
-        if (UIContextDirectButton( "+10T", 0) & BUTTON_STATE_FLAG_JUST_PRESSED) trade_ammount = 1e4;
-        if (UIContextDirectButton("+100T", 0) & BUTTON_STATE_FLAG_JUST_PRESSED) trade_ammount = 1e5;
+        resource_count_t trade_ammount = 0;
+        if (UIContextDirectButton("+ 10", 0) & BUTTON_STATE_FLAG_JUST_PRESSED) trade_ammount = 10;
+        if (UIContextDirectButton("+ 1", 0) & BUTTON_STATE_FLAG_JUST_PRESSED) trade_ammount = 1;
+        if (UIContextDirectButton("- 1", 0) & BUTTON_STATE_FLAG_JUST_PRESSED) trade_ammount = -1;
+        if (UIContextDirectButton("- 10", 0) & BUTTON_STATE_FLAG_JUST_PRESSED) trade_ammount = -10;
 
         if (trade_ammount != 0) {
             TryPlayerTransaction({resource, trade_ammount});

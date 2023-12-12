@@ -1,7 +1,7 @@
 capital: 1e6
 planets:
   - name: Mimas
-    trading_acessible: n
+    trading_accessible: n
     resource_stock:
       water: 1000
     resource_delta:
@@ -10,14 +10,14 @@ planets:
     buildings: 
     - mod_water_extractor
   - name: Encelladus
-    trading_acessible: y
+    trading_accessible: n
     resource_stock: {}
     buildings: 
     - mod_pop_small
     - mod_food_mine
     - mod_food_mine
   - name: Tethys
-    trading_acessible: n
+    trading_accessible: y
     resource_stock:
       water: 1000
       electronics: 6
@@ -27,18 +27,19 @@ planets:
     - mod_food_mine
     - mod_food_mine
   - name: Rhea
+    trading_accessible: n
     resource_stock: {}
     buildings: []
   - name: Titan
-    trading_acessible: y
+    trading_accessible: y
     resource_stock: {}
     buildings: []
   - name: Iaeptus
-    trading_acessible: n
+    trading_accessible: n
     resource_stock: {}
     buildings: []
   - name: Phoebe
-    trading_acessible: n
+    trading_accessible: n
     resource_stock: {}
     buildings: []
 

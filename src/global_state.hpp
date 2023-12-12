@@ -33,7 +33,7 @@ struct GlobalState {
     entity_id_t focused_planet;
     entity_id_t focused_ship;
 
-    int capital;
+    cost_t capital;
 
     // Lifecycle
     void Make(timemath::Time time);

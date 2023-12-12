@@ -7,21 +7,21 @@
 #include "string_builder.hpp"
 #include "debug_drawing.hpp"
 
-double ShipClass::GetPayloadCapacity(double dv) const {
+double ShipClass::GetPayloadCapacityMass(double dv) const {
     //          dv = v_e * ln((max_cap + eom) / (x + eom))
     // <=> x + eom = (max_cap + eom) / exp(dv/v_e)
 
-    return (max_capacity + oem) / exp(dv/v_e) - oem;
+    return ResourceCountsToKG(max_capacity) + oem / exp(dv/v_e) - oem;
 }
 
-double ShipClass::GetFuelRequiredFull(double dv) const {
+resource_count_t ShipClass::GetFuelRequiredFull(double dv) const {
     // assuming max payload
-    return max_capacity - GetPayloadCapacity(dv);
+    return max_capacity - KGToResourceCounts(GetPayloadCapacityMass(dv));
 }
 
-double ShipClass::GetFuelRequiredEmpty(double dv) const {
+resource_count_t ShipClass::GetFuelRequiredEmpty(double dv) const {
     // assuming no payload
-    return oem * (exp(dv/v_e) - 1);
+    return KGToResourceCounts(oem * (exp(dv/v_e) - 1));
 }
 
 bool Ship::HasMouseHover(double* min_distance) const {
@@ -85,7 +85,7 @@ void Ship::Serialize(DataNode *data) const {
     data->Set("is_parked", is_parked ? "y" : "n");
     
     data->Set("class_id", GetShipClassByIndex(ship_class)->id);
-    data->SetF("resource_qtt", transporing.quantity);
+    data->SetI("resource_qtt", transporing.quantity);
     data->SetI("resource_id", transporing.resource_id);
 
     data->SetArrayChild("prepared_plans", prepared_plans_count);
@@ -99,7 +99,7 @@ void Ship::Deserialize(const DataNode* data) {
     is_parked = strcmp(data->Get("is_parked", "y", true), "y") == 0;
     plan_edit_index = -1;
     ship_class = GlobalGetState()->ships.GetShipClassIndexById(data->Get("class_id"));
-    transporing.quantity = data->GetF("resource_qtt", 0);
+    transporing.quantity = data->GetI("resource_qtt", 0);
     transporing.resource_id = (ResourceType) data->GetI("resource_id", RESOURCE_NONE);
 
     color = PALETTE_GREEN;
@@ -111,8 +111,8 @@ void Ship::Deserialize(const DataNode* data) {
     }
 }
 
-resource_count_t Ship::GetPayloadMass() const{
-    resource_count_t res = 0;
+double Ship::GetPayloadMass() const{
+    double res = 0.0;
 
     QuestManager* qm = &GlobalGetState()->quest_manager;
     for(auto i = qm->active_quests.GetIter(); i; i++) {
@@ -120,27 +120,27 @@ resource_count_t Ship::GetPayloadMass() const{
             res += qm->active_quests[i]->payload_mass;
         }
     }
-    return res;
+    return res - 0;
 }
 
 resource_count_t Ship::GetMaxCapacity() const {
     return GetShipClassByIndex(ship_class)->max_capacity;
 }
 
-double Ship::GetRemainingPayloadCapacity(double dv) const {
+resource_count_t Ship::GetRemainingPayloadCapacity(double dv) const {
     const ShipClass* sc = GetShipClassByIndex(ship_class);
-    resource_count_t capacity = sc->GetPayloadCapacity(dv);
-    return capacity - GetPayloadMass();
+    double capacity = sc->GetPayloadCapacityMass(dv);
+    return KGToResourceCounts(capacity - GetPayloadMass());
 }
 
-double Ship::GetFuelRequiredEmpty(double dv) const {
+resource_count_t Ship::GetFuelRequiredEmpty(double dv) const {
     const ShipClass* sc = GetShipClassByIndex(ship_class);
-    return (sc->oem + GetPayloadMass()) * (exp(dv/sc->v_e) - 1);
+    return KGToResourceCounts((sc->oem + GetPayloadMass()) * (exp(dv/sc->v_e) - 1));
 }
 
 double Ship::GetCapableDV() const {
     const ShipClass* sc = GetShipClassByIndex(ship_class);
-    return sc->v_e * log((sc->max_capacity + sc->oem) / (GetPayloadMass() + sc->oem));
+    return sc->v_e * log((ResourceCountsToKG(sc->max_capacity) + sc->oem) / (GetPayloadMass() + sc->oem));
 
     // max_dv = v_e * log(max_capacity / oem + 1)
     // exp(max_dv / v_e) - 1
@@ -172,7 +172,7 @@ void Ship::ConfirmEditedTransferPlan() {
         return;
     }
     //payload.push_back(TransportContainer(tp.resource_transfer));
-    INFO("Assigning transfer plan %f to ship %s", tp.arrival_time, name);
+    INFO("Assigning transfer plan to ship %s", name);
     plan_edit_index = -1;
 }
 
@@ -309,7 +309,7 @@ void _UIDrawTransferplans(Ship* ship) {
 
         snprintf(tp_str[0], 40, "- %s (%3d D %2d H)",
             resource_name,
-            (int) (ship->prepared_plans[i].arrival_time - now).Seconds(),
+            (int) (ship->prepared_plans[i].arrival_time - now).Seconds() / 86400,
             ((int) (ship->prepared_plans[i].arrival_time - now).Seconds() % 86400) / 3600
         );
 
@@ -352,7 +352,7 @@ void _UIDrawTransferplans(Ship* ship) {
 
 void _UIDrawQuests(Ship* ship) {
     QuestManager* qm = &GlobalGetState()->quest_manager;
-    resource_count_t max_mass = ship->GetMaxCapacity() - ship->GetPayloadMass();
+    double max_mass = ResourceCountsToKG(ship->GetMaxCapacity()) - ship->GetPayloadMass();
     
     for(auto it = qm->active_quests.GetIter(); it; it++) {
         Quest* quest = qm->active_quests.Get(it);
@@ -395,14 +395,14 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
 
     UIContextWrite(name);
     StringBuilder sb;
-    sb.AddFormat("Payload %2.3f / %2.3f kT", GetPayloadMass() / 1e6, GetMaxCapacity() / 1e6);
+    sb.AddFormat("Payload %d / %d ", KGToResourceCounts(GetPayloadMass()), GetMaxCapacity());
     UIContextWrite(sb.c_str);
     UIContextPushInset(0, 3);
-    UIContextFillline(GetPayloadMass() / GetMaxCapacity(), MAIN_UI_COLOR, BG_COLOR);
+    UIContextFillline(ResourceCountsToKG(GetPayloadMass()) / GetMaxCapacity(), MAIN_UI_COLOR, BG_COLOR);
     UIContextPop();  // Inset
     sb.Clear();
     sb.AddFormat("I_sp        %2.2f km/s\n", GetShipClassByIndex(ship_class)->v_e / 1000);
-    sb.AddFormat("dv  left    %2.2f km/s\n", GetCapableDV());
+    sb.AddFormat("dv left     %2.2f km/s\n", GetCapableDV());
     UIContextWrite(sb.c_str);
 
     _UIDrawTransferplans(this);
@@ -413,8 +413,25 @@ void Ship::Inspect() {
 }
 
 void Ship::_OnDeparture(const TransferPlan& tp) {
-    transporing = GetPlanet(tp.departure_planet)->economy.DrawResource(tp.resource_transfer);
-    GetPlanet(tp.departure_planet)->economy.DrawResource(ResourceTransfer(RESOURCE_WATER, tp.fuel_mass));
+    PlanetaryEconomy* local_economy = &GetPlanet(tp.departure_planet)->economy;
+
+    ResourceTransfer fuel_tf = local_economy->DrawResource(ResourceTransfer(RESOURCE_WATER, tp.fuel_mass));
+    if (fuel_tf.quantity <= tp.fuel_mass) {
+        resource_count_t remaining_fuel = tp.fuel_mass - fuel_tf.quantity;
+        if (local_economy->trading_accessible && local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) < GlobalGetState()->capital) {
+            USER_INFO("Automatically purchased %d of water for %f k$$", remaining_fuel, local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) / 1e3)
+            local_economy->TryPlayerTransaction(ResourceTransfer(RESOURCE_WATER, remaining_fuel));
+            local_economy->DrawResource(ResourceTransfer(RESOURCE_WATER, remaining_fuel));
+        } else {
+            // Abort
+            USER_INFO("Not enough fuel. Could not afford/access remaining fuel %d cts on %s", remaining_fuel, GetPlanet(tp.departure_planet)->name)
+            local_economy->GiveResource(fuel_tf);
+            prepared_plans_count = 0;
+            return;
+        }
+    }
+
+    transporing = local_economy->DrawResource(tp.resource_transfer);
 
     for(auto i = GlobalGetState()->quest_manager.active_quests.GetIter(); i; i++) {
         if (GlobalGetState()->quest_manager.active_quests[i]->ship == id) {
@@ -510,11 +527,11 @@ int Ships::LoadShipClasses(const DataNode* data) {
         strncpy(sc.name, ship_data->Get("name", "[NAME MISSING]"), SHIPCLASS_NAME_MAX_SIZE);
         strncpy(sc.description, ship_data->Get("description", "[DESCRITION MISSING]"), SHIPCLASS_DESCRIPTION_MAX_SIZE);
 
-        sc.max_capacity = ship_data->GetF("capacity", 0) * 1000;  // t -> kg
+        sc.max_capacity = ship_data->GetI("capacity", 0);
         sc.max_dv = ship_data->GetF("dv", 0) * 1000;  // km/s -> m/s
         sc.v_e = ship_data->GetF("Isp", 0) * 1000;    // km/s -> m/s
-        sc.oem = sc.max_capacity / (exp(sc.max_dv/sc.v_e) - 1);
-        ASSERT_ALOMST_EQUAL_FLOAT(sc.v_e * log((sc.max_capacity + sc.oem) / sc.oem), sc.max_dv)   // Remove when we're sure thisworks
+        sc.oem = ResourceCountsToKG(sc.max_capacity) / (exp(sc.max_dv/sc.v_e) - 1);
+        ASSERT_ALOMST_EQUAL_FLOAT(sc.v_e * log((ResourceCountsToKG(sc.max_capacity) + sc.oem) / sc.oem), sc.max_dv)   // Remove when we're sure thisworks
 
         ship_classes[index] = sc;
         auto pair = ship_classes_ids.insert_or_assign(ship_data->Get("id", "_"), index);

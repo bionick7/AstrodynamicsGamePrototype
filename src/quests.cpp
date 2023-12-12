@@ -165,7 +165,7 @@ ButtonStateFlags Quest::DrawUI(bool show_as_button, bool highlinght) const {
 
     StringBuilder sb;
     // Line 1
-    sb.AddFormat("%s >> %s  %.3f kT", GetPlanet(departure_planet)->name, GetPlanet(arrival_planet)->name, payload_mass / 1e6);
+    sb.AddFormat("%s >> %s  %d cts", GetPlanet(departure_planet)->name, GetPlanet(arrival_planet)->name, KGToResourceCounts(payload_mass));
     if (button_state == BUTTON_STATE_FLAG_HOVER) {
         UISetMouseHint(sb_mouse.c_str);
     }
@@ -367,7 +367,7 @@ int QuestManager::LoadQuests(const DataNode* data) {
         for (int j=0; j < mission_data->GetArrayLen("ship_accesibilty"); j++) {
             entity_id_t ship_class = GlobalGetState()->ships.GetShipClassIndexById(mission_data->GetArray("ship_accesibilty", j));
             const ShipClass* sc = GetShipClassByIndex(ship_class);
-            double max_dv_class = sc->v_e * log(sc->max_capacity + sc->oem) - sc->v_e * log(templates[i].payload + sc->oem);
+            double max_dv_class = sc->v_e * log(ResourceCountsToKG(sc->max_capacity) + sc->oem) - sc->v_e * log(templates[i].payload + sc->oem);
             if (max_dv_class < templates[i].max_dv) templates[i].max_dv = max_dv_class;
         }
 

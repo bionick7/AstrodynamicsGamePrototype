@@ -52,7 +52,7 @@ void _DrawRelevantStatsFromArray(
     for (int i=0; i < array_size; i++) {
         if (array[i] > 0) {
             char temp[1024];
-            sprintf(&temp[0], "%s: %+3.0f%s", array_names[i], array[i] / scaler, suffix);
+            sprintf(&temp[0], "%s: %+3d%s", array_names[i], array[i] / scaler, suffix);
             ss << std::string(temp) << "\n";
         }
     }
@@ -101,23 +101,23 @@ void _WriteSingleBuildingToFile(FILE* file, const BuildingClass* mc) {
     fprintf(file, "%s : ", mc->name);
     for (int i=0; i < RESOURCE_MAX; i++) {
         if (mc->resource_delta_contributions[i] < 0) {
-            fprintf(file, "%5.0fT/d %s", -mc->resource_delta_contributions[i] / 1000, GetResourceData(i).name);
+            fprintf(file, "%5.0d/d %s", -mc->resource_delta_contributions[i], GetResourceData(i).name);
         }
     }
     for (int i=0; i < STAT_MAX; i++) {
         if (mc->stat_required[i] > 0) {
-            fprintf(file, "%5.0f %s", mc->stat_required[i], stat_names[i]);
+            fprintf(file, "%3d %s", mc->stat_required[i], stat_names[i]);
         }
     }
     fprintf(file, " ==> ");
     for (int i=0; i < RESOURCE_MAX; i++) {
         if (mc->resource_delta_contributions[i] > 0) {
-            fprintf(file, "%5.0fT/d %s", mc->resource_delta_contributions[i] / 1000, GetResourceData(i).name);
+            fprintf(file, "%5.0d/d %s", mc->resource_delta_contributions[i], GetResourceData(i).name);
         }
     }
     for (int i=0; i < STAT_MAX; i++) {
         if (mc->stat_contributions[i] > 0) {
-            fprintf(file, "%5.0f %s", mc->stat_contributions[i], stat_names[i]);
+            fprintf(file, "%5d %s", mc->stat_contributions[i], stat_names[i]);
         }
     }
     fprintf(file, "\n");

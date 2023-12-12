@@ -44,7 +44,7 @@ struct Quest {
     ButtonStateFlags DrawUI(bool show_as_button, bool highlight) const;
 };
 
-#define _AVAILABLE_QUESTS 20
+#define _AVAILABLE_QUESTS 15
 
 struct QuestManager {
     Quest available_quests[_AVAILABLE_QUESTS];

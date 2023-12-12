@@ -3,6 +3,10 @@
 #include "global_state.hpp"
 #include "constants.hpp"
 #include "debug_drawing.hpp"
+#include "string_builder.hpp"
+
+bool show_timeline = false;
+const int PIXELS_PER_DAY = 60;
 
 struct TimeLineCoordinateData {
     int x0;
@@ -13,7 +17,6 @@ struct TimeLineCoordinateData {
     int* planet_coords;
 };
 
-const int PIXELS_PER_DAY = 60;
 
 int GetPlanetCoord(const TimeLineCoordinateData* tcd, entity_id_t planet) {
     return tcd->planet_coords[planet];
@@ -81,6 +84,11 @@ void  _QuestDrawLine(TimeLineCoordinateData* tcd, const Quest* q, bool active) {
 
     //Vector2 scaled_unit = Vector2Scale(Vector2Normalize(Vector2Subtract(end_pos, start_pos)), 10);
     Vector2 scaled_unit = {(end_pos.x - start_pos.x) > 0 ? 10 : -10, 0};
+    DrawTextAligned(
+        StringBuilder().AddI(KGToResourceCounts(q->payload_mass)).c_str, 
+        Vector2Lerp(start_pos, end_pos, 0.15), 
+        TEXT_ALIGNMENT_HCENTER | TEXT_ALIGNMENT_BOTTOM, c
+    );
     start_pos = Vector2Add(start_pos, scaled_unit);
     end_pos = Vector2Subtract(end_pos, scaled_unit);
     DrawTriangle(
@@ -189,8 +197,6 @@ void _DrawShips(TimeLineCoordinateData* tcd, const Ships* ships) {
         _ShipDrawPathLine(tcd, &end_point_x, &end_point_y, end_planet, GetEndTime(tcd), x_offset);
     }
 }
-
-bool show_timeline = true;
 
 bool TimelineShown() {
     return show_timeline;

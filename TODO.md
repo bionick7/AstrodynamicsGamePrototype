@@ -2,13 +2,16 @@
 # TODO/Wishlists
 
 ## Immediate
-- build buildings (Done)
-- water as fuel (Done)
-- saving state  (Done)
-- virtual economy 
-- quest system (with wren?) ...
+- Build buildings (Done)
+- Water as fuel (Done)
+- Saving state  (Done)
+- Quest system (with wren?) ...
 - Sound (Done)
-- build ships in shipyard
+- Automatically purchase fuel when possible (Done)
+- quantise resources (1 count = 100kT)
+- Transfer plan UX
+- Implement Ship Docking Rent?
+- Build ships in shipyard
 
 ## Known Bugs
 - Deleting a transfer plan while editing it is a problem  (Done)

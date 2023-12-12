@@ -246,7 +246,7 @@ void GlobalState::DrawState() {
     UIStart();
     calendar.DrawUI();
     char capital_str[14];
-    sprintf(capital_str, "%6d.%3d M$", capital / (int)1e6, capital % 1000000 / 1000);
+    sprintf(capital_str, "%6ld.%3ld M$", capital / (int)1e6, capital % 1000000 / 1000);
     DrawTextAligned(capital_str, {GetScreenWidth() / 2.0f, 10}, TEXT_ALIGNMENT_HCENTER & TEXT_ALIGNMENT_TOP, MAIN_UI_COLOR);
 
     // 

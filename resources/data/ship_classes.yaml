@@ -6,7 +6,7 @@ ship_classes:
     of a traditional C1K-998. 
   dv: 6  # km/s
   Isp: 4.5  # km/s
-  capacity: 3000  # t
+  capacity: 30  # t
   
 - id: shp_light_transport
   name: C1K-998
@@ -20,7 +20,7 @@ ship_classes:
     of nuclear fuel.
   dv: 6
   Isp: 4.5
-  capacity: 1000
+  capacity: 10
   
 - id: shp_express
   name: Express
@@ -28,4 +28,4 @@ ship_classes:
     High-end ship
   dv: 12
   Isp: 10
-  capacity: 1000
+  capacity: 10

@@ -3,7 +3,37 @@
 #include "basic.hpp"
 #include "datanode.hpp"
 
-typedef double resource_count_t;
+const double KG_PER_COUNT = 100e3;
+
+/*struct resource_count_t {
+    uint16_t value;
+
+    resource_count_t() { value = 0; }
+    resource_count_t(uint16_t p_counts) { value = p_counts; }
+
+    static resource_count_t FromMass(double mass) {
+        return resource_count_t((uint16_t) std::ceil(mass / KG_PER_COUNT));
+    }
+
+    double GetMass() { return (double) value * KG_PER_COUNT; }
+    resource_count_t operator+(resource_count_t other) { return resource_count_t(value + other.value); }
+    resource_count_t operator+(int other) { return resource_count_t(value + other); }
+    resource_count_t operator-(resource_count_t other) { return resource_count_t(value - other.value); }
+    resource_count_t operator-(int other) { return resource_count_t(value - other); }
+    resource_count_t operator*(int other) { return resource_count_t(value * other); }
+    double operator/(resource_count_t other) { return (double)value / (double)other.value; }
+    bool operator>(resource_count_t other) { value > other.value; }
+    bool operator<(resource_count_t other) { value < other.value; }
+    bool operator>(uint16_t other) { value > other; }
+    bool operator<(uint16_t other) { value < other; }
+
+    operator int() { return value; }
+};*/
+
+typedef int16_t resource_count_t;
+
+double ResourceCountsToKG(resource_count_t counts);
+resource_count_t KGToResourceCounts(double mass);
 
 enum ResourceType {
     RESOURCE_NONE = -1,
@@ -38,7 +68,7 @@ struct ResourceTransfer {
 #define RESOURCE_DESCRIPTION_MAX_SIZE 1000
 #define PRICE_TREND_SIZE 31
 
-typedef double cost_t;
+typedef int64_t cost_t;
 
 enum StatType {
     STAT_NONE = -1,
@@ -80,7 +110,7 @@ struct PlanetaryEconomy {
     cost_t resource_noise[RESOURCE_MAX];
 
     cost_t price_history[RESOURCE_MAX*PRICE_TREND_SIZE];
-    bool trading_acessible;
+    bool trading_accessible;
 
     PlanetaryEconomy();
 
