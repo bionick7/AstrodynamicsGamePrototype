@@ -6,6 +6,51 @@
 
 Font default_font;
 
+// Copy of raylib's DrawTextEx(), but will not draw over a certain rectangle
+void DrawTextConstrained(Font font, const char *text, Vector2 position, float fontSize, float spacing, Color tint, Rectangle render_rect) {
+    if (font.texture.id == 0) font = GetFontDefault();  // (Raylib cmt) Security check in case of not valid font
+
+    int size = TextLength(text);    // (Raylib cmt) Total size in bytes of the text, scanned by codepoints in loop
+
+    int textOffsetY = 0;            // (Raylib cmt) Offset between lines (on linebreak '\n')
+    float textOffsetX = 0.0f;       // (Raylib cmt) Offset X to next character to draw
+
+    float scaleFactor = fontSize/font.baseSize;         // (Raylib cmt) Character quad scaling factor
+
+    for (int i = 0; i < size;)
+    {
+        // (Raylib cmt)Get next codepoint from byte string and glyph index in font
+        int codepointByteCount = 0;
+        int codepoint = GetCodepointNext(&text[i], &codepointByteCount);
+        int index = GetGlyphIndex(font, codepoint);
+
+        if (codepoint == '\n')
+        {
+            // (Raylib cmt) NOTE: Line spacing is a global variable, use SetTextLineSpacing() to setup
+            textOffsetY += 20;  // TODO, raylib doesn't expose line space, so how to?
+            textOffsetX = 0.0f;
+        }
+        else
+        {
+            float x_increment = (float)font.recs[index].width*scaleFactor + spacing;
+            Vector2 char_pos = (Vector2){ position.x + textOffsetX, position.y + textOffsetY };
+            Vector2 char_pos2 = (Vector2){ position.x + textOffsetX + x_increment, position.y + textOffsetY + fontSize };
+            if (
+                (codepoint != ' ') && (codepoint != '\t')
+                && CheckCollisionPointRec(char_pos, render_rect)
+                && CheckCollisionPointRec(char_pos2, render_rect)
+            ) {
+                DrawTextCodepoint(font, codepoint, char_pos, fontSize, tint);
+            }
+
+            if (font.glyphs[index].advanceX == 0) textOffsetX += x_increment;
+            else textOffsetX += ((float)font.glyphs[index].advanceX*scaleFactor + spacing);
+        }
+
+        i += codepointByteCount;   // (Raylib cmt) Move text bytes counter to next codepoint
+    }
+}
+
 void DrawTextAligned(const char* text, Vector2 pos, TextAlignment alignment, Color c) {
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, 16, 1);
     if (alignment & TEXT_ALIGNMENT_HCENTER) {
@@ -123,16 +168,16 @@ void TextBox::Write(const char* text) {
     Vector2 pos = {text_start_x + x_cursor, text_start_y + y_cursor};
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
     // text fully in render rectangle
-    if (
+    /*if (
         !CheckCollisionPointRec(pos, render_rec)
         || !CheckCollisionPointRec(Vector2Add(pos, size), render_rec)
-    ) return;
+    ) return;*/
 
     // avoid drawing if the bg is fully transparent (most cases)
     if(text_background.a != 0) {
         DrawRectangleV(pos, size, text_background);
     }
-    DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color);
+    DrawTextConstrained(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec);
     _Advance(size);
 }
 
@@ -140,15 +185,15 @@ void TextBox::WriteLine(const char* text) {
     Vector2 pos = {text_start_x + x_cursor, text_start_y + y_cursor};
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
     // text fully in render rectangle
-    if (
+    /*if (
         !CheckCollisionPointRec(pos, render_rec)
         || !CheckCollisionPointRec(Vector2Add(pos, size), render_rec)
-    ) return;
+    ) return;*/
 
     if (text_background.a != 0) {
         DrawRectangleV(pos, size, text_background);
     }
-    DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color);
+    DrawTextConstrained(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec);
     _Advance(size);
     LineBreak();
 }

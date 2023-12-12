@@ -151,7 +151,7 @@ float  _QuestDrawLine(TimeLineCoordinateData* tcd, const Quest* q, bool active) 
     );*/
 }
 
-void _DrawQuests(TimeLineCoordinateData* tcd, const QuestManager* qm) {
+void _DrawQuests(TimeLineCoordinateData* tcd, QuestManager* qm) {
     float closest_mouse_dist = INFINITY;
     entity_id_t closest_mouse_dist_quest = -1;
     bool closest_mouse_dist_quest_is_active = false;
@@ -181,6 +181,11 @@ void _DrawQuests(TimeLineCoordinateData* tcd, const QuestManager* qm) {
             qm->active_quests.Get(closest_mouse_dist_quest)->DrawUI(false, false);
         } else {
             qm->available_quests[closest_mouse_dist_quest].DrawUI(false, false);
+            UIContextWrite("Press enter to accept quest", true);
+            if (IsKeyPressed(KEY_ENTER)) {
+                HandleButtonSound(BUTTON_STATE_FLAG_JUST_PRESSED);
+                qm->AcceptQuest(closest_mouse_dist_quest);
+            }
         }
         //UIContextCurrent().DebugDrawRenderRec();
         UIContextPop();
@@ -275,7 +280,7 @@ void DrawTimeline() {
 
     // Create UI Context
     GlobalState* gs = GlobalGetState();
-    UIContextCreate(20, 100, GetScreenWidth() - 40, GetScreenHeight() - 100, 16, WHITE);
+    UIContextCreate(20, 100, GetScreenWidth() - 40, GetScreenHeight() - 100, 16, MAIN_UI_COLOR);
     UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
 
     // Initiualize Common Data Structure

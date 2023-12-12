@@ -122,7 +122,7 @@ void TransferPlanSolve(TransferPlan* tp) {
     double c = Vector2Distance(pos1.cartesian, pos2.cartesian);
     double r_sum = pos1.r + pos2.r;
     double a_min = 0.25 * (r_sum + c);
-    double K = sqrt((r_sum - c) / (r_sum + c));
+    double K = sqrt(fmax(r_sum - c, 0) / (r_sum + c));
     double y = timemath::Time::SecDiff(t2, t1) * sqrt(mu / (a_min*a_min*a_min));
 
     bool is_ellipse[2] =  {y > _Lambert(1e-3, K, 0), y > _Lambert(1e-3, K, 2)};
@@ -320,6 +320,11 @@ void _TransferPlanInitialize(TransferPlan* tp, timemath::Time t0) {
     );
     tp->departure_time = tp->hohmann_departure_time;
     tp->arrival_time = tp->hohmann_arrival_time;
+
+    // StringBuilder sb;
+    // sb.AddI(tp->departure_planet).Add(", ").AddI(tp->arrival_planet).Add(" ; ");
+    // sb.AddDate(tp->departure_time).Add(", ").AddDate(tp->arrival_time);
+    // INFO(sb.c_str)
 }
 
 void _DrawSweep(const Orbit* orbit, timemath::Time from, timemath::Time to, Color color) {
@@ -476,11 +481,7 @@ void TransferPlanUI::DrawUI() {
     double capacity_ratio = (float)capacity / (float)max_capacity;
 
     if (capacity >= 0) {
-        sb.AddFormat("Payload cap.  %3.0f %% (%d / %d)", 
-            capacity_ratio * 100,
-            capacity,
-            max_capacity
-        );
+        sb.AddFormat("Payload cap.  %d / %d", capacity, max_capacity);
     } else {
         sb.Add("Cannot make transfer");
     }
@@ -531,7 +532,11 @@ void TransferPlanUI::SetPlan(TransferPlan* pplan, entity_id_t pship, timemath::T
         return;
     }
     plan->arrival_planet = planet;
-    if (plan->departure_planet != GetInvalidId() && plan->arrival_planet != GetInvalidId()) {
+    if (
+           plan->departure_planet != GetInvalidId() 
+        && plan->arrival_planet   != GetInvalidId() 
+        && plan->departure_planet != plan->arrival_planet
+    ) {
         _TransferPlanInitialize(plan, time_bounds[0]);
     }
 }

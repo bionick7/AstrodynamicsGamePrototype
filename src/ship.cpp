@@ -11,7 +11,7 @@ double ShipClass::GetPayloadCapacityMass(double dv) const {
     //          dv = v_e * ln((max_cap + eom) / (x + eom))
     // <=> x + eom = (max_cap + eom) / exp(dv/v_e)
 
-    return ResourceCountsToKG(max_capacity) + oem / exp(dv/v_e) - oem;
+    return (ResourceCountsToKG(max_capacity) + oem) / exp(dv/v_e) - oem;
 }
 
 resource_count_t ShipClass::GetFuelRequiredFull(double dv) const {
@@ -398,7 +398,7 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
     sb.AddFormat("Payload %d / %d ", KGToResourceCounts(GetPayloadMass()), GetMaxCapacity());
     UIContextWrite(sb.c_str);
     UIContextPushInset(0, 3);
-    UIContextFillline(ResourceCountsToKG(GetPayloadMass()) / GetMaxCapacity(), MAIN_UI_COLOR, BG_COLOR);
+    UIContextFillline(KGToResourceCounts(GetPayloadMass()) / GetMaxCapacity(), MAIN_UI_COLOR, BG_COLOR);
     UIContextPop();  // Inset
     sb.Clear();
     sb.AddFormat("I_sp        %2.2f km/s\n", GetShipClassByIndex(ship_class)->v_e / 1000);

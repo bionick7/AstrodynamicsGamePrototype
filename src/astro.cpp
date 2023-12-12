@@ -129,9 +129,9 @@ Orbit::Orbit(OrbitPos pos1, OrbitPos pos2, timemath::Time time_at_pos1, double s
     double E = d / A;
     double B_sqr = d*d - A*A;
     double x_0 = - (pos2.r + pos1.r) / (2*E);
-    double y_0 = Sign(r1_r2_outer_prod) * sqrt(B_sqr * (x_0*x_0 / (A*A) - 1));
+    double y_0 = Sign(r1_r2_outer_prod) * sqrt(B_sqr * fmax(x_0*x_0 / (A*A) - 1, 0));
     double x_f = x_0 + 2*sma / E;
-    double y_f = sqrt(B_sqr * (x_f*x_f / (A*A) - 1));
+    double y_f = sqrt(B_sqr * fmax(x_f*x_f / (A*A) - 1, 0));
     if (cut_focus) y_f = -y_f;  // For a hyperbola this means, it's the more direct way
     ecc = hypot(x_0 - x_f, y_0 - y_f) / (2 * fabs(sma));
     ASSERT(!isnan(ecc))

@@ -141,6 +141,7 @@ ButtonStateFlags Quest::DrawUI(bool show_as_button, bool highlinght) const {
     }
 
     int height = UIContextPushInset(3, QUEST_PANEL_HEIGHT);
+
     if (height == 0) {
         UIContextPop();
         return false;
@@ -159,7 +160,6 @@ ButtonStateFlags Quest::DrawUI(bool show_as_button, bool highlinght) const {
         UIContextPop();
         return button_state & BUTTON_STATE_FLAG_JUST_PRESSED;
     }
-
 
     StringBuilder sb_mouse;
     double dv1, dv2;
@@ -286,7 +286,7 @@ void QuestManager::Draw() {
 
     if (GlobalGetState()->current_focus == GlobalState::QUEST_MANAGER) {
         int max_scroll = MaxInt(QUEST_PANEL_HEIGHT * GetAvailableQuests() - UIContextCurrent().height, 0);
-        current_available_quests_scroll = ClampInt(current_available_quests_scroll - GetMouseWheelMove() * 10, 0, max_scroll);
+        current_available_quests_scroll = ClampInt(current_available_quests_scroll - GetMouseWheelMove() * 20, 0, max_scroll);
     }
 
     UIContextPushScrollInset(0, UIContextCurrent().height, QUEST_PANEL_HEIGHT * GetAvailableQuests(), current_available_quests_scroll);
