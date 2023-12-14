@@ -187,7 +187,6 @@ void _DrawQuests(TimeLineCoordinateData* tcd, QuestManager* qm) {
                 qm->AcceptQuest(closest_mouse_dist_quest);
             }
         }
-        //UIContextCurrent().DebugDrawRenderRec();
         UIContextPop();
     }
 }
@@ -236,8 +235,6 @@ void _DrawShips(TimeLineCoordinateData* tcd, const Ships* ships) {
                 (tp->arrival_time - GlobalGetNow()).Seconds() / 
                 (tp->arrival_time - tp->departure_time).Seconds();
             
-            DEBUG_SHOW_F(travel_progress)
-
             end_point_x = Lerp(GetPlanetCoord(tcd, tp->departure_planet), GetPlanetCoord(tcd, tp->arrival_planet), travel_progress) + x_offset;
             _ShipDrawPathLine(tcd, &end_point_x, &end_point_y, tp->arrival_planet, tp->arrival_time, x_offset);
 

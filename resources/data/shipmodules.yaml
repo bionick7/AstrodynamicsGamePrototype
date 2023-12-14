@@ -1,0 +1,10 @@
+shipmodules:
+- id: shpmod_water_extractor
+  name: Water extractor
+  description: Provides + 1 count water / day if stationned on an icey moon
+  mass: 100.e+3  # kg
+
+- id: shpmod_heatshield
+  name: Heatshield
+  mass: 50.e+3
+  

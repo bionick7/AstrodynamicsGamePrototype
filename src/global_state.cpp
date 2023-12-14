@@ -78,25 +78,28 @@ void GlobalState::Make(timemath::Time p_time) {
 }
 
 void GlobalState::LoadData() {
-    #define NUM 5
+    #define NUM 6
     const char* loading_paths[NUM] = {
         "resources/data/buildings.yaml",
+        "resources/data/shipmodules.yaml",
         "resources/data/ephemerides.yaml",
         "resources/data/ship_classes.yaml",
         "resources/data/resources.yaml",
-        "resources/data/quests.yaml"
+        "resources/data/quests.yaml",
     };
 
     int (*load_funcs[NUM])(const DataNode*) = { 
         LoadBuildings,
+        LoadShipModules,
         LoadEphemerides,
         LoadShipClasses,
         LoadResources,
-        LoadQuests
+        LoadQuests,
     };
 
     const char* declarations[NUM] {
         "Buildings",
+        "ShipModules",
         "Planets",
         "ShipClasses",
         "Resources",
@@ -118,6 +121,9 @@ void GlobalState::LoadData() {
     for (int i=0; i < NUM; i++) {
         printf("%d %s%s", ammounts[i], declarations[i], i == NUM-1 ? "\n" : "; ");
     }
+
+    // INFO(GetModuleByIndex(GetModuleIndexById("shpmod_water_extractor"))->id)
+    // INFO("%f", GetModuleByIndex(GetModuleIndexById("shpmod_heatshield"))->mass)
 
     #undef NUM
 }

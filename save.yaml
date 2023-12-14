@@ -1,4 +1,4 @@
-capital: 346369.000000
+capital: 1000000.000000
 focused_planet: -1
 focused_ship: -1
 calendar:
@@ -16,51 +16,12 @@ calendar:
 
 
 coordinate_transform:
-  focus_x: 381226816.000000
-  focus_y: -155772864.000000
-  log_space_scale: -6.107449
+  focus_x: -8081056.000000
+  focus_y: 4377232.000000
+  log_space_scale: -6.013094
 
 quests:
-  active_quests:
-  - arrival_planet: 3
-    current_planet: 2
-    departure_planet: 2
-    payload_mass: 500000.000000
-    payout: 1000000.000000
-    ship: 1
-    delivery_expiration_time:
-      t: 437148.397686
-
-    pickup_expiration_time:
-      t: 437148.397686
-
-
-  - arrival_planet: 1
-    current_planet: 3
-    departure_planet: 3
-    payload_mass: 500000.000000
-    payout: 1000000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 500276.346792
-
-    pickup_expiration_time:
-      t: 500276.346792
-
-
-  - arrival_planet: 2
-    current_planet: 1
-    departure_planet: 1
-    payload_mass: 1000000.000000
-    payout: 1500000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 460141.013784
-
-    pickup_expiration_time:
-      t: 460141.013784
-
-
+  active_quests: []
   available_quests:
   - arrival_planet: 2
     current_planet: -1
@@ -69,10 +30,10 @@ quests:
     payout: 1000000.000000
     ship: -1
     delivery_expiration_time:
-      t: 11650761.326247
+      t: 8651546.862249
 
     pickup_expiration_time:
-      t: 11650761.326247
+      t: 8651546.862249
 
 
   - arrival_planet: 0
@@ -82,10 +43,10 @@ quests:
     payout: 1000000.000000
     ship: -1
     delivery_expiration_time:
-      t: 8122642.790192
+      t: 3749900.263372
 
     pickup_expiration_time:
-      t: 8122642.790192
+      t: 3749900.263372
 
 
   - arrival_planet: 2
@@ -95,10 +56,10 @@ quests:
     payout: 1500000.000000
     ship: -1
     delivery_expiration_time:
-      t: 1089481.596605
+      t: 897254.595066
 
     pickup_expiration_time:
-      t: 1089481.596605
+      t: 897254.595066
 
 
   - arrival_planet: 4
@@ -108,10 +69,10 @@ quests:
     payout: 1000000.000000
     ship: -1
     delivery_expiration_time:
-      t: 7326062.647280
+      t: 4546868.684809
 
     pickup_expiration_time:
-      t: 7326062.647280
+      t: 4546868.684809
 
 
   - arrival_planet: 0
@@ -121,10 +82,10 @@ quests:
     payout: 1000000.000000
     ship: -1
     delivery_expiration_time:
-      t: 12145369.686278
+      t: 6518578.990121
 
     pickup_expiration_time:
-      t: 12145369.686278
+      t: 6518578.990121
 
 
   - arrival_planet: 0
@@ -134,10 +95,10 @@ quests:
     payout: 1500000.000000
     ship: -1
     delivery_expiration_time:
-      t: 879083.926823
+      t: 292984.208390
 
     pickup_expiration_time:
-      t: 879083.926823
+      t: 292984.208390
 
 
   - arrival_planet: 2
@@ -147,23 +108,23 @@ quests:
     payout: 1000000.000000
     ship: -1
     delivery_expiration_time:
-      t: 7942614.238145
+      t: 5452452.979617
 
     pickup_expiration_time:
-      t: 7942614.238145
+      t: 5452452.979617
 
 
-  - arrival_planet: -1
+  - arrival_planet: 3
     current_planet: -1
-    departure_planet: -1
-    payload_mass: 0.000000
-    payout: 0.000000
+    departure_planet: 2
+    payload_mass: 500000.000000
+    payout: 1000000.000000
     ship: -1
     delivery_expiration_time:
-      t: 437148.397686
+      t: 714558.998752
 
     pickup_expiration_time:
-      t: 437148.397686
+      t: 714558.998752
 
 
   - arrival_planet: 4
@@ -173,36 +134,36 @@ quests:
     payout: 1000000.000000
     ship: -1
     delivery_expiration_time:
-      t: 6124459.696963
+      t: 8992646.682533
 
     pickup_expiration_time:
-      t: 6124459.696963
+      t: 8992646.682533
 
 
-  - arrival_planet: -1
+  - arrival_planet: 2
     current_planet: -1
-    departure_planet: -1
-    payload_mass: 0.000000
-    payout: 0.000000
+    departure_planet: 1
+    payload_mass: 1000000.000000
+    payout: 1500000.000000
     ship: -1
     delivery_expiration_time:
-      t: 460141.013784
+      t: 403384.930228
 
     pickup_expiration_time:
-      t: 460141.013784
+      t: 403384.930228
 
 
-  - arrival_planet: -1
+  - arrival_planet: 1
     current_planet: -1
-    departure_planet: -1
-    payload_mass: 0.000000
-    payout: 0.000000
+    departure_planet: 3
+    payload_mass: 500000.000000
+    payout: 1000000.000000
     ship: -1
     delivery_expiration_time:
-      t: 500276.346792
+      t: 103827.621348
 
     pickup_expiration_time:
-      t: 500276.346792
+      t: 103827.621348
 
 
   - arrival_planet: 2
@@ -212,10 +173,10 @@ quests:
     payout: 200000.000000
     ship: -1
     delivery_expiration_time:
-      t: 1311329.116199
+      t: 1335615.619355
 
     pickup_expiration_time:
-      t: 1311329.116199
+      t: 1335615.619355
 
 
   - arrival_planet: 3
@@ -225,10 +186,10 @@ quests:
     payout: 1000000.000000
     ship: -1
     delivery_expiration_time:
-      t: 451846.591689
+      t: 698426.092112
 
     pickup_expiration_time:
-      t: 451846.591689
+      t: 698426.092112
 
 
   - arrival_planet: 3
@@ -238,10 +199,10 @@ quests:
     payout: 200000.000000
     ship: -1
     delivery_expiration_time:
-      t: 652848.890882
+      t: 334565.078567
 
     pickup_expiration_time:
-      t: 652848.890882
+      t: 334565.078567
 
 
   - arrival_planet: 1
@@ -251,10 +212,10 @@ quests:
     payout: 200000.000000
     ship: -1
     delivery_expiration_time:
-      t: 1032628.720430
+      t: 1047845.288338
 
     pickup_expiration_time:
-      t: 1032628.720430
+      t: 1047845.288338
 
 
   - arrival_planet: 1
@@ -264,10 +225,10 @@ quests:
     payout: 1000000.000000
     ship: -1
     delivery_expiration_time:
-      t: 2029030.430675
+      t: 5735786.406667
 
     pickup_expiration_time:
-      t: 2029030.430675
+      t: 5735786.406667
 
 
   - arrival_planet: 0
@@ -277,10 +238,10 @@ quests:
     payout: 1000000.000000
     ship: -1
     delivery_expiration_time:
-      t: 430829.443151
+      t: 550029.296066
 
     pickup_expiration_time:
-      t: 430829.443151
+      t: 550029.296066
 
 
   - arrival_planet: 0
@@ -290,10 +251,10 @@ quests:
     payout: 1000000.000000
     ship: -1
     delivery_expiration_time:
-      t: 642914.636883
+      t: 50062.600388
 
     pickup_expiration_time:
-      t: 642914.636883
+      t: 50062.600388
 
 
   - arrival_planet: 0
@@ -303,10 +264,10 @@ quests:
     payout: 1000000.000000
     ship: -1
     delivery_expiration_time:
-      t: 9584915.137611
+      t: 10252916.775544
 
     pickup_expiration_time:
-      t: 9584915.137611
+      t: 10252916.775544
 
 
   - arrival_planet: 0
@@ -316,10 +277,10 @@ quests:
     payout: 1500000.000000
     ship: -1
     delivery_expiration_time:
-      t: 706977.219189
+      t: 838990.176410
 
     pickup_expiration_time:
-      t: 706977.219189
+      t: 838990.176410
 
 
 
@@ -353,7 +314,7 @@ planets:
   resource_stock:
     electronics: 0
     food: 0
-    metal: 1
+    metal: 0
     water: 0
 
   buildings:
@@ -455,20 +416,8 @@ ships:
   planet: Tethys
   resource_id: -1
   resource_qtt: 0
-  prepared_plans:
-  - arrival_planet: 1
-    departure_planet: 2
-    fuel_mass: 4
-    primary_solution: 0
-    resource_transfer_id: 0
-    resource_transfer_qtt: 26
-    arrival_time:
-      t: 272100.035842
-
-    departure_time:
-      t: 201939.029487
-
-
+  modules: []
+  prepared_plans: []
 
 - class_id: shp_light_transport
   id: 1
@@ -477,28 +426,29 @@ ships:
   planet: Tethys
   resource_id: -1
   resource_qtt: 0
+  modules: []
+  prepared_plans: []
+
+- class_id: shp_light_transport
+  id: 2
+  is_parked: y
+  name: Extractor
+  planet: Tethys
+  resource_id: -1
+  resource_qtt: 0
+  modules:
+  - shpmod_water_extractor
+  - shpmod_water_extractor
   prepared_plans: []
 
 - class_id: shp_express
-  id: 2
+  id: 3
   is_parked: y
   name: Express
   planet: Tethys
   resource_id: -1
   resource_qtt: 0
-  prepared_plans:
-  - arrival_planet: 3
-    departure_planet: 2
-    fuel_mass: 2
-    primary_solution: 1
-    resource_transfer_id: 0
-    resource_transfer_qtt: 3
-    arrival_time:
-      t: 251254.285110
-
-    departure_time:
-      t: 151383.690447
-
-
+  modules: []
+  prepared_plans: []
 
 

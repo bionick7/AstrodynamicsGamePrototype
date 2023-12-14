@@ -350,6 +350,7 @@ void QuestManager::CompleteQuest(entity_id_t quest_index) {
     Quest* q = active_quests[quest_index];
     INFO("Quest completed (M§M %f)", q->payout)
     GlobalGetState()->CompleteTransaction(q->payout, "Completed quest");
+    active_quests.Erase(quest_index);
 }
 
 int QuestManager::GetAvailableQuests() const {

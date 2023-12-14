@@ -88,6 +88,11 @@ void Ship::Serialize(DataNode *data) const {
     data->SetI("resource_qtt", transporing.quantity);
     data->SetI("resource_id", transporing.resource_id);
 
+    data->SetArray("modules", modules_count);
+    for(int i=0; i < modules_count; i++) {
+        data->SetArrayElem("modules", i, GetModuleByIndex(modules[i])->id);
+    }
+
     data->SetArrayChild("prepared_plans", prepared_plans_count);
     for (int i=0; i < prepared_plans_count; i++) {
         prepared_plans[i].Serialize(data->SetArrayElemChild("prepared_plans", i, DataNode()));
@@ -104,7 +109,15 @@ void Ship::Deserialize(const DataNode* data) {
 
     color = PALETTE_GREEN;
 
+
+    modules_count = data->GetArrayLen("modules", true);
+    if (modules_count > SHIP_MAX_MODULES) modules_count = SHIP_MAX_MODULES;
+    for(int i=0; i < modules_count; i++) {
+        modules[i] = GetModuleIndexById(data->GetArray("modules", i));
+    }
+
     prepared_plans_count = data->GetArrayChildLen("prepared_plans", true);
+    if (prepared_plans_count > SHIP_MAX_PREPARED_PLANS) prepared_plans_count = SHIP_MAX_PREPARED_PLANS;
     for (int i=0; i < prepared_plans_count; i++) {
         prepared_plans[i] = TransferPlan();
         prepared_plans[i].Deserialize(data->GetArrayChild("prepared_plans", i, true));
@@ -120,6 +133,11 @@ double Ship::GetPayloadMass() const{
             res += qm->active_quests[i]->payload_mass;
         }
     }
+
+    for(int i=0; i < modules_count; i++) {
+        res += GetModuleByIndex(modules[i])->mass;
+    }
+
     return res - 0;
 }
 
@@ -245,6 +263,10 @@ void Ship::Update() {
         double rad = fmax(GetScreenTransform()->TransformS(GetPlanet(parent_planet)->radius), 4) + 8.0;
         double phase = 20.0 /  rad * index_on_planet;
         draw_pos = Vector2Add(FromPolar(rad, phase), draw_pos);
+    }
+
+    for (int i=0; i < modules_count; i++) {
+        GetModuleByIndex(modules[i])->Update(this);
     }
 }
 
@@ -404,6 +426,23 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
     sb.AddFormat("I_sp        %2.2f km/s\n", GetShipClassByIndex(ship_class)->v_e / 1000);
     sb.AddFormat("dv left     %2.2f km/s\n", GetCapableDV());
     UIContextWrite(sb.c_str);
+
+    UIContextPushInset(3, SHIP_MAX_MODULES * 200 / (5*5));
+    for (int i=0; i < SHIP_MAX_MODULES; i++) {
+        UIContextPushGridCell(5, SHIP_MAX_MODULES / 5, i % 5, i / 5);
+        UIContextShrink(3, 3);
+        if(i >= modules_count) {
+            UIContextEnclose(BG_COLOR, GRAY);
+            UIContextPop(); // GridCell
+            continue;
+        }
+        UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
+        if (UIContextAsButton() & BUTTON_STATE_FLAG_HOVER) {
+            UISetMouseHint(GetModuleByIndex(modules[i])->name);
+        }
+        UIContextPop(); // GridCell
+    }
+    UIContextPop(); // Inset
 
     _UIDrawTransferplans(this);
     _UIDrawQuests(this);

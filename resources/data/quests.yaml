@@ -27,7 +27,6 @@ contractors:
 # 5: Iaeptus
 # 6: Phoebe
 
-
 resource_missions:
 - payload: 100
   flavour: Bring 100 t of Coffee from {{departure}} to {{destination}}

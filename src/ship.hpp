@@ -6,8 +6,10 @@
 #include "datanode.hpp"
 #include "id_allocator.hpp"
 #include "quests.hpp"
+#include "ship_modules.hpp"
 
 #define SHIP_MAX_PREPARED_PLANS 10
+#define SHIP_MAX_MODULES 10
 #define SHIPCLASS_NAME_MAX_SIZE 64
 #define SHIPCLASS_DESCRIPTION_MAX_SIZE 1024
 #define SHIP_NAME_MAX_SIZE 64
@@ -44,6 +46,9 @@ struct Ship {
 
     int prepared_plans_count;
     TransferPlan prepared_plans[SHIP_MAX_PREPARED_PLANS];
+    int modules_count;
+    entity_id_t modules[SHIP_MAX_MODULES];
+    
     int plan_edit_index;
     int highlighted_plan_index;
 

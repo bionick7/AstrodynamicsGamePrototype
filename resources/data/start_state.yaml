@@ -46,22 +46,20 @@ planets:
 ships:
 - name: Bulk transport
   class_id: shp_bulk_transport
-  dv: 4  # km/s
-  Isp: 4  # km/s
-  capacity: 3000  # t
   planet: Tethys
   tf_plans: []
 - name: Light transport
   class_id: shp_light_transport
-  dv: 6
-  Isp: 4
-  capacity: 1000
   planet: Tethys
   tf_plans: []
+- name: Extractor
+  class_id: shp_light_transport
+  planet: Encelladus
+  tf_plans: []
+  modules:
+  - shpmod_water_extractor
+  - shpmod_water_extractor
 - name: Express
   class_id: shp_express
-  dv: 25
-  Isp: 20
-  capacity: 1000
   planet: Tethys
   tf_plans: []

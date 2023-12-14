@@ -8,9 +8,10 @@
 - Quest system (with wren?) ...
 - Sound (Done)
 - Automatically purchase fuel when possible (Done)
-- quantise resources (1 count = 100kT)
-- Transfer plan UX
-- Implement Ship Docking Rent?
+- quantise resources (1 count = 100kT) (Done)
+- water mining ship (or other more techniques to deal with fuel management?,)
+- Transfer plan UX 
+//- Implement Ship Docking Rent?
 - Build ships in shipyard
 
 ## Known Bugs
