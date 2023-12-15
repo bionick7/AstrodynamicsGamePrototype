@@ -9,15 +9,16 @@
 - Sound (Done)
 - Automatically purchase fuel when possible (Done)
 - quantise resources (1 count = 100kT) (Done)
-- water mining ship (or other more techniques to deal with fuel management?,)
+- water mining ship (or other more techniques to deal with fuel management?,) (Done)
 - Transfer plan UX 
+- Quests drop modules & Ships
 //- Implement Ship Docking Rent?
 - Build ships in shipyard
 
 ## Known Bugs
 - Deleting a transfer plan while editing it is a problem  (Done)
 - GetCapableDV does not align with GetAvailablePayload (which is prob. right)  (Done)
-- Loadsaving loads default wphemerides (Done)
+- Loadsaving loads default ephemerides (Done)
 - DATANODE: Can't distinguish between empty child array and empty string array
 
 ## UX improvements wishlist
@@ -26,6 +27,8 @@ Near-term, realizable only
 - "loading"bars to show resource scarcity (Done)
 - departure time adjusts automatically to the optimum (with option to turn it off)
 - "ASAP" button for transfer UI
+- ability to show hohmann trnasfer period in transfer window
+- questlog window is kinda outdated
 - front-end info and error log
 - different icons for different ships
 - icons for buildings

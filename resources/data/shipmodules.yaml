@@ -8,3 +8,7 @@ shipmodules:
   name: Heatshield
   mass: 50.e+3
   
+# ... Weapons, time extenders
+# e.g. loadout for gunship:
+#   Armor, Accomodations, Torpedos
+#   Light Armor, Railgun, Heatshield

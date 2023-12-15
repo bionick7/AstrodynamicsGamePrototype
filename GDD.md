@@ -131,3 +131,23 @@ Loop B (main)
 //
 - build up fleet
 
+## Status 14 Dec 23
+Ship modules implemented.
+The logistics part works, but feels pretty stale on it's own.
+The game lacks conflict.
+It's time to re-explore combat as a mechanic, using modules.
+Keep it simple. This is the plan. Every ship has:
+- kinetic offensive (speed advantage)
+- ordnance offensive
+- point-defense (against missiles)
+- kinetic defense (against advantage)
+- ordnance defense (against ordnance)
+modules change these
+Unsure if introducing power is a good idea.
+
+I like the elegance of having ships replace buildings for economy stuff.
+
+## Status 15 Dec 23
+Game is approaching an RPG more and more and I'm liking it. (quests, discretization, upgrades, ...)
+Focussing on the UX for transfers is still a good idea. Streamline it as much as possible
+Maybe ensure that the mission is fair not only in dv, but also time
