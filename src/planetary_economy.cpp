@@ -142,7 +142,7 @@ void PlanetaryEconomy::UIDrawResources(const ResourceTransfer& transfer, double 
             sprintf(buffer, "   %+3d", qtt);
             UIContextWrite(buffer, false);
         }
-        UIContextFillline(resource_stock[i] / resource_capacity[i], MAIN_UI_COLOR, BG_COLOR);
+        UIContextFillline(resource_stock[i] / resource_capacity[i], Palette::ui_main, Palette::bg);
         UIContextPop();  // Inset
         //TextBoxLineBreak(&tb);
     }
@@ -162,11 +162,11 @@ void _UIDrawResourceGrpah(const cost_t price_history[], int resource_index) {
         current_graph_y = price_history[i * RESOURCE_MAX + resource_index] - r_data.min_cost;
         int next_draw_x = box.text_start_x + current_graph_x * box.width / PRICE_TREND_SIZE;
         int next_draw_y = box.text_start_y + box.height - current_graph_y * box.height / graph_height;
-        DrawLine(current_draw_x, current_draw_y, next_draw_x, next_draw_y, MAIN_UI_COLOR);
+        DrawLine(current_draw_x, current_draw_y, next_draw_x, next_draw_y, Palette::ui_main);
         current_draw_x = next_draw_x;
         current_draw_y = next_draw_y;
     }
-    DrawLine(current_draw_x, current_draw_y, box.text_start_x, current_draw_y, PALETTE_BLUE);
+    DrawLine(current_draw_x, current_draw_y, box.text_start_x, current_draw_y, Palette::blue);
 }
 
 void PlanetaryEconomy::TryPlayerTransaction(ResourceTransfer rt) {

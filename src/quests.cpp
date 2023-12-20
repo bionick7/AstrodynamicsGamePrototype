@@ -147,9 +147,9 @@ ButtonStateFlags Quest::DrawUI(bool show_as_button, bool highlinght) const {
         return false;
     }
     if (highlinght) {
-        UIContextEnclose(BG_COLOR, TRANSFER_UI_COLOR);
+        UIContextEnclose(Palette::bg, Palette::transfer_ui);
     } else {
-        UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
+        UIContextEnclose(Palette::bg, Palette::ui_main);
     }
     UIContextShrink(6, 6);
     ButtonStateFlags button_state = UIContextAsButton();
@@ -268,13 +268,13 @@ void QuestManager::Draw() {
     int y_margin = MinInt(50, GetScreenWidth()*.1);
     int w = GetScreenWidth() - x_margin*2;
     int h = GetScreenHeight() - y_margin*2;
-    UIContextCreate(x_margin, y_margin, w, h, 16, MAIN_UI_COLOR);
-    UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
+    UIContextCreate(x_margin, y_margin, w, h, 16, Palette::ui_main);
+    UIContextEnclose(Palette::bg, Palette::ui_main);
     UIContextPushHSplit(0, w/2);
     UIContextShrink(5, 5);
     // Active quests
     if (active_quests.Count() == 0) {
-        UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
+        UIContextEnclose(Palette::bg, Palette::ui_main);
     }
     for(auto i = active_quests.GetIter(); i; i++) {
         active_quests[i]->DrawUI(false, IsIdValid(available_quests[i].ship));

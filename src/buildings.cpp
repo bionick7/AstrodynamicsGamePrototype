@@ -64,12 +64,12 @@ bool BuildingInstance::UIDraw() {
     HandleButtonSound(button_state & (BUTTON_STATE_FLAG_JUST_PRESSED | BUTTON_STATE_FLAG_JUST_HOVER_IN));
     if (button_state & BUTTON_STATE_FLAG_HOVER) {
         if (!IsValid()) {
-            UIContextEnclose(BG_COLOR, PALETTE_RED);
+            UIContextEnclose(Palette::bg, Palette::red);
         } else if (disabled) {
-            UIContextEnclose(BG_COLOR, PALETTE_RED);
+            UIContextEnclose(Palette::bg, Palette::red);
         } else {
             const BuildingClass* building_class = GetBuildingByIndex(class_index);
-            UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
+            UIContextEnclose(Palette::bg, Palette::ui_main);
             std::stringstream ss = std::stringstream();
             ss << building_class->name << "\n";
             ss << building_class->description << "\n";
@@ -221,8 +221,8 @@ void BuildingConstructionUI() {
         return;
     }
 
-    UIContextCreate(16*30 + 20, 10, 4*(32+sprite_margin_tot), 4*(32+sprite_margin_tot), 16, MAIN_UI_COLOR);
-    UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
+    UIContextCreate(16*30 + 20, 10, 4*(32+sprite_margin_tot), 4*(32+sprite_margin_tot), 16, Palette::ui_main);
+    UIContextEnclose(Palette::bg, Palette::ui_main);
     for (building_index_t i=0; i < building_count && i < 16; i++) {
         const BuildingClass* building_class = GetBuildingByIndex(i);
 
@@ -231,7 +231,7 @@ void BuildingConstructionUI() {
         HandleButtonSound(button_state & (BUTTON_STATE_FLAG_JUST_PRESSED | BUTTON_STATE_FLAG_JUST_HOVER_IN));
         if (button_state & BUTTON_STATE_FLAG_HOVER) {
             UIContextShrink(2, 2);
-            UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
+            UIContextEnclose(Palette::bg, Palette::ui_main);
             std::stringstream ss = std::stringstream();
             ss << building_class->name << "\n";
             ss << building_class->description << "\n";

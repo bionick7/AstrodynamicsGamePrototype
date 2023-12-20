@@ -29,7 +29,7 @@ void GlobalState::_InspectState() {
 
 bool _PauseMenuButton(const char* label) {
     UIContextPushInset(0, 20);
-    UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
+    UIContextEnclose(Palette::bg, Palette::ui_main);
     UIContextWrite(label);
     ButtonStateFlags button_state = UIContextAsButton();
     HandleButtonSound(button_state & BUTTON_STATE_FLAG_JUST_PRESSED);
@@ -48,9 +48,9 @@ void _PauseMenu() {
         menu_width,
         menu_height,
         16,
-        MAIN_UI_COLOR
+        Palette::ui_main
     );
-    UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
+    UIContextEnclose(Palette::bg, Palette::ui_main);
     if (_PauseMenuButton("Save")) {
         INFO("Save")
         DataNode dn;
@@ -257,7 +257,7 @@ void GlobalState::UpdateState(double delta_t) {
 
 // Draw
 void GlobalState::DrawState() {
-    DrawCircleV(c_transf.TransformV({0}), c_transf.TransformS(planets.GetParentNature()->radius), MAIN_UI_COLOR);
+    DrawCircleV(c_transf.TransformV({0}), c_transf.TransformS(planets.GetParentNature()->radius), Palette::ui_main);
     for (entity_id_t planet_id = 0; planet_id < planets.GetPlanetCount(); planet_id++) {
         planets.GetPlanet(planet_id)->Draw(&c_transf);
     }
@@ -273,7 +273,7 @@ void GlobalState::DrawState() {
     calendar.DrawUI();
     char capital_str[21];
     sprintf(capital_str, "M§M %6ld.%3ld .mil", capital / (int)1e6, capital % 1000000 / 1000);
-    DrawTextAligned(capital_str, {GetScreenWidth() / 2.0f, 10}, TEXT_ALIGNMENT_HCENTER & TEXT_ALIGNMENT_TOP, MAIN_UI_COLOR);
+    DrawTextAligned(capital_str, {GetScreenWidth() / 2.0f, 10}, TEXT_ALIGNMENT_HCENTER & TEXT_ALIGNMENT_TOP, Palette::ui_main);
 
     // 
     for (entity_id_t planet_id = 0; planet_id < planets.GetPlanetCount(); planet_id++) {

@@ -63,7 +63,7 @@ void MainLoopStep(GlobalState* app) {
     app->UpdateState(1./60.);
 
     BeginDrawing();
-    ClearBackground(BG_COLOR);
+    ClearBackground(Palette::bg);
     app->DrawState();
     EndDrawing();
 }

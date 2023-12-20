@@ -63,16 +63,16 @@ void Calendar::DrawUI() const {
     const char* text = TextFormat("II Time x %.1f", time_scale);
     if (!paused) text += 3;
     Vector2 pos = { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(), text, FONT_SIZE, 1).x - 10, 10 };
-    DrawTextEx(GetCustomDefaultFont(), text, pos, FONT_SIZE, 1, MAIN_UI_COLOR);
+    DrawTextEx(GetCustomDefaultFont(), text, pos, FONT_SIZE, 1, Palette::ui_main);
     char text_date[100];
     GlobalGetNow().FormatAsDate(text_date, 100);
     pos = { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(), text_date, FONT_SIZE, 1).x - 10, 30 };
-    DrawTextEx(GetCustomDefaultFont(), text_date, pos, FONT_SIZE, 1, MAIN_UI_COLOR);
+    DrawTextEx(GetCustomDefaultFont(), text_date, pos, FONT_SIZE, 1, Palette::ui_main);
 
     // Migration progress
     double t_val = 1.0 - (migration_arrrival_time - GlobalGetNow()).Seconds() / current_migration_period.Seconds();
     int progress_x = t_val * GetScreenWidth();
-    DrawRectangle(0, 1, progress_x, 2, MAIN_UI_COLOR);
+    DrawRectangle(0, 1, progress_x, 2, Palette::ui_main);
     const int collider_rec_width = 16;
     Rectangle mouse_collider = { progress_x - collider_rec_width/2, 0, collider_rec_width, collider_rec_width};
     if (CheckCollisionPointRec(GetMousePosition(), mouse_collider) || GetMousePosition().y < 4) {
@@ -83,7 +83,7 @@ void Calendar::DrawUI() const {
         if (progress_x > GetScreenWidth() - text_size.x - 200) {
             progress_x = GetScreenWidth() - text_size.x - 200;
         }
-        DrawTextEx(GetCustomDefaultFont(), buffer, (Vector2) { progress_x, 1 }, 16, 1, MAIN_UI_COLOR);
+        DrawTextEx(GetCustomDefaultFont(), buffer, (Vector2) { progress_x, 1 }, 16, 1, Palette::ui_main);
     }
 }
 

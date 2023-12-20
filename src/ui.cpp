@@ -2,6 +2,7 @@
 #include "logging.hpp"
 #include "constants.hpp"
 #include "audio_server.hpp"
+
 #include <stack>
 
 Font default_font;
@@ -34,6 +35,9 @@ void DrawTextConstrained(Font font, const char *text, Vector2 position, float fo
         {
             float x_increment = (float)font.recs[index].width*scaleFactor + spacing;
             Vector2 char_pos = (Vector2){ position.x + textOffsetX, position.y + textOffsetY };
+
+            // This part is custom
+
             Vector2 char_pos2 = (Vector2){ position.x + textOffsetX + x_increment, position.y + textOffsetY + fontSize };
             if (
                 (codepoint != ' ') && (codepoint != '\t')
@@ -173,7 +177,7 @@ void TextBox::Write(const char* text) {
         || !CheckCollisionPointRec(Vector2Add(pos, size), render_rec)
     ) return;*/
 
-    // avoid drawing if the bg is fully transparent (most cases)
+    // avoid drawing if the Palette::bg is fully transparent (most cases)
     if(text_background.a != 0) {
         DrawRectangleV(pos, size, text_background);
     }
@@ -218,7 +222,7 @@ ButtonStateFlags TextBox::WriteButton(const char* text, int inset) {
         is_in_area,
         CheckCollisionPointRec(Vector2Subtract(GetMousePosition(), GetMouseDelta()), {pos.x, pos.y, size.x, size.y})
     );
-    Color c = is_in_area ? MAIN_UI_COLOR : PALETTE_BLUE;
+    Color c = is_in_area ? Palette::ui_main : Palette::blue;
     DrawRectangleLines(pos.x - inset, pos.y - inset, size.x, size.y, c);
     DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, c);
     _Advance(size);
@@ -452,9 +456,9 @@ void UIEnd() {
         // Draw mouse
         Vector2 mouse_pos = GetMousePosition();
         Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), mouseover_text, 16, 1);
-        DrawRectangleV(mouse_pos, text_size, BG_COLOR);
-        DrawRectangleLines(mouse_pos.x, mouse_pos.y, text_size.x, text_size.y, MAIN_UI_COLOR);
-        DrawTextEx(GetCustomDefaultFont(), mouseover_text, mouse_pos, 16, 1, MAIN_UI_COLOR);
+        DrawRectangleV(mouse_pos, text_size, Palette::bg);
+        DrawRectangleLines(mouse_pos.x, mouse_pos.y, text_size.x, text_size.y, Palette::ui_main);
+        DrawTextEx(GetCustomDefaultFont(), mouseover_text, mouse_pos, 16, 1, Palette::ui_main);
     }
 }
 
@@ -469,9 +473,9 @@ ButtonStateFlags DrawTriangleButton(Vector2 point, Vector2 base, double width, C
     Vector2 side_2 =  Vector2Add(base_pos, Vector2Scale(tangent_dir, width));
     bool is_in_area = CheckCollisionPointTriangle(GetMousePosition(), side_1, point, side_2);
     if (is_in_area) {
-        DrawTriangle(side_1, point, side_2, PALETTE_BLUE);
+        DrawTriangle(side_1, point, side_2, Palette::blue);
     } else {
-        DrawTriangleLines(side_1, point, side_2, PALETTE_BLUE);
+        DrawTriangleLines(side_1, point, side_2, Palette::blue);
     }
     return _GetButtonState(
         is_in_area,
@@ -482,9 +486,9 @@ ButtonStateFlags DrawTriangleButton(Vector2 point, Vector2 base, double width, C
 ButtonStateFlags DrawCircleButton(Vector2 midpoint, double radius, Color color) {
     bool is_in_area = CheckCollisionPointCircle(GetMousePosition(), midpoint, radius);
     if (is_in_area) {
-        DrawCircleV(midpoint, radius, PALETTE_BLUE);
+        DrawCircleV(midpoint, radius, Palette::blue);
     } else {
-        DrawCircleLines(midpoint.x, midpoint.y, radius, PALETTE_BLUE);
+        DrawCircleLines(midpoint.x, midpoint.y, radius, Palette::blue);
     }
     return _GetButtonState(
         is_in_area,

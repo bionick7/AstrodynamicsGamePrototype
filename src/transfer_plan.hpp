@@ -38,6 +38,8 @@ struct TransferPlan {
 };
 
 void TransferPlanSolve(TransferPlan* tp);
+void TransferPlanSetBestDeparture(TransferPlan* tp);
+void TransferPlanSoonest(TransferPlan* tp, double dv_limit);
 int TransferPlanTests();
 
 struct TransferPlanUI {
@@ -51,6 +53,8 @@ struct TransferPlanUI {
     Vector2 departure_handle_pos;
     Vector2 arrival_handle_pos;
     bool redraw_queued;
+
+    bool departure_time_automatic;
 
     timemath::Time time_bounds[2];
 

@@ -2,13 +2,14 @@
 #include "global_state.hpp"
 #include "coordinate_transform.hpp"
 #include "ui.hpp"
+#include "constants.hpp"
 
 void DebugDrawLine(Vector2 from, Vector2 to) {
     const CoordinateTransform* c_transf = GetScreenTransform();
     DrawLineV(
         c_transf->TransformV(from),
         c_transf->TransformV(to),
-        GREEN
+        Palette::green
     );
 }
 
@@ -35,16 +36,16 @@ void DebugDrawConic(Vector2 focus, Vector2 ecc_vector, double a) {
     DrawLineV(
         c_transf->TransformV(focus),
         c_transf->TransformV(Vector2Add(focus, Vector2Scale(x, -2*a*e))),
-        GREEN
+        Palette::green
     );
-    DrawLineStrip(&point_buffer[0], 64, GREEN);
+    DrawLineStrip(&point_buffer[0], 64, Palette::green);
 }
 
 char lines[64][256];
 int lines_index = 0;
 
 void DebugFlushText() {
-    TextBox debug_textbox = TextBox(5, 35, 500, GetScreenHeight() - 40, 16, GREEN);
+    TextBox debug_textbox = TextBox(5, 35, 500, GetScreenHeight() - 40, 16, Palette::green);
     debug_textbox.text_background = BLACK;
     for (int i=0; i < lines_index; i++) {
         debug_textbox.WriteLine(lines[i]);

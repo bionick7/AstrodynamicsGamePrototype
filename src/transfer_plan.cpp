@@ -241,6 +241,15 @@ void TransferPlan::Deserialize(const DataNode* data) {
     TransferPlanSolve(this);
 }
 
+
+void TransferPlanSetBestDeparture(TransferPlan* tp) {
+    // TODO
+}
+
+void TransferPlanSoonest(TransferPlan* tp, double dv_limit) {
+    // TODO
+}
+
 int TransferPlanTests() {
     const double epsilon = 1e-5;
     for (double K = 0.0; K < 1.0; K += 0.2) 
@@ -283,6 +292,9 @@ void TransferPlanUI::Update() {
     Ship* ship_instance = GetShip(ship);
 
     if (IsIdValid(plan->departure_planet) && IsIdValid(plan->arrival_planet) && redraw_queued) {
+        if (departure_time_automatic) {
+            TransferPlanSetBestDeparture(plan);
+        }
         TransferPlanSolve(plan);
         is_valid = plan->num_solutions > 0 && plan->tot_dv <= ship_instance->GetCapableDV();
         is_valid = is_valid && GlobalGetNow() < plan->departure_time;
@@ -343,7 +355,7 @@ void _DrawTransferOrbit(const TransferPlan* plan, int solution, bool is_secondar
     const Planet* from = GetPlanet(plan->departure_planet);
     const Planet* to = GetPlanet(plan->arrival_planet);
     Color velocity_color = YELLOW;
-    Color orbit_color = TRANSFER_UI_COLOR;
+    Color orbit_color = Palette::transfer_ui;
     if (is_secondary) {
         velocity_color = ColorTint(velocity_color, GRAY);
         orbit_color = ColorTint(orbit_color, GRAY);
@@ -359,7 +371,7 @@ timemath::Time _DrawHandle(
     const CoordinateTransform* c_transf, Vector2 pos, const Orbit* orbit, 
     timemath::Time current, timemath::Time t0, bool* is_dragging
 ) {
-    Color c = PALETTE_BLUE;
+    Color c = Palette::blue;
 
     Vector2 radial_dir = Vector2Normalize(c_transf->InvTransformV(pos));
     radial_dir.y = -radial_dir.y;
@@ -457,19 +469,20 @@ void TransferPlanUI::DrawUI() {
     UIContextCreate(
         GetScreenWidth() - 20*16 - 5, y_margin,
         20*16, MinInt(200, GetScreenHeight()) - 2*5 - y_margin, 
-        16, TRANSFER_UI_COLOR
+        16, Palette::transfer_ui
     );
 
-    UIContextCurrent().Enclose(2, 2, BG_COLOR, is_valid ? TRANSFER_UI_COLOR : PALETTE_RED);
+    UIContextCurrent().Enclose(2, 2, Palette::bg, is_valid ? Palette::transfer_ui : Palette::red);
     
     StringBuilder sb = StringBuilder();
     sb.Add("Departs in ").AddTime(plan->departure_time - time_bounds[0]);
     sb.Add("\nArrives in ").AddTime(plan->arrival_time - time_bounds[0]);
+    DebugPrintText("%i", sb.CountLines());
+    UIContextPushInset(0, 18 * sb.CountLines() + 5);
     UIContextWrite(sb.c_str);
-    UIContextPushInset(0, 18);
     UIContextFillline(
         fmin(timemath::Time::SecDiff(plan->arrival_time, time_bounds[0]) / timemath::Time::SecDiff(plan->hohmann_arrival_time, time_bounds[0]), 1.0), 
-        TRANSFER_UI_COLOR, BG_COLOR
+        Palette::transfer_ui, Palette::bg
     );
     UIContextPop();  // Inset
     sb.Clear();
@@ -486,9 +499,52 @@ void TransferPlanUI::DrawUI() {
         sb.Add("Cannot make transfer");
     }
 
+    UIContextPushInset(0, 18 * sb.CountLines() + 5);
     UIContextWrite(sb.c_str);
-    UIContextPushInset(0, 18);
-        UIContextFillline(fmax(0, capacity_ratio), capacity >= 0 ? TRANSFER_UI_COLOR : PALETTE_RED, BG_COLOR);
+    UIContextFillline(fmax(0, capacity_ratio), capacity >= 0 ? Palette::transfer_ui : Palette::red, Palette::bg);
+    UIContextPop();  // Inset
+
+    int w = UIContextCurrent().width;
+    UIContextPushInset(0, 20);
+    {
+        UIContextPushHSplit(0, w/3);
+        ButtonStateFlags button_state = UIContextAsButton();
+        if (button_state & BUTTON_STATE_FLAG_HOVER) {
+            UIContextEnclose(Palette::bg, Palette::ui_main);
+        }
+        if(button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+            TransferPlanSoonest(plan, ship_instance->GetCapableDV() - 1);
+        }
+        UIContextWrite("ASAP");
+        UIContextPop();  // HSplit
+    }
+    {
+        UIContextPushHSplit(w/3, 2*w/3);
+        ButtonStateFlags button_state = UIContextAsButton();
+        if (button_state & BUTTON_STATE_FLAG_HOVER) {
+            UIContextEnclose(Palette::bg, Palette::ui_main);
+        }
+        if(button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+            if (is_valid) {
+                ship_instance->ConfirmEditedTransferPlan();
+                Make();
+            }
+        }
+        UIContextWrite("Confirm");
+        UIContextPop();  // HSplit
+    }
+    {
+        UIContextPushHSplit(2*w/3, w);
+        ButtonStateFlags button_state = UIContextAsButton();
+        if(button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+            departure_time_automatic = !departure_time_automatic;
+        }
+        if (departure_time_automatic || (button_state & BUTTON_STATE_FLAG_HOVER)) {
+            UIContextEnclose(Palette::bg, Palette::ui_main);
+        }
+        UIContextWrite("Lock");
+        UIContextPop();  // HSplit
+    }
     UIContextPop();  // Inset
 }
 

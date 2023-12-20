@@ -55,14 +55,11 @@ void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
             x = previous_x + min_planet_spacing;
         }
         //DebugPrintText("%s: sma = %f, x = %d", planet->name, planet->orbit.sma, x);
-        DrawTextAligned(planet->name, {(float)x, (float)tcd->y0 + 18}, TEXT_ALIGNMENT_HCENTER | TEXT_ALIGNMENT_BOTTOM, MAIN_UI_COLOR);
-        DrawLine(x, tcd->y0 + 24, x, tcd->y0 + tcd->h, MAIN_UI_COLOR);
+        DrawTextAligned(planet->name, {(float)x, (float)tcd->y0 + 18}, TEXT_ALIGNMENT_HCENTER | TEXT_ALIGNMENT_BOTTOM, Palette::ui_main);
+        DrawLine(x, tcd->y0 + 24, x, tcd->y0 + tcd->h, Palette::ui_main);
         previous_x = x;
         tcd->planet_coords[planet_index] = x;
     }
-
-    Color alt = ColorAlphaBlend(BG_COLOR, MAIN_UI_COLOR, GetColor(0x50505050u));
-    Color alt2 = ColorAlphaBlend(BG_COLOR, MAIN_UI_COLOR, GetColor(0x80808080u));
 
     // Draw 'y-backticks'
     int t_indx = 0;
@@ -73,16 +70,16 @@ void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
     if (pixels_per_day_vscale < 4) time_interval = 31;
     for (timemath::Time t = day_start; t < GetEndTime(tcd); t = t + timemath::Time::Day()) {
         int y = GetTimeCoord(tcd, t);
-        DrawLine(tcd->x0 - 2, y, tcd->x0 + 15, y, MAIN_UI_COLOR);
+        DrawLine(tcd->x0 - 2, y, tcd->x0 + 15, y, Palette::ui_main);
         if (t_indx++ % time_interval == 0) {
             DrawTextAligned(
                 sb.Clear().AddDate(t, true).c_str, 
                 { (float) tcd->x0 + 20, (float) y },
                 TEXT_ALIGNMENT_BOTTOM | TEXT_ALIGNMENT_LEFT,
-                alt2
+                Palette::ui_alt
             );
         }
-        DrawLine(tcd->x0 + 40, y, tcd->x0 + tcd->w - 10, y, alt);
+        DrawLine(tcd->x0 + 40, y, tcd->x0 + tcd->w - 10, y, Palette::ui_dark);
     }
 }
 
@@ -111,9 +108,9 @@ float  _QuestDrawLine(TimeLineCoordinateData* tcd, const Quest* q, bool active) 
         GetTimeCoord(tcd, delivery_time)
     };
 
-    Color c = MAIN_UI_COLOR;
+    Color c = Palette::ui_main;
     if (!active) {
-        c = ColorAlphaBlend(BG_COLOR, c, GetColor(0x80808080u));
+        c = ColorAlphaBlend(Palette::bg, c, GetColor(0x80808080u));
     }
 
     //Vector2 scaled_unit = Vector2Scale(Vector2Normalize(Vector2Subtract(end_pos, start_pos)), 10);
@@ -199,7 +196,7 @@ int _Assign_And_Ret(int* var, int value) {
 void _ShipDrawPathLine(const TimeLineCoordinateData* tcd, int* x_pos, int* y_pos, entity_id_t to_planet, timemath::Time to_time, int x_offset) {
     int new_x = GetPlanetCoord(tcd, to_planet) + x_offset;
     int new_y = GetTimeCoord(tcd, to_time);
-    DrawLine(*x_pos, *y_pos, new_x, new_y, TRANSFER_UI_COLOR);
+    DrawLine(*x_pos, *y_pos, new_x, new_y, Palette::transfer_ui);
     *x_pos = new_x;
     *y_pos = new_y;
 }
@@ -277,8 +274,8 @@ void DrawTimeline() {
 
     // Create UI Context
     GlobalState* gs = GlobalGetState();
-    UIContextCreate(20, 100, GetScreenWidth() - 40, GetScreenHeight() - 100, 16, MAIN_UI_COLOR);
-    UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
+    UIContextCreate(20, 100, GetScreenWidth() - 40, GetScreenHeight() - 100, 16, Palette::ui_main);
+    UIContextEnclose(Palette::bg, Palette::ui_main);
 
     // Initiualize Common Data Structure
     TimeLineCoordinateData tcd = TimeLineCoordinateData();

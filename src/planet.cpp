@@ -169,18 +169,18 @@ void Planet::Update() {
 void Planet::Draw(const CoordinateTransform* c_transf) {
     //printf("%f : %f\n", position.x, position.y);
     Vector2 screen_pos = c_transf->TransformV(position.cartesian);
-    DrawCircleV(screen_pos, ScreenRadius(), MAIN_UI_COLOR);
+    DrawCircleV(screen_pos, ScreenRadius(), Palette::ui_main);
     
-    orbit.Draw(MAIN_UI_COLOR);
+    orbit.Draw(Palette::ui_main);
 
     int screen_x = (int)screen_pos.x, screen_y = (int)screen_pos.y;
     int text_h = 16;
     Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), name, text_h, 1);
-    DrawTextEx(GetCustomDefaultFont(), name, {screen_x - text_size.x / 2,  screen_y - text_size.y - 5}, text_h, 1, MAIN_UI_COLOR);
+    DrawTextEx(GetCustomDefaultFont(), name, {screen_x - text_size.x / 2,  screen_y - text_size.y - 5}, text_h, 1, Palette::ui_main);
 
     if (mouse_hover) {
         // Hover
-        DrawCircleLines(screen_x, screen_y, 20, TRANSFER_UI_COLOR);
+        DrawCircleLines(screen_x, screen_y, 20, Palette::transfer_ui);
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             _OnClicked();
         }
@@ -219,11 +219,11 @@ void _UIDrawBuildings(Planet* planet) {
 int current_tab = 0;  // Global variable, I suppose
 void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, ResourceTransfer transfer, double fuel_draw) {
     if (upper_quadrant) {
-        UIContextCreate(10, 10, 16*30, GetScreenHeight() / 2 - 20, 16, MAIN_UI_COLOR);
+        UIContextCreate(10, 10, 16*30, GetScreenHeight() / 2 - 20, 16, Palette::ui_main);
     } else {
-        UIContextCreate(10, GetScreenHeight() / 2 + 10, 16*30, GetScreenHeight() / 2 - 20, 16, MAIN_UI_COLOR);
+        UIContextCreate(10, GetScreenHeight() / 2 + 10, 16*30, GetScreenHeight() / 2 - 20, 16, Palette::ui_main);
     }
-    UIContextCurrent().Enclose(2, 2, BG_COLOR, MAIN_UI_COLOR);
+    UIContextCurrent().Enclose(2, 2, Palette::bg, Palette::ui_main);
 
     UIContextPushInset(4, 20);  // Tab container
     int w = UIContextCurrent().width;
@@ -247,7 +247,7 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
             current_tab = i;
         }
         if (button_state & BUTTON_STATE_FLAG_HOVER || i == current_tab) {
-            UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
+            UIContextEnclose(Palette::bg, Palette::ui_main);
         }
         UIContextWrite(tab_descriptions[i]);
         UIContextPop();  // HSplit
@@ -255,7 +255,7 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
     UIContextPop();  // Tab container
 
     UIContextWrite(name);
-    UIContextFillline(1, MAIN_UI_COLOR, MAIN_UI_COLOR);
+    UIContextFillline(1, Palette::ui_main, Palette::ui_main);
     //_UIDrawStats(stats);
     switch (current_tab) {
     case 0:

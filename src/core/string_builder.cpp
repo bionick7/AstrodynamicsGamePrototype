@@ -19,6 +19,15 @@ StringBuilder::~StringBuilder() {
     free(c_str);
 }
 
+int StringBuilder::CountLines() const {
+    if (length == 0) return 0;
+    int res = 1;
+    for (int i = 0; i < length; i++) {
+        if (c_str[i] == '\n') res++;
+    }
+    return res;
+}
+
 StringBuilder& StringBuilder::Clear() {
     c_str = (char*)malloc(1);
     c_str[0] = '\0';

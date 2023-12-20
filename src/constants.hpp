@@ -1,14 +1,21 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
+#include "basic.hpp"
 
-#define BG_COLOR          GetColor(0x1D2025FFu)
-#define PALETTE_BLUE      GetColor(0x006D80FFu)
-#define PALETTE_GREEN     GetColor(0x4Fc76CFFu)
-#define PALETTE_RED       GetColor(0xFF5155FFu)
-#define PALETTE_WHITE     GetColor(0xFFFFA0FFu)
-
-#define MAIN_UI_COLOR     PALETTE_WHITE
-#define TRANSFER_UI_COLOR PALETTE_GREEN
+namespace Palette {
+    extern Color bg;
+    extern Color blue;
+    extern Color green;
+    extern Color red;
+    extern Color white;
+    extern Color ui_main;
+    extern Color ui_dark;
+    extern Color ui_alt;
+    extern Color interactable_main;
+    extern Color interactable_dark;
+    extern Color interactable_alt;
+    extern Color transfer_ui;
+}
 
 #define SCREEN_WIDTH 1600
 #define SCREEN_HEIGHT 900

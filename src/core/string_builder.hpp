@@ -10,6 +10,7 @@ struct StringBuilder {
     StringBuilder();
     StringBuilder(int p_length);
     ~StringBuilder();
+    int CountLines() const;
     StringBuilder& Clear();
     StringBuilder& Add(const char* add_str);
     StringBuilder& _AddBuffer(char buffer[]);

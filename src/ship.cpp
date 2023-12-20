@@ -107,7 +107,7 @@ void Ship::Deserialize(const DataNode* data) {
     transporing.quantity = data->GetI("resource_qtt", 0);
     transporing.resource_id = (ResourceType) data->GetI("resource_id", RESOURCE_NONE);
 
-    color = PALETTE_GREEN;
+    color = Palette::green;
 
 
     modules_count = data->GetArrayLen("modules", true);
@@ -292,7 +292,7 @@ void Ship::Draw(const CoordinateTransform* c_transf) const {
             ColorAlpha(color, i == highlighted_plan_index ? 1 : 0.5)
         );
         if (i == plan_edit_index){
-            plan.transfer_orbit[plan.primary_solution].DrawBounded(to_departure, to_arrival, 0, MAIN_UI_COLOR);
+            plan.transfer_orbit[plan.primary_solution].DrawBounded(to_departure, to_arrival, 0, Palette::ui_main);
         }
     }
     if (plan_edit_index >= 0 && IsIdValid(prepared_plans[plan_edit_index].arrival_planet)) {
@@ -340,7 +340,7 @@ void _UIDrawTransferplans(Ship* ship) {
         // Double Button
         UIContextPushInset(2, UIContextCurrent().GetLineHeight() * 2);
         UIContextPushHSplit(0, -32);
-        UIContextEnclose(BG_COLOR, PALETTE_BLUE);
+        UIContextEnclose(Palette::bg, Palette::blue);
         UIContextWrite(tp_str[0]);
         UIContextWrite(tp_str[1]);
         ButtonStateFlags button_state = UIContextAsButton();
@@ -356,7 +356,7 @@ void _UIDrawTransferplans(Ship* ship) {
         if (i != ship->plan_edit_index) {
             UIContextPushHSplit(-32, -1);
             UIContextWrite("X");
-            UIContextEnclose(BG_COLOR, PALETTE_BLUE);
+            UIContextEnclose(Palette::bg, Palette::blue);
             ButtonStateFlags button_state = UIContextAsButton();
             HandleButtonSound(button_state & BUTTON_STATE_FLAG_JUST_PRESSED);
             if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
@@ -395,7 +395,7 @@ void _UIDrawQuests(Ship* ship) {
 void Ship::DrawUI(const CoordinateTransform* c_transf) {
     if (mouse_hover) {
         // Hover
-        DrawCircleLines(draw_pos.x, draw_pos.y, 10, RED);
+        DrawCircleLines(draw_pos.x, draw_pos.y, 10, Palette::red);
         DrawTextEx(GetCustomDefaultFont(), name, Vector2Add(draw_pos, {5, 5}), 16, 1, color);
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -410,17 +410,17 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
     UIContextCreate(
         GetScreenWidth() - 20*text_size - 5, 5 + 200,
         20*text_size, GetScreenHeight() - 200 - 2*5, 
-        text_size, MAIN_UI_COLOR
+        text_size, Palette::ui_main
     );
 
-    UIContextEnclose(BG_COLOR, color);
+    UIContextEnclose(Palette::bg, color);
 
     UIContextWrite(name);
     StringBuilder sb;
     sb.AddFormat("Payload %d / %d ", KGToResourceCounts(GetPayloadMass()), GetMaxCapacity());
     UIContextWrite(sb.c_str);
     UIContextPushInset(0, 3);
-    UIContextFillline(KGToResourceCounts(GetPayloadMass()) / GetMaxCapacity(), MAIN_UI_COLOR, BG_COLOR);
+    UIContextFillline(KGToResourceCounts(GetPayloadMass()) / GetMaxCapacity(), Palette::ui_main, Palette::bg);
     UIContextPop();  // Inset
     sb.Clear();
     sb.AddFormat("I_sp        %2.2f km/s\n", GetShipClassByIndex(ship_class)->v_e / 1000);
@@ -432,11 +432,11 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
         UIContextPushGridCell(5, SHIP_MAX_MODULES / 5, i % 5, i / 5);
         UIContextShrink(3, 3);
         if(i >= modules_count) {
-            UIContextEnclose(BG_COLOR, GRAY);
+            UIContextEnclose(Palette::bg, GRAY);
             UIContextPop(); // GridCell
             continue;
         }
-        UIContextEnclose(BG_COLOR, MAIN_UI_COLOR);
+        UIContextEnclose(Palette::bg, Palette::ui_main);
         if (UIContextAsButton() & BUTTON_STATE_FLAG_HOVER) {
             UISetMouseHint(GetModuleByIndex(modules[i])->name);
         }
