@@ -3,6 +3,7 @@
 
 dependencies/*
 screenshots/*
+dev_output/*
 
 app
 app.exe
