@@ -224,12 +224,16 @@ void Ship::RemoveTransferPlan(int index) {
 void Ship::StartEditingPlan(int index) {
     TransferPlanUI& tp_ui = GlobalGetState()->active_transfer_plan;
     timemath::Time min_time = 0;
-    if (prepared_plans_count == 0) {
-        prepared_plans[prepared_plans_count].departure_planet = parent_planet;
-        min_time = GlobalGetNow();
+    if (index == 0) {
+        if (is_parked) {
+            prepared_plans[index].departure_planet = parent_planet;
+            min_time = GlobalGetNow();
+        } else {
+            return;
+        }
     } else {
-        prepared_plans[prepared_plans_count].departure_planet = prepared_plans[prepared_plans_count - 1].arrival_planet;
-        min_time = prepared_plans[prepared_plans_count - 1].arrival_time;
+        prepared_plans[index].departure_planet = prepared_plans[index - 1].arrival_planet;
+        min_time = prepared_plans[index - 1].arrival_time;
     }
 
     plan_edit_index = index;

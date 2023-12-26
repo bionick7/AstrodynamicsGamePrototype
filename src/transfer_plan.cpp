@@ -219,39 +219,6 @@ void TransferPlanSetBestDeparture(TransferPlan* tp, timemath::Time t0, timemath:
     // simple optimization of dv vs departure time
 
     TransferPlan tp_copy = TransferPlan(*tp);
-#if false
-    const double H = 1;
-
-    timemath::Time x = tp->departure_time;
-    double diff_seconds;
-
-    do {
-        tp_copy.departure_time = x;
-        TransferPlanSolve(&tp_copy);
-        double dv_0 = tp_copy.tot_dv;
-
-        tp_copy.departure_time = x + H;
-        TransferPlanSolve(&tp_copy);
-        double dv_plus = tp_copy.tot_dv;
-
-        tp_copy.departure_time = x - H;
-        TransferPlanSolve(&tp_copy);
-        double dv_minus = tp_copy.tot_dv;
-
-        double deriv = (dv_plus - dv_minus) / (2 * H);
-        double deriv2 = (dv_plus - 2 * dv_0 + dv_minus) / H*H;
-        
-        DebugPrintText("%f, D %f, D2 %f", dv_0, deriv, deriv2);
-        diff_seconds = deriv / deriv2 * 0.1;
-        x = x - timemath::Time(diff_seconds);
-    } while (abs(diff_seconds) > 1);
-    if (x.IsInvalid()) {
-        return;
-    }    
-    if (x > t1) x = t1;
-    if (x < t0) x = t0;
-    tp->departure_time = x;
-#else
     timemath::Time xl = t0;
     timemath::Time xr = t1;
     
@@ -286,7 +253,6 @@ void TransferPlanSetBestDeparture(TransferPlan* tp, timemath::Time t0, timemath:
     else if (xr.IsInvalid()) tp->departure_time = yr;
     else tp->departure_time = yl < yr ? xl : xr;
 
-#endif
 }
 
 void TransferPlanSoonest(TransferPlan* tp, double dv_limit) {
