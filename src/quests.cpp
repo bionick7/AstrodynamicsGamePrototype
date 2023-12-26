@@ -30,6 +30,8 @@ void _GenerateRandomQuest(Quest* quest, const QuestTemplate* quest_template) {
     if (add_time < characteristic_period * 0.5)
         add_time = characteristic_period;
     quest->pickup_expiration_time = now + GetRandomGaussian(characteristic_period * 2.0, characteristic_period);
+    if (quest->pickup_expiration_time < characteristic_period*.5)
+        quest->pickup_expiration_time = characteristic_period*.5;
     quest->delivery_expiration_time = quest->pickup_expiration_time;
 }
 
@@ -147,7 +149,7 @@ ButtonStateFlags Quest::DrawUI(bool show_as_button, bool highlinght) const {
         return false;
     }
     if (highlinght) {
-        UIContextEnclose(Palette::bg, Palette::transfer_ui);
+        UIContextEnclose(Palette::bg, Palette::ship);
     } else {
         UIContextEnclose(Palette::bg, Palette::ui_main);
     }

@@ -58,8 +58,8 @@ struct TransferPlanUI {
 
     timemath::Time time_bounds[2];
 
-    TransferPlanUI() { Make(); }
-    void Make();
+    TransferPlanUI();
+    void Reset();
     void Abort();
     void Update();
     void Draw(const CoordinateTransform* c_transf);

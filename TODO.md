@@ -10,7 +10,8 @@
 - Automatically purchase fuel when possible (Done)
 - quantise resources (1 count = 100kT) (Done)
 - water mining ship (or other more techniques to deal with fuel management?,) (Done)
-- Transfer plan UX 
+- Transfer plan UX (Half)
+- Shop
 - Quests drop modules & Ships
 //- Implement Ship Docking Rent?
 - Build ships in shipyard
@@ -20,6 +21,7 @@
 - GetCapableDV does not align with GetAvailablePayload (which is prob. right)  (Done)
 - Loadsaving loads default ephemerides (Done)
 - DATANODE: Can't distinguish between empty child array and empty string array
+- ASTRO: departure time optimization is reliable, but not accurate (found A solution)
 
 ## UX improvements wishlist
 Near-term, realizable only

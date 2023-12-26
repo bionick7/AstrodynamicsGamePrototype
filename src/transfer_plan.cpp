@@ -214,45 +214,88 @@ void TransferPlanSolve(TransferPlan* tp) {
     TransferPlanRankSolutions(tp);
 }
 
+double TransferPlanSolveWithDeptartureTime(TransferPlan* tp, timemath::Time departure) {
+    timemath::Time t = tp->departure_time;
+    tp->departure_time = departure;
+    TransferPlanSolve(tp);
+    double res = tp->tot_dv;
+    tp->departure_time = t;
+    return res;
+}
+
 void TransferPlanSetBestDeparture(TransferPlan* tp, timemath::Time t0, timemath::Time t1) {
-    // TODO
     // simple optimization of dv vs departure time
 
-    TransferPlan tp_copy = TransferPlan(*tp);
+#if true
+    //const timemath::Time H = timemath::Time(1);
+    const double H = 1.0;
+
+    timemath::Time x = tp->departure_time;
+
+    /*HohmannTransfer(
+        &GetPlanet(tp->departure_planet)->orbit,
+        &GetPlanet(tp->arrival_planet)->orbit, t0,
+        &x, NULL, NULL, NULL
+    );*/
+
+    double diff_seconds;
+    int counter = 0;
+    do {
+        double dv_0 = TransferPlanSolveWithDeptartureTime(tp, x);
+        double dv_plus = TransferPlanSolveWithDeptartureTime(tp, x + H);
+        double dv_minus = TransferPlanSolveWithDeptartureTime(tp, x - H);
+
+        double deriv = (dv_plus - dv_minus) / (2 * H);
+        double deriv2 = (dv_plus - 2 * dv_0 + dv_minus) / (H*H);
+        
+        //diff_seconds = deriv / deriv2 * 0.1;
+        diff_seconds = deriv * 1000;
+        DebugPrintText("%f, D %f, D2 %f => dt: %f", dv_0, deriv, deriv2, diff_seconds);
+        if (std::abs(diff_seconds) > (t1 - t0).Seconds() / 10.0) {
+            diff_seconds = (t1 - t0).Seconds() / 10.0 * (diff_seconds > 0 ? 1 : -1);
+        }
+        x = x - timemath::Time(diff_seconds);
+    } while (abs(diff_seconds) > 1 && counter++ < 100);
+    if (x.IsInvalid()) {
+        return;
+    }    
+    if (x > t1) x = t1;
+    if (x < t0) x = t0;
+    tp->departure_time = x;
+
+    //double dv_plus = TransferPlanSolveWithDeptartureTime(tp, x + H);
+    //double dv_minus = TransferPlanSolveWithDeptartureTime(tp, x - H);
+    //double deriv = (dv_plus - dv_minus) / (2 * H);
+    //SHOW_F(deriv)
+#else
     timemath::Time xl = t0;
     timemath::Time xr = t1;
     
-    tp_copy.departure_time = xl;
-    TransferPlanSolve(&tp_copy);
-    double yl = tp_copy.tot_dv;
-    
-    tp_copy.departure_time = xr;
-    TransferPlanSolve(&tp_copy);
-    double yr = tp_copy.tot_dv;
+    double yl = TransferPlanSolveWithDeptartureTime(tp, xl);
+    double yr = TransferPlanSolveWithDeptartureTime(tp, xr);
 
     const double CONVERGANCE_DELTA = 1e-10;
     const int MAX_ITER = 100;
-    const double PHI_INV = 0.6180339887;
-    for (int i = 0; yr - yl > CONVERGANCE_DELTA && i < MAX_ITER; i++) {
+    const double PHI_INV = 0.6180339887; // (sqrt(5) - 1) / 2
+    for (int i = 0; /*yr - yl > CONVERGANCE_DELTA &&*/ i < MAX_ITER; i++) {
         if (yl < yr) {
             xr = xl + (PHI_INV) * (xr - xl).Seconds();
-            
-            tp_copy.departure_time = xr;
-            TransferPlanSolve(&tp_copy);
-            yr = tp_copy.tot_dv;
+            yr = TransferPlanSolveWithDeptartureTime(tp, xr);
         } else {
             xl = xl + (1 - PHI_INV) * (xr - xl).Seconds();
-            
-            tp_copy.departure_time = xl;
-            TransferPlanSolve(&tp_copy);
-            yl = tp_copy.tot_dv;
+            yl = TransferPlanSolveWithDeptartureTime(tp, xl);
         }
     }
+
+    double deriv = (yr - yl) / (xr - xl).Seconds();
+    DebugPrintText("l: (%f, %f), r: (%f, %f)", xl, yl, xr, yr);
+
     if (xl.IsInvalid() && xr.IsInvalid()) return;
     if (xl.IsInvalid()) tp->departure_time = yl;
     else if (xr.IsInvalid()) tp->departure_time = yr;
     else tp->departure_time = yl < yr ? xl : xr;
 
+#endif
 }
 
 void TransferPlanSoonest(TransferPlan* tp, double dv_limit) {
@@ -360,7 +403,13 @@ int TransferPlanTests() {
     return 0;
 }
 
- void TransferPlanUI::Make() {
+
+TransferPlanUI::TransferPlanUI() { 
+    Reset();
+    departure_time_automatic = false;
+}
+
+void TransferPlanUI::Reset() {
     plan = NULL;
     ship = GetInvalidId();
     is_dragging_departure    = false;
@@ -368,7 +417,6 @@ int TransferPlanTests() {
     departure_handle_pos     = {0};
     arrival_handle_pos       = {0};
     redraw_queued            = false;
-    departure_time_automatic = true;
     time_bounds[0]           = 0;
 }
 
@@ -376,7 +424,7 @@ void TransferPlanUI::Abort() {
     if (IsIdValid(ship)) {
         GetShip(ship)->CloseEditedTransferPlan();
     }
-    Make();
+    Reset();
 }
 
 void TransferPlanUI::Update() {
@@ -388,7 +436,7 @@ void TransferPlanUI::Update() {
 
     if (IsIdValid(plan->departure_planet) && IsIdValid(plan->arrival_planet) && redraw_queued) {
         if (departure_time_automatic) {
-            TransferPlanSetBestDeparture(plan, time_bounds[0], plan->arrival_time - 1000);
+            TransferPlanSetBestDeparture(plan, time_bounds[0], plan->arrival_time - timemath::Time(60));
         }
         TransferPlanSolve(plan);
         is_valid = plan->num_solutions > 0 && plan->tot_dv <= ship_instance->GetCapableDV();
@@ -410,7 +458,7 @@ void TransferPlanUI::Update() {
 
     if (IsKeyPressed(KEY_ENTER) && is_valid) {
         ship_instance->ConfirmEditedTransferPlan();
-        Make();
+        Reset();
     }
 }
 
@@ -450,7 +498,7 @@ void _DrawTransferOrbit(const TransferPlan* plan, int solution, bool is_secondar
     const Planet* from = GetPlanet(plan->departure_planet);
     const Planet* to = GetPlanet(plan->arrival_planet);
     Color velocity_color = YELLOW;
-    Color orbit_color = Palette::transfer_ui;
+    Color orbit_color = Palette::ship;
     if (is_secondary) {
         velocity_color = ColorTint(velocity_color, GRAY);
         orbit_color = ColorTint(orbit_color, GRAY);
@@ -531,11 +579,13 @@ void TransferPlanUI::Draw(const CoordinateTransform* c_transf) {
     const Planet* from = GetPlanet(plan->departure_planet);
     const Planet* to = GetPlanet(plan->arrival_planet);
 
+
     departure_handle_pos = c_transf->TransformV(from->orbit.GetPosition(plan->departure_time).cartesian);
     arrival_handle_pos = c_transf->TransformV(to->orbit.GetPosition(plan->arrival_time).cartesian);
-
+    
     timemath::Time new_departure_time = _DrawHandle(c_transf, departure_handle_pos, &from->orbit, plan->departure_time, time_bounds[0], &is_dragging_departure);
     timemath::Time new_arrival_time = _DrawHandle(c_transf, arrival_handle_pos, &to->orbit, plan->arrival_time, time_bounds[0], &is_dragging_arrival);
+
     if (time_bounds[0] < new_departure_time && new_departure_time < plan->arrival_time) {
         plan->departure_time = new_departure_time;
         redraw_queued = true;
@@ -564,10 +614,10 @@ void TransferPlanUI::DrawUI() {
     UIContextCreate(
         GetScreenWidth() - 20*16 - 5, y_margin,
         20*16, MinInt(200, GetScreenHeight()) - 2*5 - y_margin, 
-        16, Palette::transfer_ui
+        16, Palette::ship
     );
 
-    UIContextCurrent().Enclose(2, 2, Palette::bg, is_valid ? Palette::transfer_ui : Palette::red);
+    UIContextCurrent().Enclose(2, 2, Palette::bg, is_valid ? Palette::ship : Palette::red);
     
     StringBuilder sb = StringBuilder();
     sb.Add("Departs in ").AddTime(plan->departure_time - time_bounds[0]);
@@ -577,7 +627,7 @@ void TransferPlanUI::DrawUI() {
     UIContextWrite(sb.c_str);
     UIContextFillline(
         fmin(timemath::Time::SecDiff(plan->arrival_time, time_bounds[0]) / timemath::Time::SecDiff(plan->hohmann_arrival_time, time_bounds[0]), 1.0), 
-        Palette::transfer_ui, Palette::bg
+        Palette::ship, Palette::bg
     );
     UIContextPop();  // Inset
     sb.Clear();
@@ -596,7 +646,7 @@ void TransferPlanUI::DrawUI() {
 
     UIContextPushInset(0, 18 * sb.CountLines() + 5);
     UIContextWrite(sb.c_str);
-    UIContextFillline(fmax(0, capacity_ratio), capacity >= 0 ? Palette::transfer_ui : Palette::red, Palette::bg);
+    UIContextFillline(fmax(0, capacity_ratio), capacity >= 0 ? Palette::ship : Palette::red, Palette::bg);
     UIContextPop();  // Inset
 
     int w = UIContextCurrent().width;
@@ -622,7 +672,7 @@ void TransferPlanUI::DrawUI() {
         if(button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
             if (is_valid) {
                 ship_instance->ConfirmEditedTransferPlan();
-                Make();
+                Reset();
             }
         }
         UIContextWrite("Confirm");
@@ -664,6 +714,7 @@ void TransferPlanUI::SetPlan(TransferPlan* pplan, entity_id_t pship, timemath::T
     time_bounds[1] = pmax_time;
     if (IsIdValid(plan->departure_planet) && IsIdValid(plan->arrival_planet)) {
         _TransferPlanInitialize(plan, time_bounds[0]);
+        redraw_queued = true;
     }
 }
 

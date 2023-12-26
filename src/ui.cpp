@@ -34,11 +34,11 @@ void DrawTextConstrained(Font font, const char *text, Vector2 position, float fo
         else
         {
             float x_increment = (float)font.recs[index].width*scaleFactor + spacing;
-            Vector2 char_pos = (Vector2){ position.x + textOffsetX, position.y + textOffsetY };
+            Vector2 char_pos = { position.x + textOffsetX, position.y + textOffsetY };
 
             // This part is custom
 
-            Vector2 char_pos2 = (Vector2){ position.x + textOffsetX + x_increment, position.y + textOffsetY + fontSize };
+            Vector2 char_pos2 = { position.x + textOffsetX + x_increment, position.y + textOffsetY + fontSize };
             if (
                 (codepoint != ' ') && (codepoint != '\t')
                 && CheckCollisionPointRec(char_pos, render_rect)
@@ -55,7 +55,7 @@ void DrawTextConstrained(Font font, const char *text, Vector2 position, float fo
     }
 }
 
-void DrawTextAligned(const char* text, Vector2 pos, TextAlignment alignment, Color c) {
+Rectangle DrawTextAligned(const char* text, Vector2 pos, TextAlignment alignment, Color c) {
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, 16, 1);
     if (alignment & TEXT_ALIGNMENT_HCENTER) {
         pos.x -= size.x / 2;
@@ -73,12 +73,12 @@ void DrawTextAligned(const char* text, Vector2 pos, TextAlignment alignment, Col
     }
     //Vector2 bottom_left = Vector2Subtract(pos, Vector2Scale(size, 0.5));
     DrawTextEx(GetCustomDefaultFont(), text, pos, 16, 1, c);
+    return { pos.x, pos.y, size.x, size.y };
 }
 
-ButtonStateFlags _GetButtonState(bool is_in_area, bool was_in_area) {
+ButtonStateFlags GetButtonState(bool is_in_area, bool was_in_area) {
     ButtonStateFlags res = BUTTON_STATE_FLAG_NONE;
     if (is_in_area) {
-        SetMouseCursor(MOUSE_CURSOR_CROSSHAIR);
         res |= BUTTON_STATE_FLAG_HOVER;
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))     res |= BUTTON_STATE_FLAG_PRESSED;
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))  res |= BUTTON_STATE_FLAG_JUST_PRESSED;
@@ -218,7 +218,7 @@ ButtonStateFlags TextBox::WriteButton(const char* text, int inset) {
         pos.y += inset;
     }
     bool is_in_area = CheckCollisionPointRec(GetMousePosition(), {pos.x, pos.y, size.x, size.y});
-    ButtonStateFlags res = _GetButtonState(
+    ButtonStateFlags res = GetButtonState(
         is_in_area,
         CheckCollisionPointRec(Vector2Subtract(GetMousePosition(), GetMouseDelta()), {pos.x, pos.y, size.x, size.y})
     );
@@ -230,7 +230,7 @@ ButtonStateFlags TextBox::WriteButton(const char* text, int inset) {
 }
 
 ButtonStateFlags TextBox::AsButton() const {
-    return _GetButtonState(
+    return GetButtonState(
         CheckCollisionPointRec(GetMousePosition(), {(float)text_start_x, (float)text_start_y, (float)width, (float)height}),
         CheckCollisionPointRec(Vector2Subtract(GetMousePosition(), GetMouseDelta()), {(float)text_start_x, (float)text_start_y, (float)width, (float)height})
     );
@@ -447,8 +447,9 @@ void UIInit() {
 }
 
 void UIStart() {
-    SetMouseCursor(MOUSE_CURSOR_DEFAULT);
-    mouseover_text[0] = '\x00';
+    SetMouseCursor(MOUSE_CURSOR_CROSSHAIR);
+    //SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+    mouseover_text[0] = '\0';
 }
 
 void UIEnd() {
@@ -477,7 +478,7 @@ ButtonStateFlags DrawTriangleButton(Vector2 point, Vector2 base, double width, C
     } else {
         DrawTriangleLines(side_1, point, side_2, Palette::blue);
     }
-    return _GetButtonState(
+    return GetButtonState(
         is_in_area,
         CheckCollisionPointTriangle(Vector2Subtract(GetMousePosition(), GetMouseDelta()), side_1, point, side_2)
     );
@@ -490,7 +491,7 @@ ButtonStateFlags DrawCircleButton(Vector2 midpoint, double radius, Color color) 
     } else {
         DrawCircleLines(midpoint.x, midpoint.y, radius, Palette::blue);
     }
-    return _GetButtonState(
+    return GetButtonState(
         is_in_area,
         CheckCollisionPointCircle(Vector2Subtract(GetMousePosition(), GetMouseDelta()), midpoint, radius)
     );

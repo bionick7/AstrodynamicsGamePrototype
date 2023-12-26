@@ -92,6 +92,7 @@ gov. RP \
 Scarcity of quests
 lots of quests => pick quests to optimize trajectory
 few quests => get inventive with quests
+lots of quests w. few exceptional ones
 
 Price of fuel
 cheap => encourage frequent use of ships
@@ -135,6 +136,7 @@ Loop B (main)
 Ship modules implemented.
 The logistics part works, but feels pretty stale on it's own.
 The game lacks conflict.
+
 It's time to re-explore combat as a mechanic, using modules.
 Keep it simple. This is the plan. Every ship has:
 - kinetic offensive (speed advantage)
@@ -149,5 +151,34 @@ I like the elegance of having ships replace buildings for economy stuff.
 
 ## Status 15 Dec 23
 Game is approaching an RPG more and more and I'm liking it. (quests, discretization, upgrades, ...)
+
 Focussing on the UX for transfers is still a good idea. Streamline it as much as possible
+
 Maybe ensure that the mission is fair not only in dv, but also time
+
+## Status 26 Dec 23
+The main problem with this concept is that a good game can be played intuitively, while this
+concept is inherently unintuitive. Especially focusing on chaining complex mauenvers together.
+
+What when we push discretization all the way?
+What when we only allow for hohmann/fastest transfers?
+nvm, there is no point in not giving the option
+
+Rather make it clear that the optimization is optional.
+
+What drives the conflict/challenge?
+challenge was supposed to come from
+- chaining mauneuvers as efficiently as possible
+- anticipating new problems and placing ships in the right places
+
+For 1st, it is crucial to:
+- Communicate efficiently what kind of maneuvers are possible (UX)
+- Give incentive to take a faster/more efficient route (Quest manager)
+For 2nd, it is crucial to:
+- Communicate what planets are relevant in which ways (UX/Writing)
+
+what about planning chains => get a to get b to get c to ...
+i.e. crafting? look at Dredge e.g.
+
+=> Important quests are unlocked through dialogue & haggeling, that become available every X days
+Good idea to start implementing wren for story/quest stuff.

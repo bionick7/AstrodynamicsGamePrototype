@@ -14,7 +14,9 @@ namespace Palette {
     extern Color interactable_main;
     extern Color interactable_dark;
     extern Color interactable_alt;
-    extern Color transfer_ui;
+    extern Color ship;
+    extern Color ship_dark;
+    extern Color ship_alt;
 }
 
 #define SCREEN_WIDTH 1600

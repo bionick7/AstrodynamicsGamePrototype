@@ -71,7 +71,7 @@ void Ship::_OnNewPlanClicked() {
         min_time = prepared_plans[plan_edit_index - 1].arrival_time;
     }
 
-    tp_ui.Make();
+    tp_ui.Reset();
     tp_ui.SetPlan(&prepared_plans[plan_edit_index], id, min_time, 1e20);
     prepared_plans_count++;
 }

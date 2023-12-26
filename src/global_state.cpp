@@ -70,7 +70,7 @@ void _PauseMenu() {
 
 void GlobalState::Make(timemath::Time p_time) {
     calendar.Make(p_time);
-    active_transfer_plan.Make();
+    active_transfer_plan.Reset();
     c_transf.Make();
     focused_planet = GetInvalidId();
     focused_ship = GetInvalidId();

@@ -180,7 +180,7 @@ void Planet::Draw(const CoordinateTransform* c_transf) {
 
     if (mouse_hover) {
         // Hover
-        DrawCircleLines(screen_x, screen_y, 20, Palette::transfer_ui);
+        DrawCircleLines(screen_x, screen_y, 20, Palette::ship);
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             _OnClicked();
         }

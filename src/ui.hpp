@@ -13,7 +13,7 @@ const TextAlignment TEXT_ALIGNMENT_TOP       = 0x00;
 const TextAlignment TEXT_ALIGNMENT_VCENTER   = 0x04;
 const TextAlignment TEXT_ALIGNMENT_BOTTOM    = 0x08;
 
-void DrawTextAligned(const char* text, Vector2 pos, TextAlignment alignment, Color c);
+Rectangle DrawTextAligned(const char* text, Vector2 pos, TextAlignment alignment, Color c);
 
 typedef uint8_t ButtonStateFlags;
 const ButtonStateFlags BUTTON_STATE_FLAG_NONE            = 0x00;
@@ -24,6 +24,8 @@ const ButtonStateFlags BUTTON_STATE_FLAG_JUST_PRESSED    = 0x08;
 const ButtonStateFlags BUTTON_STATE_FLAG_JUST_UNPRESSED  = 0x10;
 const ButtonStateFlags BUTTON_STATE_FLAG_JUST_HOVER_IN   = 0x20;
 const ButtonStateFlags BUTTON_STATE_FLAG_JUST_HOVER_OUT  = 0x40;
+
+ButtonStateFlags GetButtonState(bool is_in_area, bool was_in_area);
 
 struct TextBox {
     // Rect

@@ -11,4 +11,6 @@ Color Palette::ui_alt = ColorAlphaBlend(Palette::bg, Palette::ui_main, GetColor(
 Color Palette::interactable_main= Palette::blue;
 Color Palette::interactable_dark = ColorAlphaBlend(Palette::bg, Palette::interactable_main, GetColor(0x50505050u));
 Color Palette::interactable_alt = ColorAlphaBlend(Palette::bg, Palette::interactable_main, GetColor(0x80808080u));
-Color Palette::transfer_ui = Palette::green;
+Color Palette::ship = Palette::green;
+Color Palette::ship_dark = ColorAlphaBlend(Palette::bg, Palette::ship, GetColor(0x50505050u));
+Color Palette::ship_alt = ColorAlphaBlend(Palette::bg, Palette::ship, GetColor(0x80808080u));

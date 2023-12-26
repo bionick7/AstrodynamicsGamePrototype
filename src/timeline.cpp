@@ -33,6 +33,25 @@ timemath::Time GetEndTime(const TimeLineCoordinateData* tcd) {
     return ref_time + timemath::Time(((float)tcd->h - 24.f) / (float) pixels_per_day_vscale * 86400);
 }
 
+void _DrawHohmanTFs(const TimeLineCoordinateData* tcd, entity_id_t from, entity_id_t to) {
+    Orbit from_orbit = GetPlanet(from)->orbit;
+    Orbit to_orbit = GetPlanet(to)->orbit;
+    timemath::Time t0 = GlobalGetNow();
+    timemath::Time t1 = t0 + timemath::Time::Day() * (tcd->h / pixels_per_day_vscale);
+    //while (t0 < t1) {
+    if (true) {
+        timemath::Time departure_t;
+        timemath::Time arrival_t;
+        HohmannTransfer(&from_orbit, &to_orbit, t0, &departure_t, &arrival_t, NULL, NULL);
+        DrawLine(
+            GetPlanetCoord(tcd, from), GetTimeCoord(tcd, departure_t),
+            GetPlanetCoord(tcd, to), GetTimeCoord(tcd, arrival_t),
+            Palette::ship_alt
+        );
+        t0 = departure_t + 1;
+    }
+}
+
 void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
     double min_sma = INFINITY, max_sma = 0;
     for (int planet_index = 0; planet_index < planets->planet_count; planet_index++) {
@@ -47,6 +66,7 @@ void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
     }
 
     int previous_x = 40;
+    entity_id_t mouse_hover_planet = GetInvalidId();
     for (int planet_index = 0; planet_index < planets->planet_count; planet_index++) {
         const Planet* planet = &planets->planet_array[planet_index];
         double ratio = log(planet->orbit.sma/min_sma) / log(max_sma/min_sma);
@@ -55,7 +75,10 @@ void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
             x = previous_x + min_planet_spacing;
         }
         //DebugPrintText("%s: sma = %f, x = %d", planet->name, planet->orbit.sma, x);
-        DrawTextAligned(planet->name, {(float)x, (float)tcd->y0 + 18}, TEXT_ALIGNMENT_HCENTER | TEXT_ALIGNMENT_BOTTOM, Palette::ui_main);
+        Rectangle rect = DrawTextAligned(planet->name, {(float)x, (float)tcd->y0 + 18}, TEXT_ALIGNMENT_HCENTER | TEXT_ALIGNMENT_BOTTOM, Palette::ui_main);
+        if(CheckCollisionPointRec(GetMousePosition(), rect)) {
+            mouse_hover_planet = planet_index;
+        }
         DrawLine(x, tcd->y0 + 24, x, tcd->y0 + tcd->h, Palette::ui_main);
         previous_x = x;
         tcd->planet_coords[planet_index] = x;
@@ -80,6 +103,13 @@ void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
             );
         }
         DrawLine(tcd->x0 + 40, y, tcd->x0 + tcd->w - 10, y, Palette::ui_dark);
+    }
+
+    if (IsIdValid(mouse_hover_planet)) {
+        for (int planet_index = 0; planet_index < planets->planet_count; planet_index++) {
+            if (planet_index != mouse_hover_planet)
+                _DrawHohmanTFs(tcd, mouse_hover_planet, planet_index);
+        }
     }
 }
 
@@ -196,7 +226,7 @@ int _Assign_And_Ret(int* var, int value) {
 void _ShipDrawPathLine(const TimeLineCoordinateData* tcd, int* x_pos, int* y_pos, entity_id_t to_planet, timemath::Time to_time, int x_offset) {
     int new_x = GetPlanetCoord(tcd, to_planet) + x_offset;
     int new_y = GetTimeCoord(tcd, to_time);
-    DrawLine(*x_pos, *y_pos, new_x, new_y, Palette::transfer_ui);
+    DrawLine(*x_pos, *y_pos, new_x, new_y, Palette::ship);
     *x_pos = new_x;
     *y_pos = new_y;
 }
