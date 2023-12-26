@@ -22,6 +22,14 @@ Time Time::operator-(Time other) const {
     return Time(__t - other.__t);
 }
 
+Time Time::operator*(Time other) const {
+    return Time(__t * other.__t);
+}
+
+Time Time::operator/(Time other) const {
+    return Time(__t / other.__t);
+}
+
 bool Time::operator<(Time other) const {
     return __t < other.__t;
 }

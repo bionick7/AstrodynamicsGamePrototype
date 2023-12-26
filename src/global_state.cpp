@@ -287,7 +287,7 @@ void GlobalState::DrawState() {
             }
         }
         else if (planet->mouse_hover || planet->id == focused_planet) {
-            planet->DrawUI(&c_transf, true, EMPTY_TRANSFER, -1);
+            planet->DrawUI(&c_transf, true, ResourceTransfer(), -1);
         }
     }
     BuildingConstructionUI();

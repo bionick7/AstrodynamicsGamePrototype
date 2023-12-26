@@ -13,6 +13,8 @@ namespace timemath {
         Time operator+(Time other) const;
         Time operator+(double other) const;
         Time operator-(Time other) const;
+        Time operator*(Time other) const;
+        Time operator/(Time other) const;
         Time PosMod(Time mod) const;
         bool operator<(Time other) const;
         bool operator>(Time other) const;

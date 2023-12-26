@@ -34,7 +34,7 @@ PlanetaryEconomy::PlanetaryEconomy(){
 ResourceTransfer PlanetaryEconomy::DrawResource(ResourceTransfer request) {
     // Returns how much of the resource the planet was able to give
     if (request.resource_id < 0 || request.resource_id >= RESOURCE_MAX) {
-        return EMPTY_TRANSFER;
+        return ResourceTransfer();
     }
     
     resource_count_t transferred_resources = ClampInt(request.quantity, 0, resource_stock[request.resource_id]);
@@ -47,7 +47,7 @@ ResourceTransfer PlanetaryEconomy::DrawResource(ResourceTransfer request) {
 ResourceTransfer PlanetaryEconomy::GiveResource(ResourceTransfer request) {
     // Returns how much of the resource the planet was able to take
     if (request.resource_id < 0 || request.resource_id >= RESOURCE_MAX) {
-        return EMPTY_TRANSFER;
+        return ResourceTransfer();
     }
 
     resource_count_t transferred_resources = ClampInt(request.quantity, 0, resource_capacity[request.resource_id] - resource_stock[request.resource_id]);
@@ -66,7 +66,7 @@ resource_count_t PlanetaryEconomy::GetForPrice(ResourceType resource, cost_t pri
 }
 
 void PlanetaryEconomy::Update() {
-    if (global_resource_data[0].name == 0) {
+    if (*global_resource_data[0].name == '\n') {
         FAIL("Resources uninititalized")
     }
     double delta_T = GetCalendar()->GetFrameElapsedGameTime().Seconds();

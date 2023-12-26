@@ -59,6 +59,12 @@ double _LambertDerivative(double x, double K, int solution) {
 double _SolveLambertBetweenBounds(double y, double K, double xl, double xr, int solution) {
     double yl = _Lambert(xl, K, solution) - y;
     double yr = _Lambert(xr, K, solution) - y;
+    if (abs(yl) < 1e-6) {
+        return xl;
+    }
+    if (abs(yr) < 1e-6) {
+        return xr;
+    }
     if (yl*yr > 0.0) {FAIL("yl = %f and yr = %f have the same sign (y = %f, xl = %f, xr = %f, K = %f, sol = %d\n)", yl, yr, y, xl, xr, K, solution)}
     //ASSERT(yl*yr < 0.0)
     int counter = 0;
@@ -73,6 +79,7 @@ double _SolveLambertBetweenBounds(double y, double K, double xl, double xr, int 
     
     double test_y = _Lambert(xm, K, solution);
     ASSERT_ALOMST_EQUAL_FLOAT(test_y, y)
+    ASSERT(!isnan(xm))
     return xm;
 }
 
@@ -95,6 +102,7 @@ double _SolveLambertWithNewton(double y, double K, int solution) {
     
     double test_y = _Lambert(xs, K, solution);
     ASSERT_ALOMST_EQUAL_FLOAT(test_y, y)
+    ASSERT(!isnan(xs))
     return xs;
 }
 
@@ -103,21 +111,18 @@ TransferPlan::TransferPlan() {
     arrival_planet = GetInvalidId();
     num_solutions = 0;
     primary_solution = 0;
-    resource_transfer = EMPTY_TRANSFER;
+    resource_transfer = ResourceTransfer();
 }
 
-void TransferPlanSolve(TransferPlan* tp) {
-    ASSERT(IsIdValid(tp->departure_planet))
-    ASSERT(IsIdValid(tp->arrival_planet))
-    const Planet* from = GetPlanet(tp->departure_planet);
-    const Planet* to = GetPlanet(tp->arrival_planet);
-    ASSERT_ALOMST_EQUAL_FLOAT(from->orbit.mu, to->orbit.mu)
-    double mu = from->orbit.mu;
+void TransferPlanSolveInputImpl(TransferPlan* tp, const Orbit* from_orbit, const Orbit* to_orbit) {
+    ASSERT_ALOMST_EQUAL_FLOAT(from_orbit->mu, to_orbit->mu)
+    ASSERT(tp->arrival_time > tp->departure_time)
+    double mu = from_orbit->mu;
 
     timemath::Time t1 = tp->departure_time;
     timemath::Time t2 = tp->arrival_time;
-    OrbitPos pos1 = from->orbit.GetPosition(t1);
-    OrbitPos pos2 = to->orbit.GetPosition(t2);
+    OrbitPos pos1 = from_orbit->GetPosition(t1);
+    OrbitPos pos2 = to_orbit->GetPosition(t2);
     
     double c = Vector2Distance(pos1.cartesian, pos2.cartesian);
     double r_sum = pos1.r + pos2.r;
@@ -151,23 +156,6 @@ void TransferPlanSolve(TransferPlan* tp) {
     // Verify (for ellipses)
 
     for (int i=0; i < tp->num_solutions; i++) {
-        if (!is_ellipse[i]) continue;
-        double α = 2 * asin(sqrt(a_min / aa[i]));
-        double β = 2 * asin(K * sqrt(a_min / aa[i]));
-
-        int lambert_case = (first_solution[i] ? 0 : 1) + i*2;
-        double t_f_annomaly;
-        switch (lambert_case) {
-        case 0: t_f_annomaly = (α - sin(α) - β + sin(β)); break;
-        case 1: t_f_annomaly = (2*PI - (α - sin(α)) - β + sin(β)); break;
-        case 2: t_f_annomaly = (α - sin(α) + β - sin(β)); break;
-        case 3: t_f_annomaly = (2*PI - (α - sin(α)) + β - sin(β)); break;
-        }
-        double t_f = sqrt(aa[i]*aa[i]*aa[i] / mu) * t_f_annomaly;
-        ASSERT_ALOMST_EQUAL_FLOAT(t_f, timemath::Time::SecDiff(t2, t1))
-    }
-
-    for (int i=0; i < tp->num_solutions; i++) {
         //double r1_r2_outer_prod = Determinant(pos1.cartesian, pos2.cartesian);
         // Direct orbit is retrograde
         bool is_prograde;
@@ -185,15 +173,15 @@ void TransferPlanSolve(TransferPlan* tp) {
 
         //SHOW_V2(OrbitGetVelocity(&tp->transfer_orbit[i], pos1_tf))
         //SHOW_V2(OrbitGetVelocity(&tp->from->orbit, pos1))
-        tp->departure_dvs[i] = Vector2Subtract(tp->transfer_orbit[i].GetVelocity(pos1_tf), from->orbit.GetVelocity(pos1));
-        tp->arrival_dvs[i] = Vector2Subtract(to->orbit.GetVelocity(pos2), tp->transfer_orbit[i].GetVelocity(pos2_tf));
+        tp->departure_dvs[i] = Vector2Subtract(tp->transfer_orbit[i].GetVelocity(pos1_tf), from_orbit->GetVelocity(pos1));
+        tp->arrival_dvs[i] = Vector2Subtract(to_orbit->GetVelocity(pos2), tp->transfer_orbit[i].GetVelocity(pos2_tf));
 
-        tp->dv1[i] = from->GetDVFromExcessVelocity(tp->departure_dvs[i]);
-        tp->dv2[i] = to->GetDVFromExcessVelocity(tp->arrival_dvs[i]);
         //ASSERT_ALOMST_EQUAL_FLOAT(pos1_.r, pos1.r)
         //ASSERT_ALOMST_EQUAL_FLOAT(pos2_.r, pos2.r)
     }
+}
 
+void TransferPlanRankSolutions(TransferPlan* tp) {
     if (tp->num_solutions == 1) {
         tp->tot_dv = tp->dv1[0] + tp->dv2[0];
         tp->tot_dv_sec = 0;
@@ -208,6 +196,102 @@ void TransferPlanSolve(TransferPlan* tp) {
             std::swap(tp->tot_dv, tp->tot_dv_sec);
         }
     }
+}
+
+void TransferPlanSolve(TransferPlan* tp) {
+    ASSERT(IsIdValid(tp->departure_planet))
+    ASSERT(IsIdValid(tp->arrival_planet))
+    const Planet* from = GetPlanet(tp->departure_planet);
+    const Planet* to = GetPlanet(tp->arrival_planet);
+
+    TransferPlanSolveInputImpl(tp, &from->orbit, &to->orbit);
+    
+    for (int i=0; i < tp->num_solutions; i++) {
+        tp->dv1[i] = from->GetDVFromExcessVelocity(tp->departure_dvs[i]);
+        tp->dv2[i] = to->GetDVFromExcessVelocity(tp->arrival_dvs[i]);
+    }
+
+    TransferPlanRankSolutions(tp);
+}
+
+void TransferPlanSetBestDeparture(TransferPlan* tp, timemath::Time t0, timemath::Time t1) {
+    // TODO
+    // simple optimization of dv vs departure time
+
+    TransferPlan tp_copy = TransferPlan(*tp);
+#if false
+    const double H = 1;
+
+    timemath::Time x = tp->departure_time;
+    double diff_seconds;
+
+    do {
+        tp_copy.departure_time = x;
+        TransferPlanSolve(&tp_copy);
+        double dv_0 = tp_copy.tot_dv;
+
+        tp_copy.departure_time = x + H;
+        TransferPlanSolve(&tp_copy);
+        double dv_plus = tp_copy.tot_dv;
+
+        tp_copy.departure_time = x - H;
+        TransferPlanSolve(&tp_copy);
+        double dv_minus = tp_copy.tot_dv;
+
+        double deriv = (dv_plus - dv_minus) / (2 * H);
+        double deriv2 = (dv_plus - 2 * dv_0 + dv_minus) / H*H;
+        
+        DebugPrintText("%f, D %f, D2 %f", dv_0, deriv, deriv2);
+        diff_seconds = deriv / deriv2 * 0.1;
+        x = x - timemath::Time(diff_seconds);
+    } while (abs(diff_seconds) > 1);
+    if (x.IsInvalid()) {
+        return;
+    }    
+    if (x > t1) x = t1;
+    if (x < t0) x = t0;
+    tp->departure_time = x;
+#else
+    timemath::Time xl = t0;
+    timemath::Time xr = t1;
+    
+    tp_copy.departure_time = xl;
+    TransferPlanSolve(&tp_copy);
+    double yl = tp_copy.tot_dv;
+    
+    tp_copy.departure_time = xr;
+    TransferPlanSolve(&tp_copy);
+    double yr = tp_copy.tot_dv;
+
+    const double CONVERGANCE_DELTA = 1e-10;
+    const int MAX_ITER = 100;
+    const double PHI_INV = 0.6180339887;
+    for (int i = 0; yr - yl > CONVERGANCE_DELTA && i < MAX_ITER; i++) {
+        if (yl < yr) {
+            xr = xl + (PHI_INV) * (xr - xl).Seconds();
+            
+            tp_copy.departure_time = xr;
+            TransferPlanSolve(&tp_copy);
+            yr = tp_copy.tot_dv;
+        } else {
+            xl = xl + (1 - PHI_INV) * (xr - xl).Seconds();
+            
+            tp_copy.departure_time = xl;
+            TransferPlanSolve(&tp_copy);
+            yl = tp_copy.tot_dv;
+        }
+    }
+    if (xl.IsInvalid() && xr.IsInvalid()) return;
+    if (xl.IsInvalid()) tp->departure_time = yl;
+    else if (xr.IsInvalid()) tp->departure_time = yr;
+    else tp->departure_time = yl < yr ? xl : xr;
+
+#endif
+}
+
+void TransferPlanSoonest(TransferPlan* tp, double dv_limit) {
+    // TODO
+    // least arrival time in departure_time x arrival_time where (dv = dvlimit)
 }
 
 void TransferPlan::Serialize(DataNode* data) const {
@@ -241,16 +325,8 @@ void TransferPlan::Deserialize(const DataNode* data) {
     TransferPlanSolve(this);
 }
 
-
-void TransferPlanSetBestDeparture(TransferPlan* tp) {
-    // TODO
-}
-
-void TransferPlanSoonest(TransferPlan* tp, double dv_limit) {
-    // TODO
-}
-
 int TransferPlanTests() {
+    // Lambert derivatives
     const double epsilon = 1e-5;
     for (double K = 0.0; K < 1.0; K += 0.2) 
         for (double x = -5.0; x < -0.1; x += 0.1) 
@@ -263,18 +339,71 @@ int TransferPlanTests() {
             return 1;
         }
     }
+
+    // build profile
+#if true
+    TransferPlan tp;
+    tp.departure_planet = 1;  // Encelladus
+    tp.arrival_planet = 2;    // Thetys
+
+    Orbit orbit1 = Orbit(
+       237.905e+6,
+       0, 0, G * 568.336e+24,
+       0, true
+    );
+    Orbit orbit2 = Orbit(
+       294.619e+6,
+       0, 0, G * 568.336e+24,
+       0, true
+    );
+
+    timemath::Time start = 0;
+    timemath::Time opt_departure = 0;
+    timemath::Time opt_arrival = 0;
+    double best_dv1 = 0;
+    double best_dv2 = 0;
+    HohmannTransfer(&orbit1, &orbit2, start, &opt_departure, &opt_arrival, &best_dv1, &best_dv2);
+    FILE* f = fopen("dev_output/encelladus_thetys_landscape.csv", "w");
+    fprintf(f, "departure, arrival, dv\n");
+    for (tp.departure_time = start; tp.departure_time < opt_departure + 1; tp.departure_time = tp.departure_time + (opt_departure - start) / timemath::Time(30.0)) {
+        for (tp.arrival_time = tp.departure_time; tp.arrival_time < opt_arrival + 1; tp.arrival_time = tp.arrival_time + (opt_arrival - start) / timemath::Time(30.0)) {
+            TransferPlanSolveInputImpl(&tp, &orbit1, &orbit2);
+            for (int i=0; i < tp.num_solutions; i++) {
+                tp.dv1[i] = Vector2Length(tp.departure_dvs[i]);
+                tp.dv2[i] = Vector2Length(tp.arrival_dvs[i]);
+            }
+            TransferPlanRankSolutions(&tp);
+
+            fprintf(f, "%f, %f, %f\n", 
+                tp.departure_time.Seconds(), 
+                tp.arrival_time.Seconds(),
+                tp.tot_dv
+            );
+        }
+    }
+
+    fprintf(f, "%f, %f, %f\n", 
+        opt_departure, 
+        opt_arrival,
+        best_dv1 + best_dv2
+    );
+
+    fclose(f);
+
+#endif
     return 0;
 }
 
  void TransferPlanUI::Make() {
     plan = NULL;
     ship = GetInvalidId();
-    is_dragging_departure = false;
-    is_dragging_arrival   = false;
-    departure_handle_pos  = {0};
-    arrival_handle_pos    = {0};
-    redraw_queued         = false;
-    time_bounds[0]        = 0;
+    is_dragging_departure    = false;
+    is_dragging_arrival      = false;
+    departure_handle_pos     = {0};
+    arrival_handle_pos       = {0};
+    redraw_queued            = false;
+    departure_time_automatic = true;
+    time_bounds[0]           = 0;
 }
 
 void TransferPlanUI::Abort() {
@@ -293,7 +422,7 @@ void TransferPlanUI::Update() {
 
     if (IsIdValid(plan->departure_planet) && IsIdValid(plan->arrival_planet) && redraw_queued) {
         if (departure_time_automatic) {
-            TransferPlanSetBestDeparture(plan);
+            TransferPlanSetBestDeparture(plan, time_bounds[0], plan->arrival_time - 1000);
         }
         TransferPlanSolve(plan);
         is_valid = plan->num_solutions > 0 && plan->tot_dv <= ship_instance->GetCapableDV();

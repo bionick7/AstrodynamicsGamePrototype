@@ -62,8 +62,6 @@ struct ResourceTransfer {
     ResourceTransfer Inverted();
 };
 
-#define EMPTY_TRANSFER (ResourceTransfer) {RESOURCE_NONE, 0}
-
 #define RESOURCE_NAME_MAX_SIZE 30
 #define RESOURCE_DESCRIPTION_MAX_SIZE 1000
 #define PRICE_TREND_SIZE 31
