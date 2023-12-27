@@ -7,6 +7,8 @@
 #include "datanode.hpp"
 #include "coordinate_transform.hpp"
 #include "quests.hpp"
+#include "audio_server.hpp"
+#include "wren_interface.hpp"
 
 enum AgentType {
     TYPE_NONE,
@@ -41,6 +43,10 @@ struct GlobalState {
     Ships ships;
     Planets planets;
 
+    AudioServer audio_server;
+    WrenInterface wren_interface;
+    Font default_font;
+    
     entity_id_t focused_planet;
     entity_id_t focused_ship;
 
@@ -69,5 +75,6 @@ struct GlobalState {
 
 GlobalState* GlobalGetState();
 timemath::Time GlobalGetNow();
+AudioServer* GetAudioServer();
 
 #endif // GLOBAL_STATE_H

@@ -4,7 +4,6 @@
 #include "utils.hpp"
 #include "constants.hpp"
 
-
 Planet::Planet(const char* p_name, double p_mu, double p_radius) {
     strcpy(name, p_name);
     mu = p_mu;

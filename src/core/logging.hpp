@@ -39,16 +39,19 @@
 #define ASSERT_EQUAL_INT(v1, v2) if (v1 != v2) { ERROR("Assertion failed: %s (%d)  != %s (%d)", #v1, v1, #v2, v2); }
 #define ASSERT_ALOMST_EQUAL_FLOAT(v1, v2) if (fabs(v1 - v2) > v1 * 1e-5) { ERROR("Assertion failed: %s (%f) != %s (%f)", #v1, v1, #v2, v2); }
 
+#endif  // LOGGING_DISABLE
+
+// Wren output shall exist even in release versions
 enum LogType{
     LOGTYPE_INFO,
     LOGTYPE_WARNING,
     LOGTYPE_ERROR,
     LOGTYPE_PLAYER,
     LOGTYPE_USERERROR,
+    LOGTYPE_WRENINFO,
+    LOGTYPE_WRENERROR,
 };
 
 void LogImpl(const char* file, int line, LogType level, const char* format, ...);
-
-#endif  // LOGGING_DISABLE
 
 #endif  // LOGGING_H

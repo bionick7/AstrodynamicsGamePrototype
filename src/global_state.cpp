@@ -78,6 +78,9 @@ void GlobalState::Make(timemath::Time p_time) {
 }
 
 void GlobalState::LoadData() {
+    wren_interface.MakeVM();
+    wren_interface.LoadQuests();
+
     #define NUM 6
     const char* loading_paths[NUM] = {
         "resources/data/buildings.yaml",
@@ -398,4 +401,8 @@ void GlobalState::Deserialize(const DataNode* data) {
     } else {
         quest_manager.Make();
     }
+}
+
+AudioServer* GetAudioServer() {
+    return &global_state.audio_server;
 }

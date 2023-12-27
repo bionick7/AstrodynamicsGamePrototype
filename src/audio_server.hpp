@@ -23,7 +23,6 @@ struct AudioServer {
     Sound sound_array[SFX_MAX];
 };
 
-AudioServer* GetAudioServer();
 void PlaySFX(SFX_ID id);
 
 #endif  // AUDIO_SERVER_H

@@ -1,7 +1,6 @@
 #include "audio_server.hpp"
+#include "global_state.hpp"
 #include "logging.hpp"
-
-AudioServer audio_server;
 
 int AudioServer::LoadSFX(const char* directory_name) {
     sound_array[SFX_CLICK_BUTTON] = LoadSound("resources/sound/SFX/Click_Standard_00.wav");
@@ -29,8 +28,4 @@ void AudioServer::PlaySFX(SFX_ID id) {
     PlaySound(sound_array[id]);
 }
 
-AudioServer* GetAudioServer() {
-    return &audio_server;
-}
-
-void PlaySFX(SFX_ID id) { return audio_server.PlaySFX(id); }
+void PlaySFX(SFX_ID id) { return GetAudioServer()->PlaySFX(id); }

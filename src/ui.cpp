@@ -2,10 +2,9 @@
 #include "logging.hpp"
 #include "constants.hpp"
 #include "audio_server.hpp"
+#include "global_state.hpp"
 
 #include <stack>
-
-Font default_font;
 
 // Copy of raylib's DrawTextEx(), but will not draw over a certain rectangle
 void DrawTextConstrained(Font font, const char *text, Vector2 position, float fontSize, float spacing, Color tint, Rectangle render_rect) {
@@ -442,7 +441,7 @@ void UISetMouseHint(const char* text) {
 }
 
 void UIInit() {
-    default_font = LoadFontEx("resources/fonts/OCRAEXT.TTF", 16, NULL, 256);
+    GlobalGetState()->default_font = LoadFontEx("resources/fonts/OCRAEXT.TTF", 16, NULL, 256);
     //default_font = LoadFontEx("resources/fonts/GOTHIC.TTF", 16, NULL, 256);
 }
 
@@ -464,7 +463,7 @@ void UIEnd() {
 }
 
 Font GetCustomDefaultFont() {
-    return default_font;
+    return GlobalGetState()->default_font;
 }
 
 ButtonStateFlags DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color) {

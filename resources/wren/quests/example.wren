@@ -1,5 +1,4 @@
-import "app_structure" for AppStructure
-import "quest_base" for Quest
+import "foreign/quest_base" for Quest
 
 // Basic idea
 
@@ -15,28 +14,6 @@ import "quest_base" for Quest
 //   on loose: loose reputation
 //   on win: gain reputation + gain access to other quest
 
-class Quest {
-    foreign static require_transport()
-    foreign static wait_seconds()
-    foreign static is_task_possible(task)
-    foreign static invalid_task
-    foreign static pay_money(ammount)
-    foreign static pay_item(kind)
-    foreign static pay_reputation(ammount)
-    
-    static ensure_possible(fn) {
-        var res = fn()
-        var counter = 0
-        while (!is_quest_possible(quest)) {
-            if (counter > 1000) {
-                return invalid_task
-            }
-            res = fn.call()
-        }
-        return res
-    }
-}
-
 class ExampleQuest is Quest {
 	static id { "example" }
     static challenge_level { 1 }
@@ -44,17 +21,17 @@ class ExampleQuest is Quest {
     static get_random_stuff_task() {
         var departure_planet = rand.int(0, 7)
         var arrival_planet = rand.int(0, 7)
-        var departure_time = ???
-        var arrival_time = ???
-        quest = require_transport(1000, departure_planet, arrival_planet, -1, -1)
+        var departure_time = -1
+        var arrival_time = -1
+        quest = require_transport(1000, departure_planet, arrival_planet, departure_time, arrival_planet)
     }
     
     static get_random_glory_task() {
         var departure_planet = rand.int(0, 7)
         var arrival_planet = rand.int(0, 7)
-        var departure_time = ???
-        var arrival_time = ???
-        quest = require_transport(500, departure_planet, arrival_planet, -1, -1)
+        var departure_time = -1
+        var arrival_time = -1
+        quest = require_transport(500, departure_planet, arrival_planet, departure_planet, arrival_planet)
     }
 
     static main { Fiber.new { |last_result|
@@ -85,7 +62,7 @@ class ExampleQuest is Quest {
                 pay_money(-100000)
             }
         }
-        else if (dialogue_option == 1) {
+        if (dialogue_option == 1) {
             task2_success = Fiber.yield(get_random_glory_task())
             if (task2_success) {
                 pay_reputation(1000)
@@ -93,7 +70,7 @@ class ExampleQuest is Quest {
                 pay_reputation(-1000)
             }
         }
-        else if (dialogue_option == 2) {
+        if (dialogue_option == 2) {
             return true
         }
         return false

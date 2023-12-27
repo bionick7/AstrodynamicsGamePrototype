@@ -51,7 +51,6 @@ void Load(int argc, const char** argv) {
     app->LoadData();
     app->LoadGame("resources/data/start_state.yaml");
 
-
     // Interpreting cmdline
     const char* building_outp_fp = GetSetting(argc, argv, "--building_outp");
     if (building_outp_fp != NULL){
