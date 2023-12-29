@@ -22,6 +22,7 @@
 - Loadsaving loads default ephemerides (Done)
 - DATANODE: Can't distinguish between empty child array and empty string array
 - ASTRO: departure time optimization is reliable, but not accurate (found A solution)
+- QUESTS: First planneing a maneuver, then picking up the quest will bypass payload check
 
 ## UX improvements wishlist
 Near-term, realizable only

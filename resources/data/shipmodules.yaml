@@ -6,6 +6,7 @@ shipmodules:
 
 - id: shpmod_heatshield
   name: Heatshield
+  description: Allows more efficient maneuvers around Titan and low Saturn orbit
   mass: 50.e+3
   
 # ... Weapons, time extenders

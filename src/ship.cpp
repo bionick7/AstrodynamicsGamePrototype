@@ -128,9 +128,9 @@ double Ship::GetPayloadMass() const{
     double res = 0.0;
 
     QuestManager* qm = &GlobalGetState()->quest_manager;
-    for(auto i = qm->active_quests.GetIter(); i; i++) {
-        if (qm->active_quests[i]->ship == id) {
-            res += qm->active_quests[i]->payload_mass;
+    for(auto i = qm->active_tasks.GetIter(); i; i++) {
+        if (qm->active_tasks[i]->ship == id) {
+            res += qm->active_tasks[i]->payload_mass;
         }
     }
 
@@ -380,17 +380,20 @@ void _UIDrawQuests(Ship* ship) {
     QuestManager* qm = &GlobalGetState()->quest_manager;
     double max_mass = ResourceCountsToKG(ship->GetMaxCapacity()) - ship->GetPayloadMass();
     
-    for(auto it = qm->active_quests.GetIter(); it; it++) {
-        Quest* quest = qm->active_quests.Get(it);
+    for(auto it = qm->active_tasks.GetIter(); it; it++) {
+        Task* quest = qm->active_tasks.Get(it);
         bool is_quest_in_cargo = quest->ship == ship->id;
+        DEBUG_SHOW_I(it.index)
+        DEBUG_SHOW_I(quest->current_planet)
+        DEBUG_SHOW_I(is_quest_in_cargo)
         if (quest->current_planet != ship->parent_planet && !is_quest_in_cargo) continue;
         bool can_accept = quest->payload_mass <= max_mass;
         ButtonStateFlags button_state = quest->DrawUI(true, is_quest_in_cargo);
         if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED && can_accept) {
             if (is_quest_in_cargo) {
-                qm->PutbackQuest(ship->id, it.index);
+                qm->PutbackTask(ship->id, it.index);
             } else {
-                qm->PickupQuest(ship->id, it.index);
+                qm->PickupTask(ship->id, it.index);
             }
         }
     }
@@ -476,9 +479,9 @@ void Ship::_OnDeparture(const TransferPlan& tp) {
 
     transporing = local_economy->DrawResource(tp.resource_transfer);
 
-    for(auto i = GlobalGetState()->quest_manager.active_quests.GetIter(); i; i++) {
-        if (GlobalGetState()->quest_manager.active_quests[i]->ship == id) {
-            GlobalGetState()->quest_manager.QuestDepartedFrom(i.index, parent_planet);
+    for(auto i = GlobalGetState()->quest_manager.active_tasks.GetIter(); i; i++) {
+        if (GlobalGetState()->quest_manager.active_tasks[i]->ship == id) {
+            GlobalGetState()->quest_manager.TaskDepartedFrom(i.index, parent_planet);
         }
     }
 
@@ -493,10 +496,10 @@ void Ship::_OnArrival(const TransferPlan& tp) {
     parent_planet = tp.arrival_planet;
     is_parked = true;
     position = GetPlanet(parent_planet)->position;
-    for(auto i = GlobalGetState()->quest_manager.active_quests.GetIter(); i; i++) {
-        const Quest* quest = GlobalGetState()->quest_manager.active_quests[i];
+    for(auto i = GlobalGetState()->quest_manager.active_tasks.GetIter(); i; i++) {
+        const Task* quest = GlobalGetState()->quest_manager.active_tasks[i];
         if (quest->ship == id && quest->arrival_planet == tp.arrival_planet) {
-            GlobalGetState()->quest_manager.QuestArrivedAt(i.index, tp.arrival_planet);
+            GlobalGetState()->quest_manager.TaskArrivedAt(i.index, tp.arrival_planet);
         }
     }
 

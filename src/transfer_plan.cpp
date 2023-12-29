@@ -250,7 +250,7 @@ void TransferPlanSetBestDeparture(TransferPlan* tp, timemath::Time t0, timemath:
         
         //diff_seconds = deriv / deriv2 * 0.1;
         diff_seconds = deriv * 1000;
-        DebugPrintText("%f, D %f, D2 %f => dt: %f", dv_0, deriv, deriv2, diff_seconds);
+        //DebugPrintText("%f, D %f, D2 %f => dt: %f", dv_0, deriv, deriv2, diff_seconds);
         if (std::abs(diff_seconds) > (t1 - t0).Seconds() / 10.0) {
             diff_seconds = (t1 - t0).Seconds() / 10.0 * (diff_seconds > 0 ? 1 : -1);
         }
@@ -259,8 +259,8 @@ void TransferPlanSetBestDeparture(TransferPlan* tp, timemath::Time t0, timemath:
     if (x.IsInvalid()) {
         return;
     }    
-    if (x > t1) x = t1;
-    if (x < t0) x = t0;
+    if (x > t1 - 1) x = t1 - 1;
+    if (x < t0 + 1) x = t0 + 1;
     tp->departure_time = x;
 
     //double dv_plus = TransferPlanSolveWithDeptartureTime(tp, x + H);
@@ -350,7 +350,7 @@ int TransferPlanTests() {
     }
 
     // build profile
-#if true
+#if false
     TransferPlan tp;
     tp.departure_planet = 1;  // Encelladus
     tp.arrival_planet = 2;    // Thetys
@@ -622,7 +622,7 @@ void TransferPlanUI::DrawUI() {
     StringBuilder sb = StringBuilder();
     sb.Add("Departs in ").AddTime(plan->departure_time - time_bounds[0]);
     sb.Add("\nArrives in ").AddTime(plan->arrival_time - time_bounds[0]);
-    DebugPrintText("%i", sb.CountLines());
+    //DebugPrintText("%i", sb.CountLines());
     UIContextPushInset(0, 18 * sb.CountLines() + 5);
     UIContextWrite(sb.c_str);
     UIContextFillline(

@@ -22,7 +22,6 @@ struct Clickable {
 };
 
 bool IsIdValid(entity_id_t id);
-constexpr entity_id_t GetInvalidId() { return UINT32_MAX; }
 
 struct GlobalState {
     enum FocusablesPanels {
@@ -76,5 +75,6 @@ struct GlobalState {
 GlobalState* GlobalGetState();
 timemath::Time GlobalGetNow();
 AudioServer* GetAudioServer();
+WrenInterface* GetWrenInterface();
 
 #endif // GLOBAL_STATE_H

@@ -11,6 +11,7 @@ int IDAllocatorListTests() {
         list.Allocate(&mm);
         *mm = MatrixScale((float)i, 1, 1);
     }
+    //INFO("%016zX", *list.verifier_array)
     LIST_TEST_ASSERT_WITH_ERROR(list[23]->m0 == 23);
     list.Erase(2);
     list.Erase(3);
@@ -42,8 +43,13 @@ int IDAllocatorListTests() {
             list.Erase(i.index);
         }
     }
+    
+    //INFO("%016zX", *list.verifier_array)
     LIST_TEST_ASSERT_WITH_ERROR(list.Count() == 10)
     auto it = list.GetIter(); it++;
     LIST_TEST_ASSERT_WITH_ERROR(list[it]->m0 == 7.0)
+    for(int i=0; i < 100; i++) {
+        list.Erase(0);
+    }
     return 0;
 }

@@ -3,8 +3,11 @@
 #include <basic.hpp>
 #include "logging.hpp"
 
+
+#define UNIT64 ((uint64_t)1ull)
 template<typename T>
 struct IDAllocatorList {
+
     struct Iterator { 
         entity_id_t index;
         int iterator;
@@ -20,7 +23,7 @@ struct IDAllocatorList {
         void operator++(int) {
             iterator++;
             do index++; while(index < list_ptr->capacity && 
-                !(list_ptr->verifier_array[index/64] & (1ul << (index % 64)))
+                !(list_ptr->verifier_array[index/64] & (UNIT64 << (index % 64)))
             ); 
         }
     };
@@ -47,11 +50,11 @@ struct IDAllocatorList {
             verifier_array = (uint64_t*)realloc(verifier_array, sizeof(uint64_t) * ceil(capacity / 64.));
             for(entity_id_t i = capacity-32; i < capacity; i++) {
                 free_index_array[i] = i;
-                verifier_array[i/64] &= ~(1ul << (i % 64));
+                verifier_array[i/64] &= ~(UNIT64 << (i % 64));
             }
         }
         entity_id_t free_index = free_index_array[alloc_count];
-        verifier_array[free_index/64] |= 1ul << (free_index % 64);
+        verifier_array[free_index/64] |= UNIT64 << (free_index % 64);
         if (ret_ptr != NULL) {
             *ret_ptr = Get(free_index);
         }
@@ -62,9 +65,12 @@ struct IDAllocatorList {
 
     void Erase(entity_id_t index) {
         Get(index)->~T();
+        if ((verifier_array[index/64] & (UNIT64 << (index % 64))) == 0) {
+            return;  // already erased
+        }
         alloc_count--;
         free_index_array[alloc_count] = index;
-        verifier_array[index/64] &= ~(1ul << (index % 64));
+        verifier_array[index/64] &= ~(UNIT64 << (index % 64));  // set bit to 0
     }
     
     inline T* Get(entity_id_t index) const { return &array[index]; }
@@ -80,7 +86,7 @@ struct IDAllocatorList {
     }
 
     bool IsValidIndex(entity_id_t index) const {
-        return index < capacity && (verifier_array[index/64] & (1ul << (index % 64)));
+        return index < capacity && (verifier_array[index/64] & (UNIT64 << (index % 64)));
     }
 
     Iterator GetIter() const {
@@ -114,7 +120,7 @@ struct IDAllocatorList {
     entity_id_t alloc_count;
     entity_id_t capacity;
 };
-
+#undef UNIT64
 int IDAllocatorListTests();
 
 #endif  // ID_ALLOCATOR_H

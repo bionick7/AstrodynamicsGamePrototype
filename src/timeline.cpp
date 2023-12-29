@@ -121,7 +121,7 @@ float _SDSegment(Vector2 p, Vector2 a, Vector2 b) {
     return Vector2Distance(pa, Vector2Scale(ba, h));
 }
 
-float  _QuestDrawLine(TimeLineCoordinateData* tcd, const Quest* q, bool active) {
+float  _QuestDrawLine(TimeLineCoordinateData* tcd, const Task* q, bool active) {
     // returns the mouse distance to the line (in pixels)
     entity_id_t from = q->departure_planet;
     entity_id_t to = q->arrival_planet;
@@ -182,8 +182,8 @@ void _DrawQuests(TimeLineCoordinateData* tcd, QuestManager* qm) {
     float closest_mouse_dist = INFINITY;
     entity_id_t closest_mouse_dist_quest = -1;
     bool closest_mouse_dist_quest_is_active = false;
-    for(int i=0; i < qm->GetAvailableQuests(); i++) {
-        const Quest* q = &qm->available_quests[i];
+    /*for(int i=0; i < qm->GetAvailableQuests(); i++) {
+        const Quest* q = qm->available_quests[i];
         if (!q->IsValid()) {
             continue;
         }
@@ -193,9 +193,9 @@ void _DrawQuests(TimeLineCoordinateData* tcd, QuestManager* qm) {
             closest_mouse_dist_quest = i;
             closest_mouse_dist_quest_is_active = false;
         }
-    }
-    for(auto it = qm->active_quests.GetIter(); it; it++) {
-        float mouse_dist = _QuestDrawLine(tcd, qm->active_quests.Get(it), true);
+    }*/
+    for(auto it = qm->active_tasks.GetIter(); it; it++) {
+        float mouse_dist = _QuestDrawLine(tcd, qm->active_tasks.Get(it), true);
         if (mouse_dist < closest_mouse_dist) {
             closest_mouse_dist = mouse_dist;
             closest_mouse_dist_quest = it.index;
@@ -205,7 +205,7 @@ void _DrawQuests(TimeLineCoordinateData* tcd, QuestManager* qm) {
     if (closest_mouse_dist < 15) {
         UIContextPushAligned(400, 100, TEXT_ALIGNMENT_TOP | TEXT_ALIGNMENT_RIGHT);
         if (closest_mouse_dist_quest_is_active) {
-            qm->active_quests.Get(closest_mouse_dist_quest)->DrawUI(false, false);
+            qm->active_tasks.Get(closest_mouse_dist_quest)->DrawUI(false, false);
         } else {
             qm->available_quests[closest_mouse_dist_quest].DrawUI(false, false);
             UIContextWrite("Press enter to accept quest", true);

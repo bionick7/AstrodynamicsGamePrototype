@@ -7,7 +7,7 @@ ShipModuleClass* ship_modules = NULL;
 size_t shipmodule_count = 0;
 
 ShipModuleClass::ShipModuleClass() {
-    double mass = 0.0;
+    mass = 0.0;
     name[0] = '\0';
     description[0] = '\0';
 }

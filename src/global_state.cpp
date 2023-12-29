@@ -79,7 +79,7 @@ void GlobalState::Make(timemath::Time p_time) {
 
 void GlobalState::LoadData() {
     wren_interface.MakeVM();
-    wren_interface.LoadQuests();
+    wren_interface.LoadWrenQuests();
 
     #define NUM 6
     const char* loading_paths[NUM] = {
@@ -405,4 +405,8 @@ void GlobalState::Deserialize(const DataNode* data) {
 
 AudioServer* GetAudioServer() {
     return &global_state.audio_server;
+}
+
+WrenInterface* GetWrenInterface() {
+    return &global_state.wren_interface;
 }
