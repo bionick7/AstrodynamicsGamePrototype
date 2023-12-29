@@ -5,7 +5,7 @@
 #include "transfer_plan.hpp"
 #include "datanode.hpp"
 #include "id_allocator.hpp"
-#include "quests.hpp"
+#include "task.hpp"
 #include "ship_modules.hpp"
 
 #define SHIP_MAX_PREPARED_PLANS 10

@@ -4,7 +4,7 @@
 #include "logging.hpp"
 
 
-#define UNIT64 ((uint64_t)1ull)
+#define UNIT64 ((uint64_t)1ull)  // make sure it's always exactly 64-bit
 template<typename T>
 struct IDAllocatorList {
 

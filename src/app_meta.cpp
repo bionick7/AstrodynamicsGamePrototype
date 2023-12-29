@@ -40,7 +40,7 @@ void AppMetaInit() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
     
     SetExitKey(KEY_NULL);
-    SetTargetFPS(60);
+    SetTargetFPS(120);
     SetWindowState(FLAG_WINDOW_RESIZABLE);
 
     InitAudioDevice();

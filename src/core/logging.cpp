@@ -1,7 +1,5 @@
 #include "logging.hpp"
 
-#ifndef LOGGING_DISABLE
-
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -13,5 +11,3 @@ void LogImpl(const char* file, int line, LogType level, const char* format, ...)
     va_end(args);
     printf("\n");
 }
-
-#endif  // LOGGING_DISABLE

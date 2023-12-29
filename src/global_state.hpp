@@ -6,7 +6,7 @@
 #include "transfer_plan.hpp"
 #include "datanode.hpp"
 #include "coordinate_transform.hpp"
-#include "quests.hpp"
+#include "quest_manager.hpp"
 #include "audio_server.hpp"
 #include "wren_interface.hpp"
 

@@ -383,9 +383,6 @@ void _UIDrawQuests(Ship* ship) {
     for(auto it = qm->active_tasks.GetIter(); it; it++) {
         Task* quest = qm->active_tasks.Get(it);
         bool is_quest_in_cargo = quest->ship == ship->id;
-        DEBUG_SHOW_I(it.index)
-        DEBUG_SHOW_I(quest->current_planet)
-        DEBUG_SHOW_I(is_quest_in_cargo)
         if (quest->current_planet != ship->parent_planet && !is_quest_in_cargo) continue;
         bool can_accept = quest->payload_mass <= max_mass;
         ButtonStateFlags button_state = quest->DrawUI(true, is_quest_in_cargo);

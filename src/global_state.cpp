@@ -4,7 +4,7 @@
 #include "ui.hpp"
 #include "constants.hpp"
 #include "audio_server.hpp"
-#include "quests.hpp"
+#include "quest.hpp"
 #include "timeline.hpp"
 
 GlobalState global_state;
@@ -81,14 +81,13 @@ void GlobalState::LoadData() {
     wren_interface.MakeVM();
     wren_interface.LoadWrenQuests();
 
-    #define NUM 6
+    #define NUM 5
     const char* loading_paths[NUM] = {
         "resources/data/buildings.yaml",
         "resources/data/shipmodules.yaml",
         "resources/data/ephemerides.yaml",
         "resources/data/ship_classes.yaml",
         "resources/data/resources.yaml",
-        "resources/data/quests.yaml",
     };
 
     int (*load_funcs[NUM])(const DataNode*) = { 
@@ -97,7 +96,6 @@ void GlobalState::LoadData() {
         LoadEphemerides,
         LoadShipClasses,
         LoadResources,
-        LoadQuests,
     };
 
     const char* declarations[NUM] {
@@ -106,7 +104,6 @@ void GlobalState::LoadData() {
         "Planets",
         "ShipClasses",
         "Resources",
-        "Quests",
     };
 
     int ammounts[NUM];
@@ -275,7 +272,7 @@ void GlobalState::DrawState() {
     UIStart();
     calendar.DrawUI();
     char capital_str[21];
-    sprintf(capital_str, "M§M %6ld.%3ld .mil", capital / (int)1e6, capital % 1000000 / 1000);
+    sprintf(capital_str, "M§M %6lld.%3lld .mil", capital / (int)1e6, capital % 1000000 / 1000);
     DrawTextAligned(capital_str, {GetScreenWidth() / 2.0f, 10}, TEXT_ALIGNMENT_HCENTER & TEXT_ALIGNMENT_TOP, Palette::ui_main);
 
     // 

@@ -11,8 +11,9 @@
 - quantise resources (1 count = 100kT) (Done)
 - water mining ship (or other more techniques to deal with fuel management?,) (Done)
 - Transfer plan UX (Half)
-- Shop
+- Inventory
 - Quests drop modules & Ships
+- Shop
 //- Implement Ship Docking Rent?
 - Build ships in shipyard
 
@@ -23,6 +24,9 @@
 - DATANODE: Can't distinguish between empty child array and empty string array
 - ASTRO: departure time optimization is reliable, but not accurate (found A solution)
 - QUESTS: First planneing a maneuver, then picking up the quest will bypass payload check
+
+## Necaissary Uncomplete features
+- save wren quest state
 
 ## UX improvements wishlist
 Near-term, realizable only
