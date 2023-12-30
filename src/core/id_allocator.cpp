@@ -34,12 +34,12 @@ int IDAllocatorListTests() {
     }
     LIST_TEST_ASSERT_WITH_ERROR(!list.IsValidIndex(45))
     for(auto i = list.GetIter(); i; i++) {
-        if (i.iterator % 2 == 0) {
+        if (i.counter % 2 == 0) {
             list.Erase(i.index);
         }
     }
     for(auto i = list.GetIter(); i; i++) {
-        if (i.iterator % 2 == 0) {
+        if (i.counter % 2 == 0) {
             list.Erase(i.index);
         }
     }

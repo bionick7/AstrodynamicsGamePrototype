@@ -16,7 +16,7 @@ struct Ship;
 #define QUEST_PANEL_HEIGHT 64
 
 struct Quest {
-    const WrenQuest* wren_interface;
+    const WrenQuestTemplate* wren_interface;
     WrenHandle* quest_instance_handle;
     WrenHandle* coroutine_instance_handle;
     WrenHandle* coroutine_call_handle;
@@ -52,7 +52,7 @@ struct Quest {
     void Deserialize(const DataNode* data);
     ButtonStateFlags DrawUI(bool show_as_button, bool highlight) const;
 
-    void AttachInterface(const WrenQuest* p_wren_interface);
+    void AttachTemplate(const WrenQuestTemplate* p_wren_interface);
 
     void StartQuest(int inp_arg=0);  // The way wren is setup, it allows 1 extra arg. Mostly unused tho
     void CompleteTask(bool success);

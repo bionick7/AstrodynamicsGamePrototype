@@ -611,7 +611,7 @@ void TransferPlanUI::DrawUI() {
     Ship* ship_instance = GetShip(ship);
     
     const int y_margin = 5+50;
-    UIContextCreate(
+    UIContextCreateNew(
         GetScreenWidth() - 20*16 - 5, y_margin,
         20*16, MinInt(200, GetScreenHeight()) - 2*5 - y_margin, 
         16, Palette::ship

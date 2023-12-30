@@ -8,7 +8,7 @@
 #include "string_builder.hpp"
 
 QuestManager::QuestManager() {
-    active_tasks.Init();
+
 }
 
 QuestManager::~QuestManager() {
@@ -18,11 +18,11 @@ QuestManager::~QuestManager() {
 void QuestManager::Serialize(DataNode* data) const {
     data->SetArrayChild("active_quests", active_tasks.alloc_count);
     for(auto it = active_tasks.GetIter(); it; it++) {
-        active_tasks.Get(it)->Serialize(data->SetArrayElemChild("active_quests", it.iterator, DataNode()));
+        active_tasks.Get(it)->Serialize(data->SetArrayElemChild("active_quests", it.counter, DataNode()));
     }
     data->SetArrayChild("available_quests", GetAvailableQuests());
-    for(int i=0; i < GetAvailableQuests(); i++) {
-        available_quests[i].Serialize(data->SetArrayElemChild("available_quests", i, DataNode()));
+    for(auto it = available_quests.GetIter(); it; it++) {
+        available_quests.Get(it)->Serialize(data->SetArrayElemChild("available_quests", it.counter, DataNode()));
     }
 }
 
@@ -32,7 +32,7 @@ void QuestManager::Deserialize(const DataNode* data) {
         active_tasks.Get(active_tasks.Allocate())->Deserialize(data->GetArrayChild("active_quests", i));
     }
     for(int i=0; i < data->GetArrayChildLen("available_quests") && i < GetAvailableQuests(); i++) {
-        available_quests[i].Deserialize(data->GetArrayChild("available_quests", i));
+        available_quests[i]->Deserialize(data->GetArrayChild("available_quests", i));
     }
     /*for(int i=data->GetArrayChildLen("available_quests"); i < GetAvailableQuests(); i++) {
         available_quests[i] = Quest();  // Just in case
@@ -40,10 +40,7 @@ void QuestManager::Deserialize(const DataNode* data) {
 }
 
 void QuestManager::Make() {
-    for(int i=0; i < GetAvailableQuests(); i++) {
-        const WrenQuest* template_ = GetWrenInterface()->GetRandomWrenQuest();
-        available_quests[i].AttachInterface(template_);
-    }
+    _RegenQuests();
 }
 
 void QuestManager::Update(double dt) {
@@ -94,10 +91,7 @@ void QuestManager::Update(double dt) {
     }*/
 
     if (GlobalGetState()->calendar.IsNewDay()) {
-        for(int i=0; i < GetAvailableQuests(); i++) {
-            const WrenQuest* template_ = GetWrenInterface()->GetRandomWrenQuest();
-            available_quests[i].AttachInterface(template_);
-        }
+        _RegenQuests();
     }
 }
 
@@ -109,7 +103,7 @@ void QuestManager::Draw() {
     int y_margin = MinInt(50, GetScreenWidth()*.1);
     int w = GetScreenWidth() - x_margin*2;
     int h = GetScreenHeight() - y_margin*2;
-    UIContextCreate(x_margin, y_margin, w, h, 16, Palette::ui_main);
+    UIContextCreateNew(x_margin, y_margin, w, h, 16, Palette::ui_main);
     UIContextEnclose(Palette::bg, Palette::ui_main);
     UIContextPushHSplit(0, w/2);
     UIContextShrink(5, 5);
@@ -133,8 +127,8 @@ void QuestManager::Draw() {
     UIContextPushScrollInset(0, UIContextCurrent().height, TASK_PANEL_HEIGHT * GetAvailableQuests(), current_available_quests_scroll);
     // Available Quests
     for(int i=0; i < GetAvailableQuests(); i++) {
-        if (!available_quests[i].IsValid()) continue;
-        if (available_quests[i].DrawUI(true, true) & BUTTON_STATE_FLAG_JUST_PRESSED) {
+        if (!available_quests[i]->IsValid()) continue;
+        if (available_quests[i]->DrawUI(true, true) & BUTTON_STATE_FLAG_JUST_PRESSED) {
             AcceptQuest(i);
         }
     }
@@ -146,10 +140,18 @@ void QuestManager::Draw() {
 void QuestManager::AcceptQuest(entity_id_t quest_index) {
     Quest* q;
     entity_id_t id = active_quests.Allocate(&q);
-    q->CopyFrom(&available_quests[quest_index]);
+    q->CopyFrom(available_quests[quest_index]);
     q->id = id;
     q->StartQuest();
-    ClearQuest(&available_quests[quest_index]);
+    available_quests.Erase(quest_index);
+}
+
+void QuestManager::ForceQuest(WrenQuestTemplate *template_) {
+    Quest* q;
+    entity_id_t id = active_quests.Allocate(&q);
+    q->AttachTemplate(template_);
+    q->id = id;
+    q->StartQuest();
 }
 
 entity_id_t QuestManager::CreateTask(entity_id_t quest_index) {
@@ -206,5 +208,16 @@ void QuestManager::CompleteTask(entity_id_t task_index) {
 }
 
 int QuestManager::GetAvailableQuests() const {
-    return _AVAILABLE_QUESTS;
+    return available_quests.Count();
+}
+
+void QuestManager::_RegenQuests() {
+    int available = GetRandomValue(0, 4);
+    available_quests.Init();
+    for(int i=0; i < available; i++) {
+        const WrenQuestTemplate* template_ = GetWrenInterface()->GetRandomWrenQuest();
+        Quest* quest;
+        available_quests.Allocate(&quest);
+        quest->AttachTemplate(template_);
+    }   
 }

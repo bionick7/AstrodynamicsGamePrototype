@@ -3,6 +3,7 @@
 #include "ui.hpp"
 #include "utils.hpp"
 #include "constants.hpp"
+#include "ship_modules.hpp"
 
 Planet::Planet(const char* p_name, double p_mu, double p_radius) {
     strcpy(name, p_name);
@@ -11,6 +12,9 @@ Planet::Planet(const char* p_name, double p_mu, double p_radius) {
 
     for (int i = 0; i < MAX_PLANET_BUILDINGS; i++) {
         buildings[i] = BuildingInstance(BUILDING_INDEX_INVALID);
+    }
+    for (int i = 0; i < MAX_PLANET_INVENTORY; i++) {
+        ship_module_inventory[i] = GetInvalidId();
     }
 }
 
@@ -27,14 +31,23 @@ void Planet::Serialize(DataNode* data) const {
         resource_delta_node->SetI(GetResourceData(resource_index).name, economy.resource_delta[resource_index]);
     }
 
+    // buildings
     int last_building_index = 0;
     for(int i=0; i < MAX_PLANET_BUILDINGS; i++) 
         if (buildings[i].IsValid()) last_building_index = i;
 
     data->SetArray("buildings", last_building_index);
     for(int i=0; i < last_building_index; i++) {
-        const BuildingClass* mc = GetBuildingByIndex(buildings[i].class_index);
-        data->SetArrayElem("buildings", i, mc->id);
+        const BuildingClass* bc = GetBuildingByIndex(buildings[i].class_index);
+        data->SetArrayElem("buildings", i, bc->id);
+    }
+    
+    // modules
+    data->SetArray("ship_modules", MAX_PLANET_INVENTORY);
+    for(int i=0; i < MAX_PLANET_INVENTORY; i++) {
+        if (!IsIdValid(ship_module_inventory[i])) continue;
+        const ShipModuleClass* smc = GetModuleByIndex(ship_module_inventory[i]);
+        data->SetArrayElem("ship_modules", i, smc->id);
     }
 
     // We assume the orbital info is stored in the ephemerides
@@ -77,6 +90,18 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
         for (int i = 0; i < initial_building_count; i++) {
             const char* building_id = data->GetArray("buildings", i);
             buildings[i] = BuildingInstance(GetBuildingIndexById(building_id));
+        }
+    }
+    
+    if (data->Has("ship_modules")) {
+        int ship_module_inventory_count = data->GetArrayLen("ship_modules", true);
+        if (ship_module_inventory_count > MAX_PLANET_INVENTORY) {
+            ship_module_inventory_count = MAX_PLANET_INVENTORY;
+        }
+        
+        for (int i = 0; i < ship_module_inventory_count; i++) {
+            const char* module_id = data->GetArray("ship_modules", i);
+            ship_module_inventory[i] = GetBuildingIndexById(module_id);
         }
     }
 
@@ -128,13 +153,13 @@ void Planet::RecalcStats() {
 }
 
 void Planet::RequestBuild(int slot, building_index_t building_class) {
-    const BuildingClass* mc = GetBuildingByIndex(building_class);
+    const BuildingClass* bc = GetBuildingByIndex(building_class);
     for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-        if (mc->build_costs[resource_index] > economy.resource_stock[resource_index]) {
+        if (bc->build_costs[resource_index] > economy.resource_stock[resource_index]) {
             USER_INFO("Not enough %s (%f available, %f required)", 
                 GetResourceData(resource_index).name,
                 economy.resource_stock[resource_index],
-                mc->build_costs[resource_index]
+                bc->build_costs[resource_index]
             )
             return;
         }
@@ -143,8 +168,22 @@ void Planet::RequestBuild(int slot, building_index_t building_class) {
     buildings[slot] = instance;
 
     for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-        economy.resource_stock[resource_index] -= mc->build_costs[resource_index];
+        economy.resource_stock[resource_index] -= bc->build_costs[resource_index];
     }
+}
+
+bool Planet::AddShipModuleToInventory(entity_id_t module_) {
+    for (int index = 0; index < MAX_PLANET_INVENTORY; index++) {
+        if(!IsIdValid(ship_module_inventory[index])) {
+            ship_module_inventory[index] = module_;
+            return true;
+        }
+    }
+    return false;  // No free space
+}
+
+void Planet::RemoveShipModuleInInventory(int index) {
+    ship_module_inventory[index] = GetInvalidId();
 }
 
 bool Planet::HasMouseHover(double* min_distance) const {
@@ -195,32 +234,33 @@ void _UIDrawStats(const resource_count_t stats[]) {
     }
 }
 
-void _UIDrawBuildings(Planet* planet) {
-    // Draw buildings
-    int current_width = UIContextCurrent().width;
+int Planet::UIDrawInventory() {
+    // Draw inventory
+    const int columns = 4;
+    int rows = (int) std::ceil(MAX_PLANET_INVENTORY / columns);
     UIContextPushInset(0, UIContextCurrent().height - UIContextCurrent().y_cursor);
-    UIContextPushHSplit(0, current_width/2);
-    for (int i = 0; i < MAX_PLANET_BUILDINGS; i += 2) {
-        if (planet->buildings[i].UIDraw()) {
-            BuildingConstructionOpen(planet->id, i);
+    
+    int res = -1;
+    for (int i = 0; i < MAX_PLANET_INVENTORY; i++) {
+    //for (int column = 0; column < columns; column++)
+    //for (int i = column; i < MAX_PLANET_BUILDINGS; i += columns) {
+        if (!IsIdValid(ship_module_inventory[i])) continue;
+        UIContextPushGridCell(columns, rows, i % columns, i / columns);
+        if (DrawShipModule(GetModuleByIndex(ship_module_inventory[i]), false) == ShipModuleClass::SELECT) {
+            res = i;
         }
+        UIContextPop();  // GridCell
     }
-    UIContextPop();  // HSplit
-    UIContextPushHSplit(current_width/2, current_width);
-    for (int i = 1; i < MAX_PLANET_BUILDINGS; i += 2) {
-        if (planet->buildings[i].UIDraw()) {
-            BuildingConstructionOpen(planet->id, i);
-        }
-    }
-    UIContextPop();  // HSplit
+    UIContextPop();  // Inset
+    return res;
 }
 
 int current_tab = 0;  // Global variable, I suppose
 void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, ResourceTransfer transfer, double fuel_draw) {
     if (upper_quadrant) {
-        UIContextCreate(10, 10, 16*30, GetScreenHeight() / 2 - 20, 16, Palette::ui_main);
+        UIContextCreateNew(10, 10, 16*30, GetScreenHeight() / 2 - 20, 16, Palette::ui_main);
     } else {
-        UIContextCreate(10, GetScreenHeight() / 2 + 10, 16*30, GetScreenHeight() / 2 - 20, 16, Palette::ui_main);
+        UIContextCreateNew(10, GetScreenHeight() / 2 + 10, 16*30, GetScreenHeight() / 2 - 20, 16, Palette::ui_main);
     }
     UIContextCurrent().Enclose(2, 2, Palette::bg, Palette::ui_main);
 
@@ -230,7 +270,7 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
     const char* tab_descriptions[4] = {
         "resources",
         "economy",
-        "~buildings~",
+        "inventory",
         "~quests~"
     };
     for (int i=0; i < n_tabs; i++) {
@@ -264,7 +304,7 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
         economy.UIDrawEconomy(transfer, fuel_draw);
         break;
     case 2:
-        _UIDrawBuildings(this);
+        UIDrawInventory();
         break;
     }
 

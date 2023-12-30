@@ -38,6 +38,8 @@ def get_base_env():
 
 
 def build_wren():
+    wren_debug = True
+
     env, lib_dir = get_base_env()
 
     wren_src_dirs = ['dependencies/wren/src/vm']
@@ -46,6 +48,16 @@ def build_wren():
 
     wren_src = get_all_files(wren_src_dirs, "c")
     env.Append(CPPPATH = wren_src_dirs + wren_include_dirs)
+
+    flags = []
+    defines = []
+
+    if wren_debug:
+        flags.append("-ggdb")
+        defines.append("DEBUG")
+
+    env.Append(CPPFLAGS=flags)
+    env.Append(CPPDEFINES=defines)
     env.StaticLibrary(os.path.join(lib_dir, 'wren'), wren_src)
 
 

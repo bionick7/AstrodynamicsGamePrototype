@@ -36,6 +36,10 @@ int UnitTests() {
     return 0;
 }
 
+void TestingSetup(GlobalState* app) {
+    app->quest_manager.ForceQuest(GetWrenInterface()->GetWrenQuest("example"));
+}
+
 void Load(int argc, const char** argv) {
     INFO("Init from working directory: '%s'", GetWorkingDirectory());
     if (!GetSetting(argc, argv, "-randseed")) {
@@ -50,6 +54,7 @@ void Load(int argc, const char** argv) {
     app->Make(1e6);
     app->LoadData();
     app->LoadGame("resources/data/start_state.yaml");
+    TestingSetup(app);
 
     // Interpreting cmdline
     const char* building_outp_fp = GetSetting(argc, argv, "--building_outp");

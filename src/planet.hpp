@@ -10,6 +10,7 @@
 #include "datanode.hpp"
 
 #define MAX_PLANET_BUILDINGS 20
+#define MAX_PLANET_INVENTORY 40
 
 struct Planets;
 
@@ -31,6 +32,7 @@ struct Planet {
 
     resource_count_t stats[STAT_MAX];
     BuildingInstance buildings[MAX_PLANET_BUILDINGS];
+    entity_id_t ship_module_inventory[MAX_PLANET_INVENTORY];
 
     bool mouse_hover;
     entity_id_t id;
@@ -47,10 +49,14 @@ struct Planet {
     void RecalcStats();
     void RequestBuild(int slot, building_index_t building_class);
 
+    bool AddShipModuleToInventory(entity_id_t module);
+    void RemoveShipModuleInInventory(int index);
+
     bool HasMouseHover(double* distance) const;
     void Update();
     void Draw(const CoordinateTransform* c_transf);
     void DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, ResourceTransfer transfer, double fuel_draw);
+    int UIDrawInventory();
 };
 
 struct Planets {
@@ -71,6 +77,7 @@ struct Planets {
     const PlanetNature* GetParentNature() const;
     int LoadEphemerides(const DataNode* data);
 };
+
 
 Planet* GetPlanet(entity_id_t id);
 int LoadEphemerides(const DataNode* data);

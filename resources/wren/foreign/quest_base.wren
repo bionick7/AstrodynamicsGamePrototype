@@ -1,25 +1,27 @@
 class Constants {
-    static mimas { 0 }
+    static mimas      { 0 }
     static encelladus { 1 }
-    static tethys { 2 }
-    static rhea { 3 }
-    static titan { 4 }
-    static iaeptus { 5 }
-    static phoebe { 6 }
+    static tethys     { 2 }
+    static rhea       { 3 }
+    static titan      { 4 }
+    static iaeptus    { 5 }
+    static phoebe     { 6 }
 
     // Time is in seconds
-    static second { 1 }
-    static minute { 60 }
-    static hour { 3600 }
-    static day { 86400 }
-    static year { day*365 }
+    static second      {         1 }
+    static minute      {        60 }
+    static hour        {      3600 }
+    static day         {     86400 }
+    static year        { 86400*365 }
+    static no_deadline {        -1 }
 
     // Mass is in kg
     static count { 100000 }
+
 }
 
 class Quest {
-    require_transport(payload, departure_planet, arrival_planet, deadline) {
+    transport_task(payload, departure_planet, arrival_planet, deadline) {
         return {
             "type": "task",
             "payload_mass": payload,
@@ -30,7 +32,7 @@ class Quest {
         }
     }
 
-    require_transport(payload, departure_planet, arrival_planet, departure_deadline, arrival_deadline) {
+    transport_task(payload, departure_planet, arrival_planet, departure_deadline, arrival_deadline) {
         return {
             "type": "task",
             "payload_mass": payload,
@@ -54,7 +56,7 @@ class Quest {
         }
     }
 
-    dialogue_text(speaker, text) {
+    dialogue(speaker, text) {
         return {
             "type": "dialogue",
             "speaker": speaker,
@@ -62,7 +64,7 @@ class Quest {
         }
     }
 
-    dialogue_text(speaker, text, answer_choices) {
+    dialogue(speaker, text, answer_choices) {
         return {
             "type": "dialogue_choice",
             "speaker": speaker,
@@ -72,9 +74,11 @@ class Quest {
     }
 
     foreign is_task_possible(task)
-    foreign pay_money(ammount)
-    foreign pay_item(kind)
-    foreign pay_reputation(ammount)
+    foreign gain_money(ammount)
+    foreign gain_item(item, location)
+    foreign gain_reputation(faction, ammount)
+    foreign gain_ship_impl(data, keylist)
+    gain_ship(data) { gain_ship_impl(data, data.keys.toList) }
     
     ensure_possible(fn) {
         var res = fn.call()

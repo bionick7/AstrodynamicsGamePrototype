@@ -46,7 +46,7 @@ struct Ship {
 
     int prepared_plans_count;
     TransferPlan prepared_plans[SHIP_MAX_PREPARED_PLANS];
-    int modules_count;
+    //int modules_count;
     entity_id_t modules[SHIP_MAX_MODULES];
     
     int plan_edit_index;
@@ -63,7 +63,6 @@ struct Ship {
     // transporting
     ResourceTransfer transporing;
 
-    void CreateFrom(const ShipClass* sc);
     void Serialize(DataNode* data) const;
     void Deserialize(const DataNode* data);
     
@@ -72,6 +71,8 @@ struct Ship {
     void Draw(const CoordinateTransform* c_transf) const;
     void DrawUI(const CoordinateTransform* c_transf);
     void Inspect();
+
+    void RemoveShipModuleAt(int index);
 
     double GetPayloadMass() const;
     resource_count_t GetMaxCapacity() const;
@@ -84,7 +85,6 @@ struct Ship {
     void CloseEditedTransferPlan();
     void RemoveTransferPlan(int index);
     void StartEditingPlan(int index);
-    TransferPlan* _NewTransferPlan();
 
     void _OnDeparture(const TransferPlan &tp);
     void _OnArrival(const TransferPlan &tp);

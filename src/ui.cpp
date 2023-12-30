@@ -237,15 +237,20 @@ ButtonStateFlags TextBox::AsButton() const {
 
 std::stack<TextBox> text_box_stack = std::stack<TextBox>();
 
-void UIContextCreate(int x, int y, int w, int h, int text_size, Color color) {
+void UIContextCreateNew(int x, int y, int w, int h, int text_size, Color color) {
     while (text_box_stack.size() > 0) {
         text_box_stack.pop();
     }
+    UIContextPushGlobal(x, y, w, h, text_size, color);
+}
+
+void UIContextPushGlobal(int x, int y, int w, int h, int text_size, Color color) {
     TextBox new_text_box = TextBox(x, y, w, h, text_size, color);
     text_box_stack.push(new_text_box);
 }
 
-int UIContextPushInset(int margin, int h) {
+int UIContextPushInset(int margin, int h)
+{
     // Returns the actual height
     TextBox& tb = UIContextCurrent();
     tb.EnsureLineBreak();

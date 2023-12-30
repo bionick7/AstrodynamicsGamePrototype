@@ -23,7 +23,7 @@ Quest::Quest() {
     ClearQuest(this);
 }
 
-void Quest::AttachInterface(const WrenQuest* p_wren_interface) {
+void Quest::AttachTemplate(const WrenQuestTemplate* p_wren_interface) {
     wren_interface = p_wren_interface;
 }
 

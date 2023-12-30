@@ -42,7 +42,7 @@ void _PauseMenu() {
     const int menu_width = 200;
     const int button_height = 20;
     const int menu_height = button_height * 3;
-    UIContextCreate(
+    UIContextCreateNew(
         (GetScreenWidth() - menu_width)/2, 
         (GetScreenHeight() - menu_height)/2, 
         menu_width,
@@ -74,7 +74,7 @@ void GlobalState::Make(timemath::Time p_time) {
     c_transf.Make();
     focused_planet = GetInvalidId();
     focused_ship = GetInvalidId();
-    capital = 0;
+    money = 0;
 }
 
 void GlobalState::LoadData() {
@@ -272,7 +272,7 @@ void GlobalState::DrawState() {
     UIStart();
     calendar.DrawUI();
     char capital_str[21];
-    sprintf(capital_str, "M§M %6lld.%3lld .mil", capital / (int)1e6, capital % 1000000 / 1000);
+    sprintf(capital_str, "M§M %6lld.%3lld .mil", money / (int)1e6, money % 1000000 / 1000);
     DrawTextAligned(capital_str, {GetScreenWidth() / 2.0f, 10}, TEXT_ALIGNMENT_HCENTER & TEXT_ALIGNMENT_TOP, Palette::ui_main);
 
     // 
@@ -315,7 +315,7 @@ void GlobalState::Serialize(DataNode* data) const {
     calendar.Serialize(data->SetChild("calendar", DataNode()));
     quest_manager.Serialize(data->SetChild("quests", DataNode()));
 
-    data->SetF("capital", capital);
+    data->SetF("capital", money);
     // ignore transferplanui for now
     data->SetI("focused_planet", (int) focused_planet);
     data->SetI("focused_ship", (int) focused_ship);
@@ -343,7 +343,7 @@ void GlobalState::Serialize(DataNode* data) const {
 
 // delta is the ammount of capital transferred TO the player
 bool GlobalState::CompleteTransaction(int delta, const char *message) {
-    capital += delta;
+    money += delta;
     return true;
 }
 
@@ -361,7 +361,7 @@ void GlobalState::Deserialize(const DataNode* data) {
     // ignore transferplanui for now
 
     
-    capital = data->GetF("capital", capital);
+    money = data->GetF("capital", money);
 
     ships.alloc.Clear(); 
     planets = Planets();

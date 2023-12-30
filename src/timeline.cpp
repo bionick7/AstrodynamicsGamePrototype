@@ -207,7 +207,7 @@ void _DrawQuests(TimeLineCoordinateData* tcd, QuestManager* qm) {
         if (closest_mouse_dist_quest_is_active) {
             qm->active_tasks.Get(closest_mouse_dist_quest)->DrawUI(false, false);
         } else {
-            qm->available_quests[closest_mouse_dist_quest].DrawUI(false, false);
+            qm->available_quests.Get(closest_mouse_dist_quest)->DrawUI(false, false);
             UIContextWrite("Press enter to accept quest", true);
             if (IsKeyPressed(KEY_ENTER)) {
                 HandleButtonSound(BUTTON_STATE_FLAG_JUST_PRESSED);
@@ -216,11 +216,6 @@ void _DrawQuests(TimeLineCoordinateData* tcd, QuestManager* qm) {
         }
         UIContextPop();
     }
-}
-
-int _Assign_And_Ret(int* var, int value) {
-    *var = value;
-    return value;
 }
 
 void _ShipDrawPathLine(const TimeLineCoordinateData* tcd, int* x_pos, int* y_pos, entity_id_t to_planet, timemath::Time to_time, int x_offset) {
@@ -234,7 +229,7 @@ void _ShipDrawPathLine(const TimeLineCoordinateData* tcd, int* x_pos, int* y_pos
 void _DrawShips(TimeLineCoordinateData* tcd, const Ships* ships) {
     for (auto it = ships->alloc.GetIter(); it; it++) {
         const Ship* ship = ships->alloc.Get(it);
-        int x_offset = (it.iterator + 1) * 4;
+        int x_offset = (it.counter + 1) * 4;
 
         int start_tp_index = 0;
         int end_point_x = 0;
@@ -304,7 +299,7 @@ void DrawTimeline() {
 
     // Create UI Context
     GlobalState* gs = GlobalGetState();
-    UIContextCreate(20, 100, GetScreenWidth() - 40, GetScreenHeight() - 100, 16, Palette::ui_main);
+    UIContextCreateNew(20, 100, GetScreenWidth() - 40, GetScreenHeight() - 100, 16, Palette::ui_main);
     UIContextEnclose(Palette::bg, Palette::ui_main);
 
     // Initiualize Common Data Structure

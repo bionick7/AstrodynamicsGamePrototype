@@ -19,10 +19,10 @@ var class_name = "ExampleQuest"
 class ExampleQuest is Quest {
 	static id { "example" }
     static challenge_level { 1 }
+    static subject { "[EXAMPLE QUEST FOR DEBUGGING AND TESTING]" }
+    static contractor { "The enclave" }
 
-    construct new () {
-        
-    }
+    construct new () {}
 
     static test() {
         System.print("hello from wren :)")
@@ -38,7 +38,7 @@ class ExampleQuest is Quest {
         var arrival_planet = rand.int(0, 7)
         var departure_time = -1
         var arrival_time = -1
-        return require_transport(1000, departure_planet, arrival_planet, departure_time, arrival_planet)
+        return transport_task(1000, departure_planet, arrival_planet, departure_time, arrival_planet)
     }
     
     get_random_glory_task() {
@@ -46,20 +46,30 @@ class ExampleQuest is Quest {
         var arrival_planet = rand.int(0, 7)
         var departure_time = -1
         var arrival_time = -1
-        return require_transport(500, departure_planet, arrival_planet, departure_planet, arrival_planet)
+        return transport_task(500, departure_planet, arrival_planet, departure_planet, arrival_planet)
     }
 
     main { Fiber.new { |last_result|
         //var ammount = rand.float(1000, 3000)
+        gain_money(1)
+        gain_ship({
+            "class_id": "shp_light_transport",  // TODO: convert to immobile platform
+            "is_parked": "y",
+            "name": "BB mining ship",
+            "planet": "Encelladus",
+            "modules": ["shpmod_water_extractor", "shpmod_water_extractor"],
+        })
+        gain_item("shpmod_heatshield", Constants.tethys)
+
         var counts = 2
-        var task1_success = Fiber.yield(require_transport(
+        var task1_success = Fiber.yield(transport_task(
             counts * Constants.count, 
             Constants.tethys, 
             Constants.encelladus, 
             Constants.day * 4
         ))
         if (task1_success) {
-            pay_money(100000)
+            gain_money(100000)
         } else {
             return false
         }
@@ -78,17 +88,17 @@ class ExampleQuest is Quest {
         if (dialogue_option == 0) {
             var task2_success = Fiber.yield(ensure_possible(get_random_stuff_task))
             if (task2_success) {
-                pay_item("heatshield")
+                gain_item("shpmod_heatshield", Constants.titan)
             } else {
-                pay_money(-100000)
+                gain_money(-100000)
             }
         }
         if (dialogue_option == 1) {
             var task2_success = Fiber.yield(get_random_glory_task())
             if (task2_success) {
-                pay_reputation(1000)
+                gain_reputation("The Enclave", 1000)
             } else {
-                pay_reputation(-1000)
+                gain_reputation("The Enclave", -1000)
             }
         }
         if (dialogue_option == 2) {

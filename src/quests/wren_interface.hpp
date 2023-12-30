@@ -3,31 +3,34 @@
 
 #include "basic.hpp"
 #include "wren.hpp"
+#include "datanode.hpp"
 #include <type_traits>
 
-struct WrenQuest {
+struct WrenQuestTemplate {
     WrenHandle* class_handle = NULL;
     char* id;
     int challenge_level;
 
-    WrenQuest() = default;
-    ~WrenQuest();
+    WrenQuestTemplate() = default;
+    ~WrenQuestTemplate();
 
     void Attach(WrenHandle* handle);
 };
 
 struct WrenInterface {
     WrenVM* vm;
-    WrenQuest* quests = NULL;
+    WrenQuestTemplate* quests = NULL;
     int valid_quest_count = 0;
+
+    WrenHandle* internals_class_handle = NULL;
 
     WrenInterface();
     ~WrenInterface();
 
     void MakeVM();
     int LoadWrenQuests();
-    WrenQuest* GetWrenQuest(const char* query_id);
-    WrenQuest* GetRandomWrenQuest();
+    WrenQuestTemplate* GetWrenQuest(const char* query_id);
+    WrenQuestTemplate* GetRandomWrenQuest();
     
     bool CallFunc(WrenHandle* func_handle);
     
@@ -35,6 +38,8 @@ struct WrenInterface {
     double GetNumFromMap(const char* key, double def);
     bool GetBoolFromMap(const char* key, bool def);
     const char* GetStringFromMap(const char* key, const char* def);
+    void _DictAsDataNodePopulateList(DataNode *dn, const char* key);
+    bool DictAsDataNode(DataNode* dn);
 };
 
 WrenVM* GetWrenVM();

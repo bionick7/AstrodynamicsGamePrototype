@@ -10,18 +10,18 @@ struct IDAllocatorList {
 
     struct Iterator { 
         entity_id_t index;
-        int iterator;
+        int counter;
         int count;
         const IDAllocatorList<T>* list_ptr;
 
         bool IsIterGoing() const {
-            return iterator < count && index < list_ptr->capacity;
+            return counter < count && index < list_ptr->capacity;
         }
 
         operator bool () const { return IsIterGoing(); }
 
         void operator++(int) {
-            iterator++;
+            counter++;
             do index++; while(index < list_ptr->capacity && 
                 !(list_ptr->verifier_array[index/64] & (UNIT64 << (index % 64)))
             ); 
@@ -95,7 +95,7 @@ struct IDAllocatorList {
             while (!IsValidIndex(start_index)) start_index++;
         Iterator it;
         it.index = start_index;
-        it.iterator = 0;
+        it.counter = 0;
         it.count = alloc_count;
         it.list_ptr = this;
         return it;

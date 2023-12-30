@@ -1,6 +1,8 @@
 #include "ship_modules.hpp"
 #include "global_state.hpp"
 #include "ship.hpp"
+#include "ui.hpp"
+#include "constants.hpp"
 
 std::map<std::string, entity_id_t> shipmodule_ids = std::map<std::string, entity_id_t>();
 ShipModuleClass* ship_modules = NULL;
@@ -69,4 +71,34 @@ const ShipModuleClass* GetModuleByIndex(entity_id_t index) {
         return NULL;
     }
     return &ship_modules[index];
+}
+
+ShipModuleClass::DrawUIRet DrawShipModule(const ShipModuleClass* smc, bool draw_deletion) {
+    if(smc == NULL) {  // empty
+        UIContextEnclose(Palette::bg, Palette::ui_dark);
+        if (UIContextAsButton() & BUTTON_STATE_FLAG_JUST_PRESSED) {
+            // Equipment menu
+            return ShipModuleClass::CREATE;
+        }
+    } else {  // filled
+        UIContextEnclose(Palette::bg, Palette::ui_main);
+        ButtonStateFlags button_state = UIContextAsButton();
+        if (button_state & BUTTON_STATE_FLAG_HOVER) {
+            UISetMouseHint(smc->name);
+        }
+        if (draw_deletion) {
+            UIContextPushHSplit(UIContextCurrent().width * 0.75, UIContextCurrent().width);
+            UIContextEnclose(Palette::red, Palette::red);
+            if (UIContextAsButton() & BUTTON_STATE_FLAG_JUST_PRESSED) {
+                return ShipModuleClass::DELETE;
+            }
+            UIContextPop();  // HSplit
+        }
+        if (button_state & BUTTON_STATE_FLAG_PRESSED) {
+            return ShipModuleClass::SELECT;
+        }
+        UIContextWrite(smc->name);
+    }
+
+    return ShipModuleClass::NONE;
 }

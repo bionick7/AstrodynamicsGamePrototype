@@ -5,31 +5,6 @@
 
 const double KG_PER_COUNT = 100e3;
 
-/*struct resource_count_t {
-    uint16_t value;
-
-    resource_count_t() { value = 0; }
-    resource_count_t(uint16_t p_counts) { value = p_counts; }
-
-    static resource_count_t FromMass(double mass) {
-        return resource_count_t((uint16_t) std::ceil(mass / KG_PER_COUNT));
-    }
-
-    double GetMass() { return (double) value * KG_PER_COUNT; }
-    resource_count_t operator+(resource_count_t other) { return resource_count_t(value + other.value); }
-    resource_count_t operator+(int other) { return resource_count_t(value + other); }
-    resource_count_t operator-(resource_count_t other) { return resource_count_t(value - other.value); }
-    resource_count_t operator-(int other) { return resource_count_t(value - other); }
-    resource_count_t operator*(int other) { return resource_count_t(value * other); }
-    double operator/(resource_count_t other) { return (double)value / (double)other.value; }
-    bool operator>(resource_count_t other) { value > other.value; }
-    bool operator<(resource_count_t other) { value < other.value; }
-    bool operator>(uint16_t other) { value > other; }
-    bool operator<(uint16_t other) { value < other; }
-
-    operator int() { return value; }
-};*/
-
 typedef int16_t resource_count_t;
 
 double ResourceCountsToKG(resource_count_t counts);

@@ -76,10 +76,6 @@ void Ship::_OnNewPlanClicked() {
     prepared_plans_count++;
 }
 
-void Ship::CreateFrom(const ShipClass *sc) {
-    
-}
-
 void Ship::Serialize(DataNode *data) const {
     data->Set("name", name);
     data->Set("is_parked", is_parked ? "y" : "n");
@@ -88,8 +84,8 @@ void Ship::Serialize(DataNode *data) const {
     data->SetI("resource_qtt", transporing.quantity);
     data->SetI("resource_id", transporing.resource_id);
 
-    data->SetArray("modules", modules_count);
-    for(int i=0; i < modules_count; i++) {
+    data->SetArray("modules", SHIP_MAX_MODULES);
+    for(int i=0; i < SHIP_MAX_MODULES; i++) {
         data->SetArrayElem("modules", i, GetModuleByIndex(modules[i])->id);
     }
 
@@ -104,16 +100,19 @@ void Ship::Deserialize(const DataNode* data) {
     is_parked = strcmp(data->Get("is_parked", "y", true), "y") == 0;
     plan_edit_index = -1;
     ship_class = GlobalGetState()->ships.GetShipClassIndexById(data->Get("class_id"));
-    transporing.quantity = data->GetI("resource_qtt", 0);
-    transporing.resource_id = (ResourceType) data->GetI("resource_id", RESOURCE_NONE);
+    transporing.quantity = data->GetI("resource_qtt", 0, true);
+    transporing.resource_id = (ResourceType) data->GetI("resource_id", RESOURCE_NONE, true);
 
     color = Palette::green;
 
 
-    modules_count = data->GetArrayLen("modules", true);
+    int modules_count = data->GetArrayLen("modules", true);
     if (modules_count > SHIP_MAX_MODULES) modules_count = SHIP_MAX_MODULES;
     for(int i=0; i < modules_count; i++) {
         modules[i] = GetModuleIndexById(data->GetArray("modules", i));
+    }
+    for(int i=modules_count; i < SHIP_MAX_MODULES; i++) {
+        modules[i] = GetInvalidId();
     }
 
     prepared_plans_count = data->GetArrayChildLen("prepared_plans", true);
@@ -134,8 +133,9 @@ double Ship::GetPayloadMass() const{
         }
     }
 
-    for(int i=0; i < modules_count; i++) {
-        res += GetModuleByIndex(modules[i])->mass;
+    for(int i=0; i < SHIP_MAX_MODULES; i++) {
+        if (IsIdValid(modules[i])) 
+            res += GetModuleByIndex(modules[i])->mass;
     }
 
     return res - 0;
@@ -269,8 +269,9 @@ void Ship::Update() {
         draw_pos = Vector2Add(FromPolar(rad, phase), draw_pos);
     }
 
-    for (int i=0; i < modules_count; i++) {
-        GetModuleByIndex(modules[i])->Update(this);
+    for (int i=0; i < SHIP_MAX_MODULES; i++) {
+        if (IsIdValid(modules[i]))
+            GetModuleByIndex(modules[i])->Update(this);
     }
 }
 
@@ -396,6 +397,7 @@ void _UIDrawQuests(Ship* ship) {
     }
 }
 
+int ship_selecting_module_index = -1;
 void Ship::DrawUI(const CoordinateTransform* c_transf) {
     if (mouse_hover) {
         // Hover
@@ -411,7 +413,7 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
     if (!mouse_hover && GlobalGetState()->active_transfer_plan.ship != id && GlobalGetState()->focused_ship != id) return;
 
     int text_size = 16;
-    UIContextCreate(
+    UIContextCreateNew(
         GetScreenWidth() - 20*text_size - 5, 5 + 200,
         20*text_size, GetScreenHeight() - 200 - 2*5, 
         text_size, Palette::ui_main
@@ -435,17 +437,37 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
     for (int i=0; i < SHIP_MAX_MODULES; i++) {
         UIContextPushGridCell(5, SHIP_MAX_MODULES / 5, i % 5, i / 5);
         UIContextShrink(3, 3);
-        if(i >= modules_count) {
-            UIContextEnclose(Palette::bg, GRAY);
-            UIContextPop(); // GridCell
-            continue;
+        ShipModuleClass::DrawUIRet ret = DrawShipModule(IsIdValid(modules[i]) ? GetModuleByIndex(modules[i]) : NULL, true);
+        if (ret == ShipModuleClass::CREATE && is_parked) {
+            ship_selecting_module_index = i;
+        }else if (ret == ShipModuleClass::DELETE) {
+            // Remove module
+            UISetMouseHint(name);
+            // Give it to planet
+            if (is_parked) {
+                // This means, unequipping during trnasit just jettisons the module to outer space
+                // Might want to ask for confirmaition
+                GetPlanet(parent_planet)->AddShipModuleToInventory(modules[i]);
+            }
+            RemoveShipModuleAt(i);
         }
-        UIContextEnclose(Palette::bg, Palette::ui_main);
-        if (UIContextAsButton() & BUTTON_STATE_FLAG_HOVER) {
-            UISetMouseHint(GetModuleByIndex(modules[i])->name);
-        }
+        
         UIContextPop(); // GridCell
     }
+    if (ship_selecting_module_index >= 0 && is_parked) {
+        int upper = UIContextCurrent().text_start_y;
+        int right = UIContextCurrent().text_start_x;
+        const int creation_popup_width = 300;
+        const int creation_popup_height = 10*50;
+        UIContextPushGlobal(right - creation_popup_width - 20, upper, creation_popup_width, creation_popup_height, 16, Palette::ui_main);
+        int selected_index = GetPlanet(parent_planet)->UIDrawInventory();
+        UIContextPop();
+        if (selected_index >= 0) {
+            modules[ship_selecting_module_index] = GetPlanet(parent_planet)->ship_module_inventory[selected_index];
+            GetPlanet(parent_planet)->RemoveShipModuleInInventory(selected_index);
+            ship_selecting_module_index = -1;
+        }
+    } 
     UIContextPop(); // Inset
 
     _UIDrawTransferplans(this);
@@ -453,6 +475,11 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
 }
 
 void Ship::Inspect() {
+
+}
+
+void Ship::RemoveShipModuleAt(int index) {
+    modules[index] = GetInvalidId();
 }
 
 void Ship::_OnDeparture(const TransferPlan& tp) {
@@ -461,7 +488,7 @@ void Ship::_OnDeparture(const TransferPlan& tp) {
     ResourceTransfer fuel_tf = local_economy->DrawResource(ResourceTransfer(RESOURCE_WATER, tp.fuel_mass));
     if (fuel_tf.quantity < tp.fuel_mass) {
         resource_count_t remaining_fuel = tp.fuel_mass - fuel_tf.quantity;
-        if (local_economy->trading_accessible && local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) < GlobalGetState()->capital) {
+        if (local_economy->trading_accessible && local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) < GlobalGetState()->money) {
             USER_INFO("Automatically purchased %d of water for M§M %ld K", remaining_fuel, local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) / 1e3)
             local_economy->TryPlayerTransaction(ResourceTransfer(RESOURCE_WATER, remaining_fuel));
             local_economy->DrawResource(ResourceTransfer(RESOURCE_WATER, remaining_fuel));

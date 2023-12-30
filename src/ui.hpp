@@ -66,7 +66,8 @@ private:
     void _Advance(Vector2 size);
 };
 
-void UIContextCreate(int x, int y, int w, int h, int text_size, Color color);
+void UIContextCreateNew(int x, int y, int w, int h, int text_size, Color color);
+void UIContextPushGlobal(int x, int y, int w, int h, int text_size, Color color);
 
 int UIContextPushInset(int margin, int h);
 int UIContextPushScrollInset(int margin, int h, int allocated_height, int scroll);

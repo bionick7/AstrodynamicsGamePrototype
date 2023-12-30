@@ -41,6 +41,8 @@ struct GlobalState {
     QuestManager quest_manager;
     Ships ships;
     Planets planets;
+    
+    cost_t money;
 
     AudioServer audio_server;
     WrenInterface wren_interface;
@@ -48,8 +50,6 @@ struct GlobalState {
     
     entity_id_t focused_planet;
     entity_id_t focused_ship;
-
-    cost_t capital;
 
     // Lifecycle
     void Make(timemath::Time time);

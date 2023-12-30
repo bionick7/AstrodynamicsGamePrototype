@@ -12,12 +12,12 @@
 #include "wren_interface.hpp"
 
 struct Ship;
-#define _AVAILABLE_QUESTS 20
 
 struct QuestManager {
-    Quest available_quests[_AVAILABLE_QUESTS];
-    IDAllocatorList<Task> active_tasks;
+    IDAllocatorList<Quest> available_quests;
+    //Quest available_quests[_AVAILABLE_QUESTS];
     IDAllocatorList<Quest> active_quests;
+    IDAllocatorList<Task> active_tasks;
 
     //QuestTemplate* templates;
     int template_count;
@@ -34,6 +34,7 @@ struct QuestManager {
     void Draw();
 
     void AcceptQuest(entity_id_t quest_index);
+    void ForceQuest(WrenQuestTemplate* template_);
     entity_id_t CreateTask(entity_id_t quest_index);
     int GetAvailableQuests() const;
 
@@ -42,6 +43,8 @@ struct QuestManager {
     void TaskDepartedFrom(entity_id_t task_index, entity_id_t planet_index);
     void TaskArrivedAt(entity_id_t task_index, entity_id_t planet_index);
     void CompleteTask(entity_id_t task_index);
+
+    void _RegenQuests();
 
     //int LoadQuests(const DataNode*);
     //int RandomTemplateIndex();

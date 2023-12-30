@@ -1,7 +1,8 @@
 #include "wren_interface.hpp"
 #include "logging.hpp"
 #include "global_state.hpp"
-#include "core/string_builder.hpp"
+#include "string_builder.hpp"
+#include "ship.hpp"
 
 bool _WrenCallEmptyMethod(WrenHandle* class_handle, const char* signature) {
 	WrenVM* vm = GetWrenVM();
@@ -13,7 +14,7 @@ bool _WrenCallEmptyMethod(WrenHandle* class_handle, const char* signature) {
 	return call_result == WREN_RESULT_SUCCESS;
 }
 
-void WrenQuest::Attach(WrenHandle* p_class_handle) {
+void WrenQuestTemplate::Attach(WrenHandle* p_class_handle) {
 	WrenVM* vm = GetWrenVM();
 	class_handle = p_class_handle;
 
@@ -32,7 +33,7 @@ void WrenQuest::Attach(WrenHandle* p_class_handle) {
 	wrenReleaseHandle(vm, test_handle);*/
 }
 
-WrenQuest::~WrenQuest() {
+WrenQuestTemplate::~WrenQuestTemplate() {
 	WrenVM* vm = GetWrenVM();
 	wrenReleaseHandle(vm, class_handle);
 	delete[] id;
@@ -46,23 +47,60 @@ WrenInterface::~WrenInterface() {
 
 }
 
+bool _AssertSlotType(WrenVM* vm, int slot, WrenType type) {
+	if (wrenGetSlotCount(vm) <= slot) {
+		wrenEnsureSlots(vm, 1);
+		wrenSetSlotString(vm, 0, "Not enough slots provided");
+		wrenAbortFiber(vm, 0);
+		return false;
+	}
+	if (wrenGetSlotType(vm, slot) != type) {
+		wrenEnsureSlots(vm, 1);
+		char error_msg[40];
+		sprintf(error_msg, "Wrong argument type at slot %d", slot);
+		wrenSetSlotString(vm, 0, error_msg);
+		wrenAbortFiber(vm, 0);
+		return false;
+	}
+	return true;
+}
+
 void QuestInterfaceIsTaskPossible(WrenVM* vm) {
-	NOT_IMPLEMENTED
+	NOT_IMPLEMENTED  // Details are blurry, bring more control to the wren side
 	wrenEnsureSlots(vm, 1);
 	wrenSetSlotBool(vm, 0, true);
 }
 
-void QuestInterfacePayMoney(WrenVM* vm) {
-	cost_t delta = (cost_t) wrenGetSlotDouble(vm, 0);
+void QuestInterfaceGainMoney(WrenVM* vm) {
+	if (!_AssertSlotType(vm, 1, WREN_TYPE_NUM)) return;
+	cost_t delta = (cost_t) wrenGetSlotDouble(vm, 1);
 	GlobalGetState()->CompleteTransaction(delta, "");
+	//INFO("Paid %lld in wren interface", delta)
 }
 
-void QuestInterfacePayItem(WrenVM* vm) {
+void QuestInterfaceGainItem(WrenVM* vm) {
+	if (!_AssertSlotType(vm, 1, WREN_TYPE_STRING) || !_AssertSlotType(vm, 2, WREN_TYPE_NUM)) return;
+	const char* item_id = wrenGetSlotString(vm, 1);
+	int planet = (int) wrenGetSlotDouble(vm, 2);
+	entity_id_t smc = GetModuleIndexById(item_id);
+	GetPlanet(planet)->AddShipModuleToInventory(smc);
+}
+
+void QuestInterfaceGainReputation(WrenVM* vm) {
+	if (!_AssertSlotType(vm, 1, WREN_TYPE_NUM)) return;
 	NOT_IMPLEMENTED
 }
 
-void QuestInterfacePayReputation(WrenVM* vm) {
-	NOT_IMPLEMENTED
+void QuestInterfaceGainShip(WrenVM* vm) {
+	if (!_AssertSlotType(vm, 1, WREN_TYPE_MAP) || !_AssertSlotType(vm, 2, WREN_TYPE_LIST)) return;
+	DataNode dn;
+	WrenHandle* instance_handle = wrenGetSlotHandle(vm, 0);
+	WrenHandle* map_handle = wrenGetSlotHandle(vm, 1);
+	WrenHandle* keylist_handle = wrenGetSlotHandle(vm, 2);
+	wrenSetSlotHandle(vm, 0, map_handle);
+	wrenSetSlotHandle(vm, 1, keylist_handle);
+	GetWrenInterface()->DictAsDataNode(&dn);
+	GlobalGetState()->ships.AddShip(&dn);
 }
 
 static void WriteFn(WrenVM* vm, const char* text) {
@@ -116,6 +154,11 @@ void DefaultDestructor(void* data) {
 
 }
 
+void DefaultMethod(WrenVM* vm) {
+	wrenEnsureSlots(vm, 1);
+	wrenSetSlotNull(vm, 0);
+}
+
 WrenForeignMethodFn BindForeignMethod(
 	WrenVM* vm,
 	const char* module,
@@ -126,12 +169,12 @@ WrenForeignMethodFn BindForeignMethod(
 	// Skip errormessage in these cases
 #ifdef WREN_OPT_RANDOM
 	if (strcmp(module, "random") == 0) {
-		return nullptr;
+		return &DefaultMethod;
 	}
 #endif // WREN_OPT_RANDOM
 #ifdef WREN_OPT_META
 	if (strcmp(module, "meta") == 0) {
-		return nullptr;
+		return &DefaultMethod;
 	}
 #endif // WREN_OPT_META
 
@@ -139,17 +182,19 @@ WrenForeignMethodFn BindForeignMethod(
 	if (strcmp(className, "Quest") == 0) {
 		if (strcmp(signature, "is_task_possible(_)") == 0) {
 			return &QuestInterfaceIsTaskPossible;
-		} else if (strcmp(signature, "pay_money(_)") == 0) {
-			return &QuestInterfacePayMoney;
-		} else if (strcmp(signature, "pay_item(_)") == 0) {
-			return &QuestInterfacePayItem;
-		} else if (strcmp(signature, "pay_reputation(_)") == 0) {
-			return &QuestInterfacePayReputation;
+		} else if (strcmp(signature, "gain_money(_)") == 0) {
+			return &QuestInterfaceGainMoney;
+		} else if (strcmp(signature, "gain_item(_,_)") == 0) {
+			return &QuestInterfaceGainItem;
+		} else if (strcmp(signature, "gain_reputation(_,_)") == 0) {
+			return &QuestInterfaceGainReputation;
+		} else if (strcmp(signature, "gain_ship_impl(_,_)") == 0) {
+			return &QuestInterfaceGainShip;
 		}
 		ERROR("Unsupported foreign method '%s.%s'", className, signature)
 	}
 	ERROR("Unsupported foreign class '%s'", className)
-	return nullptr;
+	return &DefaultMethod;
 }
 
 WrenForeignClassMethods BindForeignClass(
@@ -158,8 +203,8 @@ WrenForeignClassMethods BindForeignClass(
 	const char* className) 
 {
 	WrenForeignClassMethods res = { 0 };
-	res.allocate = nullptr;
-	res.finalize = nullptr;
+	res.allocate = NULL;
+	res.finalize = NULL;
 
 	// Skip errormessage in these cases
 #ifdef WREN_OPT_RANDOM
@@ -224,7 +269,17 @@ void WrenInterface::MakeVM() {
 int WrenInterface::LoadWrenQuests() {
 	FilePathList fps = LoadDirectoryFilesEx("resources/wren/quests", ".wren", true);
 	delete[] quests;
-	quests = new WrenQuest[fps.count];
+	quests = new WrenQuestTemplate[fps.count];
+
+	wrenInterpret(vm, "_internals", 
+		"class Internals {\n"
+		"\n"
+		"}\n"
+	);
+	wrenEnsureSlots(vm, 1);
+	wrenGetVariable(vm, "_internals", "Internals", 0);
+	internals_class_handle = wrenGetSlotHandle(vm, 0);
+
 	for (int i=0; i < fps.count; i++) {
 		const char* module_name = GetFileNameWithoutExt(fps.paths[i]);
 		INFO("Loading %s", module_name);
@@ -237,8 +292,17 @@ int WrenInterface::LoadWrenQuests() {
 			continue;
 		}
 		wrenGetVariable(vm, module_name, "class_name", 0);
+		if (wrenGetSlotType(vm, 0) != WREN_TYPE_STRING) {
+			ERROR("'class_name' in '%s' (%s) must be a string identical to the class name", module_name, fps.paths[i])
+			continue;
+		}
 		const char* class_name = wrenGetSlotString(vm, 0);
 		wrenGetVariable(vm, module_name, class_name, 0);
+
+		if (!wrenHasVariable(vm, module_name, class_name)) {
+			ERROR("'class_name' in '%s' (%s) must be a string identical to the class name", module_name, fps.paths[i])
+			continue;
+		}
 		WrenHandle* class_handle = wrenGetSlotHandle(vm, 0);
 		quests[valid_quest_count++].Attach(class_handle);
 	}
@@ -250,7 +314,7 @@ int WrenInterface::LoadWrenQuests() {
 }
 
 
-WrenQuest* WrenInterface::GetWrenQuest(const char* query_id) {
+WrenQuestTemplate* WrenInterface::GetWrenQuest(const char* query_id) {
 	// when surpassing ~50 of these, switch to a map or so.
 	for(int i=0; i < valid_quest_count; i++) {
 		if (strcmp(quests[i].id, query_id) == 0) {
@@ -260,7 +324,7 @@ WrenQuest* WrenInterface::GetWrenQuest(const char* query_id) {
 	return NULL;
 }
 
-WrenQuest* WrenInterface::GetRandomWrenQuest() {
+WrenQuestTemplate* WrenInterface::GetRandomWrenQuest() {
 	if (valid_quest_count <= 0) {
 		return NULL;
 	}
@@ -269,6 +333,12 @@ WrenQuest* WrenInterface::GetRandomWrenQuest() {
 
 bool WrenInterface::CallFunc(WrenHandle* func_handle) {
 	WrenInterpretResult call_result = wrenCall(vm, func_handle);
+	if (call_result == WREN_RESULT_COMPILE_ERROR) {
+		ERROR("compilation error in function call")
+	}
+	if (call_result == WREN_RESULT_RUNTIME_ERROR) {
+		ERROR("runntime error in function call")
+	}
 	// Handle errors
 	return call_result == WREN_RESULT_SUCCESS;
 }
@@ -312,10 +382,148 @@ const char* WrenInterface::GetStringFromMap(const char* key, const char* def) {
     return wrenGetSlotString(vm, 2);
 }
 
+void WrenInterface::_DictAsDataNodePopulateList(DataNode *dn, const char* key) {
+	// Will leave slots intact
+	// reuse key slot to store list value
+	const int DICT_SLOT = 0;
+	const int KEYLIST_SLOT = 1;
+	const int ELEM_SLOT = 2;
+	const int VALUE_SLOT = 3;
+	
+	WrenHandle* dict_handle = wrenGetSlotHandle(vm, DICT_SLOT);
+	WrenHandle* key_list_handle = wrenGetSlotHandle(vm, KEYLIST_SLOT);
+
+	int list_count = wrenGetListCount(vm, VALUE_SLOT);
+	if (list_count == 0) {
+		dn->SetArray(key, list_count);
+		return;
+	}
+	wrenGetListElement(vm, VALUE_SLOT, 0, ELEM_SLOT);
+	if (wrenGetSlotType(vm, ELEM_SLOT) == WREN_TYPE_MAP) {  // Will not support mixed arrays
+		NOT_IMPLEMENTED  // Current method disallows recursion
+		dn->SetArrayChild(key, list_count);
+		WrenHandle* list_handle = wrenGetSlotHandle(vm, VALUE_SLOT);
+		for (int i=0; i < list_count; i++) {
+			wrenGetListElement(vm, VALUE_SLOT, i, ELEM_SLOT);
+			WrenHandle* child_handle = wrenGetSlotHandle(vm, ELEM_SLOT);
+			DataNode* child = dn->SetArrayElemChild(key, i, DataNode());
+			wrenSetSlotHandle(vm, 0, child_handle);
+			bool success = DictAsDataNode(child);
+
+			// Restore state
+			wrenEnsureSlots(vm, 4);
+			wrenSetSlotHandle(vm, DICT_SLOT, dict_handle);
+			wrenSetSlotHandle(vm, KEYLIST_SLOT, key_list_handle);
+			wrenSetSlotHandle(vm, VALUE_SLOT, list_handle);
+		}
+		return;
+	}
+	dn->SetArray(key, list_count);
+	for (int i=0; i < list_count; i++) {
+		wrenGetListElement(vm, VALUE_SLOT, i, ELEM_SLOT);
+		WrenType value_type = wrenGetSlotType(vm, ELEM_SLOT);
+		switch (value_type) {
+		case WREN_TYPE_BOOL: {
+			bool value = wrenGetSlotBool(vm, ELEM_SLOT);
+			dn->SetArrayElem(key, i, value ? "y" : "n");
+			break;}
+		case WREN_TYPE_NUM: {
+			double value = wrenGetSlotDouble(vm, ELEM_SLOT);
+			if (std::fmod(value, 1.0) == 0.0) {
+				dn->SetArrayElemI(key, i, (int)value);
+			} else {
+				dn->SetArrayElemF(key, i, value);
+			}
+			break;}
+		case WREN_TYPE_NULL: {
+			dn->SetArrayElem(key, i, "NONE");
+			break;}
+		case WREN_TYPE_STRING: {
+			const char* value = wrenGetSlotString(vm, ELEM_SLOT);
+			dn->SetArrayElem(key, i, value);
+			break;}
+		}
+	}
+
+	wrenEnsureSlots(vm, 4);
+	wrenSetSlotHandle(vm, DICT_SLOT, dict_handle);
+	wrenSetSlotHandle(vm, KEYLIST_SLOT, key_list_handle);
+}
+
+bool WrenInterface::DictAsDataNode(DataNode *dn) {
+    // assumes map at position 0 and keylist at position 1 (has to be provided :( )
+	// Will erase slots
+	const int DICT_SLOT = 0;
+	const int KEYLIST_SLOT = 1;
+	const int KEY_SLOT = 2;
+	const int VALUE_SLOT = 3;
+
+    if (wrenGetSlotCount(vm) < 2) {
+        return false;
+    }
+    if (wrenGetSlotType(vm, 0) != WREN_TYPE_MAP) {
+        return false;
+    }
+    if (wrenGetSlotType(vm, 1) != WREN_TYPE_LIST) {
+        return false;
+    }
+	WrenHandle* dict_handle = wrenGetSlotHandle(vm, 0);
+	WrenHandle* key_list_handle = wrenGetSlotHandle(vm, 1);
+
+    wrenEnsureSlots(vm, 4);
+	wrenSetSlotHandle(vm, DICT_SLOT, dict_handle);
+	wrenSetSlotHandle(vm, KEYLIST_SLOT, key_list_handle);
+	int dict_count = wrenGetListCount(vm, KEYLIST_SLOT);
+	for (int i=0; i < dict_count; i++) {
+		wrenGetListElement(vm, KEYLIST_SLOT, i, KEY_SLOT);
+		if (wrenGetSlotType(vm, KEY_SLOT) != WREN_TYPE_STRING) {
+			ERROR("Expected string key, not '%d' in wren datanode", (int) wrenGetSlotType(vm, KEY_SLOT))
+			continue;
+		}
+		const char* key = wrenGetSlotString(vm, KEY_SLOT);
+		wrenGetMapValue(vm, DICT_SLOT, KEY_SLOT, VALUE_SLOT);
+		WrenType value_type = wrenGetSlotType(vm, VALUE_SLOT);
+		switch (value_type) {
+		case WREN_TYPE_BOOL: {
+			bool value = wrenGetSlotBool(vm, VALUE_SLOT);
+			dn->Set(key, value ? "y" : "n");
+			break;}
+		case WREN_TYPE_NUM: {
+			double value = wrenGetSlotDouble(vm, VALUE_SLOT);
+			if (std::fmod(value, 1.0) == 0.0) {
+				dn->SetI(key, (int)value);
+			} else {
+				dn->SetF(key, value);
+			}
+			break;}
+		case WREN_TYPE_NULL: {
+			dn->Set(key, "NONE");
+			break;}
+		case WREN_TYPE_STRING: {
+			const char* value = wrenGetSlotString(vm, VALUE_SLOT);
+			dn->Set(key, value);
+			break;}
+		case WREN_TYPE_LIST: {
+			_DictAsDataNodePopulateList(dn, key);
+			break;}
+		case WREN_TYPE_MAP: {
+			NOT_IMPLEMENTED  // Current method disallows recursion
+			WrenHandle* child_handle = wrenGetSlotHandle(vm, VALUE_SLOT);
+			DataNode* child = dn->SetChild(key, DataNode());
+			wrenSetSlotHandle(vm, 0, child_handle);
+			bool success = DictAsDataNode(child);
+			wrenEnsureSlots(vm, 4);
+			wrenSetSlotHandle(vm, DICT_SLOT, dict_handle);
+			wrenSetSlotHandle(vm, KEYLIST_SLOT, key_list_handle);
+			break;}
+		default: {
+			ERROR("Unexpected vale type in wren datanode: '%d'", (int) value_type)
+			break;}
+		}
+	}
+    return true;
+}
 
 WrenVM* GetWrenVM() {
     return GetWrenInterface()->vm;
 }
-
-// resources wren foreign quest_base.wren
-// resources wren foreign quest_base.wren

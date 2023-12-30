@@ -175,7 +175,7 @@ void PlanetaryEconomy::TryPlayerTransaction(ResourceTransfer rt) {
         GlobalGetState()->CompleteTransaction(GetPrice(actual.resource_id, actual.quantity), "Sold on market");
     }
     else if (rt.quantity > 0) {  // Buy
-        rt.quantity = fmin(GetForPrice(rt.resource_id, GlobalGetState()->capital), rt.quantity);
+        rt.quantity = fmin(GetForPrice(rt.resource_id, GlobalGetState()->money), rt.quantity);
         ResourceTransfer actual = GiveResource(rt);
         GlobalGetState()->CompleteTransaction(-GetPrice(actual.resource_id, actual.quantity), "Bought on market");
     }

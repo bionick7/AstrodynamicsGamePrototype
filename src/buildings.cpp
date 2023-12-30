@@ -221,7 +221,7 @@ void BuildingConstructionUI() {
         return;
     }
 
-    UIContextCreate(16*30 + 20, 10, 4*(32+sprite_margin_tot), 4*(32+sprite_margin_tot), 16, Palette::ui_main);
+    UIContextCreateNew(16*30 + 20, 10, 4*(32+sprite_margin_tot), 4*(32+sprite_margin_tot), 16, Palette::ui_main);
     UIContextEnclose(Palette::bg, Palette::ui_main);
     for (building_index_t i=0; i < building_count && i < 16; i++) {
         const BuildingClass* building_class = GetBuildingByIndex(i);
