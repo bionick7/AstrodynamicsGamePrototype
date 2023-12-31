@@ -4,10 +4,6 @@
 #include "ui.hpp"
 #include "constants.hpp"
 
-std::map<std::string, entity_id_t> shipmodule_ids = std::map<std::string, entity_id_t>();
-ShipModuleClass* ship_modules = NULL;
-size_t shipmodule_count = 0;
-
 ShipModuleClass::ShipModuleClass() {
     mass = 0.0;
     name[0] = '\0';
@@ -31,7 +27,55 @@ void ShipModuleClass::Update(Ship* ship) const {
     }
 }
 
-int LoadShipModules(const DataNode* data) {
+
+ShipModuleSlot::ShipModuleSlot(entity_id_t p_entity, int p_index, ShipModuleSlotType p_type) {
+    entity = p_entity;
+    index = p_index;
+    type = p_type;
+}
+
+void ShipModuleSlot::SetSlot(entity_id_t module_) const {
+    if (type == ShipModuleSlot::DRAGGING_FROM_PLANET) {
+        GetPlanet(entity)->ship_module_inventory[index] = module_;
+    } else if (type == ShipModuleSlot::DRAGGING_FROM_SHIP) {
+        GetShip(entity)->modules[index] = module_;
+    }
+}
+
+entity_id_t ShipModuleSlot::GetSlot() const {
+    if (type == ShipModuleSlot::DRAGGING_FROM_PLANET) {
+        return GetPlanet(entity)->ship_module_inventory[index];
+    } else if (type == ShipModuleSlot::DRAGGING_FROM_SHIP) {
+        return GetShip(entity)->modules[index];
+    }
+    return GetInvalidId();
+}
+
+void ShipModuleSlot::AssignIfValid(ShipModuleSlot other) {
+    if (IsIdValid(other.entity) && other.index >= 0) {
+        *this = other;
+    }
+}
+
+bool ShipModuleSlot::IsReachable(ShipModuleSlot other) {
+    entity_id_t own_planet = GetInvalidId();
+    entity_id_t other_planet = GetInvalidId();
+    if (type == ShipModuleSlot::DRAGGING_FROM_PLANET) {
+        own_planet = entity;
+    } else if (type == ShipModuleSlot::DRAGGING_FROM_SHIP) {
+        own_planet = GetShip(entity)->parent_planet;  // Might be invalid
+    }
+    
+    if (other.type == ShipModuleSlot::DRAGGING_FROM_PLANET) {
+        other_planet = other.entity;
+    } else if (other.type == ShipModuleSlot::DRAGGING_FROM_SHIP) {
+        other_planet = GetShip(other.entity)->parent_planet;  // Might be invalid
+    }
+
+    return own_planet == other_planet;
+}
+
+int ShipModules::Load(const DataNode* data) {
     shipmodule_count = data->GetArrayChildLen("shipmodules");
     delete[] ship_modules;
     ship_modules = new ShipModuleClass[shipmodule_count];
@@ -53,7 +97,7 @@ int LoadShipModules(const DataNode* data) {
     return shipmodule_count;
 }
 
-entity_id_t GetModuleIndexById(const char* id) {
+entity_id_t ShipModules::GetModuleIndexById(const char* id) const {
     auto find = shipmodule_ids.find(id);
     if (find == shipmodule_ids.end()) {
         return GetInvalidId();
@@ -61,7 +105,7 @@ entity_id_t GetModuleIndexById(const char* id) {
     return find->second;
 }
 
-const ShipModuleClass* GetModuleByIndex(entity_id_t index) {
+const ShipModuleClass* ShipModules::GetModuleByIndex(entity_id_t index) const {
     if (ship_modules == NULL) {
         ERROR("Ship modules uninitialized")
         return NULL;
@@ -73,26 +117,19 @@ const ShipModuleClass* GetModuleByIndex(entity_id_t index) {
     return &ship_modules[index];
 }
 
-ShipModuleClass::DrawUIRet DrawShipModule(const ShipModuleClass* smc, bool draw_deletion) {
-    if(smc == NULL) {  // empty
+ShipModuleClass::DrawUIRet ShipModules::DrawShipModule(entity_id_t index) const {
+    if(!IsIdValid(index)) {  // empty
         UIContextEnclose(Palette::bg, Palette::ui_dark);
         if (UIContextAsButton() & BUTTON_STATE_FLAG_JUST_PRESSED) {
             // Equipment menu
             return ShipModuleClass::CREATE;
         }
     } else {  // filled
+        const ShipModuleClass* smc = GetModuleByIndex(index);
         UIContextEnclose(Palette::bg, Palette::ui_main);
         ButtonStateFlags button_state = UIContextAsButton();
         if (button_state & BUTTON_STATE_FLAG_HOVER) {
             UISetMouseHint(smc->name);
-        }
-        if (draw_deletion) {
-            UIContextPushHSplit(UIContextCurrent().width * 0.75, UIContextCurrent().width);
-            UIContextEnclose(Palette::red, Palette::red);
-            if (UIContextAsButton() & BUTTON_STATE_FLAG_JUST_PRESSED) {
-                return ShipModuleClass::DELETE;
-            }
-            UIContextPop();  // HSplit
         }
         if (button_state & BUTTON_STATE_FLAG_PRESSED) {
             return ShipModuleClass::SELECT;
@@ -101,4 +138,52 @@ ShipModuleClass::DrawUIRet DrawShipModule(const ShipModuleClass* smc, bool draw_
     }
 
     return ShipModuleClass::NONE;
+}
+
+void ShipModules::InitDragging(ShipModuleSlot slot, Rectangle current_draw_rect) {
+    _dragging_origin = slot;
+    _dragging = slot.GetSlot();
+    slot.SetSlot(GetInvalidId());
+
+    Vector2 draw_pos = {current_draw_rect.x, current_draw_rect.y};
+    _dragging_mouse_offset = Vector2Subtract(draw_pos, GetMousePosition());
+
+}
+
+void ShipModules::UpdateDragging() {
+    if (!IsIdValid(_dragging)) {
+        return;
+    }
+    Vector2 pos = Vector2Add(GetMousePosition(), _dragging_mouse_offset);
+    UIContextPushGlobal(pos.x, pos.y, SHIP_MODULE_WIDTH, SHIP_MODULE_HEIGHT, 16, Palette::ui_main);
+    DrawShipModule(_dragging);
+    UIContextPop();  // Global
+
+    ShipModuleSlot release_slot = _dragging_origin;
+
+    // TODO
+    for (entity_id_t planet_id = 0; planet_id < GlobalGetState()->planets.GetPlanetCount(); planet_id++) {
+        release_slot.AssignIfValid(GetPlanet(planet_id)->current_slot);
+    }
+    for (auto it = GlobalGetState()->ships.alloc.GetIter(); it.IsIterGoing(); it++) {
+        release_slot.AssignIfValid(GetShip(it.index)->current_slot);
+    }
+
+    if (!_dragging_origin.IsReachable(release_slot)) {
+        release_slot = _dragging_origin;
+    }
+
+    if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+        _dragging_origin.SetSlot(release_slot.GetSlot());
+        release_slot.SetSlot(_dragging);
+        _dragging = GetInvalidId();
+    }
+}
+
+int LoadShipModules(const DataNode* data) {
+    return GlobalGetState()->ship_modules.Load(data);
+}
+
+const ShipModuleClass* GetModule(entity_id_t id) {
+    return GlobalGetState()->ship_modules.GetModuleByIndex(id);
 }

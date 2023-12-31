@@ -11,8 +11,11 @@
 - quantise resources (1 count = 100kT) (Done)
 - water mining ship (or other more techniques to deal with fuel management?,) (Done)
 - Transfer plan UX (Half)
-- Inventory
-- Quests drop modules & Ships
+- Inventory (Done)
+- Quests drop modules & Ships (Done)
+- Drag & Drop
+- Dialogue
+- Actual quests
 - Shop
 //- Implement Ship Docking Rent?
 - Build ships in shipyard
@@ -32,14 +35,14 @@
 Near-term, realizable only
 - modules => buildings (Done)
 - "loading"bars to show resource scarcity (Done)
-- departure time adjusts automatically to the optimum (with option to turn it off)
-- "ASAP" button for transfer UI
-- ability to show hohmann trnasfer period in transfer window
+- departure time adjusts automatically to the optimum (with option to turn it off) (Done)
+- "ASAP" button for transfer UI (mathematically tricky problem tbh)
+- ability to show hohmann trnasfer period in transfer window (eh ... hard to make it be usefull)
 - questlog window is kinda outdated
 - front-end info and error log
 - different icons for different ships
-- icons for buildings
-- make clear which buildings are buildable
+//- icons for buildings
+//- make clear which buildings are buildable
 - warn before committing to an empty transform ("empty" in red or required to choose it explicitly)
 - highlight more important statistics
 

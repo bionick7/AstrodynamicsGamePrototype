@@ -275,27 +275,18 @@ void GlobalState::DrawState() {
     sprintf(capital_str, "M§M %6lld.%3lld .mil", money / (int)1e6, money % 1000000 / 1000);
     DrawTextAligned(capital_str, {GetScreenWidth() / 2.0f, 10}, TEXT_ALIGNMENT_HCENTER & TEXT_ALIGNMENT_TOP, Palette::ui_main);
 
-    // 
+    // planets
     for (entity_id_t planet_id = 0; planet_id < planets.GetPlanetCount(); planet_id++) {
         Planet* planet = planets.GetPlanet(planet_id);
-        if (active_transfer_plan.IsActive()){
-            if (active_transfer_plan.plan->departure_planet == planet->id) {
-                planet->DrawUI(&c_transf, true, active_transfer_plan.plan->resource_transfer.Inverted(), active_transfer_plan.plan->fuel_mass);
-            }
-            if (active_transfer_plan.plan->arrival_planet == planet->id) {
-                planet->DrawUI(&c_transf, false, active_transfer_plan.plan->resource_transfer, -1);
-            }
-        }
-        else if (planet->mouse_hover || planet->id == focused_planet) {
-            planet->DrawUI(&c_transf, true, ResourceTransfer(), -1);
-        }
+        planet->DrawUI();
     }
-    BuildingConstructionUI();
+    //BuildingConstructionUI();
     for (auto it = ships.alloc.GetIter(); it.IsIterGoing(); it++) {
         Ship* ship = ships.alloc[it];
-        ship->DrawUI(&c_transf);
+        ship->DrawUI();
     }
     active_transfer_plan.DrawUI();
+    ship_modules.UpdateDragging();
     DrawTimeline();
     quest_manager.Draw();
     

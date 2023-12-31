@@ -39,8 +39,10 @@ struct GlobalState {
     Calendar calendar;
     TransferPlanUI active_transfer_plan;
     QuestManager quest_manager;
+
     Ships ships;
     Planets planets;
+    ShipModules ship_modules;
     
     cost_t money;
 

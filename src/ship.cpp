@@ -86,7 +86,7 @@ void Ship::Serialize(DataNode *data) const {
 
     data->SetArray("modules", SHIP_MAX_MODULES);
     for(int i=0; i < SHIP_MAX_MODULES; i++) {
-        data->SetArrayElem("modules", i, GetModuleByIndex(modules[i])->id);
+        data->SetArrayElem("modules", i, GetModule(modules[i])->id);
     }
 
     data->SetArrayChild("prepared_plans", prepared_plans_count);
@@ -108,8 +108,9 @@ void Ship::Deserialize(const DataNode* data) {
 
     int modules_count = data->GetArrayLen("modules", true);
     if (modules_count > SHIP_MAX_MODULES) modules_count = SHIP_MAX_MODULES;
+    const ShipModules* sms = &GlobalGetState()->ship_modules;
     for(int i=0; i < modules_count; i++) {
-        modules[i] = GetModuleIndexById(data->GetArray("modules", i));
+        modules[i] = sms->GetModuleIndexById(data->GetArray("modules", i));
     }
     for(int i=modules_count; i < SHIP_MAX_MODULES; i++) {
         modules[i] = GetInvalidId();
@@ -135,7 +136,7 @@ double Ship::GetPayloadMass() const{
 
     for(int i=0; i < SHIP_MAX_MODULES; i++) {
         if (IsIdValid(modules[i])) 
-            res += GetModuleByIndex(modules[i])->mass;
+            res += GetModule(modules[i])->mass;
     }
 
     return res - 0;
@@ -268,10 +269,10 @@ void Ship::Update() {
         double phase = 20.0 /  rad * index_on_planet;
         draw_pos = Vector2Add(FromPolar(rad, phase), draw_pos);
     }
-
+    
     for (int i=0; i < SHIP_MAX_MODULES; i++) {
         if (IsIdValid(modules[i]))
-            GetModuleByIndex(modules[i])->Update(this);
+            GetModule(modules[i])->Update(this);
     }
 }
 
@@ -308,6 +309,31 @@ void Ship::Draw(const CoordinateTransform* c_transf) const {
         Vector2 last_draw_pos = c_transf->TransformV(last_pos.cartesian);
         _DrawShipAt(last_draw_pos, ColorAlpha(color, 0.5));
     }
+}
+
+int ship_selecting_module_index = -1;
+void _UIDrawInventory(Ship* ship) {
+    const int MARGIN = 3;
+
+    ShipModules* sms = &GlobalGetState()->ship_modules;
+    int columns = UIContextCurrent().width / (SHIP_MODULE_WIDTH + MARGIN);
+
+    UIContextPushInset(0, SHIP_MAX_MODULES / columns * (SHIP_MODULE_HEIGHT + MARGIN));
+    UIContextCurrent().width = columns * (SHIP_MODULE_WIDTH + MARGIN);
+    for (int i=0; i < SHIP_MAX_MODULES; i++) {
+        UIContextPushGridCell(columns, SHIP_MAX_MODULES / columns, i % columns, i / columns);
+        UIContextShrink(MARGIN, MARGIN);
+        ButtonStateFlags button_state = UIContextAsButton();
+        if (button_state & BUTTON_STATE_FLAG_HOVER) {
+            ship->current_slot = ShipModuleSlot(ship->id, i, ShipModuleSlot::DRAGGING_FROM_SHIP);
+        }
+        if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+            sms->InitDragging(ship->current_slot, UIContextCurrent().render_rec);
+        }
+        ShipModuleClass::DrawUIRet ret = sms->DrawShipModule(ship->modules[i]);
+        UIContextPop(); // GridCell
+    }
+    UIContextPop(); // Inset
 }
 
 void _UIDrawTransferplans(Ship* ship) {
@@ -397,8 +423,7 @@ void _UIDrawQuests(Ship* ship) {
     }
 }
 
-int ship_selecting_module_index = -1;
-void Ship::DrawUI(const CoordinateTransform* c_transf) {
+void Ship::DrawUI() {
     if (mouse_hover) {
         // Hover
         DrawCircleLines(draw_pos.x, draw_pos.y, 10, Palette::red);
@@ -409,7 +434,10 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
         }
     }
 
+    // Reset
+    current_slot = ShipModuleSlot();
     highlighted_plan_index = -1;
+
     if (!mouse_hover && GlobalGetState()->active_transfer_plan.ship != id && GlobalGetState()->focused_ship != id) return;
 
     int text_size = 16;
@@ -432,44 +460,7 @@ void Ship::DrawUI(const CoordinateTransform* c_transf) {
     sb.AddFormat("I_sp        %2.2f km/s\n", GetShipClassByIndex(ship_class)->v_e / 1000);
     sb.AddFormat("dv left     %2.2f km/s\n", GetCapableDV());
     UIContextWrite(sb.c_str);
-
-    UIContextPushInset(3, SHIP_MAX_MODULES * 200 / (5*5));
-    for (int i=0; i < SHIP_MAX_MODULES; i++) {
-        UIContextPushGridCell(5, SHIP_MAX_MODULES / 5, i % 5, i / 5);
-        UIContextShrink(3, 3);
-        ShipModuleClass::DrawUIRet ret = DrawShipModule(IsIdValid(modules[i]) ? GetModuleByIndex(modules[i]) : NULL, true);
-        if (ret == ShipModuleClass::CREATE && is_parked) {
-            ship_selecting_module_index = i;
-        }else if (ret == ShipModuleClass::DELETE) {
-            // Remove module
-            UISetMouseHint(name);
-            // Give it to planet
-            if (is_parked) {
-                // This means, unequipping during trnasit just jettisons the module to outer space
-                // Might want to ask for confirmaition
-                GetPlanet(parent_planet)->AddShipModuleToInventory(modules[i]);
-            }
-            RemoveShipModuleAt(i);
-        }
-        
-        UIContextPop(); // GridCell
-    }
-    if (ship_selecting_module_index >= 0 && is_parked) {
-        int upper = UIContextCurrent().text_start_y;
-        int right = UIContextCurrent().text_start_x;
-        const int creation_popup_width = 300;
-        const int creation_popup_height = 10*50;
-        UIContextPushGlobal(right - creation_popup_width - 20, upper, creation_popup_width, creation_popup_height, 16, Palette::ui_main);
-        int selected_index = GetPlanet(parent_planet)->UIDrawInventory();
-        UIContextPop();
-        if (selected_index >= 0) {
-            modules[ship_selecting_module_index] = GetPlanet(parent_planet)->ship_module_inventory[selected_index];
-            GetPlanet(parent_planet)->RemoveShipModuleInInventory(selected_index);
-            ship_selecting_module_index = -1;
-        }
-    } 
-    UIContextPop(); // Inset
-
+    _UIDrawInventory(this);
     _UIDrawTransferplans(this);
     _UIDrawQuests(this);
 }

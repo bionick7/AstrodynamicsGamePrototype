@@ -15,7 +15,7 @@ resource_count_t KGToResourceCounts(double mass) {
     return mass / KG_PER_COUNT;
 }
 
-ResourceTransfer ResourceTransfer::Inverted() {
+ResourceTransfer ResourceTransfer::Inverted() const {
     return ResourceTransfer(resource_id, -quantity);
 }
 

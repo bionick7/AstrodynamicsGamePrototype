@@ -4,6 +4,7 @@
 #include "utils.hpp"
 #include "constants.hpp"
 #include "ship_modules.hpp"
+#include "logging.hpp"
 
 Planet::Planet(const char* p_name, double p_mu, double p_radius) {
     strcpy(name, p_name);
@@ -46,7 +47,7 @@ void Planet::Serialize(DataNode* data) const {
     data->SetArray("ship_modules", MAX_PLANET_INVENTORY);
     for(int i=0; i < MAX_PLANET_INVENTORY; i++) {
         if (!IsIdValid(ship_module_inventory[i])) continue;
-        const ShipModuleClass* smc = GetModuleByIndex(ship_module_inventory[i]);
+        const ShipModuleClass* smc = GetModule(ship_module_inventory[i]);
         data->SetArrayElem("ship_modules", i, smc->id);
     }
 
@@ -101,7 +102,7 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
         
         for (int i = 0; i < ship_module_inventory_count; i++) {
             const char* module_id = data->GetArray("ship_modules", i);
-            ship_module_inventory[i] = GetBuildingIndexById(module_id);
+            ship_module_inventory[i] = GlobalGetState()->ship_modules.GetModuleIndexById(module_id);
         }
     }
 
@@ -234,30 +235,67 @@ void _UIDrawStats(const resource_count_t stats[]) {
     }
 }
 
-int Planet::UIDrawInventory() {
-    // Draw inventory
-    const int columns = 4;
-    int rows = (int) std::ceil(MAX_PLANET_INVENTORY / columns);
-    UIContextPushInset(0, UIContextCurrent().height - UIContextCurrent().y_cursor);
+void Planet::_UIDrawInventory() {
+    const int MARGIN = 3;
+    int columns = UIContextCurrent().width / (SHIP_MODULE_WIDTH + MARGIN);
+    int max_rows = (int) std::ceil(MAX_PLANET_INVENTORY / columns);
+    int available_height = UIContextCurrent().height - UIContextCurrent().y_cursor;
+    int height = MinInt(available_height, max_rows * (SHIP_MODULE_HEIGHT + MARGIN));
+    int rows = height / (SHIP_MODULE_HEIGHT + MARGIN);
+    int i_max = MinInt(rows * columns, MAX_PLANET_INVENTORY);
+    UIContextPushInset(0, height);
     
     int res = -1;
-    for (int i = 0; i < MAX_PLANET_INVENTORY; i++) {
-    //for (int column = 0; column < columns; column++)
-    //for (int i = column; i < MAX_PLANET_BUILDINGS; i += columns) {
-        if (!IsIdValid(ship_module_inventory[i])) continue;
+    ShipModules* sms = &GlobalGetState()->ship_modules;
+    for (int i = 0; i < i_max; i++) {
+        //if (!IsIdValid(ship_module_inventory[i])) continue;
         UIContextPushGridCell(columns, rows, i % columns, i / columns);
-        if (DrawShipModule(GetModuleByIndex(ship_module_inventory[i]), false) == ShipModuleClass::SELECT) {
-            res = i;
+        UIContextShrink(MARGIN, MARGIN);
+        ButtonStateFlags button_state = UIContextAsButton();
+        if (button_state & BUTTON_STATE_FLAG_HOVER) {
+            current_slot = ShipModuleSlot(id, i, ShipModuleSlot::DRAGGING_FROM_PLANET);
         }
+        if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+            sms->InitDragging(current_slot, UIContextCurrent().render_rec);
+        }
+        sms->DrawShipModule(ship_module_inventory[i]);
         UIContextPop();  // GridCell
     }
     UIContextPop();  // Inset
-    return res;
 }
 
 int current_tab = 0;  // Global variable, I suppose
-void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, ResourceTransfer transfer, double fuel_draw) {
-    if (upper_quadrant) {
+void Planet::DrawUI() {
+    // Reset
+    current_slot = ShipModuleSlot();
+
+    int show_quadrant = 0;
+    ResourceTransfer transfer = ResourceTransfer();
+    resource_count_t fuel_draw = -1;  // why not 0?
+
+    const TransferPlan* tp = GlobalGetState()->active_transfer_plan.plan;
+
+    if (GlobalGetState()->active_transfer_plan.IsActive()){
+        if (tp->departure_planet == id) {
+            show_quadrant = 1;
+            transfer = tp->resource_transfer.Inverted();
+            fuel_draw = tp->fuel_mass;
+        }
+        if (tp->arrival_planet == id) {
+            show_quadrant = 2;
+            transfer = tp->resource_transfer;
+        }
+    }
+    if (mouse_hover || GlobalGetState()->focused_planet == id) {
+        show_quadrant = 1;
+        transfer = ResourceTransfer();
+        fuel_draw = -1;
+    }
+    if (show_quadrant == 0) {
+        return;
+    }
+
+    if (show_quadrant == 1) {
         UIContextCreateNew(10, 10, 16*30, GetScreenHeight() / 2 - 20, 16, Palette::ui_main);
     } else {
         UIContextCreateNew(10, GetScreenHeight() / 2 + 10, 16*30, GetScreenHeight() / 2 - 20, 16, Palette::ui_main);
@@ -304,7 +342,7 @@ void Planet::DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, Re
         economy.UIDrawEconomy(transfer, fuel_draw);
         break;
     case 2:
-        UIDrawInventory();
+        _UIDrawInventory();
         break;
     }
 

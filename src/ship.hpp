@@ -63,13 +63,15 @@ struct Ship {
     // transporting
     ResourceTransfer transporing;
 
+    ShipModuleSlot current_slot;
+
     void Serialize(DataNode* data) const;
     void Deserialize(const DataNode* data);
     
     bool HasMouseHover(double* min_distance) const;
     void Update();
     void Draw(const CoordinateTransform* c_transf) const;
-    void DrawUI(const CoordinateTransform* c_transf);
+    void DrawUI();
     void Inspect();
 
     void RemoveShipModuleAt(int index);

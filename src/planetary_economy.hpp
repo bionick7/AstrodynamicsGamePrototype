@@ -34,7 +34,7 @@ struct ResourceTransfer {
         quantity = p_quantity; 
     }
 
-    ResourceTransfer Inverted();
+    ResourceTransfer Inverted() const;
 };
 
 #define RESOURCE_NAME_MAX_SIZE 30

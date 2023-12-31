@@ -1,13 +1,12 @@
 #ifndef PLANET_H
 #define PLANET_H
-#include "basic.hpp"
 #include "astro.hpp"
-#include "datanode.hpp"
-#include "coordinate_transform.hpp"
-#include "logging.hpp"
+#include "basic.hpp"
 #include "buildings.hpp"
-#include "planetary_economy.hpp"
+#include "coordinate_transform.hpp"
 #include "datanode.hpp"
+#include "planetary_economy.hpp"
+#include "ship_modules.hpp"
 
 #define MAX_PLANET_BUILDINGS 20
 #define MAX_PLANET_INVENTORY 40
@@ -37,6 +36,8 @@ struct Planet {
     bool mouse_hover;
     entity_id_t id;
 
+    ShipModuleSlot current_slot;
+
     Planet() : Planet("UNNAMED", 0, 0) {};
     Planet(const char* name, double mu, double radius);
     void Serialize(DataNode* data) const;
@@ -55,8 +56,8 @@ struct Planet {
     bool HasMouseHover(double* distance) const;
     void Update();
     void Draw(const CoordinateTransform* c_transf);
-    void DrawUI(const CoordinateTransform* c_transf, bool upper_quadrant, ResourceTransfer transfer, double fuel_draw);
-    int UIDrawInventory();
+    void DrawUI();
+    void _UIDrawInventory();
 };
 
 struct Planets {

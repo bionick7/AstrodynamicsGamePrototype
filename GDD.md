@@ -182,3 +182,13 @@ i.e. crafting? look at Dredge e.g.
 
 => Important quests are unlocked through dialogue & haggeling, that become available every X days
 Good idea to start implementing wren for story/quest stuff.
+
+## Status 30 Dec 23
+Dynamic Quest System works kinda well.
+Main question now is when to show the quests.
+Maybe some randomly, some for specific triggers.
+Really happy with how well the item slot paradigm works. If we make political stability or so a thing, you could get
+more or less secure places to store shit.
+
+Could ultimately also incorporate resources into the item-slot paradigm
+Fuel would have to be seperate though.
