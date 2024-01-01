@@ -4,7 +4,9 @@
 
 void InternalToggleFullScreen();
 void DatedScreenShot();
+
 void AppMetaInit();
 void AppMetaStep();
+void AppMetaClose();
 
 #endif  // APP_META_H

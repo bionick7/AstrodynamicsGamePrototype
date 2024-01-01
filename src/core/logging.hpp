@@ -1,6 +1,8 @@
 #ifndef LOGGING_H
 #define LOGGING_H
 
+#include <stdarg.h>
+
 #ifdef LOGGING_DISABLE
 
 #define INFO(...)
@@ -52,8 +54,29 @@ enum LogType{
     LOGTYPE_USERERROR,
     LOGTYPE_WRENINFO,
     LOGTYPE_WRENERROR,
+
+    // Keep continuous
+    LOGTYPE_RAYALL,
+    LOGTYPE_RAYTRACE,
+    LOGTYPE_RAYDEBUG,
+    LOGTYPE_RAYINFO,
+    LOGTYPE_RAYWARNING,
+    LOGTYPE_RAYERROR,
+    LOGTYPE_RAYFATAL,
+    LOGTYPE_RAYNONE,
 };
 
+#define LOG_INVALID_FILE ""
+#define LOG_INVALID_LINE -1
+
+void LogSetOutput(const char* filename);
+void LogSetOutputs(const char* filenames[]);
+void LogCloseOutputs();
+void LogToStdout(bool value);
+
+void VLogImpl(const char* file, int line, LogType level, const char* format, va_list args);
 void LogImpl(const char* file, int line, LogType level, const char* format, ...);
+
+void CustomRaylibLog(int msgType, const char *text, va_list args);
 
 #endif  // LOGGING_H

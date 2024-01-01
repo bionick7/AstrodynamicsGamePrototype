@@ -1,5 +1,6 @@
 #include "app_meta.hpp"
 #include "constants.hpp"
+#include "logging.hpp"
 #include <time.h>
 
 const char* WINDOW_TITLE = "Astro navigation game prototype";
@@ -38,12 +39,17 @@ void AppMetaInit() {
     SetConfigFlags(FLAG_MSAA_4X_HINT);
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
+    InitAudioDevice();
     
     SetExitKey(KEY_NULL);
     SetTargetFPS(120);
     SetWindowState(FLAG_WINDOW_RESIZABLE);
 
-    InitAudioDevice();
+    LogSetOutput("log.txt");
+    LogToStdout(true);
+
+    SetTraceLogLevel(LOG_INFO);
+    SetTraceLogCallback(&CustomRaylibLog);
 }
 
 void AppMetaStep() {
@@ -54,4 +60,9 @@ void AppMetaStep() {
     if (IsKeyPressed(KEY_F2)) {  // Disable when on steam
         DatedScreenShot();
     }
+}
+
+void AppMetaClose() {
+    CloseWindow();  // Close window and OpenGL context
+    LogCloseOutputs();
 }

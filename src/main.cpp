@@ -89,6 +89,6 @@ int main(int argc, const char** argv) {
         MainLoopStep(app);
     }
 
-    CloseWindow();  // Close window and OpenGL context
+    AppMetaClose();    
     return 0;
 }

@@ -105,7 +105,7 @@ void QuestInterfaceGainShip(WrenVM* vm) {
 
 static void WriteFn(WrenVM* vm, const char* text) {
 	if (strcmp(text, "\n") != 0) {
-        LogImpl("wren", -1, LOGTYPE_WRENINFO, text);
+        LogImpl(LOG_INVALID_FILE, LOG_INVALID_LINE, LOGTYPE_WRENINFO, text);
 	}
 }
 
@@ -143,7 +143,7 @@ void ErrorFn(WrenVM* vm, WrenErrorType errorType,
 }
 
 void NotImplementedFn(WrenVM* vm) {
-    LogImpl(" - ", -1, LOGTYPE_WRENERROR, "Tried to call non implented foreign function");
+    LogImpl(LOG_INVALID_FILE, LOG_INVALID_LINE, LOGTYPE_WRENERROR, "Tried to call non implented foreign function");
 }
 
 void DefaultConstructor(WrenVM* vm) {
