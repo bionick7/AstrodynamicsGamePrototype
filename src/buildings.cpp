@@ -194,10 +194,10 @@ const BuildingClass *GetBuildingByIndex(building_index_t index) {
 }
 
 bool show_building_construction_ui = false;
-entity_id_t building_construction_planet_id = GetInvalidId();
+RID building_construction_planet_id = GetInvalidId();
 int building_construction_slot_index = -1;
 
-void BuildingConstructionOpen(entity_id_t planet_id, int slot_index) {
+void BuildingConstructionOpen(RID planet_id, int slot_index) {
     show_building_construction_ui = true;
     building_construction_planet_id = planet_id;
     building_construction_slot_index = slot_index;

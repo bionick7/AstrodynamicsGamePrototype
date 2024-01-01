@@ -10,7 +10,7 @@ struct Calendar {
 
     timemath::Time current_migration_period;
     timemath::Time migration_arrrival_time;
-    entity_id_t migration_arrrival_planet;  // Doesn't really fit anywhere right now ...
+    //RID migration_arrrival_planet;  // Doesn't really fit anywhere right now ...
 
     double time_scale;
     bool paused;

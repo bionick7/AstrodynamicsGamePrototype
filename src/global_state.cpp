@@ -9,12 +9,6 @@
 
 GlobalState global_state;
 
-bool IsIdValid(entity_id_t id) {
-    if (id == UINT32_MAX) return false;
-    //if (!global_state.registry.valid(id)) return false;
-    return true;
-}
-
 GlobalState* GlobalGetState() {
     return &global_state;
 }
@@ -122,8 +116,8 @@ void GlobalState::LoadData() {
         printf("%d %s%s", ammounts[i], declarations[i], i == NUM-1 ? "\n" : "; ");
     }
 
-    // INFO(GetModuleByIndex(GetModuleIndexById("shpmod_water_extractor"))->id)
-    // INFO("%f", GetModuleByIndex(GetModuleIndexById("shpmod_heatshield"))->mass)
+    // INFO(GetModuleByRID(GetModuleRIDFromStringId("shpmod_water_extractor"))->id)
+    // INFO("%f", GetModuleByRID(GetModuleRIDFromStringId("shpmod_heatshield"))->mass)
 
     #undef NUM
 }
@@ -205,7 +199,7 @@ void _UpdateShipsPlanets(GlobalState* gs) {
     double min_distance = INFINITY;
 
     for (int planet_id = 0; planet_id < gs->planets.GetPlanetCount(); planet_id++) {
-        Planet* planet = GetPlanet((entity_id_t) planet_id);
+        Planet* planet = GetPlanetByIndex(planet_id);
         planet->Update();
         planet->mouse_hover = false;
         if (planet->HasMouseHover(&min_distance)) {
@@ -245,7 +239,7 @@ void _UpdateShipsPlanets(GlobalState* gs) {
 void GlobalState::UpdateState(double delta_t) {
     c_transf.HandleInput(delta_t);
     calendar.HandleInput(delta_t);
-    GetAudioServer()->Update(delta_t);
+    audio_server.Update(delta_t);
     
     current_focus = _GetCurrentFocus(this);
     _HandleDeselect(this);
@@ -258,8 +252,8 @@ void GlobalState::UpdateState(double delta_t) {
 // Draw
 void GlobalState::DrawState() {
     DrawCircleV(c_transf.TransformV({0}), c_transf.TransformS(planets.GetParentNature()->radius), Palette::ui_main);
-    for (entity_id_t planet_id = 0; planet_id < planets.GetPlanetCount(); planet_id++) {
-        planets.GetPlanet(planet_id)->Draw(&c_transf);
+    for (int planet_id = 0; planet_id < planets.GetPlanetCount(); planet_id++) {
+        GetPlanetByIndex(planet_id)->Draw(&c_transf);
     }
     for (auto it = ships.alloc.GetIter(); it.IsIterGoing(); it++) {
         Ship* ship = ships.alloc[it];
@@ -276,8 +270,8 @@ void GlobalState::DrawState() {
     DrawTextAligned(capital_str, {GetScreenWidth() / 2.0f, 10}, TEXT_ALIGNMENT_HCENTER & TEXT_ALIGNMENT_TOP, Palette::ui_main);
 
     // planets
-    for (entity_id_t planet_id = 0; planet_id < planets.GetPlanetCount(); planet_id++) {
-        Planet* planet = planets.GetPlanet(planet_id);
+    for (int planet_id = 0; planet_id < planets.GetPlanetCount(); planet_id++) {
+        Planet* planet = GetPlanetByIndex(planet_id);
         planet->DrawUI();
     }
     //BuildingConstructionUI();
@@ -308,15 +302,15 @@ void GlobalState::Serialize(DataNode* data) const {
 
     data->SetF("capital", money);
     // ignore transferplanui for now
-    data->SetI("focused_planet", (int) focused_planet);
-    data->SetI("focused_ship", (int) focused_ship);
+    data->SetI("focused_planet", focused_planet.AsInt());
+    data->SetI("focused_ship", focused_ship.AsInt());
 
     data->SetArrayChild("planets", (int) planets.GetPlanetCount());
     int i=0;
-    for (entity_id_t planet_id = 0; planet_id < planets.GetPlanetCount(); planet_id++) {
+    for (int planet_index = 0; planet_index < planets.GetPlanetCount(); planet_index++) {
         DataNode dn2 = DataNode();
-        dn2.SetI("id", (int) planet_id);
-        planets.GetPlanet(planet_id)->Serialize(data->SetArrayElemChild("planets", i++, dn2));
+        dn2.SetI("id", RID(planet_index, EntityType::PLANET).AsInt());
+        GetPlanetByIndex(planet_index)->Serialize(data->SetArrayElemChild("planets", i++, dn2));
     }
 
     data->SetArrayChild("ships", ships.alloc.Count());
@@ -324,7 +318,7 @@ void GlobalState::Serialize(DataNode* data) const {
     for (auto it = ships.alloc.GetIter(); it.IsIterGoing(); it++) {
         Ship* ship = ships.alloc.Get(it);
         DataNode dn2 = DataNode();
-        dn2.SetI("id", (int) it.index);
+        dn2.SetI("id", it.GetId().AsInt());
         if (ship->is_parked) {
             dn2.Set("planet", planets.GetPlanet(ship->parent_planet)->name);
         }
@@ -363,23 +357,23 @@ void GlobalState::Deserialize(const DataNode* data) {
     }
     planets.LoadEphemerides(&ephem_data);  // if necaissary
 
-    focused_planet = (entity_id_t) data->GetI("focused_planet", -1, true);
-    focused_ship = (entity_id_t) data->GetI("focused_ship", -1, true);
+    focused_planet = RID(data->GetI("focused_planet", -1, true));
+    focused_ship = RID(data->GetI("focused_ship", -1, true));
 
     for (int i=0; i < data->GetArrayChildLen("planets"); i++) {
         DataNode* planet_data = data->GetArrayChild("planets", i);
-        entity_id_t id = planets.AddPlanet(planet_data);
+        RID id = planets.AddPlanet(planet_data);
 
         if (planet_data->Has("id")) {
-            ASSERT_EQUAL_INT(id, (entity_id_t) planet_data->GetI("id"))
+            ASSERT_EQUAL_INT(id.AsInt(), planet_data->GetI("id"))
         }
     }
     for (int i=0; i < data->GetArrayChildLen("ships"); i++) {
         DataNode* ship_data = data->GetArrayChild("ships", i);
-        entity_id_t id = ships.AddShip(ship_data);
+        RID id = ships.AddShip(ship_data);
 
         if (ship_data->Has("id")) {
-            ASSERT_EQUAL_INT(id, (entity_id_t) ship_data->GetI("id"))
+            ASSERT_EQUAL_INT(id.AsInt(), ship_data->GetI("id"))
         }
     }
 

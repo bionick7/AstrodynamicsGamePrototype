@@ -2,6 +2,7 @@
 #define TASKS_H
 
 #include "basic.hpp"
+#include "id_system.hpp"
 #include "datanode.hpp"
 #include "planetary_economy.hpp"
 #include "ui.hpp"
@@ -9,12 +10,12 @@
 #define TASK_PANEL_HEIGHT 64
 
 struct Task {
-    entity_id_t departure_planet;
-    entity_id_t arrival_planet;
-    entity_id_t current_planet;
-    entity_id_t ship;
+    RID departure_planet;
+    RID arrival_planet;
+    RID current_planet;
+    RID ship;
 
-    entity_id_t quest;
+    RID quest;
 
     double payload_mass;
     timemath::Time pickup_expiration_time;

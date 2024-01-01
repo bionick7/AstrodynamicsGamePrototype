@@ -106,9 +106,9 @@ void Quest::_NextTask() {
         current.task = GlobalGetState()->quest_manager.CreateTask(id);
         Task* task = GlobalGetState()->quest_manager.active_tasks.Get(current.task);
 
-        task->departure_planet = (int) GetWrenInterface()->GetNumFromMap("departure_planet", 0);
-        task->current_planet = (int) GetWrenInterface()->GetNumFromMap("departure_planet", 0);
-        task->arrival_planet = (int) GetWrenInterface()->GetNumFromMap("arrival_planet", 0);
+        task->departure_planet = RID(GetWrenInterface()->GetNumFromMap("departure_planet", 0), EntityType::PLANET);
+        task->current_planet = task->departure_planet;
+        task->arrival_planet = RID(GetWrenInterface()->GetNumFromMap("arrival_planet", 0), EntityType::PLANET);
         task->payload_mass = GetWrenInterface()->GetNumFromMap("payload_mass", 0);
         task->pickup_expiration_time = GlobalGetNow() + timemath::Time(GetWrenInterface()->GetNumFromMap("departure_time_offset", 0));
         task->delivery_expiration_time = GlobalGetNow() + timemath::Time(GetWrenInterface()->GetNumFromMap("arrival_time_offset", 0));

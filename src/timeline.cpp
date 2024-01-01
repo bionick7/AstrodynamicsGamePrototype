@@ -19,8 +19,8 @@ struct TimeLineCoordinateData {
 };
 
 
-int GetPlanetCoord(const TimeLineCoordinateData* tcd, entity_id_t planet) {
-    return tcd->planet_coords[planet];
+int GetPlanetCoord(const TimeLineCoordinateData* tcd, RID planet) {
+    return tcd->planet_coords[IdGetIndex(planet)];
 }
 
 int GetTimeCoord(const TimeLineCoordinateData* tcd, timemath::Time t) {
@@ -33,7 +33,7 @@ timemath::Time GetEndTime(const TimeLineCoordinateData* tcd) {
     return ref_time + timemath::Time(((float)tcd->h - 24.f) / (float) pixels_per_day_vscale * 86400);
 }
 
-void _DrawHohmanTFs(const TimeLineCoordinateData* tcd, entity_id_t from, entity_id_t to) {
+void _DrawHohmanTFs(const TimeLineCoordinateData* tcd, RID from, RID to) {
     Orbit from_orbit = GetPlanet(from)->orbit;
     Orbit to_orbit = GetPlanet(to)->orbit;
     timemath::Time t0 = GlobalGetNow();
@@ -66,7 +66,7 @@ void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
     }
 
     int previous_x = 40;
-    entity_id_t mouse_hover_planet = GetInvalidId();
+    int mouse_hover_planet = -1;
     for (int planet_index = 0; planet_index < planets->planet_count; planet_index++) {
         const Planet* planet = &planets->planet_array[planet_index];
         double ratio = log(planet->orbit.sma/min_sma) / log(max_sma/min_sma);
@@ -105,10 +105,10 @@ void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
         DrawLine(tcd->x0 + 40, y, tcd->x0 + tcd->w - 10, y, Palette::ui_dark);
     }
 
-    if (IsIdValid(mouse_hover_planet)) {
+    if (mouse_hover_planet >= 0) {
         for (int planet_index = 0; planet_index < planets->planet_count; planet_index++) {
             if (planet_index != mouse_hover_planet)
-                _DrawHohmanTFs(tcd, mouse_hover_planet, planet_index);
+                _DrawHohmanTFs(tcd, RID(mouse_hover_planet, EntityType::PLANET), RID(planet_index, EntityType::PLANET));
         }
     }
 }
@@ -123,8 +123,8 @@ float _SDSegment(Vector2 p, Vector2 a, Vector2 b) {
 
 float  _QuestDrawLine(TimeLineCoordinateData* tcd, const Task* q, bool active) {
     // returns the mouse distance to the line (in pixels)
-    entity_id_t from = q->departure_planet;
-    entity_id_t to = q->arrival_planet;
+    RID from = q->departure_planet;
+    RID to = q->arrival_planet;
     timemath::Time pickup_time = q->pickup_expiration_time;
     timemath::Time delivery_time = q->delivery_expiration_time;
 
@@ -180,7 +180,7 @@ float  _QuestDrawLine(TimeLineCoordinateData* tcd, const Task* q, bool active) {
 
 void _DrawQuests(TimeLineCoordinateData* tcd, QuestManager* qm) {
     float closest_mouse_dist = INFINITY;
-    entity_id_t closest_mouse_dist_quest = -1;
+    RID closest_mouse_dist_quest = GetInvalidId();
     bool closest_mouse_dist_quest_is_active = false;
     /*for(int i=0; i < qm->GetAvailableQuests(); i++) {
         const Quest* q = qm->available_quests[i];
@@ -198,7 +198,7 @@ void _DrawQuests(TimeLineCoordinateData* tcd, QuestManager* qm) {
         float mouse_dist = _QuestDrawLine(tcd, qm->active_tasks.Get(it), true);
         if (mouse_dist < closest_mouse_dist) {
             closest_mouse_dist = mouse_dist;
-            closest_mouse_dist_quest = it.index;
+            closest_mouse_dist_quest = it.GetId();
             closest_mouse_dist_quest_is_active = true;
         }
     }
@@ -218,7 +218,7 @@ void _DrawQuests(TimeLineCoordinateData* tcd, QuestManager* qm) {
     }
 }
 
-void _ShipDrawPathLine(const TimeLineCoordinateData* tcd, int* x_pos, int* y_pos, entity_id_t to_planet, timemath::Time to_time, int x_offset) {
+void _ShipDrawPathLine(const TimeLineCoordinateData* tcd, int* x_pos, int* y_pos, RID to_planet, timemath::Time to_time, int x_offset) {
     int new_x = GetPlanetCoord(tcd, to_planet) + x_offset;
     int new_y = GetTimeCoord(tcd, to_time);
     DrawLine(*x_pos, *y_pos, new_x, new_y, Palette::ship);
@@ -235,7 +235,7 @@ void _DrawShips(TimeLineCoordinateData* tcd, const Ships* ships) {
         int end_point_x = 0;
         int end_point_y = GetTimeCoord(tcd, GlobalGetNow());
 
-        entity_id_t end_planet = GetInvalidId();
+        RID end_planet = GetInvalidId();
         if (ship->prepared_plans_count > 0 && !(ship->prepared_plans_count == 1 && ship->plan_edit_index == 0)) {
             int last_index = ship->prepared_plans_count - 1;
             if (ship->plan_edit_index == last_index) last_index--;

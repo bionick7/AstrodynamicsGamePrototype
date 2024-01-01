@@ -16,6 +16,8 @@ QuestManager::~QuestManager() {
 }
 
 void QuestManager::Serialize(DataNode* data) const {
+    return;
+    NOT_IMPLEMENTED
     data->SetArrayChild("active_quests", active_tasks.alloc_count);
     for(auto it = active_tasks.GetIter(); it; it++) {
         active_tasks.Get(it)->Serialize(data->SetArrayElemChild("active_quests", it.counter, DataNode()));
@@ -27,12 +29,14 @@ void QuestManager::Serialize(DataNode* data) const {
 }
 
 void QuestManager::Deserialize(const DataNode* data) {
+    return;
+    NOT_IMPLEMENTED
     active_tasks.Clear();
     for(int i=0; i < data->GetArrayChildLen("active_quests"); i++) {
         active_tasks.Get(active_tasks.Allocate())->Deserialize(data->GetArrayChild("active_quests", i));
     }
     for(int i=0; i < data->GetArrayChildLen("available_quests") && i < GetAvailableQuests(); i++) {
-        available_quests[i]->Deserialize(data->GetArrayChild("available_quests", i));
+        available_quests.Get(available_quests.Allocate())->Deserialize(data->GetArrayChild("available_quests", i));
     }
     /*for(int i=data->GetArrayChildLen("available_quests"); i < GetAvailableQuests(); i++) {
         available_quests[i] = Quest();  // Just in case
@@ -52,7 +56,7 @@ void QuestManager::Update(double dt) {
     for(auto i = active_quests.GetIter(); i; i++) {
         switch (active_quests[i]->await_type) {
             case Quest::TASK: {
-                entity_id_t task_id = active_quests[i]->current.task;
+                RID task_id = active_quests[i]->current.task;
                 Task* task = active_tasks[task_id];
                 bool is_in_transit = IsIdValid(task->ship) && !GetShip(task->ship)->is_parked;
                 if (task->pickup_expiration_time < now && !is_in_transit) {
@@ -126,10 +130,10 @@ void QuestManager::Draw() {
 
     UIContextPushScrollInset(0, UIContextCurrent().height, TASK_PANEL_HEIGHT * GetAvailableQuests(), current_available_quests_scroll);
     // Available Quests
-    for(int i=0; i < GetAvailableQuests(); i++) {
-        if (!available_quests[i]->IsValid()) continue;
-        if (available_quests[i]->DrawUI(true, true) & BUTTON_STATE_FLAG_JUST_PRESSED) {
-            AcceptQuest(i);
+    for(auto it = available_quests.GetIter(); it; it++) {
+        if (!available_quests[it]->IsValid()) continue;
+        if (available_quests[it]->DrawUI(true, true) & BUTTON_STATE_FLAG_JUST_PRESSED) {
+            AcceptQuest(it.GetId());
         }
     }
     UIContextPop();  // ScrollInseet
@@ -137,9 +141,9 @@ void QuestManager::Draw() {
     UIContextPop();  // HSplit
 }
 
-void QuestManager::AcceptQuest(entity_id_t quest_index) {
+void QuestManager::AcceptQuest(RID quest_index) {
     Quest* q;
-    entity_id_t id = active_quests.Allocate(&q);
+    RID id = active_quests.Allocate(&q);
     q->CopyFrom(available_quests[quest_index]);
     q->id = id;
     q->StartQuest();
@@ -148,26 +152,26 @@ void QuestManager::AcceptQuest(entity_id_t quest_index) {
 
 void QuestManager::ForceQuest(WrenQuestTemplate *template_) {
     Quest* q;
-    entity_id_t id = active_quests.Allocate(&q);
+    RID id = active_quests.Allocate(&q);
     q->AttachTemplate(template_);
     q->id = id;
     q->StartQuest();
 }
 
-entity_id_t QuestManager::CreateTask(entity_id_t quest_index) {
+RID QuestManager::CreateTask(RID quest_index) {
     Task* task;
-    entity_id_t id = active_tasks.Allocate(&task);
+    RID id = active_tasks.Allocate(&task);
     task->quest = quest_index;
     return id;
 }
 
-void QuestManager::PickupTask(entity_id_t ship_index, entity_id_t task_index)
+void QuestManager::PickupTask(RID ship_index, RID task_index)
 {
     active_tasks[task_index]->ship = ship_index;
     //ship->payload.push_back(TransportContainer(quest_index));
 }
 
-void QuestManager::PutbackTask(entity_id_t ship_index, entity_id_t task_index) {
+void QuestManager::PutbackTask(RID ship_index, RID task_index) {
     Ship* ship = GetShip(ship_index);
     //auto quest_in_cargo = ship->payload.end();
     //for(auto it2=ship->payload.begin(); it2 != ship->payload.end(); it2++) {
@@ -187,11 +191,11 @@ void QuestManager::PutbackTask(entity_id_t ship_index, entity_id_t task_index) {
     //ship->payload.erase(quest_in_cargo);
 }
 
-void QuestManager::TaskDepartedFrom(entity_id_t task_index, entity_id_t planet_index) {
+void QuestManager::TaskDepartedFrom(RID task_index, RID planet_index) {
     active_tasks[task_index]->current_planet = GetInvalidId();
 }
 
-void QuestManager::TaskArrivedAt(entity_id_t task_index, entity_id_t planet_index) {
+void QuestManager::TaskArrivedAt(RID task_index, RID planet_index) {
     Task* q = active_tasks[task_index];
     q->current_planet = planet_index;
     if (q->arrival_planet == planet_index) {
@@ -199,7 +203,7 @@ void QuestManager::TaskArrivedAt(entity_id_t task_index, entity_id_t planet_inde
     }
 }
 
-void QuestManager::CompleteTask(entity_id_t task_index) {
+void QuestManager::CompleteTask(RID task_index) {
     Task* q = active_tasks[task_index];
     INFO("Task completed (M§M %f)", q->payout)
     //GlobalGetState()->CompleteTransaction(q->payout, "Completed quest");

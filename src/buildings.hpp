@@ -3,6 +3,7 @@
 #include "basic.hpp"
 #include "datanode.hpp"
 #include "planetary_economy.hpp"
+#include "id_system.hpp"
 
 typedef uint16_t building_index_t;
 const building_index_t BUILDING_INDEX_INVALID = UINT16_MAX;
@@ -37,7 +38,7 @@ void WriteBuildingsToFile(const char* filepath);
 building_index_t GetBuildingIndexById(const char* id);
 const BuildingClass* GetBuildingByIndex(building_index_t index);
 
-void BuildingConstructionOpen(entity_id_t planet, int slot_index);
+void BuildingConstructionOpen(RID planet, int slot_index);
 void BuildingConstructionClose();
 bool BuildingConstructionIsOpen();
 void BuildingConstructionUI();

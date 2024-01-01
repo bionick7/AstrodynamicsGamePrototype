@@ -58,8 +58,8 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
     //SettingOverridePush("datanode_quite", true);
     //SettingOverridePop("datanode_quite");
     strcpy(name, data->Get("name", name, true));
-    int index = planets->GetIndexByName(name);
-    if (index < 0) {
+    RID index = planets->GetIndexByName(name);
+    if (!IsIdValid(index)) {
         return;
     }
     //*this = *((Planet*) (void*) &find->second);
@@ -102,7 +102,7 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
         
         for (int i = 0; i < ship_module_inventory_count; i++) {
             const char* module_id = data->GetArray("ship_modules", i);
-            ship_module_inventory[i] = GlobalGetState()->ship_modules.GetModuleIndexById(module_id);
+            ship_module_inventory[i] = GlobalGetState()->ship_modules.GetModuleRIDFromStringId(module_id);
         }
     }
 
@@ -173,7 +173,7 @@ void Planet::RequestBuild(int slot, building_index_t building_class) {
     }
 }
 
-bool Planet::AddShipModuleToInventory(entity_id_t module_) {
+bool Planet::AddShipModuleToInventory(RID module_) {
     for (int index = 0; index < MAX_PLANET_INVENTORY; index++) {
         if(!IsIdValid(ship_module_inventory[index])) {
             ship_module_inventory[index] = module_;
@@ -245,7 +245,6 @@ void Planet::_UIDrawInventory() {
     int i_max = MinInt(rows * columns, MAX_PLANET_INVENTORY);
     UIContextPushInset(0, height);
     
-    int res = -1;
     ShipModules* sms = &GlobalGetState()->ship_modules;
     for (int i = 0; i < i_max; i++) {
         //if (!IsIdValid(ship_module_inventory[i])) continue;
@@ -360,43 +359,43 @@ Planets::~Planets() {
     delete[] ephemerides;
 }
 
-entity_id_t Planets::AddPlanet(const DataNode* data) {
+RID Planets::AddPlanet(const DataNode* data) {
     //entity_map.insert({uuid, planet_entity});
-    entity_id_t id = GetIndexByName(data->Get("name", "UNNAMED"));
-    if (id < 0);
-    planet_array[id].Deserialize(this, data);
-    planet_array[id].Update();
-    planet_array[id].id = id;
+    RID id = GetIndexByName(data->Get("name", "UNNAMED"));
+    if (!IsIdValid(id)) return id;
+    planet_array[IdGetIndex(id)].Deserialize(this, data);
+    planet_array[IdGetIndex(id)].Update();
+    planet_array[IdGetIndex(id)].id = id;
     return id;
 }
 
-Planet* Planets::GetPlanet(entity_id_t id) const {
-    if (id >= planet_count) {
+Planet* Planets::GetPlanet(RID id) const {
+    if (IdGetIndex(id) >= planet_count) {
         FAIL("Invalid planet id (%d)", id)
     }
-    return &planet_array[(int)id];
+    return &planet_array[IdGetIndex(id)];
 }
 
-const PlanetNature* Planets::GetPlanetNature(entity_id_t id) const {
-    if (id >= planet_count) {
+const PlanetNature* Planets::GetPlanetNature(RID id) const {
+    if (IdGetIndex(id) >= planet_count) {
         FAIL("Invalid planet id (%d)", id)
     }
-    return &ephemerides[(int)id];
+    return &ephemerides[IdGetIndex(id)];
 }
 
-entity_id_t Planets::GetPlanetCount() const {
+int Planets::GetPlanetCount() const {
     return planet_count;
 }
 
-entity_id_t Planets::GetIndexByName(const char* planet_name) const {
+RID Planets::GetIndexByName(const char* planet_name) const {
     // Returns NULL if planet_name not found
     for(int i=0; i < planet_count; i++) {
         if (strcmp(ephemerides[i].name, planet_name) == 0) {
-            return i;
+            return RID(i, EntityType::PLANET);
         }
     }
     ERROR("No such planet '%s' ", planet_name)
-    return -1;
+    return GetInvalidId();
 }
 
 const PlanetNature* Planets::GetParentNature() const {
@@ -412,7 +411,7 @@ int Planets::LoadEphemerides(const DataNode* data) {
     ephemerides = new PlanetNature[planet_count];
     planet_array = new Planet[planet_count];
     //if (num_planets > 100) num_planets = 100;
-    //entity_id_t planets[100];
+    //RID planets[100];
     for(int i=0; i < planet_count; i++) {
         const DataNode* planet_data = data->GetArrayChild("satellites", i);
         PlanetNature* nature = &ephemerides[i];
@@ -436,5 +435,8 @@ int Planets::LoadEphemerides(const DataNode* data) {
     return planet_count;
 }
 
-Planet* GetPlanet(entity_id_t id) { return GlobalGetState()->planets.GetPlanet(id); }
+Planet* GetPlanet(RID id) { return GlobalGetState()->planets.GetPlanet(id); }
+Planet* GetPlanetByIndex(int index) { 
+    return GlobalGetState()->planets.GetPlanet(RID(index, EntityType::PLANET)); 
+}
 int LoadEphemerides(const DataNode* data) { return GlobalGetState()->planets.LoadEphemerides(data); }

@@ -31,10 +31,10 @@ struct Planet {
 
     resource_count_t stats[STAT_MAX];
     BuildingInstance buildings[MAX_PLANET_BUILDINGS];
-    entity_id_t ship_module_inventory[MAX_PLANET_INVENTORY];
+    RID ship_module_inventory[MAX_PLANET_INVENTORY];
 
     bool mouse_hover;
-    entity_id_t id;
+    RID id;
 
     ShipModuleSlot current_slot;
 
@@ -50,7 +50,7 @@ struct Planet {
     void RecalcStats();
     void RequestBuild(int slot, building_index_t building_class);
 
-    bool AddShipModuleToInventory(entity_id_t module);
+    bool AddShipModuleToInventory(RID module);
     void RemoveShipModuleInInventory(int index);
 
     bool HasMouseHover(double* distance) const;
@@ -69,18 +69,19 @@ struct Planets {
 
     Planets();
     ~Planets();
-    entity_id_t AddPlanet(const DataNode* data);
-    entity_id_t GetIndexByName(const char* planet_name) const;
-    Planet* GetPlanet(entity_id_t id) const;
-    const PlanetNature* GetPlanetNature(entity_id_t id) const;
-    entity_id_t GetPlanetCount() const;
+    RID AddPlanet(const DataNode* data);
+    RID GetIndexByName(const char* planet_name) const;
+    Planet* GetPlanet(RID id) const;
+    const PlanetNature* GetPlanetNature(RID id) const;
+    int GetPlanetCount() const;
 
     const PlanetNature* GetParentNature() const;
     int LoadEphemerides(const DataNode* data);
 };
 
 
-Planet* GetPlanet(entity_id_t id);
+Planet* GetPlanet(RID id);
+Planet* GetPlanetByIndex(int index);
 int LoadEphemerides(const DataNode* data);
 
 

@@ -10,8 +10,8 @@ struct TransferPlan {
     resource_count_t fuel_mass;
 
     // Inputs
-    entity_id_t departure_planet;
-    entity_id_t arrival_planet;
+    RID departure_planet;
+    RID arrival_planet;
     timemath::Time departure_time;
     timemath::Time arrival_time;
 
@@ -44,7 +44,7 @@ int TransferPlanTests();
 
 struct TransferPlanUI {
     TransferPlan* plan;
-    entity_id_t ship;
+    RID ship;
     bool is_valid;
 
     // UI
@@ -64,10 +64,10 @@ struct TransferPlanUI {
     void Update();
     void Draw(const CoordinateTransform* c_transf);
     void DrawUI();
-    void SetPlan(TransferPlan* plan, entity_id_t ship, timemath::Time min_time, timemath::Time pos_time);
+    void SetPlan(TransferPlan* plan, RID ship, timemath::Time min_time, timemath::Time pos_time);
     void SetResourceType(ResourceType resource_type);
     void SetLogistics(resource_count_t payload_mass, resource_count_t fuel_mass);
-    void SetDestination(entity_id_t planet);
+    void SetDestination(RID planet);
 
     bool IsSelectingDestination();
     bool IsActive();

@@ -1,6 +1,7 @@
 #ifndef GLOBAL_STATE_H
 #define GLOBAL_STATE_H
 
+#include "id_system.hpp"
 #include "planet.hpp"
 #include "ship.hpp"
 #include "transfer_plan.hpp"
@@ -18,10 +19,8 @@ enum AgentType {
 
 struct Clickable {
     AgentType type;
-    entity_id_t id;
+    RID id;
 };
-
-bool IsIdValid(entity_id_t id);
 
 struct GlobalState {
     enum FocusablesPanels {
@@ -38,8 +37,8 @@ struct GlobalState {
     CoordinateTransform c_transf;
     Calendar calendar;
     TransferPlanUI active_transfer_plan;
-    QuestManager quest_manager;
 
+    QuestManager quest_manager;
     Ships ships;
     Planets planets;
     ShipModules ship_modules;
@@ -50,8 +49,8 @@ struct GlobalState {
     WrenInterface wren_interface;
     Font default_font;
     
-    entity_id_t focused_planet;
-    entity_id_t focused_ship;
+    RID focused_planet;
+    RID focused_ship;
 
     // Lifecycle
     void Make(timemath::Time time);
@@ -63,7 +62,6 @@ struct GlobalState {
     void DrawState();
 
     // Interaction
-    FocusablesPanels GetCurrentFocus();
     bool CompleteTransaction(int delta, const char* message);
 
     // Serialization

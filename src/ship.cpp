@@ -24,6 +24,12 @@ resource_count_t ShipClass::GetFuelRequiredEmpty(double dv) const {
     return KGToResourceCounts(oem * (exp(dv/v_e) - 1));
 }
 
+Ship::Ship() {
+    for (int i=0; i < SHIP_MAX_MODULES; i++) {
+        modules[i] = GetInvalidId();
+    }
+}
+
 bool Ship::HasMouseHover(double* min_distance) const {
     double dist = Vector2Distance(GetMousePosition(), draw_pos);
     if (dist <= 10 && dist < *min_distance) {
@@ -76,7 +82,8 @@ void Ship::_OnNewPlanClicked() {
     prepared_plans_count++;
 }
 
-void Ship::Serialize(DataNode *data) const {
+void Ship::Serialize(DataNode *data) const
+{
     data->Set("name", name);
     data->Set("is_parked", is_parked ? "y" : "n");
     
@@ -110,7 +117,7 @@ void Ship::Deserialize(const DataNode* data) {
     if (modules_count > SHIP_MAX_MODULES) modules_count = SHIP_MAX_MODULES;
     const ShipModules* sms = &GlobalGetState()->ship_modules;
     for(int i=0; i < modules_count; i++) {
-        modules[i] = sms->GetModuleIndexById(data->GetArray("modules", i));
+        modules[i] = sms->GetModuleRIDFromStringId(data->GetArray("modules", i));
     }
     for(int i=modules_count; i < SHIP_MAX_MODULES; i++) {
         modules[i] = GetInvalidId();
@@ -330,7 +337,7 @@ void _UIDrawInventory(Ship* ship) {
         if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
             sms->InitDragging(ship->current_slot, UIContextCurrent().render_rec);
         }
-        ShipModuleClass::DrawUIRet ret = sms->DrawShipModule(ship->modules[i]);
+        sms->DrawShipModule(ship->modules[i]);
         UIContextPop(); // GridCell
     }
     UIContextPop(); // Inset
@@ -415,9 +422,9 @@ void _UIDrawQuests(Ship* ship) {
         ButtonStateFlags button_state = quest->DrawUI(true, is_quest_in_cargo);
         if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED && can_accept) {
             if (is_quest_in_cargo) {
-                qm->PutbackTask(ship->id, it.index);
+                qm->PutbackTask(ship->id, it.GetId());
             } else {
-                qm->PickupTask(ship->id, it.index);
+                qm->PickupTask(ship->id, it.GetId());
             }
         }
     }
@@ -494,9 +501,9 @@ void Ship::_OnDeparture(const TransferPlan& tp) {
 
     transporing = local_economy->DrawResource(tp.resource_transfer);
 
-    for(auto i = GlobalGetState()->quest_manager.active_tasks.GetIter(); i; i++) {
-        if (GlobalGetState()->quest_manager.active_tasks[i]->ship == id) {
-            GlobalGetState()->quest_manager.TaskDepartedFrom(i.index, parent_planet);
+    for(auto it = GlobalGetState()->quest_manager.active_tasks.GetIter(); it; it++) {
+        if (GlobalGetState()->quest_manager.active_tasks[it]->ship == id) {
+            GlobalGetState()->quest_manager.TaskDepartedFrom(it.GetId(), parent_planet);
         }
     }
 
@@ -511,10 +518,10 @@ void Ship::_OnArrival(const TransferPlan& tp) {
     parent_planet = tp.arrival_planet;
     is_parked = true;
     position = GetPlanet(parent_planet)->position;
-    for(auto i = GlobalGetState()->quest_manager.active_tasks.GetIter(); i; i++) {
-        const Task* quest = GlobalGetState()->quest_manager.active_tasks[i];
+    for(auto it = GlobalGetState()->quest_manager.active_tasks.GetIter(); it; it++) {
+        const Task* quest = GlobalGetState()->quest_manager.active_tasks[it];
         if (quest->ship == id && quest->arrival_planet == tp.arrival_planet) {
-            GlobalGetState()->quest_manager.TaskArrivedAt(i.index, tp.arrival_planet);
+            GlobalGetState()->quest_manager.TaskArrivedAt(it.GetId(), tp.arrival_planet);
         }
     }
 
@@ -525,7 +532,7 @@ void Ship::_OnArrival(const TransferPlan& tp) {
 void Ship::_EnsureContinuity() {
     INFO("Ensure Continuity Call");
     if (prepared_plans_count == 0) return;
-    entity_id_t planet_tracker = parent_planet;
+    RID planet_tracker = parent_planet;
     int start_index = 0;
     if (!is_parked) {
         planet_tracker = prepared_plans[0].arrival_planet;
@@ -552,23 +559,23 @@ void Ships::ClearShips(){
     alloc.Clear();
 }
 
-entity_id_t Ships::AddShip(const DataNode* data) {
+RID Ships::AddShip(const DataNode* data) {
     Ship *ship;
-    int ship_entity = alloc.Allocate(&ship);
+    RID ship_entity = alloc.Allocate(&ship);
     
     ship->Deserialize(data);
     if (ship->is_parked) {
         const char* planet_name = data->Get("planet", "NO NAME SPECIFIED");
-        entity_id_t index = GlobalGetState()->planets.GetIndexByName(planet_name);
-        if (index < 0) {
+        RID id = GlobalGetState()->planets.GetIndexByName(planet_name);
+        if (!IsIdValid(id)) {
             FAIL("Error while initializing ship '%s': no such planet '%s'", ship->name, planet_name)
         }
-        ship->parent_planet = index;
+        ship->parent_planet = id;
     }
 
-    ship->id = (entity_id_t) ship_entity;
+    ship->id = ship_entity;
     ship->Update();
-    return (entity_id_t) ship_entity;
+    return ship_entity;
 }
 
 int Ships::LoadShipClasses(const DataNode* data) {
@@ -601,11 +608,11 @@ int Ships::LoadShipClasses(const DataNode* data) {
     return ship_classes_count;
 }
 
-Ship* Ships::GetShip(entity_id_t id) const {
-    if ((!alloc.IsValidIndex((int)id))) {
+Ship* Ships::GetShip(RID id) const {
+    if ((!alloc.IsValidIndex(id))) {
         FAIL("Invalid id (%d)", id)
     }
-    return (Ship*) alloc.Get((int)id);
+    return (Ship*) alloc.Get(id);
 }
 
 shipclass_index_t Ships::GetShipClassIndexById(const char *id) const { 
@@ -631,7 +638,7 @@ const ShipClass* Ships::GetShipClassByIndex(shipclass_index_t index) const {
     return &ship_classes[index];
 }
 
-Ship* GetShip(entity_id_t uuid) {
+Ship* GetShip(RID uuid) {
     return GlobalGetState()->ships.GetShip(uuid);
 }
 

@@ -35,11 +35,11 @@ Task::Task() {
 }*/
 
 void Task::Serialize(DataNode* data) const {
-    data->SetI("departure_planet", departure_planet);
-    data->SetI("arrival_planet", arrival_planet);
-    data->SetI("current_planet", current_planet);
-    data->SetI("ship", ship);
-    data->SetI("quest", quest);
+    data->SetI("departure_planet", departure_planet.AsInt());
+    data->SetI("arrival_planet", arrival_planet.AsInt());
+    data->SetI("current_planet", current_planet.AsInt());
+    data->SetI("ship", ship.AsInt());
+    data->SetI("quest", quest.AsInt());
 
     data->SetF("payload_mass", payload_mass);
     data->SetDate("pickup_expiration_time", pickup_expiration_time);
@@ -48,11 +48,11 @@ void Task::Serialize(DataNode* data) const {
 }
 
 void Task::Deserialize(const DataNode* data) {
-    departure_planet =          data->GetI("departure_planet", departure_planet);
-    arrival_planet =            data->GetI("arrival_planet", arrival_planet);
-    current_planet =            data->GetI("current_planet", current_planet);
-    ship =                      data->GetI("ship", ship);
-    quest =                     data->GetI("quest", quest);
+    departure_planet =          RID(data->GetI("departure_planet", departure_planet.AsInt()));
+    arrival_planet =            RID(data->GetI("arrival_planet", arrival_planet.AsInt()));
+    current_planet =            RID(data->GetI("current_planet", current_planet.AsInt()));
+    ship =                      RID(data->GetI("ship", ship.AsInt()));
+    quest =                     RID(data->GetI("quest", quest.AsInt()));
     payload_mass =              data->GetF("payload_mass", payload_mass);
     pickup_expiration_time =    data->GetDate("pickup_expiration_time", pickup_expiration_time);
     delivery_expiration_time =  data->GetDate("delivery_expiration_time", delivery_expiration_time);

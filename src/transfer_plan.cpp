@@ -307,8 +307,8 @@ void TransferPlan::Serialize(DataNode* data) const {
     data->SetI("resource_transfer_id", resource_transfer.resource_id);
     data->SetI("resource_transfer_qtt", resource_transfer.quantity);
     data->SetI("fuel_mass", fuel_mass);
-    data->SetI("departure_planet", (int)departure_planet);
-    data->SetI("arrival_planet", (int)arrival_planet);
+    data->SetI("departure_planet", departure_planet.AsInt());
+    data->SetI("arrival_planet", arrival_planet.AsInt());
     departure_time.Serialize(data->SetChild("departure_time", DataNode()));
     arrival_time.Serialize(data->SetChild("arrival_time", DataNode()));
     data->SetI("primary_solution", primary_solution);
@@ -318,8 +318,8 @@ void TransferPlan::Deserialize(const DataNode* data) {
     resource_transfer.resource_id = (ResourceType) data->GetI("resource_transfer_id", resource_transfer.resource_id);
     resource_transfer.quantity = data->GetI("resource_transfer_qtt", resource_transfer.quantity);
     fuel_mass = data->GetI("fuel_mass", fuel_mass);
-    departure_planet = (entity_id_t) data->GetI("departure_planet", (int)departure_planet);
-    arrival_planet = (entity_id_t) data->GetI("arrival_planet", (int)arrival_planet);
+    departure_planet = RID(data->GetI("departure_planet", departure_planet.AsInt()));
+    arrival_planet = RID(data->GetI("arrival_planet", arrival_planet.AsInt()));
     departure_time.Deserialize(data->GetChild("departure_time"));
     arrival_time.Deserialize(data->GetChild("arrival_time"));
     primary_solution = data->GetI("primary_solution", primary_solution);
@@ -693,7 +693,7 @@ void TransferPlanUI::DrawUI() {
     UIContextPop();  // Inset
 }
 
-void TransferPlanUI::SetPlan(TransferPlan* pplan, entity_id_t pship, timemath::Time pmin_time, timemath::Time pmax_time) {
+void TransferPlanUI::SetPlan(TransferPlan* pplan, RID pship, timemath::Time pmin_time, timemath::Time pmax_time) {
     if (is_dragging_departure || is_dragging_arrival) {
         return;
     }
@@ -729,7 +729,7 @@ void TransferPlanUI::SetPlan(TransferPlan* pplan, entity_id_t pship, timemath::T
     plan->fuel_mass = fuel_mass;
 }
 
- void TransferPlanUI::SetDestination(entity_id_t planet) {
+ void TransferPlanUI::SetDestination(RID planet) {
     if (is_dragging_departure || is_dragging_arrival || !IsIdValid(ship) || !IsIdValid(plan->departure_planet)) {
         return;
     }

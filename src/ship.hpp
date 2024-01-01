@@ -41,13 +41,13 @@ struct Ship {
     // Current state
     bool is_parked;
     OrbitPos position;
-    entity_id_t parent_planet;
+    RID parent_planet;
     int index_on_planet;
 
     int prepared_plans_count;
     TransferPlan prepared_plans[SHIP_MAX_PREPARED_PLANS];
     //int modules_count;
-    entity_id_t modules[SHIP_MAX_MODULES];
+    RID modules[SHIP_MAX_MODULES];
     
     int plan_edit_index;
     int highlighted_plan_index;
@@ -58,12 +58,14 @@ struct Ship {
     Color color;
 
     // Identifier
-    entity_id_t id;
+    RID id;
 
     // transporting
     ResourceTransfer transporing;
 
     ShipModuleSlot current_slot;
+
+    Ship();
 
     void Serialize(DataNode* data) const;
     void Deserialize(const DataNode* data);
@@ -97,22 +99,22 @@ struct Ship {
 
 struct Ships {
     Ships();
-    entity_id_t AddShip(const DataNode* data);
+    RID AddShip(const DataNode* data);
     int LoadShipClasses(const DataNode* data);
     void ClearShips();
 
-    Ship* GetShip(entity_id_t uuid) const;
+    Ship* GetShip(RID uuid) const;
     shipclass_index_t GetShipClassIndexById(const char* id) const;
     const ShipClass* GetShipClassByIndex(shipclass_index_t index) const;
 
-    IDAllocatorList<Ship> alloc;
+    IDAllocatorList<Ship, EntityType::SHIP> alloc;
 private:
     std::map<std::string, shipclass_index_t> ship_classes_ids;
     ShipClass* ship_classes;
     size_t ship_classes_count;
 };
 
-Ship* GetShip(entity_id_t uuid);
+Ship* GetShip(RID uuid);
 const ShipClass* GetShipClassByIndex(shipclass_index_t index);
 int LoadShipClasses(const DataNode* data);
 

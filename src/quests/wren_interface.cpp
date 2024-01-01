@@ -82,8 +82,8 @@ void QuestInterfaceGainItem(WrenVM* vm) {
 	if (!_AssertSlotType(vm, 1, WREN_TYPE_STRING) || !_AssertSlotType(vm, 2, WREN_TYPE_NUM)) return;
 	const char* item_id = wrenGetSlotString(vm, 1);
 	int planet = (int) wrenGetSlotDouble(vm, 2);
-	entity_id_t smc = GlobalGetState()->ship_modules.GetModuleIndexById(item_id);
-	GetPlanet(planet)->AddShipModuleToInventory(smc);
+	RID smc = GlobalGetState()->ship_modules.GetModuleRIDFromStringId(item_id);
+	GetPlanetByIndex(planet)->AddShipModuleToInventory(smc);
 }
 
 void QuestInterfaceGainReputation(WrenVM* vm) {

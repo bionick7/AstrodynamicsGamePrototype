@@ -21,13 +21,13 @@ struct Quest {
     WrenHandle* coroutine_instance_handle;
     WrenHandle* coroutine_call_handle;
 
-    entity_id_t id = GetInvalidId();
+    RID id = GetInvalidId();
 
     Quest();
     ~Quest();
 
     union QuestUnion {
-        entity_id_t task;
+        RID task;
         //Dialogue dialogue;
         timemath::Time wait_until;
         bool quest_sccessfull;

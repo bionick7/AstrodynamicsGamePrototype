@@ -73,7 +73,7 @@ double PosMod(double x, double period) {
 
 static std::mt19937_64 r_generator = std::mt19937_64(std::random_device{}());
 
-double SetRandomSeed(uint_fast64_t seed) {
+void SetRandomSeed(uint_fast64_t seed) {
     r_generator.seed(seed);
 }
 

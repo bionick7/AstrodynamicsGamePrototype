@@ -18,7 +18,7 @@ void Calendar::Serialize(DataNode* data) const {
     time.Serialize(data->SetChild("time", DataNode()));
     current_migration_period.Serialize(data->SetChild("current_migration_period", DataNode()));
     migration_arrrival_time.Serialize(data->SetChild("migration_arrrival_time", DataNode()));
-    data->SetI("migration_arrrival_planet", (int) migration_arrrival_planet);
+    //data->SetI("migration_arrrival_planet", (int) migration_arrrival_planet);
     data->SetF("time_scale", time_scale);
     data->Set("paused", paused ? "y": "n");
 }
@@ -27,7 +27,7 @@ void Calendar::Deserialize(const DataNode* data) {
     time.Deserialize(data->GetChild("time"));
     current_migration_period.Deserialize(data->GetChild("current_migration_period"));
     migration_arrrival_time.Deserialize(data->GetChild("migration_arrrival_time"));
-    migration_arrrival_planet = (entity_id_t) data->GetI("migration_arrrival_planet", (int) migration_arrrival_planet);
+    //migration_arrrival_planet = (RID) data->GetI("migration_arrrival_planet", (int) migration_arrrival_planet);
     time_scale = data->GetF("time_scale", time_scale);
     paused = strcmp(data->Get("paused", paused ? "y": "n"), "y") == 0;
 }
@@ -70,7 +70,7 @@ void Calendar::DrawUI() const {
     DrawTextEx(GetCustomDefaultFont(), text_date, pos, FONT_SIZE, 1, Palette::ui_main);
 
     // Migration progress
-    double t_val = 1.0 - (migration_arrrival_time - GlobalGetNow()).Seconds() / current_migration_period.Seconds();
+    /*double t_val = 1.0 - (migration_arrrival_time - GlobalGetNow()).Seconds() / current_migration_period.Seconds();
     int progress_x = t_val * GetScreenWidth();
     DrawRectangle(0, 1, progress_x, 2, Palette::ui_main);
     const int collider_rec_width = 16;
@@ -84,7 +84,7 @@ void Calendar::DrawUI() const {
             progress_x = GetScreenWidth() - text_size.x - 200;
         }
         DrawTextEx(GetCustomDefaultFont(), buffer, (Vector2) { progress_x, 1 }, 16, 1, Palette::ui_main);
-    }
+    }*/
 }
 
 bool Calendar::IsNewDay() const {

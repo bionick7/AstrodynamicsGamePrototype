@@ -14,10 +14,10 @@
 struct Ship;
 
 struct QuestManager {
-    IDAllocatorList<Quest> available_quests;
+    IDAllocatorList<Quest, EntityType::QUEST> available_quests;
     //Quest available_quests[_AVAILABLE_QUESTS];
-    IDAllocatorList<Quest> active_quests;
-    IDAllocatorList<Task> active_tasks;
+    IDAllocatorList<Quest, EntityType::ACTIVE_QUEST> active_quests;
+    IDAllocatorList<Task, EntityType::TASK> active_tasks;
 
     //QuestTemplate* templates;
     int template_count;
@@ -33,16 +33,16 @@ struct QuestManager {
     void Update(double dt);
     void Draw();
 
-    void AcceptQuest(entity_id_t quest_index);
+    void AcceptQuest(RID quest_index);
     void ForceQuest(WrenQuestTemplate* template_);
-    entity_id_t CreateTask(entity_id_t quest_index);
+    RID CreateTask(RID quest_index);
     int GetAvailableQuests() const;
 
-    void PickupTask(entity_id_t ship_index, entity_id_t task_index);
-    void PutbackTask(entity_id_t ship_index, entity_id_t task_index);
-    void TaskDepartedFrom(entity_id_t task_index, entity_id_t planet_index);
-    void TaskArrivedAt(entity_id_t task_index, entity_id_t planet_index);
-    void CompleteTask(entity_id_t task_index);
+    void PickupTask(RID ship_index, RID task_index);
+    void PutbackTask(RID ship_index, RID task_index);
+    void TaskDepartedFrom(RID task_index, RID planet_index);
+    void TaskArrivedAt(RID task_index, RID planet_index);
+    void CompleteTask(RID task_index);
 
     void _RegenQuests();
 
