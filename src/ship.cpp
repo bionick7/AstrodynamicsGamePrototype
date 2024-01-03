@@ -354,7 +354,7 @@ void _UIDrawTransferplans(Ship* ship) {
         if (ship->prepared_plans[i].resource_transfer.resource_id < 0){
             resource_name = "EMPTY";
         } else {
-            resource_name = GetResourceData(ship->prepared_plans[i].resource_transfer.resource_id).name;
+            resource_name = GetResourceData(ship->prepared_plans[i].resource_transfer.resource_id)->name;
         }
         if (IsIdValid(ship->prepared_plans[i].departure_planet)) {
             departure_planet_name = GetPlanet(ship->prepared_plans[i].departure_planet)->name;
@@ -550,7 +550,7 @@ void Ship::_EnsureContinuity() {
 Ships::Ships() {
     alloc.Init();
 
-    ship_classes_ids = std::map<std::string, shipclass_index_t>();
+    ship_classes_ids = std::map<std::string, RID>();
     ship_classes = NULL;
     ship_classes_count = 0;
 }
@@ -602,7 +602,8 @@ int Ships::LoadShipClasses(const DataNode* data) {
         ASSERT_ALOMST_EQUAL_FLOAT(sc.v_e * log((ResourceCountsToKG(sc.max_capacity) + sc.oem) / sc.oem), sc.max_dv)   // Remove when we're sure thisworks
 
         ship_classes[index] = sc;
-        auto pair = ship_classes_ids.insert_or_assign(ship_data->Get("id", "_"), index);
+        RID rid = RID(index, EntityType::SHIP_CLASS);
+        auto pair = ship_classes_ids.insert_or_assign(ship_data->Get("id", "_"), rid);
         ship_classes[index].id = pair.first->first.c_str();  // points to string in dictionary
     }
     return ship_classes_count;
@@ -615,34 +616,36 @@ Ship* Ships::GetShip(RID id) const {
     return (Ship*) alloc.Get(id);
 }
 
-shipclass_index_t Ships::GetShipClassIndexById(const char *id) const { 
+RID Ships::GetShipClassIndexById(const char *id) const { 
     auto find = ship_classes_ids.find(id);
     if (find == ship_classes_ids.end()) {
-        ERROR("No such ship id '%s'", id)
-        return BUILDING_INDEX_INVALID;
+        ERROR("No such ship class id '%s'", id)
+        return GetInvalidId();
     }
     return find->second;
 }
 
-const ShipClass* Ships::GetShipClassByIndex(shipclass_index_t index) const {
-#ifndef LOGGING_DISABLE
+const ShipClass* Ships::GetShipClassByIndex(RID id) const {
     if (ship_classes == NULL) {
         ERROR("Ship Class uninitialized")
         return NULL;
     }
-    if (index >= ship_classes_count) {
-        ERROR("Invalid ship class index (%d >= %d or negative)", index, ship_classes_count)
+    if (IdGetType(id) != EntityType::SHIP_CLASS) {
+        ERROR("id '%d' does not refer to a ship class", id)
         return NULL;
     }
-#endif
-    return &ship_classes[index];
+    if (IdGetIndex(id) >= ship_classes_count) {
+        ERROR("Invalid ship class index (%d >= %d or negative)", IdGetIndex(id), ship_classes_count)
+        return NULL;
+    }
+    return &ship_classes[IdGetIndex(id)];
 }
 
 Ship* GetShip(RID uuid) {
     return GlobalGetState()->ships.GetShip(uuid);
 }
 
-const ShipClass* GetShipClassByIndex(shipclass_index_t index) {
+const ShipClass* GetShipClassByIndex(RID index) {
     return GlobalGetState()->ships.GetShipClassByIndex(index);
 }
 

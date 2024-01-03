@@ -192,3 +192,9 @@ more or less secure places to store shit.
 
 Could ultimately also incorporate resources into the item-slot paradigm
 Fuel would have to be seperate though.
+
+## Status 3 Jan 24
+Start work on quests
+The focus should be on modules, since it's the most elegant (fun?) part of the game.
+Modules can produce resources in space-stations and have the same functionality as buildings
+make modules => define quests to get them

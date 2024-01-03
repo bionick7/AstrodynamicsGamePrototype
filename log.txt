@@ -1,26 +1,25 @@
-[2024-01-01 19:29:15] src\main.cpp:44 :: Init from working directory: 'E:\Games\astrodyn_concept_3\standalone'
-[2024-01-01 19:29:15] FILEIO: [resources/fonts/OCRAEXT.TTF] File loaded successfully
-[2024-01-01 19:29:15] TEXTURE: [ID 3] Texture loaded successfully (512x512 | GRAY_ALPHA | 1 mipmaps)
-[2024-01-01 19:29:15] FONT: Data loaded successfully (16 pixel size | 256 glyphs)
-[2024-01-01 19:29:15] FILEIO: [resources/sound/SFX/Click_Standard_00.wav] File loaded successfully
-[2024-01-01 19:29:15] WAVE: Data loaded successfully (48000 Hz, 16 bit, 2 channels)
-[2024-01-01 19:29:15] FILEIO: [resources/sound/SFX/Click_Electronic_01.wav] File loaded successfully
-[2024-01-01 19:29:15] WAVE: Data loaded successfully (48000 Hz, 16 bit, 2 channels)
-[2024-01-01 19:29:15] FILEIO: [resources/sound/SFX/ClickMechanic1.wav] File loaded successfully
-[2024-01-01 19:29:15] WAVE: Data loaded successfully (96000 Hz, 16 bit, 2 channels)
-[2024-01-01 19:29:15] FILEIO: [resources/sound/SFX/Click_Electronic_14.wav] File loaded successfully
-[2024-01-01 19:29:15] WAVE: Data loaded successfully (48000 Hz, 16 bit, 2 channels)
-[2024-01-01 19:29:16] src\quests\wren_interface.cpp:285 :: Loading example
-[2024-01-01 19:29:16] FILEIO: [resources/wren/quests/example.wren] Text file loaded successfully
-[2024-01-01 19:29:16] FILEIO: [resources/wren/foreign/quest_base.wren] Text file loaded successfully
-[2024-01-01 19:29:16] src\quests\wren_interface.cpp:285 :: Loading tutorial
-[2024-01-01 19:29:16] FILEIO: [resources/wren/quests/tutorial.wren] Text file loaded successfully
-[2024-01-01 19:29:16] src\global_state.cpp:106 :: Loading Buildings
-[2024-01-01 19:29:16] src\global_state.cpp:106 :: Loading ShipModules
-[2024-01-01 19:29:16] src\global_state.cpp:106 :: Loading Planets
-[2024-01-01 19:29:16] src\global_state.cpp:106 :: Loading ShipClasses
-[2024-01-01 19:29:16] src\global_state.cpp:106 :: Loading Resources
-[2024-01-01 19:29:21] TEXTURE: [ID 2] Unloaded texture data from VRAM (GPU)
-[2024-01-01 19:29:21] SHADER: [ID 3] Default shader unloaded successfully
-[2024-01-01 19:29:21] TEXTURE: [ID 1] Default texture unloaded successfully
-[2024-01-01 19:29:21] Window closed successfully
+[2024-01-03 23:13:32] src\main.cpp:44 :: Init from working directory: 'E:\Games\astrodyn_concept_3\standalone'
+[2024-01-03 23:13:32] FILEIO: [resources/fonts/OCRAEXT.TTF] File loaded successfully
+[2024-01-03 23:13:32] TEXTURE: [ID 3] Texture loaded successfully (512x512 | GRAY_ALPHA | 1 mipmaps)
+[2024-01-03 23:13:32] FONT: Data loaded successfully (16 pixel size | 256 glyphs)
+[2024-01-03 23:13:32] FILEIO: [resources/sound/SFX/Click_Standard_00.wav] File loaded successfully
+[2024-01-03 23:13:32] WAVE: Data loaded successfully (48000 Hz, 16 bit, 2 channels)
+[2024-01-03 23:13:32] FILEIO: [resources/sound/SFX/Click_Electronic_01.wav] File loaded successfully
+[2024-01-03 23:13:32] WAVE: Data loaded successfully (48000 Hz, 16 bit, 2 channels)
+[2024-01-03 23:13:32] FILEIO: [resources/sound/SFX/ClickMechanic1.wav] File loaded successfully
+[2024-01-03 23:13:32] WAVE: Data loaded successfully (96000 Hz, 16 bit, 2 channels)
+[2024-01-03 23:13:32] FILEIO: [resources/sound/SFX/Click_Electronic_14.wav] File loaded successfully
+[2024-01-03 23:13:32] WAVE: Data loaded successfully (48000 Hz, 16 bit, 2 channels)
+[2024-01-03 23:13:32] src\quests\wren_interface.cpp:285 :: Loading example
+[2024-01-03 23:13:32] FILEIO: [resources/wren/quests/example.wren] Text file loaded successfully
+[2024-01-03 23:13:32] FILEIO: [resources/wren/foreign/quest_base.wren] Text file loaded successfully
+[2024-01-03 23:13:32] src\quests\wren_interface.cpp:285 :: Loading tutorial
+[2024-01-03 23:13:32] FILEIO: [resources/wren/quests/tutorial.wren] Text file loaded successfully
+[2024-01-03 23:13:32] src\global_state.cpp:103 :: Loading ShipModules
+[2024-01-03 23:13:32] src\global_state.cpp:103 :: Loading Planets
+[2024-01-03 23:13:32] src\global_state.cpp:103 :: Loading ShipClasses
+[2024-01-03 23:13:32] src\global_state.cpp:103 :: Loading Resources
+[2024-01-03 23:13:53] TEXTURE: [ID 2] Unloaded texture data from VRAM (GPU)
+[2024-01-03 23:13:53] SHADER: [ID 3] Default shader unloaded successfully
+[2024-01-03 23:13:53] TEXTURE: [ID 1] Default texture unloaded successfully
+[2024-01-03 23:13:53] Window closed successfully

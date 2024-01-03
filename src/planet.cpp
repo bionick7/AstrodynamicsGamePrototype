@@ -11,9 +11,6 @@ Planet::Planet(const char* p_name, double p_mu, double p_radius) {
     mu = p_mu;
     radius = p_radius;
 
-    for (int i = 0; i < MAX_PLANET_BUILDINGS; i++) {
-        buildings[i] = BuildingInstance(BUILDING_INDEX_INVALID);
-    }
     for (int i = 0; i < MAX_PLANET_INVENTORY; i++) {
         ship_module_inventory[i] = GetInvalidId();
     }
@@ -28,19 +25,8 @@ void Planet::Serialize(DataNode* data) const {
     DataNode* resource_node = data->SetChild("resource_stock", DataNode());
     DataNode* resource_delta_node = data->SetChild("resource_delta", DataNode());
     for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-        resource_node->SetI(GetResourceData(resource_index).name, economy.resource_stock[resource_index]);
-        resource_delta_node->SetI(GetResourceData(resource_index).name, economy.resource_delta[resource_index]);
-    }
-
-    // buildings
-    int last_building_index = 0;
-    for(int i=0; i < MAX_PLANET_BUILDINGS; i++) 
-        if (buildings[i].IsValid()) last_building_index = i;
-
-    data->SetArray("buildings", last_building_index);
-    for(int i=0; i < last_building_index; i++) {
-        const BuildingClass* bc = GetBuildingByIndex(buildings[i].class_index);
-        data->SetArrayElem("buildings", i, bc->id);
+        resource_node->SetI(GetResourceData(resource_index)->name, economy.resource_stock[resource_index]);
+        resource_delta_node->SetI(GetResourceData(resource_index)->name, economy.resource_delta[resource_index]);
     }
     
     // modules
@@ -72,29 +58,17 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
     const DataNode* resource_node = data->GetChild("resource_stock", true);
     if (resource_node != NULL) {
         for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-            economy.resource_stock[resource_index] = resource_node->GetI(GetResourceData(resource_index).name, 0, true);
+            economy.resource_stock[resource_index] = resource_node->GetI(GetResourceData(resource_index)->name, 0, true);
         }
     }
     const DataNode* resource_delta_node = data->GetChild("resource_delta", true);
     if (resource_delta_node != NULL) {
         for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-            economy.resource_delta[resource_index] = resource_delta_node->GetI(GetResourceData(resource_index).name, 0, true);
-        }
-    }
-
-    if (data->Has("buildings")) {
-        int initial_building_count = data->GetArrayLen("buildings", true);
-        if (initial_building_count > MAX_PLANET_BUILDINGS) {
-            initial_building_count = MAX_PLANET_BUILDINGS;
-        }
-        
-        for (int i = 0; i < initial_building_count; i++) {
-            const char* building_id = data->GetArray("buildings", i);
-            buildings[i] = BuildingInstance(GetBuildingIndexById(building_id));
+            economy.resource_delta[resource_index] = resource_delta_node->GetI(GetResourceData(resource_index)->name, 0, true);
         }
     }
     
-    if (data->Has("ship_modules")) {
+    if (data->HasArray("ship_modules")) {
         int ship_module_inventory_count = data->GetArrayLen("ship_modules", true);
         if (ship_module_inventory_count > MAX_PLANET_INVENTORY) {
             ship_module_inventory_count = MAX_PLANET_INVENTORY;
@@ -140,36 +114,6 @@ void Planet::RecalcStats() {
     // Just call this every frame tbh
     for (int i = 0; i < RESOURCE_MAX; i++){
         economy.resource_delta[i] = 0;
-    }
-    
-    for (int i = 0; i < STAT_MAX; i++){
-        stats[i] = 0;
-    }
-
-    for (int i = 0; i < MAX_PLANET_BUILDINGS; i++) {
-        if (buildings[i].IsValid()) {
-            buildings[i].Effect(&economy.resource_delta[0], &stats[0]);
-        }
-    }
-}
-
-void Planet::RequestBuild(int slot, building_index_t building_class) {
-    const BuildingClass* bc = GetBuildingByIndex(building_class);
-    for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-        if (bc->build_costs[resource_index] > economy.resource_stock[resource_index]) {
-            USER_INFO("Not enough %s (%f available, %f required)", 
-                GetResourceData(resource_index).name,
-                economy.resource_stock[resource_index],
-                bc->build_costs[resource_index]
-            )
-            return;
-        }
-    }
-    BuildingInstance instance = BuildingInstance(building_class);
-    buildings[slot] = instance;
-
-    for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-        economy.resource_stock[resource_index] -= bc->build_costs[resource_index];
     }
 }
 
@@ -226,10 +170,10 @@ void Planet::Draw(const CoordinateTransform* c_transf) {
     }
 }
 
-void _UIDrawStats(const resource_count_t stats[]) {
-    for (int i=0; i < STAT_MAX; i++) {
+void _UIDrawStats(const resource_count_t planet_stats[]) {
+    for (int i=0; i < PlanetStats::MAX; i++) {
         char buffer[50];
-        sprintf(buffer, "%-10s %3d", stat_names[i], stats[i]);
+        sprintf(buffer, "%-10s %3d", planet_stat_names[i], planet_stats[i]);
         UIContextWrite(buffer);
         //TextBoxLineBreak(&tb);
     }
@@ -332,7 +276,7 @@ void Planet::DrawUI() {
 
     UIContextWrite(name);
     UIContextFillline(1, Palette::ui_main, Palette::ui_main);
-    //_UIDrawStats(stats);
+    //_UIDrawStats(planet_stats);
     switch (current_tab) {
     case 0:
         economy.UIDrawResources(transfer, fuel_draw);

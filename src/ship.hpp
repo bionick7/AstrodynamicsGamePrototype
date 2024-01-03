@@ -10,11 +10,10 @@
 
 #define SHIP_MAX_PREPARED_PLANS 10
 #define SHIP_MAX_MODULES 10
+
 #define SHIPCLASS_NAME_MAX_SIZE 64
 #define SHIPCLASS_DESCRIPTION_MAX_SIZE 1024
 #define SHIP_NAME_MAX_SIZE 64
-
-typedef uint16_t shipclass_index_t;
 
 struct ShipClass {
     char name[SHIPCLASS_NAME_MAX_SIZE];
@@ -36,7 +35,7 @@ struct ShipClass {
 struct Ship {
     // Inherent properties
     char name[SHIP_NAME_MAX_SIZE];
-    shipclass_index_t ship_class;
+    RID ship_class;
 
     // Current state
     bool is_parked;
@@ -46,8 +45,8 @@ struct Ship {
 
     int prepared_plans_count;
     TransferPlan prepared_plans[SHIP_MAX_PREPARED_PLANS];
-    //int modules_count;
     RID modules[SHIP_MAX_MODULES];
+    double stats[static_cast<int>(ShipStats::MAX)];
     
     int plan_edit_index;
     int highlighted_plan_index;
@@ -62,7 +61,6 @@ struct Ship {
 
     // transporting
     ResourceTransfer transporing;
-
     ShipModuleSlot current_slot;
 
     Ship();
@@ -104,18 +102,17 @@ struct Ships {
     void ClearShips();
 
     Ship* GetShip(RID uuid) const;
-    shipclass_index_t GetShipClassIndexById(const char* id) const;
-    const ShipClass* GetShipClassByIndex(shipclass_index_t index) const;
+    RID GetShipClassIndexById(const char* id) const;
+    const ShipClass* GetShipClassByIndex(RID index) const;
 
     IDAllocatorList<Ship, EntityType::SHIP> alloc;
-private:
-    std::map<std::string, shipclass_index_t> ship_classes_ids;
+    std::map<std::string, RID> ship_classes_ids;
     ShipClass* ship_classes;
-    size_t ship_classes_count;
+    uint32_t ship_classes_count;
 };
 
 Ship* GetShip(RID uuid);
-const ShipClass* GetShipClassByIndex(shipclass_index_t index);
+const ShipClass* GetShipClassByIndex(RID index);
 int LoadShipClasses(const DataNode* data);
 
 #endif  // SHIP_H

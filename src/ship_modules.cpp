@@ -8,18 +8,38 @@ ShipModuleClass::ShipModuleClass() {
     mass = 0.0;
     name[0] = '\0';
     description[0] = '\0';
+
+    for (int i=0; i < (int) ShipStats::MAX; i++) {
+        delta_stats[i] = 0;
+        required_stats[i] = 0;
+    }
 }
 
 void ShipModuleClass::Update(Ship* ship) const {
+    bool new_day = GlobalGetState()->calendar.IsNewDay();
+    for (int i=0; i < (int) ShipStats::MAX; i++) {
+        if (ship->stats[i] > required_stats[i]) {
+            return;
+        }
+    }
+    for (int i=0; i < (int) ShipStats::MAX; i++) {
+        ship->stats[i] += delta_stats[i];
+    }
+    if (new_day) {
+        for (int i=0; i < RESOURCE_MAX; i++) {
+            ship->stats[i] += delta_stats[i];
+        }
+    }
+    // Special behavior
     switch (module_type) {
     case WATER_EXTRACTOR:{
         if (!ship->is_parked) break;
-        if (!GlobalGetState()->calendar.IsNewDay()) break;
+        if (!new_day) break;
         Planet* planet = GetPlanet(ship->parent_planet);
         planet->economy.GiveResource(ResourceTransfer(RESOURCE_WATER, 1));
         break;}
     case HEAT_SHIELD:{
-        NOT_IMPLEMENTED
+        // nothing rn
         break;}
     default:
     case INVALID_MODULE:
@@ -80,17 +100,37 @@ int ShipModules::Load(const DataNode* data) {
     ship_modules = new ShipModuleClass[shipmodule_count];
     for(int i=0; i < shipmodule_count; i++) {
         DataNode* module_data = data->GetArrayChild("shipmodules", i);
-        ship_modules[i].mass = module_data->GetF("mass");
+        ship_modules[i].mass = module_data->GetF("mass") * KG_PER_COUNT;
         strcpy(ship_modules[i].name, module_data->Get("name"));
         strcpy(ship_modules[i].description, module_data->Get("description"));
 
         const char* id = module_data->Get("id", "_");
-        if (strcmp(id, "shpmod_water_extractor") == 0) 
+        if (strcmp(id, "shpmod_water_extractor") == 0) {
             ship_modules[i].module_type = ShipModuleClass::WATER_EXTRACTOR;
-        if (strcmp(id, "shpmod_heatshield") == 0) 
+        }
+        if (strcmp(id, "shpmod_heatshield") == 0) {
             ship_modules[i].module_type = ShipModuleClass::HEAT_SHIELD;
+        }
 
-        auto pair = shipmodule_ids.insert_or_assign(id, RID(i, EntityType::MODULE));
+        const DataNode* add_data = module_data->GetChild("add", true);
+        const DataNode* require_data = module_data->GetChild("require", true);
+        for(int j=0; j < (int)ShipStats::MAX; j++) {
+            if (add_data != NULL && add_data->Has(ship_stat_names[j])) {
+                ship_modules[i].delta_stats[j] = add_data->GetF(ship_stat_names[j]);
+            }
+            if (require_data != NULL && require_data->Has(ship_stat_names[j])) {
+                ship_modules[i].required_stats[j] = require_data->GetF(ship_stat_names[j]);
+            }
+        }
+
+        const DataNode* produce_data = module_data->GetChild("produce", true);
+        for(int j=0; j < (int)ShipStats::MAX; j++) {
+            if (produce_data != NULL && produce_data->Has(resource_names[j])) {
+                ship_modules[i].production[j] = produce_data->GetI(resource_names[j]);
+            }
+        }
+
+        auto pair = shipmodule_ids.insert_or_assign(id, RID(i, EntityType::MODULE_CLASS));
         ship_modules[i].id = pair.first->first.c_str();  // points to string in dictionary
     }
     return shipmodule_count;
@@ -109,7 +149,7 @@ const ShipModuleClass* ShipModules::GetModuleByRID(RID index) const {
         ERROR("Ship modules uninitialized")
         return NULL;
     }
-    if (IdGetType(index) != EntityType::MODULE) {
+    if (IdGetType(index) != EntityType::MODULE_CLASS) {
         return NULL;
     }
     if (IdGetIndex(index) >= shipmodule_count) {
@@ -122,10 +162,6 @@ const ShipModuleClass* ShipModules::GetModuleByRID(RID index) const {
 void ShipModules::DrawShipModule(RID index) const {
     if(!IsIdValid(index)) {  // empty
         UIContextEnclose(Palette::bg, Palette::ui_dark);
-        if (UIContextAsButton() & BUTTON_STATE_FLAG_JUST_PRESSED) {
-            // Equipment menu
-            return;
-        }
     } else {  // filled
         const ShipModuleClass* smc = GetModuleByRID(index);
         UIContextEnclose(Palette::bg, Palette::ui_main);

@@ -43,14 +43,14 @@ struct ResourceTransfer {
 
 typedef int64_t cost_t;
 
-enum StatType {
-    STAT_NONE = -1,
-    STAT_POPULATION = 0,
-    STAT_WORKFORCE,
-    STAT_MAX,
+enum PlanetStats {
+    NONE = -1,
+    POPULATION = 0,
+    WORKFORCE,
+    MAX,
 };
 
-static const char stat_names[STAT_MAX][RESOURCE_NAME_MAX_SIZE] = {
+static const char planet_stat_names[static_cast<int>(PlanetStats::MAX)][RESOURCE_NAME_MAX_SIZE] = {
     "population", // STAT_POPULATION
     "workforce" // STAT_WORKFORCE
 };
@@ -101,6 +101,6 @@ struct PlanetaryEconomy {
 };
 
 int LoadResources(const DataNode* data);
-ResourceData& GetResourceData(int resource_index);
+ResourceData* GetResourceData(int resource_index);
 
 #endif  // #ifndef PLANETARY_ECONOMY

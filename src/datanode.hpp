@@ -39,6 +39,9 @@ struct DataNode {
     void WriteToFile(const char* file, FileFormat fmt) const;
 
     bool Has(const char* key) const;
+    bool HasChild(const char* key) const;
+    bool HasArray(const char* key) const;
+    bool HasChildArray(const char* key) const;
     void Remove(const char* key);
     void RemoveAt(const char* key, int index);
 

@@ -24,7 +24,7 @@ PlanetaryEconomy::PlanetaryEconomy(){
         resource_stock[i] = 0;
         resource_delta[i] = 0;
         resource_capacity[i] = 100;
-        resource_price[i] = GetResourceData(i).default_cost;
+        resource_price[i] = GetResourceData(i)->default_cost;
     }
     for (int i=0; i < RESOURCE_MAX*PRICE_TREND_SIZE; i++) {
         price_history[i] = resource_price[i % RESOURCE_MAX];
@@ -85,9 +85,9 @@ void PlanetaryEconomy::AdvanceEconomy() {
         // 2. update noise (independant of natural state)
         // 3. update final
         resource_noise[i] = Clamp(
-            GetRandomGaussian(-resource_noise[i] * 0.5, GetResourceData(i).cost_volatility),
-            -GetResourceData(i).max_noise * 0.5,
-            GetResourceData(i).max_noise * 0.5
+            GetRandomGaussian(-resource_noise[i] * 0.5, GetResourceData(i)->cost_volatility),
+            -GetResourceData(i)->max_noise * 0.5,
+            GetResourceData(i)->max_noise * 0.5
         );
     }
     for(int i = 0; i < RESOURCE_MAX * (PRICE_TREND_SIZE - 1); i++) {
@@ -101,11 +101,11 @@ void PlanetaryEconomy::RecalcEconomy() {
         FAIL("Resources uninititalized")
     }
     for (int i = 0; i < RESOURCE_MAX; i++){
-        cost_t natural_cost = GetResourceData(i).default_cost;  // TBD
+        cost_t natural_cost = GetResourceData(i)->default_cost;  // TBD
         resource_price[i] = Clamp(
             resource_noise[i] + natural_cost,
-            GetResourceData(i).min_cost,
-            GetResourceData(i).max_cost
+            GetResourceData(i)->min_cost,
+            GetResourceData(i)->max_cost
         );
         price_history[RESOURCE_MAX*(PRICE_TREND_SIZE-1) + i] = resource_price[i];
     }
@@ -117,8 +117,8 @@ void PlanetaryEconomy::UIDrawResources(const ResourceTransfer& transfer, double 
     }
     for (int i=0; i < RESOURCE_MAX; i++) {
         char buffer[50];
-        //sprintf(buffer, "%-10s %5d/%5d (%+3d)", GetResourceData(i).name, qtt, cap, delta);
-        sprintf(buffer, "%-10s %3d (%+3.3f /d)", GetResourceData(i).name, resource_stock[i], (double)resource_delta[i]/1e3);
+        //sprintf(buffer, "%-10s %5d/%5d (%+3d)", GetResourceData(i)->name, qtt, cap, delta);
+        sprintf(buffer, "%-10s %3d (%+3.3f /d)", GetResourceData(i)->name, resource_stock[i], (double)resource_delta[i]/1e3);
         UIContextPushInset(0, 18);
         if (GlobalGetState()->active_transfer_plan.IsActive()) {
             // Button
@@ -184,7 +184,7 @@ void PlanetaryEconomy::TryPlayerTransaction(ResourceTransfer rt) {
 void PlanetaryEconomy::UIDrawEconomy(const ResourceTransfer& transfer, double fuel_draw) {
     for (int i=0; i < RESOURCE_MAX; i++) {
         //char buffer[50];
-        //sprintf(buffer, "%-10s %5d/%5d (%+3d)", GetResourceData(i).name, qtt, cap, delta);
+        //sprintf(buffer, "%-10s %5d/%5d (%+3d)", GetResourceData(i)->name, qtt, cap, delta);
         UIContextPushInset(0, 18);
         ResourceType resource = (ResourceType) i;
 
@@ -196,8 +196,8 @@ void PlanetaryEconomy::UIDrawEconomy(const ResourceTransfer& transfer, double fu
         }
 
         StringBuilder sb = StringBuilder();
-        sb.AddFormat("%-10s", GetResourceData(i).name).AddCost(resource_price[i]);
-        //sprintf(buffer, "%-10sM§M  %+3fK /cnt", GetResourceData(i).name, resource_price[i]/1e3);
+        sb.AddFormat("%-10s", GetResourceData(i)->name).AddCost(resource_price[i]);
+        //sprintf(buffer, "%-10sM§M  %+3fK /cnt", GetResourceData(i)->name, resource_price[i]/1e3);
         UIContextWrite(sb.c_str, false);
 
         resource_count_t qtt = 0;
@@ -233,20 +233,20 @@ void PlanetaryEconomy::UIDrawEconomy(const ResourceTransfer& transfer, double fu
 
 int LoadResources(const DataNode* data) {
     for (int i=0; i < RESOURCE_MAX; i++) {
-        strcpy(GetResourceData(i).name, resource_names[i]);
+        strcpy(GetResourceData(i)->name, resource_names[i]);
     }
     for (int i=0; i < RESOURCE_MAX; i++) {
-        const DataNode* dn = data->GetChild(GetResourceData(i).name);
-        strncpy(GetResourceData(i).descrption, dn->Get("description", "[DESCRITION MISSING]"), RESOURCE_DESCRIPTION_MAX_SIZE);
-        GetResourceData(i).min_cost = dn->GetF("min_cost", 0);
-        GetResourceData(i).max_cost = dn->GetF("max_cost", GetResourceData(i).min_cost);
-        GetResourceData(i).default_cost = dn->GetF("default_cost", (GetResourceData(i).max_cost + GetResourceData(i).min_cost) / 2);
-        GetResourceData(i).cost_volatility = dn->GetF("cost_volatility", GetResourceData(i).default_cost - GetResourceData(i).min_cost);
-        GetResourceData(i).max_noise = dn->GetF("max_noise", 0);
+        const DataNode* dn = data->GetChild(GetResourceData(i)->name);
+        strncpy(GetResourceData(i)->descrption, dn->Get("description", "[DESCRITION MISSING]"), RESOURCE_DESCRIPTION_MAX_SIZE);
+        GetResourceData(i)->min_cost = dn->GetF("min_cost", 0);
+        GetResourceData(i)->max_cost = dn->GetF("max_cost", GetResourceData(i)->min_cost);
+        GetResourceData(i)->default_cost = dn->GetF("default_cost", (GetResourceData(i)->max_cost + GetResourceData(i)->min_cost) / 2);
+        GetResourceData(i)->cost_volatility = dn->GetF("cost_volatility", GetResourceData(i)->default_cost - GetResourceData(i)->min_cost);
+        GetResourceData(i)->max_noise = dn->GetF("max_noise", 0);
     }
-    return 0;
+    return RESOURCE_MAX;
 }
 
-ResourceData& GetResourceData(int resource_index) {
-    return global_resource_data[resource_index];
+ResourceData* GetResourceData(int resource_index) {
+    return &global_resource_data[resource_index];
 }

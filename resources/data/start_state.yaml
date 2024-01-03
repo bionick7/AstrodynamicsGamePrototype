@@ -12,36 +12,24 @@ planets:
   - name: Encelladus
     trading_accessible: n
     resource_stock: {}
-    buildings: 
-    - mod_pop_small
-    - mod_food_mine
-    - mod_food_mine
   - name: Tethys
     trading_accessible: y
     resource_stock:
       water: 1000
       electronics: 6
     resource_delta: {}
-    buildings: 
-    - mod_pop_small
-    - mod_food_mine
-    - mod_food_mine
   - name: Rhea
     trading_accessible: n
     resource_stock: {}
-    buildings: []
   - name: Titan
     trading_accessible: y
     resource_stock: {}
-    buildings: []
   - name: Iaeptus
     trading_accessible: n
     resource_stock: {}
-    buildings: []
   - name: Phoebe
     trading_accessible: n
     resource_stock: {}
-    buildings: []
 
 ships:
 - name: Bulk transport
@@ -63,3 +51,12 @@ ships:
   class_id: shp_express
   planet: Tethys
   tf_plans: []
+- name: Tethys Shipyard
+  class_id: shp_spacestation
+  planet: Tethys
+  tf_plans: []
+  modules:
+  - shpmod_small_yard_1
+  - shpmod_small_yard_2
+  - shpmod_small_yard_3
+  - shpmod_small_yard_4

@@ -20,7 +20,7 @@ metal:
   max_cost: 8.e+5
   default_cost : 7.e+5
   cost_volatility: 0.5e+5
-  max_noise: 8.e+5  # Amplitude of "noise"
+  max_noise: 8.e+5
 
 electronics:
   description: ...

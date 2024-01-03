@@ -697,7 +697,19 @@ DataNode* DataNode::AddArrayElemChild(const char* key, const DataNode& value) {
 
 
 bool DataNode::Has(const char* key) const {
-    return Fields.count(key) > 0 || Children.count(key) > 0 || FieldArrays.count(key) > 0 || ChildArrays.count(key) > 0;
+    return Fields.find(std::string(key)) != Fields.end();
+}
+
+bool DataNode::HasChild(const char* key) const {
+    return Children.find(key) != Children.end();
+}
+
+bool DataNode::HasArray(const char* key) const {
+    return FieldArrays.find(key) != FieldArrays.end();
+}
+
+bool DataNode::HasChildArray(const char* key) const {
+    return Fields.find(key) != Fields.end();
 }
 
 void DataNode::Remove(const char* key) {

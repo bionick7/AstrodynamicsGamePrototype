@@ -22,6 +22,18 @@ ship_classes:
   Isp: 4.5
   capacity: 10
   
+- id: shp_spacestation
+  name: Station 10M
+  description: >
+    General Cosmonautics space station bus is a structural framework that can 
+    hold 10 metric kilotonns of cargo. It is often used for medium sized habitats
+    ,shipyards and logistics points. 
+    The station has just enough propulsion to maintain orbit and attitude 
+    and cannot be used to transport equipment between points
+  dv: 0
+  Isp: 0
+  capacity: 100
+
 - id: shp_express
   name: Express
   description: >

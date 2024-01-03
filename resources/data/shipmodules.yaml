@@ -1,14 +1,92 @@
 shipmodules:
-- id: shpmod_water_extractor
-  name: Water extractor
-  description: Provides + 1 count water / day if stationned on an icey moon
-  mass: 100.e+3  # kg
-
+# Mobility
 - id: shpmod_heatshield
   name: Heatshield
   description: Allows more efficient maneuvers around Titan and low Saturn orbit
-  mass: 50.e+3
+  mass: 0.5
+
+- id: shpmod_droptank
+  name: Drop-tank
+  description: The ship can hold 1 extra count of fuel. Lost after use
+  mass: 0
+
+# Production
+- id: shpmod_foodhouse
+  name: Food house
+  description: Provides + 1 count food / day
+  produce: { foot: 1 }
+  mass: 1
+
+- id: shpmod_water_extractor
+  name: Water extractor
+  description: Provides + 1 count water / day if stationned on an icey moon
+  produce: {  }  # Special behaviour, since it needs to check for environemnet
+  mass: 1  # counts
+
+# Shipyard
+- id: shpmod_small_yard_1
+  name: Small shipyard administration
+  description: TODO
+  mass: 1
+
+- id: shpmod_small_yard_2
+  name: Shipyard storage facility
+  description: TODO
+  mass: 2
+
+- id: shpmod_small_yard_3
+  name: Small shipyard workshop
+  description: TODO
+  mass: 4
+
+- id: shpmod_small_yard_4
+  name: Small shipyard scaffolding
+  description: TODO
+  mass: 2
+
+# Military
+- id: shpmod_coilgun
+  name: Coilgun
+  description: Consumes 1 power. Kinetic Attk. +1
+  add: 
+    kinetic_offense: 1
+    power: -2
+  require:
+    power: 2
+  mass: 1
   
+- id: shpmod_missiles
+  name: Missiles
+  description: Ordonance Attk. +1
+  add: { ordnance_offense: 1 }
+  mass: 1
+
+- id: shpmod_armor
+  name: Extra armor
+  description: TODO
+  add: 
+    kinetic_defense: 2
+    ordnance_defense: 1
+  mass: 2
+  
+- id: shpmod_pdc
+  name: Point-defence cannons
+  description: TODO
+  add: 
+    ordnance_defense: 1
+  mass: 0.5
+
+# Support
+- id: shpmod_reactor
+  name: Reactor
+  description: >
+    While most ship classes have a power regeneration system that can
+    support the most basic ship functions, some modules require a dedicated, 'sailed' 
+    reactor.
+  add:
+    power: 4
+  mass: 2
+
 # ... Weapons, time extenders
 # e.g. loadout for gunship:
 #   Armor, Accomodations, Torpedos

@@ -75,9 +75,8 @@ void GlobalState::LoadData() {
     wren_interface.MakeVM();
     wren_interface.LoadWrenQuests();
 
-    #define NUM 5
+    #define NUM 4
     const char* loading_paths[NUM] = {
-        "resources/data/buildings.yaml",
         "resources/data/shipmodules.yaml",
         "resources/data/ephemerides.yaml",
         "resources/data/ship_classes.yaml",
@@ -85,7 +84,6 @@ void GlobalState::LoadData() {
     };
 
     int (*load_funcs[NUM])(const DataNode*) = { 
-        LoadBuildings,
         LoadShipModules,
         LoadEphemerides,
         LoadShipClasses,
@@ -93,7 +91,6 @@ void GlobalState::LoadData() {
     };
 
     const char* declarations[NUM] {
-        "Buildings",
         "ShipModules",
         "Planets",
         "ShipClasses",
@@ -140,12 +137,7 @@ GlobalState::FocusablesPanels _GetCurrentFocus(GlobalState* gs) {
     // out of timeline
     if (TimelineIsOpen()) {
         return GlobalState::TIMELINE;
-    } 
-
-    // cancel out of focused planet and ship
-    if (BuildingConstructionIsOpen()) {
-        return GlobalState::BUILDING_CONSTRUCTION;
-    } 
+    }
 
     // transfer plan UI
     if (gs->active_transfer_plan.IsActive() || gs->active_transfer_plan.IsSelectingDestination()) {
@@ -173,9 +165,6 @@ void _HandleDeselect(GlobalState* gs) {
         break;}
     case GlobalState::TIMELINE:{
         TimelineClose();
-        break;}
-    case GlobalState::BUILDING_CONSTRUCTION:{
-        BuildingConstructionClose();
         break;}
     case GlobalState::TRANSFER_PLAN_UI:{
         gs->active_transfer_plan.Abort();
@@ -333,12 +322,12 @@ bool GlobalState::CompleteTransaction(int delta, const char *message) {
 }
 
 void GlobalState::Deserialize(const DataNode* data) {
-    if (data->Has("coordinate_transform")) {
+    if (data->HasChild("coordinate_transform")) {
         c_transf.Deserialize(data->GetChild("coordinate_transform"));
     } else {
         c_transf.Make();
     }
-    if (data->Has("calendar")) {
+    if (data->HasChild("calendar")) {
         calendar.Deserialize(data->GetChild("calendar"));
     } else {
         calendar.Make(timemath::Time(data->GetF("start_time", 0, true)));
@@ -378,7 +367,7 @@ void GlobalState::Deserialize(const DataNode* data) {
     }
 
     // Dependency on planets
-    if (data->Has("quests")) {
+    if (data->HasChild("quests")) {
         quest_manager.Deserialize(data->GetChild("quests"));
     } else {
         quest_manager.Make();

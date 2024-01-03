@@ -19,7 +19,7 @@ RID::RID(uint32_t index, EntityType type) {
 }
 
 bool IsIdValid(RID id) {
-    if (id._internal == UINT32_MAX) return false;
+    if (id.AsInt() == UINT32_MAX) return false;
     EntityType type = IdGetType(id);
     if (type == EntityType::UNINITIALIZED) {
         FAIL("Uninitialized");
@@ -32,7 +32,9 @@ bool IsIdValid(RID id) {
         return index < gs->planets.GetPlanetCount();
     case EntityType::SHIP:
         return gs->ships.alloc.IsValidIndex(id);
-    case EntityType::MODULE:
+    case EntityType::SHIP_CLASS:
+        return index < gs->ships.ship_classes_count;
+    case EntityType::MODULE_CLASS:
         return index < gs->ship_modules.shipmodule_count;
     case EntityType::QUEST:
         return gs->quest_manager.available_quests.IsValidIndex(id);

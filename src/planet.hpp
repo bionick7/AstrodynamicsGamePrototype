@@ -2,7 +2,6 @@
 #define PLANET_H
 #include "astro.hpp"
 #include "basic.hpp"
-#include "buildings.hpp"
 #include "coordinate_transform.hpp"
 #include "datanode.hpp"
 #include "planetary_economy.hpp"
@@ -29,8 +28,7 @@ struct Planet {
 
     PlanetaryEconomy economy;
 
-    resource_count_t stats[STAT_MAX];
-    BuildingInstance buildings[MAX_PLANET_BUILDINGS];
+    resource_count_t planet_stats[static_cast<int>(PlanetStats::MAX)];
     RID ship_module_inventory[MAX_PLANET_INVENTORY];
 
     bool mouse_hover;
@@ -48,7 +46,6 @@ struct Planet {
     double GetDVFromExcessVelocity(Vector2 vel) const;
 
     void RecalcStats();
-    void RequestBuild(int slot, building_index_t building_class);
 
     bool AddShipModuleToInventory(RID module);
     void RemoveShipModuleInInventory(int index);
