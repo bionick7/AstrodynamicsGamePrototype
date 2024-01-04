@@ -60,3 +60,12 @@ ships:
   - shpmod_small_yard_2
   - shpmod_small_yard_3
   - shpmod_small_yard_4
+- name: Military ship
+  class_id: shp_express
+  planet: Tethys
+  tf_plans: []
+  modules:
+  - shpmod_railgun
+  - shpmod_railgun
+  - shpmod_armor
+  - shpmod_reactor

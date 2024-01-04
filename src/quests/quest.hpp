@@ -36,7 +36,7 @@ struct Quest {
     } current;
 
     enum {
-        NOT_STARTED,
+        NOT_STARTED = 0,
         TASK,
         DAILOGUE,
         DAILOGUE_CHOICE,

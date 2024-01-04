@@ -46,7 +46,7 @@ struct Ship {
     int prepared_plans_count;
     TransferPlan prepared_plans[SHIP_MAX_PREPARED_PLANS];
     RID modules[SHIP_MAX_MODULES];
-    double stats[static_cast<int>(ShipStats::MAX)];
+    int stats[static_cast<int>(ShipStats::MAX)];
     
     int plan_edit_index;
     int highlighted_plan_index;

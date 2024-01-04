@@ -16,17 +16,21 @@ enum class ShipStats {
     POWER = 0,
     KINETIC_OFFENSE,
     ORDONANCE_OFFENSE,
+    BOARDING_OFFENSE,
     KINETIC_DEFENSE,
     ORDONANCE_DEFENSE,
+    BOARDING_DEFENSE,
     MAX,
 };
 
 static const char* ship_stat_names[] = {
     "power",
     "kinetic_offense",
-    "ordonance_offense",
+    "ordnance_offense",
+    "boarding_offense",
     "kinetic_defense",
-    "ordonance_defense",
+    "ordnance_defense",
+    "boarding_defense",
 };
 
 static_assert((int) ShipStats::MAX == sizeof(ship_stat_names) / sizeof(ship_stat_names[0]));
@@ -54,16 +58,19 @@ struct ShipModuleClass {
         HEAT_SHIELD,
     } module_type = INVALID_MODULE;  // Placeholder for functionality
 
-    double delta_stats[static_cast<int>(ShipStats::MAX)];
-    double required_stats[static_cast<int>(ShipStats::MAX)];
+    int delta_stats[static_cast<int>(ShipStats::MAX)];
+    int required_stats[static_cast<int>(ShipStats::MAX)];
     resource_count_t production[RESOURCE_MAX];
 
     double mass;  // kg
     char name[100];
     char description[512];
+    bool has_activation_requirements;
 
     ShipModuleClass();
-    void Update(Ship* ship) const;
+    void UpdateStats(Ship* ship) const;
+    void UpdateCustom(Ship* ship) const;
+    bool HasDependencies() const;
     const char* id;
 };
 

@@ -277,9 +277,28 @@ void Ship::Update() {
         draw_pos = Vector2Add(FromPolar(rad, phase), draw_pos);
     }
     
+    // Recalculate every frame
+
+    // Gotta exist a more efficient way
+    // And robust. Dependency graph (also a way to find circular dependencies)
+
+    for (int i=0; i < (int) ShipStats::MAX; i++) {
+        stats[i] = 0;
+    }
+    for (int j=0; j < SHIP_MAX_MODULES; j++) {
+        if (IsIdValid(modules[j]) && !GetModule(modules[j])->HasDependencies()) {
+            GetModule(modules[j])->UpdateStats(this);
+        }
+    }
+    for (int j=0; j < SHIP_MAX_MODULES; j++) {
+        if (IsIdValid(modules[j]) && GetModule(modules[j])->HasDependencies()) {
+            GetModule(modules[j])->UpdateStats(this);
+        }
+    }
     for (int i=0; i < SHIP_MAX_MODULES; i++) {
-        if (IsIdValid(modules[i]))
-            GetModule(modules[i])->Update(this);
+        if (IsIdValid(modules[i])) {
+            GetModule(modules[i])->UpdateCustom(this);
+        }
     }
 }
 
@@ -324,11 +343,12 @@ void _UIDrawInventory(Ship* ship) {
 
     ShipModules* sms = &GlobalGetState()->ship_modules;
     int columns = UIContextCurrent().width / (SHIP_MODULE_WIDTH + MARGIN);
+    int rows = std::ceil(SHIP_MAX_MODULES / (double)columns);
 
-    UIContextPushInset(0, SHIP_MAX_MODULES / columns * (SHIP_MODULE_HEIGHT + MARGIN));
+    UIContextPushInset(0, rows * (SHIP_MODULE_HEIGHT + MARGIN));
     UIContextCurrent().width = columns * (SHIP_MODULE_WIDTH + MARGIN);
     for (int i=0; i < SHIP_MAX_MODULES; i++) {
-        UIContextPushGridCell(columns, SHIP_MAX_MODULES / columns, i % columns, i / columns);
+        UIContextPushGridCell(columns, rows, i % columns, i / columns);
         UIContextShrink(MARGIN, MARGIN);
         ButtonStateFlags button_state = UIContextAsButton();
         if (button_state & BUTTON_STATE_FLAG_HOVER) {
@@ -447,25 +467,37 @@ void Ship::DrawUI() {
 
     if (!mouse_hover && GlobalGetState()->active_transfer_plan.ship != id && GlobalGetState()->focused_ship != id) return;
 
-    int text_size = 16;
+    const int INSET_MARGIN = 6;
+    const int OUTSET_MARGIN = 6;
+    const int TEXT_SIZE = 16;
     UIContextCreateNew(
-        GetScreenWidth() - 20*text_size - 5, 5 + 200,
-        20*text_size, GetScreenHeight() - 200 - 2*5, 
-        text_size, Palette::ui_main
-    );
+        GetScreenWidth() - 20*TEXT_SIZE - 2*INSET_MARGIN - OUTSET_MARGIN, 
+        OUTSET_MARGIN + 200,
 
+        20*TEXT_SIZE + 2*INSET_MARGIN, 
+        GetScreenHeight() - 200 - OUTSET_MARGIN - 2*INSET_MARGIN,
+        TEXT_SIZE, Palette::ui_main
+    );
     UIContextEnclose(Palette::bg, color);
+    UIContextShrink(INSET_MARGIN, INSET_MARGIN);
 
     UIContextWrite(name);
     StringBuilder sb;
     sb.AddFormat("Payload %d / %d ", KGToResourceCounts(GetPayloadMass()), GetMaxCapacity());
     UIContextWrite(sb.c_str);
     UIContextPushInset(0, 3);
-    UIContextFillline(KGToResourceCounts(GetPayloadMass()) / GetMaxCapacity(), Palette::ui_main, Palette::bg);
+    UIContextFillline(GetPayloadMass() / ResourceCountsToKG(GetMaxCapacity()), Palette::ui_main, Palette::bg);
+    //UIContextFillline(0.5, Palette::ui_main, Palette::bg);
     UIContextPop();  // Inset
     sb.Clear();
     sb.AddFormat("I_sp        %2.2f km/s\n", GetShipClassByIndex(ship_class)->v_e / 1000);
     sb.AddFormat("dv left     %2.2f km/s\n", GetCapableDV());
+    
+    for(int i=0; i < (int) ShipStats::MAX; i++) {
+        if (stats[i] != 0) {
+            sb.AddFormat("%s: %d\n", ship_stat_names[i], (int) stats[i]);
+        }
+    }
     UIContextWrite(sb.c_str);
     _UIDrawInventory(this);
     _UIDrawTransferplans(this);

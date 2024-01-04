@@ -73,6 +73,9 @@ void QuestManager::Update(double dt) {
                     active_quests[i]->TimePassed();
                 }
                 break;}
+            case Quest::DONE:
+                active_quests.Erase(i.GetId());
+                break;
             default: 
                 INFO("%d", active_quests[i]->await_type)
                 NOT_IMPLEMENTED

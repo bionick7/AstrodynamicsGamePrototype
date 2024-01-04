@@ -8,6 +8,7 @@ ShipModuleClass::ShipModuleClass() {
     mass = 0.0;
     name[0] = '\0';
     description[0] = '\0';
+    has_activation_requirements = false;
 
     for (int i=0; i < (int) ShipStats::MAX; i++) {
         delta_stats[i] = 0;
@@ -15,19 +16,28 @@ ShipModuleClass::ShipModuleClass() {
     }
 }
 
-void ShipModuleClass::Update(Ship* ship) const {
-    bool new_day = GlobalGetState()->calendar.IsNewDay();
+void ShipModuleClass::UpdateStats(Ship* ship) const {
     for (int i=0; i < (int) ShipStats::MAX; i++) {
-        if (ship->stats[i] > required_stats[i]) {
+        if (ship->stats[i] < required_stats[i]) {
             return;
         }
     }
     for (int i=0; i < (int) ShipStats::MAX; i++) {
         ship->stats[i] += delta_stats[i];
     }
-    if (new_day) {
+}
+
+void ShipModuleClass::UpdateCustom(Ship* ship) const {
+    for (int i=0; i < (int) ShipStats::MAX; i++) {
+        if (ship->stats[i] < required_stats[i]) {
+            return;
+        }
+    }
+    bool new_day = GlobalGetState()->calendar.IsNewDay();
+    if (new_day && ship->is_parked) {
+        Planet* planet = GetPlanet(ship->parent_planet);
         for (int i=0; i < RESOURCE_MAX; i++) {
-            ship->stats[i] += delta_stats[i];
+            planet->economy.GiveResource(ResourceTransfer((ResourceType) i, production[i]));
         }
     }
     // Special behavior
@@ -45,6 +55,10 @@ void ShipModuleClass::Update(Ship* ship) const {
     case INVALID_MODULE:
         break;
     }
+}
+
+bool ShipModuleClass::HasDependencies() const {
+    return has_activation_requirements;
 }
 
 ShipModuleSlot::ShipModuleSlot(RID p_entity, int p_index, ShipModuleSlotType p_type) {
@@ -116,10 +130,12 @@ int ShipModules::Load(const DataNode* data) {
         const DataNode* require_data = module_data->GetChild("require", true);
         for(int j=0; j < (int)ShipStats::MAX; j++) {
             if (add_data != NULL && add_data->Has(ship_stat_names[j])) {
-                ship_modules[i].delta_stats[j] = add_data->GetF(ship_stat_names[j]);
+                ship_modules[i].delta_stats[j] = add_data->GetI(ship_stat_names[j]);
+                INFO("%s: delta %s = %d", ship_modules[i].name, ship_stat_names[j], ship_modules[i].delta_stats[j])
             }
             if (require_data != NULL && require_data->Has(ship_stat_names[j])) {
                 ship_modules[i].required_stats[j] = require_data->GetF(ship_stat_names[j]);
+                ship_modules[i].has_activation_requirements = true;
             }
         }
 
@@ -127,6 +143,7 @@ int ShipModules::Load(const DataNode* data) {
         for(int j=0; j < (int)ShipStats::MAX; j++) {
             if (produce_data != NULL && produce_data->Has(resource_names[j])) {
                 ship_modules[i].production[j] = produce_data->GetI(resource_names[j]);
+                INFO("%s: produce %d %s", ship_modules[i].name, ship_modules[i].production[j], resource_names[j])
             }
         }
 

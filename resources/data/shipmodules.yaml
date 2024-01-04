@@ -3,7 +3,7 @@ shipmodules:
 - id: shpmod_heatshield
   name: Heatshield
   description: Allows more efficient maneuvers around Titan and low Saturn orbit
-  mass: 0.5
+  mass: 1
 
 - id: shpmod_droptank
   name: Drop-tank
@@ -11,10 +11,10 @@ shipmodules:
   mass: 0
 
 # Production
-- id: shpmod_foodhouse
+- id: shpmod_farm
   name: Food house
   description: Provides + 1 count food / day
-  produce: { foot: 1 }
+  produce: { food: 1 }
   mass: 1
 
 - id: shpmod_water_extractor
@@ -45,8 +45,8 @@ shipmodules:
   mass: 2
 
 # Military
-- id: shpmod_coilgun
-  name: Coilgun
+- id: shpmod_railgun
+  name: Railgun
   description: Consumes 1 power. Kinetic Attk. +1
   add: 
     kinetic_offense: 1
@@ -86,6 +86,24 @@ shipmodules:
   add:
     power: 4
   mass: 2
+
+# Boarding
+- id: shpmod_exp_brigade
+  name: Platoon of the Expeditionary brigade
+  description: >
+    TODO
+  add:
+    boarding_offense: 3
+    boarding_defense: 2
+  mass: 1
+  
+- id: shpmod_armory
+  name: Armory
+  description: >
+    TODO
+  add:
+    boarding_defense: 1
+  mass: 0
 
 # ... Weapons, time extenders
 # e.g. loadout for gunship:

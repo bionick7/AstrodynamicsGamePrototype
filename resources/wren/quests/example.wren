@@ -60,6 +60,7 @@ class ExampleQuest is Quest {
             "modules": ["shpmod_water_extractor", "shpmod_water_extractor"],
         })
         gain_item("shpmod_heatshield", Constants.tethys)
+        gain_item("shpmod_farm", Constants.tethys)
 
         var counts = 2
         var task1_success = Fiber.yield(transport_task(
