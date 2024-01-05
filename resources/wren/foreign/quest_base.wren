@@ -115,12 +115,13 @@ class Quest {
         })
     }
 
-    dialogue(speaker, text, answer_choices) {
+    dialogue(speaker, text, answer_choices, routes) {
         yield({
             "type": "dialogue choice",
             "speaker": speaker,
             "text": text,
-            "answer_choices": answer_choices
+            "answer_choices": answer_choices,
+            "answer_routes": routes,
         })
     }
 

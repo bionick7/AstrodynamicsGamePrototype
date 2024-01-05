@@ -31,17 +31,19 @@ bool IsIdValid(RID id) {
     case EntityType::PLANET:
         return index < gs->planets.GetPlanetCount();
     case EntityType::SHIP:
-        return gs->ships.alloc.IsValidIndex(id);
+        return gs->ships.alloc.ContainsID(id);
     case EntityType::SHIP_CLASS:
         return index < gs->ships.ship_classes_count;
     case EntityType::MODULE_CLASS:
         return index < gs->ship_modules.shipmodule_count;
     case EntityType::QUEST:
-        return gs->quest_manager.available_quests.IsValidIndex(id);
+        return gs->quest_manager.available_quests.ContainsID(id);
     case EntityType::ACTIVE_QUEST:
-        return gs->quest_manager.active_quests.IsValidIndex(id);
+        return gs->quest_manager.active_quests.ContainsID(id);
     case EntityType::TASK:
-        return gs->quest_manager.active_tasks.IsValidIndex(id);
+        return gs->quest_manager.active_tasks.ContainsID(id);
+    case EntityType::DIALOGUE:
+        return gs->quest_manager.dialogues.ContainsID(id);
     default:
     case EntityType::INVALID:
         return false;

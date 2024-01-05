@@ -18,13 +18,18 @@ void ClearQuest(Quest* quest) {
 
     quest->id = GetInvalidId();
     quest->await_type = Quest::NOT_STARTED;
-    for (int i=0; i < DIALOGUE_MAX_ANSWERS; i++) {
+    for (int i=0; i < DIALOGUE_MAX_REPLIES; i++) {
         delete[] quest->next_options[i];
         quest->next_options[i] = NULL;
     }
+
+    quest->dialogue_backlog.clear();
 }
 
 Quest::Quest() {
+    for (int i=0; i < DIALOGUE_MAX_REPLIES; i++) {
+        next_options[i] = NULL;
+    }
     ClearQuest(this);
 }
 
@@ -142,7 +147,6 @@ bool Quest::StartQuest() {
 
 bool Quest::CompleteTask(bool success) {
     if (await_type != TASK) return false;
-    WrenVM* vm = GetWrenVM();
     return _RunInState(next_options[(bool) success]);
 }
 
@@ -152,7 +156,7 @@ bool Quest::TimePassed() {
 }
 
 bool Quest::AnswerDialogue(int choice) {
-    if (await_type != DAILOGUE && await_type != DAILOGUE_CHOICE) return false;
+    if (await_type != DAILOGUE) return false;
     return _RunInState(next_options[choice]);
 }
 
@@ -190,6 +194,7 @@ bool Quest::_RunInState(const char *next_state) {
     if(!GetWrenInterface()->CallFunc(next_handle)) return false;
 
     _NextTask();
+    return true;
 }
 
 void Quest::_NextTask() {
@@ -239,11 +244,38 @@ void Quest::_NextTask() {
         }
         else if (strcmp(type, "dialogue") == 0) {
             await_type = DAILOGUE;
-            NOT_IMPLEMENTED
+            const char* speaker = GetWrenInterface()->GetStringFromMap("speaker", "NO SPEAKER");
+            const char* text = GetWrenInterface()->GetStringFromMap("text", "NO TEXT");
+            const char* replies[] = { "<continue>" };
+
+            current.dialogue = GlobalGetState()->quest_manager.CreateDialogue(speaker, text, &replies[0], 1);
         }
         else if (strcmp(type, "dialogue choice") == 0) {
-            await_type = DAILOGUE_CHOICE;
-            NOT_IMPLEMENTED
+            await_type = DAILOGUE;
+            const char* speaker = GetWrenInterface()->GetStringFromMap("speaker", "NO SPEAKER");
+            const char* text = GetWrenInterface()->GetStringFromMap("text", "NO TEXT");
+
+            GetWrenInterface()->PrepareMap("answer_choices");
+            int replies_num = wrenGetListCount(vm, 2);
+            const char** replies = new const char*[replies_num];
+            for (int i=0; i < replies_num; i++) {
+                wrenGetListElement(vm, 2, i, 1);
+                replies[i] = wrenGetSlotString(vm, 1);
+            }
+            
+            GetWrenInterface()->PrepareMap("answer_routes");
+            if (wrenGetListCount(vm, 2) < replies_num) {
+                replies_num = wrenGetListCount(vm, 2);
+            }
+            for (int i=0; i < replies_num; i++) {
+                wrenGetListElement(vm, 2, i, 1);
+                const char* option_route = wrenGetSlotString(vm, 1);
+                next_options[i] = new char[strlen(option_route)];
+                strcpy(next_options[i], option_route);
+            }
+
+            current.dialogue = GlobalGetState()->quest_manager.CreateDialogue(speaker, text, replies, replies_num);
+            delete[] replies;
         }
         else if (strcmp(type, "goto") == 0) {
             const char* next = GetWrenInterface()->GetStringFromMap("next", "INVALID");

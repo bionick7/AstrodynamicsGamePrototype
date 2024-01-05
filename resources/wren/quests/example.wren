@@ -65,7 +65,7 @@ class ExampleQuest is Quest {
             })
             gain_module("shpmod_heatshield", Constants.tethys)
             gain_module("shpmod_farm", Constants.tethys)
-            goto("t1")
+            goto("d1")
         }
         if(state == "t1") {
             transport_task(

@@ -2,6 +2,7 @@
 #define QUEST_H
 
 #include "basic.hpp"
+#include "dialogue.hpp"
 #include "datanode.hpp"
 #include "planetary_economy.hpp"
 #include "time.hpp"
@@ -14,7 +15,6 @@
 struct Ship;
 
 #define QUEST_PANEL_HEIGHT 64
-#define DIALOGUE_MAX_ANSWERS 5
 
 struct Quest {
     const WrenQuestTemplate* wren_interface;
@@ -29,9 +29,11 @@ struct Quest {
     
     // current, await_type and next_options can be regained by re-running the next
 
+    std::vector<RID> dialogue_backlog = std::vector<RID>();
+
     union QuestUnion {
         RID task;
-        //Dialogue dialogue;
+        RID dialogue;
         timemath::Time wait_until;
         bool quest_sccessfull;
 
@@ -42,14 +44,11 @@ struct Quest {
         NOT_STARTED = 0,
         TASK,
         DAILOGUE,
-        DAILOGUE_CHOICE,
         WAIT,
         DONE,
     } await_type = NOT_STARTED;
     //std::vector<std::string> next_options;
-    char* next_options[DIALOGUE_MAX_ANSWERS] = {
-        NULL, NULL, NULL, NULL, NULL
-    };
+    char* next_options[DIALOGUE_MAX_REPLIES] = {};
 
     Quest();
     ~Quest();

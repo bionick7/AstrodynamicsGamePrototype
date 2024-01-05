@@ -89,8 +89,6 @@ void ErrorFn(WrenVM* vm, WrenErrorType errorType,
 		msg = "---";
 	}
 
-	int line = p_line;
-
 	switch (errorType)
 	{
 	case WREN_ERROR_COMPILE:
@@ -381,7 +379,7 @@ void WrenInterface::_MapAsDataNodePopulateList(DataNode *dn, const char* key) co
 			wrenGetListElement(vm, VALUE_SLOT, i, ELEM_SLOT);
 			MoveSlot(ELEM_SLOT, 0);
 			DataNode* child = dn->SetArrayElemChild(key, i, DataNode());
-			bool success = MapAsDataNode(child);
+			MapAsDataNode(child);
 
 			// Restore state
 			wrenEnsureSlots(vm, 4);
@@ -415,6 +413,7 @@ void WrenInterface::_MapAsDataNodePopulateList(DataNode *dn, const char* key) co
 			const char* value = wrenGetSlotString(vm, ELEM_SLOT);
 			dn->SetArrayElem(key, i, value);
 			break;}
+		default: break; // Unsupported types
 		}
 	}
 

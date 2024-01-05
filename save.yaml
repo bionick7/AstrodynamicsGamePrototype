@@ -15,29 +15,43 @@ calendar:
 
 
 coordinate_transform:
-  focus_x: -45629648.000000
-  focus_y: 6444448.000000
-  log_space_scale: -6.091515
+  focus_x: 0.000000
+  focus_y: 0.000000
+  log_space_scale: -6.000000
 
 quests:
   active_quests:
   - active: y
-    await_type: 1
-    state: t1
+    await_type: 2
+    id: 100663296
+    state: d1
     template: example
 
   available_quests:
   - active: n
     await_type: 0
+    id: 83886080
     template: tutorial
 
   - active: n
     await_type: 0
+    id: 83886081
     template: example
 
   - active: n
     await_type: 0
+    id: 83886082
     template: tutorial
+
+  dialogues:
+  - body: What do you chose ?
+    id: 134217728
+    selected: -1
+    speaker: The enclave administrator
+    replies:
+    - end quest
+    - work for stuff
+    - work for glory
 
 
 planets:

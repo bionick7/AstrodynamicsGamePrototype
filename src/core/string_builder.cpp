@@ -1,6 +1,7 @@
 #include "string_builder.hpp"
 #include "basic.hpp"
 #include "logging.hpp"
+#include "tests.hpp"
 
 StringBuilder::StringBuilder() {
     c_str = (char*)malloc(1);
@@ -74,7 +75,7 @@ StringBuilder& StringBuilder::AddFormat(const char* fmt, ...) {
 
 StringBuilder& StringBuilder::AddF(double num) {
     char buffer[12];  // How much is enough?
-    if (abs(num) > 1e4 || abs(num) < 1e-4) {
+    if (fabs(num) > 1e4 || fabs(num) < 1e-4) {
         sprintf(buffer, "%.4e", num);
     } else {
         sprintf(buffer, "%.7f", num);
@@ -116,24 +117,13 @@ StringBuilder& StringBuilder::AddCost(int64_t cost) {
 int StringBuilderTests() {
     StringBuilder sb;
     sb.Add("abcd").Add("01234").Add("ÄÄÖÜ").AddI(-175);
-    if (strcmp(sb.c_str, "abcd01234ÄÄÖÜ-175") != 0) {
-        ERROR("Expected '%s', got '%s'", "abcd01234ÄÄÖÜ-175", sb.c_str);
-        return 1;
-    }
+    TEST_ASSERT_STREQUAL(sb.c_str, "abcd01234ÄÄÖÜ-175")
     timemath::Time t = timemath::Time(1258254);
     sb.Clear();
     sb.AddF(-1e10).Add(" - ").AddF(15.84).Add(" - ").AddTime(t).Add(" - ").AddDate(t);
-    const char* test_str = "-1.0000e+10 - 15.8400000 -  0M 14D 13H - 15. 01. 2080Y, 13h";
-    if (strcmp(sb.c_str, test_str) != 0) {
-        ERROR("Expected '%s', got '%s'", test_str, sb.c_str);
-        return 1;
-    }
+    TEST_ASSERT_STREQUAL(sb.c_str, "-1.0000e+10 - 15.8400000 -  0M 14D 13H - 15. 01. 2080Y, 13h")
     sb.Clear();
     sb.AddFormat("%05d %X , %s", 17, 32, "Trololo");
-    const char* test_str2 = "00017 20 , Trololo";
-    if (strcmp(sb.c_str, test_str2) != 0) {
-        ERROR("Expected '%s', got '%s'", test_str2, sb.c_str);
-        return 1;
-    }
+    TEST_ASSERT_STREQUAL(sb.c_str, "00017 20 , Trololo")
     return 0;
 }

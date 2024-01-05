@@ -16,26 +16,17 @@ QuestManager::~QuestManager() {
 }
 
 void QuestManager::Serialize(DataNode* data) const {
-    data->SetArrayChild("active_quests", active_quests.Count());
-    for(auto it = active_quests.GetIter(); it; it++) {
-        active_quests.Get(it)->Serialize(data->SetArrayElemChild("active_quests", it.counter, DataNode()));
-    }
-    data->SetArrayChild("available_quests", GetAvailableQuests());
-    for(auto it = available_quests.GetIter(); it; it++) {
-        available_quests.Get(it)->Serialize(data->SetArrayElemChild("available_quests", it.counter, DataNode()));
-    }
+    dialogues.SerializeInto(data, "dialogues", [](DataNode* dn, const Dialogue* d){ d->Serialize(dn); });
+    available_quests.SerializeInto(data, "available_quests", [](DataNode* dn, const Quest* q){ q->Serialize(dn); });
+    active_quests.SerializeInto(data, "active_quests", [](DataNode* dn, const Quest* q){ q->Serialize(dn); });
 }
 
 void QuestManager::Deserialize(const DataNode* data) {
+    // Order matters!
     active_tasks.Clear();
-    active_quests.Clear();
-    for(int i=0; i < data->GetArrayChildLen("active_quests"); i++) {
-        active_quests.Get(active_quests.Allocate())->Deserialize(data->GetArrayChild("active_quests", i));
-    }
-    available_quests.Clear();
-    for(int i=0; i < data->GetArrayChildLen("available_quests") && i < GetAvailableQuests(); i++) {
-        available_quests.Get(available_quests.Allocate())->Deserialize(data->GetArrayChild("available_quests", i));
-    }
+    dialogues.DeserializeFrom(data, "dialogues", [](const DataNode* dn, Dialogue* d){ d->Deserialize(dn); });
+    available_quests.DeserializeFrom(data, "available_quests", [](const DataNode* dn, Quest* q){ q->Deserialize(dn); });
+    active_quests.DeserializeFrom(data, "active_quests", [](const DataNode* dn, Quest* q){ q->Deserialize(dn); });
 }
 
 void QuestManager::Make() {
@@ -71,12 +62,18 @@ void QuestManager::Update(double dt) {
                     if (!success) active_quests.Erase(it.GetId());
                 }
                 break;}
-            case Quest::DONE:
+            case Quest::DONE:{
                 active_quests.Erase(it.GetId());
-                break;
+                break;}
+            case Quest::DAILOGUE:{
+                const Dialogue* dialogue = GetDialogue(active_quests[it]->current.dialogue);
+                if (dialogue->reply >= 0) {
+                    NOT_IMPLEMENTED
+                }
+                break;}
             default: 
                 INFO("%d", active_quests[it]->await_type)
-                NOT_IMPLEMENTED
+                NOT_REACHABLE
         }
     }
     /*for(auto i = active_tasks.GetIter(); i; i++) {
@@ -217,6 +214,22 @@ void QuestManager::CompleteTask(RID task_index) {
 int QuestManager::GetAvailableQuests() const {
     return available_quests.Count();
 }
+
+RID QuestManager::CreateDialogue(const char* speaker, const char* body, const char* replies[], int reply_count) {
+    Dialogue* d;
+    RID res = dialogues.Allocate(&d);
+    d->Setup(speaker, body, replies, reply_count);
+    return res;
+}
+
+const Dialogue* QuestManager::GetDialogue(RID dialogue_index) const {
+    return dialogues.Get(dialogue_index);
+}
+
+void QuestManager::EraseDialogue(RID dialogue_index) {
+    dialogues.Erase(dialogue_index);
+}
+
 
 void QuestManager::_RegenQuests() {
     int available = GetRandomValue(0, 4);

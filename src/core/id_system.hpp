@@ -11,6 +11,7 @@ enum class EntityType: uint8_t {
     QUEST,
     ACTIVE_QUEST,
     TASK,
+    DIALOGUE,
     TEST = 0xFE,
     INVALID = 0xFF,
 };

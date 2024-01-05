@@ -17,6 +17,7 @@ struct QuestManager {
     IDAllocatorList<Quest, EntityType::QUEST> available_quests;
     IDAllocatorList<Quest, EntityType::ACTIVE_QUEST> active_quests;
     IDAllocatorList<Task, EntityType::TASK> active_tasks;
+    IDAllocatorList<Dialogue, EntityType::DIALOGUE> dialogues;
 
     bool show_ui;
     
@@ -39,6 +40,10 @@ struct QuestManager {
     void TaskDepartedFrom(RID task_index, RID planet_index);
     void TaskArrivedAt(RID task_index, RID planet_index);
     void CompleteTask(RID task_index);
+
+    RID CreateDialogue(const char* speaker, const char* body, const char* replies[], int reply_count);
+    const Dialogue* GetDialogue(RID dielogue_index) const;
+    void EraseDialogue(RID dielogue_index);
 
     void _RegenQuests();
 

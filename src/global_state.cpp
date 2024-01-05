@@ -334,7 +334,6 @@ void GlobalState::Deserialize(const DataNode* data) {
     }
     // ignore transferplanui for now
 
-    
     money = data->GetF("capital", money);
 
     ships.alloc.Clear(); 
@@ -351,19 +350,11 @@ void GlobalState::Deserialize(const DataNode* data) {
 
     for (int i=0; i < data->GetArrayChildLen("planets"); i++) {
         DataNode* planet_data = data->GetArrayChild("planets", i);
-        RID id = planets.AddPlanet(planet_data);
-
-        if (planet_data->Has("id")) {
-            ASSERT_EQUAL_INT(id.AsInt(), planet_data->GetI("id"))
-        }
+        planets.AddPlanet(planet_data);
     }
     for (int i=0; i < data->GetArrayChildLen("ships"); i++) {
         DataNode* ship_data = data->GetArrayChild("ships", i);
-        RID id = ships.AddShip(ship_data);
-
-        if (ship_data->Has("id")) {
-            ASSERT_EQUAL_INT(id.AsInt(), ship_data->GetI("id"))
-        }
+        ships.AddShip(ship_data);
     }
 
     // Dependency on planets

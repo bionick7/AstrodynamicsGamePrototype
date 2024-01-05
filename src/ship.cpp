@@ -597,16 +597,25 @@ void Ships::ClearShips(){
 
 RID Ships::AddShip(const DataNode* data) {
     Ship *ship;
-    RID ship_entity = alloc.Allocate(&ship);
+    RID ship_entity;
+    if (data->Has("id")) {
+        RID rid = RID(data->GetI("id"));
+        if(!alloc.AllocateAtID(rid, &ship)) {
+            ERROR("INVALID while loading ship RID")
+            return GetInvalidId();
+        } 
+    } else {
+        ship_entity = alloc.Allocate(&ship);
+    }
     
     ship->Deserialize(data);
     if (ship->is_parked) {
         const char* planet_name = data->Get("planet", "NO NAME SPECIFIED");
-        RID id = GlobalGetState()->planets.GetIndexByName(planet_name);
-        if (!IsIdValid(id)) {
+        RID planet_id = GlobalGetState()->planets.GetIndexByName(planet_name);
+        if (!IsIdValid(planet_id)) {
             FAIL("Error while initializing ship '%s': no such planet '%s'", ship->name, planet_name)
         }
-        ship->parent_planet = id;
+        ship->parent_planet = planet_id;
     }
 
     ship->id = ship_entity;
@@ -646,7 +655,7 @@ int Ships::LoadShipClasses(const DataNode* data) {
 }
 
 Ship* Ships::GetShip(RID id) const {
-    if ((!alloc.IsValidIndex(id))) {
+    if ((!alloc.ContainsID(id))) {
         FAIL("Invalid id (%d)", id)
     }
     return (Ship*) alloc.Get(id);
