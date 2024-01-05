@@ -30,11 +30,13 @@ void Planet::Serialize(DataNode* data) const {
     }
     
     // modules
-    data->SetArray("ship_modules", MAX_PLANET_INVENTORY);
+    data->SetArray("inventory", MAX_PLANET_INVENTORY);
     for(int i=0; i < MAX_PLANET_INVENTORY; i++) {
-        if (!IsIdValid(ship_module_inventory[i])) continue;
-        const ShipModuleClass* smc = GetModule(ship_module_inventory[i]);
-        data->SetArrayElem("ship_modules", i, smc->id);
+        if (IsIdValid(ship_module_inventory[i])) {
+            data->SetArrayElem("inventory", i, GetModule(ship_module_inventory[i])->id);
+        } else {
+            data->SetArrayElem("inventory", i, "---");
+        }
     }
 
     // We assume the orbital info is stored in the ephemerides
@@ -68,14 +70,14 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
         }
     }
     
-    if (data->HasArray("ship_modules")) {
-        int ship_module_inventory_count = data->GetArrayLen("ship_modules", true);
+    if (data->HasArray("inventory")) {
+        int ship_module_inventory_count = data->GetArrayLen("inventory", true);
         if (ship_module_inventory_count > MAX_PLANET_INVENTORY) {
             ship_module_inventory_count = MAX_PLANET_INVENTORY;
         }
         
         for (int i = 0; i < ship_module_inventory_count; i++) {
-            const char* module_id = data->GetArray("ship_modules", i);
+            const char* module_id = data->GetArray("inventory", i);
             ship_module_inventory[i] = GlobalGetState()->ship_modules.GetModuleRIDFromStringId(module_id);
         }
     }

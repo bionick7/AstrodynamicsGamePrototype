@@ -71,38 +71,6 @@ void QuestInterfaceIsTaskPossible(WrenVM* vm) {
 	wrenSetSlotBool(vm, 0, true);
 }
 
-void QuestInterfaceGainMoney(WrenVM* vm) {
-	if (!_AssertSlotType(vm, 1, WREN_TYPE_NUM)) return;
-	cost_t delta = (cost_t) wrenGetSlotDouble(vm, 1);
-	GlobalGetState()->CompleteTransaction(delta, "");
-	//INFO("Paid %lld in wren interface", delta)
-}
-
-void QuestInterfaceGainItem(WrenVM* vm) {
-	if (!_AssertSlotType(vm, 1, WREN_TYPE_STRING) || !_AssertSlotType(vm, 2, WREN_TYPE_NUM)) return;
-	const char* item_id = wrenGetSlotString(vm, 1);
-	int planet = (int) wrenGetSlotDouble(vm, 2);
-	RID smc = GlobalGetState()->ship_modules.GetModuleRIDFromStringId(item_id);
-	GetPlanetByIndex(planet)->AddShipModuleToInventory(smc);
-}
-
-void QuestInterfaceGainReputation(WrenVM* vm) {
-	if (!_AssertSlotType(vm, 1, WREN_TYPE_NUM)) return;
-	NOT_IMPLEMENTED
-}
-
-void QuestInterfaceGainShip(WrenVM* vm) {
-	if (!_AssertSlotType(vm, 1, WREN_TYPE_MAP) || !_AssertSlotType(vm, 2, WREN_TYPE_LIST)) return;
-	DataNode dn;
-	WrenHandle* instance_handle = wrenGetSlotHandle(vm, 0);
-	WrenHandle* map_handle = wrenGetSlotHandle(vm, 1);
-	WrenHandle* keylist_handle = wrenGetSlotHandle(vm, 2);
-	wrenSetSlotHandle(vm, 0, map_handle);
-	wrenSetSlotHandle(vm, 1, keylist_handle);
-	GetWrenInterface()->DictAsDataNode(&dn);
-	GlobalGetState()->ships.AddShip(&dn);
-}
-
 static void WriteFn(WrenVM* vm, const char* text) {
 	if (strcmp(text, "\n") != 0) {
         LogImpl(LOG_INVALID_FILE, LOG_INVALID_LINE, LOGTYPE_WRENINFO, text);
@@ -179,7 +147,7 @@ WrenForeignMethodFn BindForeignMethod(
 #endif // WREN_OPT_META
 
 	// Only gets called on startup
-	if (strcmp(className, "Quest") == 0) {
+	/*if (strcmp(className, "Quest") == 0) {
 		if (strcmp(signature, "is_task_possible(_)") == 0) {
 			return &QuestInterfaceIsTaskPossible;
 		} else if (strcmp(signature, "gain_money(_)") == 0) {
@@ -192,7 +160,7 @@ WrenForeignMethodFn BindForeignMethod(
 			return &QuestInterfaceGainShip;
 		}
 		ERROR("Unsupported foreign method '%s.%s'", className, signature)
-	}
+	}*/
 	ERROR("Unsupported foreign class '%s'", className)
 	return &DefaultMethod;
 }
@@ -314,7 +282,7 @@ int WrenInterface::LoadWrenQuests() {
 }
 
 
-WrenQuestTemplate* WrenInterface::GetWrenQuest(const char* query_id) {
+WrenQuestTemplate* WrenInterface::GetWrenQuest(const char* query_id) const {
 	// when surpassing ~50 of these, switch to a map or so.
 	for(int i=0; i < valid_quest_count; i++) {
 		if (strcmp(quests[i].id, query_id) == 0) {
@@ -324,14 +292,14 @@ WrenQuestTemplate* WrenInterface::GetWrenQuest(const char* query_id) {
 	return NULL;
 }
 
-WrenQuestTemplate* WrenInterface::GetRandomWrenQuest() {
+WrenQuestTemplate* WrenInterface::GetRandomWrenQuest() const {
 	if (valid_quest_count <= 0) {
 		return NULL;
 	}
 	return &quests[GetRandomValue(0, valid_quest_count - 1)];
 }
 
-bool WrenInterface::CallFunc(WrenHandle* func_handle) {
+bool WrenInterface::CallFunc(WrenHandle* func_handle) const {
 	WrenInterpretResult call_result = wrenCall(vm, func_handle);
 	if (call_result == WREN_RESULT_COMPILE_ERROR) {
 		ERROR("compilation error in function call")
@@ -343,7 +311,13 @@ bool WrenInterface::CallFunc(WrenHandle* func_handle) {
 	return call_result == WREN_RESULT_SUCCESS;
 }
 
-bool WrenInterface::PrepareMap(const char* key) {
+void WrenInterface::MoveSlot(int from, int to) const {
+	WrenHandle* handle = wrenGetSlotHandle(vm, from);
+	wrenSetSlotHandle(vm, to, handle);
+	wrenReleaseHandle(vm, handle);
+}
+
+bool WrenInterface::PrepareMap(const char* key) const {
     // assumes map at position 0 and nothing else set
     // puts result in slot 2
     if (wrenGetSlotCount(vm) == 0) {
@@ -361,28 +335,28 @@ bool WrenInterface::PrepareMap(const char* key) {
     return true;
 }
 
-double WrenInterface::GetNumFromMap(const char* key, double def) {
+double WrenInterface::GetNumFromMap(const char* key, double def) const {
     // assumes map at position 0 and nothing else set
     if (!PrepareMap(key)) return def;
     if (wrenGetSlotType(vm, 2) != WREN_TYPE_NUM) return def;
     return wrenGetSlotDouble(vm, 2);
 }
 
-bool WrenInterface::GetBoolFromMap(const char* key, bool def) {
+bool WrenInterface::GetBoolFromMap(const char* key, bool def) const {
     // assumes map at position 0 and nothing else set
     if (!PrepareMap(key)) return def;
     if (wrenGetSlotType(vm, 2) != WREN_TYPE_BOOL) return def;
     return wrenGetSlotBool(vm, 2);
 }
 
-const char* WrenInterface::GetStringFromMap(const char* key, const char* def) {
+const char* WrenInterface::GetStringFromMap(const char* key, const char* def) const {
     // assumes map at position 0 and nothing else set
     if (!PrepareMap(key)) return def;
     if (wrenGetSlotType(vm, 2) != WREN_TYPE_STRING) return def;
     return wrenGetSlotString(vm, 2);
 }
 
-void WrenInterface::_DictAsDataNodePopulateList(DataNode *dn, const char* key) {
+void WrenInterface::_MapAsDataNodePopulateList(DataNode *dn, const char* key) const {
 	// Will leave slots intact
 	// reuse key slot to store list value
 	const int DICT_SLOT = 0;
@@ -405,10 +379,9 @@ void WrenInterface::_DictAsDataNodePopulateList(DataNode *dn, const char* key) {
 		WrenHandle* list_handle = wrenGetSlotHandle(vm, VALUE_SLOT);
 		for (int i=0; i < list_count; i++) {
 			wrenGetListElement(vm, VALUE_SLOT, i, ELEM_SLOT);
-			WrenHandle* child_handle = wrenGetSlotHandle(vm, ELEM_SLOT);
+			MoveSlot(ELEM_SLOT, 0);
 			DataNode* child = dn->SetArrayElemChild(key, i, DataNode());
-			wrenSetSlotHandle(vm, 0, child_handle);
-			bool success = DictAsDataNode(child);
+			bool success = MapAsDataNode(child);
 
 			// Restore state
 			wrenEnsureSlots(vm, 4);
@@ -450,25 +423,29 @@ void WrenInterface::_DictAsDataNodePopulateList(DataNode *dn, const char* key) {
 	wrenSetSlotHandle(vm, KEYLIST_SLOT, key_list_handle);
 }
 
-bool WrenInterface::DictAsDataNode(DataNode *dn) {
-    // assumes map at position 0 and keylist at position 1 (has to be provided :( )
+bool WrenInterface::MapAsDataNode(DataNode *dn) const {
+    // assumes map at position 0
+	// cannot be called from within a foreign function
 	// Will erase slots
 	const int DICT_SLOT = 0;
 	const int KEYLIST_SLOT = 1;
 	const int KEY_SLOT = 2;
 	const int VALUE_SLOT = 3;
 
-    if (wrenGetSlotCount(vm) < 2) {
+    if (wrenGetSlotCount(vm) < 1) {
         return false;
     }
     if (wrenGetSlotType(vm, 0) != WREN_TYPE_MAP) {
         return false;
     }
-    if (wrenGetSlotType(vm, 1) != WREN_TYPE_LIST) {
-        return false;
-    }
 	WrenHandle* dict_handle = wrenGetSlotHandle(vm, 0);
-	WrenHandle* key_list_handle = wrenGetSlotHandle(vm, 1);
+	WrenHandle* keys_callhandle = wrenMakeCallHandle(vm, "keys");
+	CallFunc(keys_callhandle);
+	WrenHandle* toList_callhandle = wrenMakeCallHandle(vm, "toList");
+	CallFunc(toList_callhandle);
+	WrenHandle* key_list_handle = wrenGetSlotHandle(vm, 0);
+	wrenReleaseHandle(vm, keys_callhandle);
+	wrenReleaseHandle(vm, toList_callhandle);
 
     wrenEnsureSlots(vm, 4);
 	wrenSetSlotHandle(vm, DICT_SLOT, dict_handle);
@@ -504,14 +481,13 @@ bool WrenInterface::DictAsDataNode(DataNode *dn) {
 			dn->Set(key, value);
 			break;}
 		case WREN_TYPE_LIST: {
-			_DictAsDataNodePopulateList(dn, key);
+			_MapAsDataNodePopulateList(dn, key);
 			break;}
 		case WREN_TYPE_MAP: {
 			NOT_IMPLEMENTED  // Current method disallows recursion
-			WrenHandle* child_handle = wrenGetSlotHandle(vm, VALUE_SLOT);
 			DataNode* child = dn->SetChild(key, DataNode());
-			wrenSetSlotHandle(vm, 0, child_handle);
-			bool success = DictAsDataNode(child);
+			MoveSlot(VALUE_SLOT, 0);
+			bool success = MapAsDataNode(child);
 			wrenEnsureSlots(vm, 4);
 			wrenSetSlotHandle(vm, DICT_SLOT, dict_handle);
 			wrenSetSlotHandle(vm, KEYLIST_SLOT, key_list_handle);
@@ -522,6 +498,65 @@ bool WrenInterface::DictAsDataNode(DataNode *dn) {
 		}
 	}
     return true;
+}
+
+bool WrenInterface::DataNodeToMap(const DataNode* dn) const {
+	// Puts map into slot 0
+	// map will only contain strings
+	const int MAP_SLOT = 0;
+	const int KEY_SLOT = 1;
+	const int VALUE_SLOT = 2;
+	const int ELEM_SLOT = 3;
+	wrenEnsureSlots(vm, 4);
+	wrenSetSlotNewMap(vm, MAP_SLOT);
+	for(int i=0; i < dn->GetFieldCount(); i++) {
+		const char* key = dn->GetKey(i);
+		const char* value = dn->Get(key);
+		wrenSetSlotString(vm, KEY_SLOT, key);
+		wrenSetSlotString(vm, VALUE_SLOT, value);
+		wrenSetMapValue(vm, MAP_SLOT, KEY_SLOT, VALUE_SLOT);
+	}
+	for(int i=0; i < dn->GetChildCount(); i++) {
+		const char* key = dn->GetChildKey(i);
+		WrenHandle* handle_map = wrenGetSlotHandle(vm, MAP_SLOT);
+
+		DataNodeToMap(dn->GetChild(key));
+		MoveSlot(MAP_SLOT, VALUE_SLOT);
+
+		// restore current map
+		wrenSetSlotHandle(vm, MAP_SLOT, handle_map);
+		wrenReleaseHandle(vm, handle_map);
+
+		wrenSetSlotString(vm, KEY_SLOT, key);
+		wrenSetMapValue(vm, MAP_SLOT, KEY_SLOT, VALUE_SLOT);
+	}
+	for(int i=0; i < dn->GetArrayCount(); i++) {
+		const char* key = dn->GetArrayKey(i);
+		wrenSetSlotString(vm, KEY_SLOT, key);
+		wrenSetSlotNewList(vm, VALUE_SLOT);
+		for(int j=dn->GetArrayLen(key); j >= 0; j--) {  // Minimizes list resizing
+			wrenSetSlotString(vm, ELEM_SLOT, dn->GetArray(key, j));
+			wrenInsertInList(vm, VALUE_SLOT, j, ELEM_SLOT);
+		}
+		wrenSetMapValue(vm, MAP_SLOT, KEY_SLOT, VALUE_SLOT);
+	}
+	for(int i=0; i < dn->GetChildArrayCount(); i++) {
+		const char* key = dn->GetChildArrayKey(i);
+		wrenSetSlotString(vm, KEY_SLOT, key);
+		WrenHandle* handle_map = wrenGetSlotHandle(vm, MAP_SLOT);
+		for(int j=dn->GetArrayLen(key); j >= 0; j--) {  // Minimizes list resizing
+
+			DataNodeToMap(dn->GetArrayChild(key, j));
+			wrenInsertInList(vm, VALUE_SLOT, j, MAP_SLOT);
+		}
+		// restore current map
+		wrenSetSlotHandle(vm, MAP_SLOT, handle_map);
+		wrenReleaseHandle(vm, handle_map);
+
+		wrenSetSlotString(vm, KEY_SLOT, key);
+		wrenSetMapValue(vm, MAP_SLOT, KEY_SLOT, VALUE_SLOT);
+	}
+	return true;
 }
 
 WrenVM* GetWrenVM() {

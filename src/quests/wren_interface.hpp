@@ -19,8 +19,8 @@ struct WrenQuestTemplate {
 
 struct WrenInterface {
     WrenVM* vm;
-    WrenQuestTemplate* quests = NULL;
     int valid_quest_count = 0;
+    WrenQuestTemplate* quests = NULL;
 
     WrenHandle* internals_class_handle = NULL;
 
@@ -29,17 +29,20 @@ struct WrenInterface {
 
     void MakeVM();
     int LoadWrenQuests();
-    WrenQuestTemplate* GetWrenQuest(const char* query_id);
-    WrenQuestTemplate* GetRandomWrenQuest();
+
+    WrenQuestTemplate* GetWrenQuest(const char* query_id) const;
+    WrenQuestTemplate* GetRandomWrenQuest() const;
     
-    bool CallFunc(WrenHandle* func_handle);
-    
-    bool PrepareMap(const char* key);
-    double GetNumFromMap(const char* key, double def);
-    bool GetBoolFromMap(const char* key, bool def);
-    const char* GetStringFromMap(const char* key, const char* def);
-    void _DictAsDataNodePopulateList(DataNode *dn, const char* key);
-    bool DictAsDataNode(DataNode* dn);
+    bool CallFunc(WrenHandle* func_handle) const;
+    void MoveSlot(int from, int to) const;
+
+    bool PrepareMap(const char* key) const;
+    double GetNumFromMap(const char* key, double def) const;
+    bool GetBoolFromMap(const char* key, bool def) const;
+    const char* GetStringFromMap(const char* key, const char* def) const;
+    void _MapAsDataNodePopulateList(DataNode *dn, const char* key) const;
+    bool MapAsDataNode(DataNode* dn) const;
+    bool DataNodeToMap(const DataNode* dn) const;
 };
 
 WrenVM* GetWrenVM();

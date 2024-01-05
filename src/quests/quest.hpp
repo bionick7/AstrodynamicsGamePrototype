@@ -14,17 +14,20 @@
 struct Ship;
 
 #define QUEST_PANEL_HEIGHT 64
+#define DIALOGUE_MAX_ANSWERS 5
 
 struct Quest {
     const WrenQuestTemplate* wren_interface;
     WrenHandle* quest_instance_handle;
-    WrenHandle* coroutine_instance_handle;
-    WrenHandle* coroutine_call_handle;
+    WrenHandle* next_handle;
+    WrenHandle* next_result_handle;
+    WrenHandle* state_set_handle;
+    WrenHandle* serialize_handle;
+    WrenHandle* deserialize_handle;
 
     RID id = GetInvalidId();
-
-    Quest();
-    ~Quest();
+    
+    // current, await_type and next_options can be regained by re-running the next
 
     union QuestUnion {
         RID task;
@@ -43,22 +46,30 @@ struct Quest {
         WAIT,
         DONE,
     } await_type = NOT_STARTED;
+    //std::vector<std::string> next_options;
+    char* next_options[DIALOGUE_MAX_ANSWERS] = {
+        NULL, NULL, NULL, NULL, NULL
+    };
 
-    int step = 0;
+    Quest();
+    ~Quest();
 
     void CopyFrom(Quest* other);
     bool IsValid() const;
+    bool IsActive() const;
     void Serialize(DataNode* data) const;
     void Deserialize(const DataNode* data);
     ButtonStateFlags DrawUI(bool show_as_button, bool highlight) const;
 
     void AttachTemplate(const WrenQuestTemplate* p_wren_interface);
 
-    void StartQuest(int inp_arg=0);  // The way wren is setup, it allows 1 extra arg. Mostly unused tho
-    void CompleteTask(bool success);
-    void TimePassed();
-    void AnswerDialogue(int choice);   // for both choices and forward
+    bool StartQuest();
+    bool CompleteTask(bool success);
+    bool TimePassed();
+    bool AnswerDialogue(int choice);   // for both choices and forward
 
+    bool _Activate();
+    bool _RunInState(const char* next_state);
     void _NextTask();
 };
 

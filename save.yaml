@@ -1,8 +1,7 @@
-capital: 1000000.000000
+capital: 1000001.000000
 focused_planet: -1
 focused_ship: -1
 calendar:
-  migration_arrrival_planet: 0
   paused: y
   time_scale: 2048.000000
   current_migration_period:
@@ -16,276 +15,33 @@ calendar:
 
 
 coordinate_transform:
-  focus_x: -8081056.000000
-  focus_y: 4377232.000000
-  log_space_scale: -6.013094
+  focus_x: -45629648.000000
+  focus_y: 6444448.000000
+  log_space_scale: -6.091515
 
 quests:
-  active_quests: []
+  active_quests:
+  - active: y
+    await_type: 1
+    state: t1
+    template: example
+
   available_quests:
-  - arrival_planet: 2
-    current_planet: -1
-    departure_planet: 5
-    payload_mass: 100000.000000
-    payout: 1000000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 8651546.862249
+  - active: n
+    await_type: 0
+    template: tutorial
 
-    pickup_expiration_time:
-      t: 8651546.862249
+  - active: n
+    await_type: 0
+    template: example
 
-
-  - arrival_planet: 0
-    current_planet: -1
-    departure_planet: 5
-    payload_mass: 100000.000000
-    payout: 1000000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 3749900.263372
-
-    pickup_expiration_time:
-      t: 3749900.263372
-
-
-  - arrival_planet: 2
-    current_planet: -1
-    departure_planet: 1
-    payload_mass: 1000000.000000
-    payout: 1500000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 897254.595066
-
-    pickup_expiration_time:
-      t: 897254.595066
-
-
-  - arrival_planet: 4
-    current_planet: -1
-    departure_planet: 5
-    payload_mass: 100000.000000
-    payout: 1000000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 4546868.684809
-
-    pickup_expiration_time:
-      t: 4546868.684809
-
-
-  - arrival_planet: 0
-    current_planet: -1
-    departure_planet: 5
-    payload_mass: 100000.000000
-    payout: 1000000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 6518578.990121
-
-    pickup_expiration_time:
-      t: 6518578.990121
-
-
-  - arrival_planet: 0
-    current_planet: -1
-    departure_planet: 1
-    payload_mass: 1000000.000000
-    payout: 1500000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 292984.208390
-
-    pickup_expiration_time:
-      t: 292984.208390
-
-
-  - arrival_planet: 2
-    current_planet: -1
-    departure_planet: 5
-    payload_mass: 100000.000000
-    payout: 1000000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 5452452.979617
-
-    pickup_expiration_time:
-      t: 5452452.979617
-
-
-  - arrival_planet: 3
-    current_planet: -1
-    departure_planet: 2
-    payload_mass: 500000.000000
-    payout: 1000000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 714558.998752
-
-    pickup_expiration_time:
-      t: 714558.998752
-
-
-  - arrival_planet: 4
-    current_planet: -1
-    departure_planet: 5
-    payload_mass: 100000.000000
-    payout: 1000000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 8992646.682533
-
-    pickup_expiration_time:
-      t: 8992646.682533
-
-
-  - arrival_planet: 2
-    current_planet: -1
-    departure_planet: 1
-    payload_mass: 1000000.000000
-    payout: 1500000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 403384.930228
-
-    pickup_expiration_time:
-      t: 403384.930228
-
-
-  - arrival_planet: 1
-    current_planet: -1
-    departure_planet: 3
-    payload_mass: 500000.000000
-    payout: 1000000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 103827.621348
-
-    pickup_expiration_time:
-      t: 103827.621348
-
-
-  - arrival_planet: 2
-    current_planet: -1
-    departure_planet: 1
-    payload_mass: 100000.000000
-    payout: 200000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 1335615.619355
-
-    pickup_expiration_time:
-      t: 1335615.619355
-
-
-  - arrival_planet: 3
-    current_planet: -1
-    departure_planet: 1
-    payload_mass: 500000.000000
-    payout: 1000000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 698426.092112
-
-    pickup_expiration_time:
-      t: 698426.092112
-
-
-  - arrival_planet: 3
-    current_planet: -1
-    departure_planet: 2
-    payload_mass: 100000.000000
-    payout: 200000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 334565.078567
-
-    pickup_expiration_time:
-      t: 334565.078567
-
-
-  - arrival_planet: 1
-    current_planet: -1
-    departure_planet: 0
-    payload_mass: 100000.000000
-    payout: 200000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 1047845.288338
-
-    pickup_expiration_time:
-      t: 1047845.288338
-
-
-  - arrival_planet: 1
-    current_planet: -1
-    departure_planet: 5
-    payload_mass: 100000.000000
-    payout: 1000000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 5735786.406667
-
-    pickup_expiration_time:
-      t: 5735786.406667
-
-
-  - arrival_planet: 0
-    current_planet: -1
-    departure_planet: 2
-    payload_mass: 500000.000000
-    payout: 1000000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 550029.296066
-
-    pickup_expiration_time:
-      t: 550029.296066
-
-
-  - arrival_planet: 0
-    current_planet: -1
-    departure_planet: 1
-    payload_mass: 500000.000000
-    payout: 1000000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 50062.600388
-
-    pickup_expiration_time:
-      t: 50062.600388
-
-
-  - arrival_planet: 0
-    current_planet: -1
-    departure_planet: 5
-    payload_mass: 100000.000000
-    payout: 1000000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 10252916.775544
-
-    pickup_expiration_time:
-      t: 10252916.775544
-
-
-  - arrival_planet: 0
-    current_planet: -1
-    departure_planet: 1
-    payload_mass: 1000000.000000
-    payout: 1500000.000000
-    ship: -1
-    delivery_expiration_time:
-      t: 838990.176410
-
-    pickup_expiration_time:
-      t: 838990.176410
-
+  - active: n
+    await_type: 0
+    template: tutorial
 
 
 planets:
-- id: 0
+- id: 16777216
   name: Mimas
   trading_accessible: n
   resource_delta:
@@ -300,9 +56,49 @@ planets:
     metal: 0
     water: 100
 
-  buildings: []
+  inventory:
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
 
-- id: 1
+- id: 16777217
   name: Encelladus
   trading_accessible: n
   resource_delta:
@@ -317,11 +113,49 @@ planets:
     metal: 0
     water: 0
 
-  buildings:
-  - mod_pop_small
-  - mod_food_mine
+  inventory:
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
 
-- id: 2
+- id: 16777218
   name: Tethys
   trading_accessible: y
   resource_delta:
@@ -336,11 +170,49 @@ planets:
     metal: 0
     water: 100
 
-  buildings:
-  - mod_pop_small
-  - mod_food_mine
+  inventory:
+  - shpmod_heatshield
+  - shpmod_farm
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
 
-- id: 3
+- id: 16777219
   name: Rhea
   trading_accessible: n
   resource_delta:
@@ -355,9 +227,49 @@ planets:
     metal: 0
     water: 0
 
-  buildings: []
+  inventory:
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
 
-- id: 4
+- id: 16777220
   name: Titan
   trading_accessible: y
   resource_delta:
@@ -372,9 +284,49 @@ planets:
     metal: 0
     water: 0
 
-  buildings: []
+  inventory:
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
 
-- id: 5
+- id: 16777221
   name: Iaeptus
   trading_accessible: n
   resource_delta:
@@ -389,9 +341,49 @@ planets:
     metal: 0
     water: 0
 
-  buildings: []
+  inventory:
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
 
-- id: 6
+- id: 16777222
   name: Phoebe
   trading_accessible: n
   resource_delta:
@@ -406,49 +398,187 @@ planets:
     metal: 0
     water: 0
 
-  buildings: []
+  inventory:
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
 
 ships:
 - class_id: shp_bulk_transport
-  id: 0
+  id: 33554432
   is_parked: y
   name: Bulk transport
   planet: Tethys
   resource_id: -1
   resource_qtt: 0
-  modules: []
+  modules:
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
   prepared_plans: []
 
 - class_id: shp_light_transport
-  id: 1
+  id: 33554433
   is_parked: y
   name: Light transport
   planet: Tethys
   resource_id: -1
   resource_qtt: 0
-  modules: []
+  modules:
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
   prepared_plans: []
 
 - class_id: shp_light_transport
-  id: 2
+  id: 33554434
   is_parked: y
   name: Extractor
-  planet: Tethys
+  planet: Encelladus
   resource_id: -1
   resource_qtt: 0
   modules:
   - shpmod_water_extractor
   - shpmod_water_extractor
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
   prepared_plans: []
 
 - class_id: shp_express
-  id: 3
+  id: 33554435
   is_parked: y
   name: Express
   planet: Tethys
   resource_id: -1
   resource_qtt: 0
-  modules: []
+  modules:
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  prepared_plans: []
+
+- class_id: shp_spacestation
+  id: 33554436
+  is_parked: y
+  name: Tethys Shipyard
+  planet: Tethys
+  resource_id: -1
+  resource_qtt: 0
+  modules:
+  - shpmod_small_yard_1
+  - shpmod_small_yard_2
+  - shpmod_small_yard_3
+  - shpmod_small_yard_4
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  prepared_plans: []
+
+- class_id: shp_express
+  id: 33554437
+  is_parked: y
+  name: Military ship
+  planet: Tethys
+  resource_id: -1
+  resource_qtt: 0
+  modules:
+  - shpmod_railgun
+  - shpmod_railgun
+  - shpmod_armor
+  - shpmod_reactor
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  prepared_plans: []
+
+- class_id: shp_spacestation
+  id: 33554438
+  is_parked: y
+  name: BB mining ship
+  planet: Encelladus
+  resource_id: -1
+  resource_qtt: 0
+  modules:
+  - shpmod_water_extractor
+  - shpmod_water_extractor
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
   prepared_plans: []
 
 

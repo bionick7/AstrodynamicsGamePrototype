@@ -93,7 +93,11 @@ void Ship::Serialize(DataNode *data) const
 
     data->SetArray("modules", SHIP_MAX_MODULES);
     for(int i=0; i < SHIP_MAX_MODULES; i++) {
-        data->SetArrayElem("modules", i, GetModule(modules[i])->id);
+        if (IsIdValid(modules[i])) {
+            data->SetArrayElem("modules", i, GetModule(modules[i])->id);
+        } else {
+            data->SetArrayElem("modules", i, "---");
+        }
     }
 
     data->SetArrayChild("prepared_plans", prepared_plans_count);

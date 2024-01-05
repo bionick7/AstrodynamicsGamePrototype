@@ -16,11 +16,9 @@ QuestManager::~QuestManager() {
 }
 
 void QuestManager::Serialize(DataNode* data) const {
-    return;
-    NOT_IMPLEMENTED
-    data->SetArrayChild("active_quests", active_tasks.alloc_count);
-    for(auto it = active_tasks.GetIter(); it; it++) {
-        active_tasks.Get(it)->Serialize(data->SetArrayElemChild("active_quests", it.counter, DataNode()));
+    data->SetArrayChild("active_quests", active_quests.Count());
+    for(auto it = active_quests.GetIter(); it; it++) {
+        active_quests.Get(it)->Serialize(data->SetArrayElemChild("active_quests", it.counter, DataNode()));
     }
     data->SetArrayChild("available_quests", GetAvailableQuests());
     for(auto it = available_quests.GetIter(); it; it++) {
@@ -29,18 +27,15 @@ void QuestManager::Serialize(DataNode* data) const {
 }
 
 void QuestManager::Deserialize(const DataNode* data) {
-    return;
-    NOT_IMPLEMENTED
     active_tasks.Clear();
+    active_quests.Clear();
     for(int i=0; i < data->GetArrayChildLen("active_quests"); i++) {
-        active_tasks.Get(active_tasks.Allocate())->Deserialize(data->GetArrayChild("active_quests", i));
+        active_quests.Get(active_quests.Allocate())->Deserialize(data->GetArrayChild("active_quests", i));
     }
+    available_quests.Clear();
     for(int i=0; i < data->GetArrayChildLen("available_quests") && i < GetAvailableQuests(); i++) {
         available_quests.Get(available_quests.Allocate())->Deserialize(data->GetArrayChild("available_quests", i));
     }
-    /*for(int i=data->GetArrayChildLen("available_quests"); i < GetAvailableQuests(); i++) {
-        available_quests[i] = Quest();  // Just in case
-    }*/
 }
 
 void QuestManager::Make() {
@@ -53,31 +48,34 @@ void QuestManager::Update(double dt) {
     if (IsKeyPressed(KEY_Q)) show_ui = !show_ui;
     
     // Remove all expired and completed quests
-    for(auto i = active_quests.GetIter(); i; i++) {
-        switch (active_quests[i]->await_type) {
+    for(auto it = active_quests.GetIter(); it; it++) {
+        switch (active_quests[it]->await_type) {
             case Quest::TASK: {
-                RID task_id = active_quests[i]->current.task;
+                RID task_id = active_quests[it]->current.task;
                 Task* task = active_tasks[task_id];
                 bool is_in_transit = IsIdValid(task->ship) && !GetShip(task->ship)->is_parked;
                 if (task->pickup_expiration_time < now && !is_in_transit) {
-                    active_quests[i]->CompleteTask(false);
+                    bool success = active_quests[it]->CompleteTask(false);
+                    if (!success) active_quests.Erase(it.GetId());
                     active_tasks.Erase(task_id);
                 }
                 else if (task->delivery_expiration_time < now) {
-                    active_quests[i]->CompleteTask(false);
+                    bool success = active_quests[it]->CompleteTask(false);;
+                    if (!success) active_quests.Erase(it.GetId());
                     active_tasks.Erase(task_id);
                 }
                 break; }
             case Quest::WAIT: {
-                if (active_quests[i]->current.wait_until < now) {
-                    active_quests[i]->TimePassed();
+                if (active_quests[it]->current.wait_until < now) {
+                    bool success = active_quests[it]->TimePassed();
+                    if (!success) active_quests.Erase(it.GetId());
                 }
                 break;}
             case Quest::DONE:
-                active_quests.Erase(i.GetId());
+                active_quests.Erase(it.GetId());
                 break;
             default: 
-                INFO("%d", active_quests[i]->await_type)
+                INFO("%d", active_quests[it]->await_type)
                 NOT_IMPLEMENTED
         }
     }
@@ -149,7 +147,8 @@ void QuestManager::AcceptQuest(RID quest_index) {
     RID id = active_quests.Allocate(&q);
     q->CopyFrom(available_quests[quest_index]);
     q->id = id;
-    q->StartQuest();
+    bool success = q->StartQuest();
+    if (!success) active_quests.Erase(id);
     available_quests.Erase(quest_index);
 }
 
@@ -158,7 +157,8 @@ void QuestManager::ForceQuest(WrenQuestTemplate *template_) {
     RID id = active_quests.Allocate(&q);
     q->AttachTemplate(template_);
     q->id = id;
-    q->StartQuest();
+    bool success = q->StartQuest();
+    if (!success) active_quests.Erase(id);
 }
 
 RID QuestManager::CreateTask(RID quest_index) {

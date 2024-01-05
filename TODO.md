@@ -5,7 +5,7 @@
 - Build buildings (Done)
 - Water as fuel (Done)
 - Saving state  (Done)
-- Quest system (with wren?) ...
+- Quest system (with wren?) (Done)
 - Sound (Done)
 - Automatically purchase fuel when possible (Done)
 - quantise resources (1 count = 100kT) (Done)
@@ -13,7 +13,7 @@
 - Transfer plan UX (Half)
 - Inventory (Done)
 - Quests drop modules & Ships (Done)
-- Drag & Drop
+- Drag & Drop (Done)
 - Dialogue
 - Actual quests
 - Shop
@@ -30,7 +30,7 @@
 - QUESTS: Accepting more than one quest fucks up the order
 
 ## Necaissary Uncomplete features
-- save wren quest state
+- save wren quest state (Done)
 
 ## UX improvements wishlist
 Near-term, realizable only
@@ -39,10 +39,12 @@ Near-term, realizable only
 - departure time adjusts automatically to the optimum (with option to turn it off) (Done)
 - "ASAP" button for transfer UI (mathematically tricky problem tbh)
 - ability to show hohmann trnasfer period in transfer window (eh ... hard to make it be usefull)
-- questlog window is kinda outdated
+- questlog window is kinda outdated (repurpoed for dialogue)
 - front-end info and error log
 - different icons for different ships
-//- icons for buildings
+- good ui showing quests
+- good ui showing tasks
+- icons for modules
 //- make clear which buildings are buildable
 - warn before committing to an empty transform ("empty" in red or required to choose it explicitly)
 - highlight more important statistics
@@ -68,7 +70,7 @@ Regardless of implementability
 - gravity assists
 - segment planets into regions
 - crew & population morale
-- construct new stations
+- construct new stations (Done, it's just a ship duh)
 - combat
 - "policies"
 - expand to 3D

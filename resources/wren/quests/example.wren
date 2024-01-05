@@ -22,7 +22,9 @@ class ExampleQuest is Quest {
     static subject { "[EXAMPLE QUEST FOR DEBUGGING AND TESTING]" }
     static contractor { "The enclave" }
 
-    construct new () {}
+    construct new () {
+        super("init")
+    }
 
     static test() {
         System.print("hello from wren :)")
@@ -49,62 +51,75 @@ class ExampleQuest is Quest {
         return transport_task(500, departure_planet, arrival_planet, departure_planet, arrival_planet)
     }
 
-    main { Fiber.new { |last_result|
+    next() {
+        super()
         //var ammount = rand.float(1000, 3000)
-        gain_money(1)
-        gain_ship({
-            "class_id": "shp_light_transport",  // TODO: convert to immobile platform
-            "is_parked": "y",
-            "name": "BB mining ship",
-            "planet": "Encelladus",
-            "modules": ["shpmod_water_extractor", "shpmod_water_extractor"],
-        })
-        gain_item("shpmod_heatshield", Constants.tethys)
-        gain_item("shpmod_farm", Constants.tethys)
-
-        var counts = 2
-        var task1_success = Fiber.yield(transport_task(
-            counts * Constants.count, 
-            Constants.tethys, 
-            Constants.encelladus, 
-            Constants.day * 4
-        ))
-        if (task1_success) {
+        if (state == "init") {
+            gain_money(1)
+            gain_ship({
+                "class_id": "shp_spacestation",
+                "is_parked": "y",
+                "name": "BB mining ship",
+                "planet": "Encelladus",
+                "modules": ["shpmod_water_extractor", "shpmod_water_extractor"],
+            })
+            gain_module("shpmod_heatshield", Constants.tethys)
+            gain_module("shpmod_farm", Constants.tethys)
+            goto("t1")
+        }
+        if(state == "t1") {
+            transport_task(
+                2 * Constants.count, 
+                Constants.tethys, 
+                Constants.encelladus, 
+                Constants.day * 4,
+                "t1S", "endF"
+            )
+        }
+        if(state == "t1S") {
             gain_money(100000)
-        } else {
+            wait_seconds(2 * Constants.day * 4, "d1")
+        }
+
+        if (state == "d1") {
+            dialogue(
+                "The enclave administrator",
+                "What do you chose ?",
+                ["end quest", "work for stuff", "work for glory"],
+                ["endS", "t1.1", "t1.2"]
+            )
+        }
+        if (state == "t1.1") {
+            var task = ensure_possible(get_random_stuff_task)
+            task["on_success"] = "t1.1S"
+            task["on_fail"] = "t1.1F"
+            yield(task)
+        }
+        if (state == "t1.2") {
+            var task = ensure_possible(get_random_glory_task)
+            task["on_success"] = "t1.2S"
+            task["on_fail"] = "t1.2F"
+            yield(task)
+        }
+        if (state == "t1.1S") {
+            gain_item("shpmod_heatshield", Constants.titan)
+        }
+        if (state == "t1.1F") {
+            gain_money(-100000)
+        }
+        if (state == "t1.2S") {
+            gain_reputation("The Enclave", 1000)
+        }
+        if (state == "t1.2F") {
+            gain_reputation("The Enclave", -1000)
+        }
+
+
+        if (_step == "endF") {
             return false
         }
-
-        Fiber.yield(wait_seconds(2 * Constants.day * 4))
-
-        Fiber.yield(dialogue_text(
-            "The enclave administrator",
-            "What do you chose ?"
-        ))
-        dialogue_option = Fiber.yield(dialogue_text(
-            "The enclave administrator",
-            "What do you chose ?",
-            ["end quest", "work for stuff", "work for glory"]
-        ))
-        if (dialogue_option == 0) {
-            var task2_success = Fiber.yield(ensure_possible(get_random_stuff_task))
-            if (task2_success) {
-                gain_item("shpmod_heatshield", Constants.titan)
-            } else {
-                gain_money(-100000)
-            }
-        }
-        if (dialogue_option == 1) {
-            var task2_success = Fiber.yield(get_random_glory_task())
-            if (task2_success) {
-                gain_reputation("The Enclave", 1000)
-            } else {
-                gain_reputation("The Enclave", -1000)
-            }
-        }
-        if (dialogue_option == 2) {
+        if (_step == "endS") {
             return true
         }
-        return false
-	}}
+	}
 }

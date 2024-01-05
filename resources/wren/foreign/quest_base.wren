@@ -20,75 +20,159 @@ class Constants {
 
 }
 
+// Because c cannot iterate through dictionaries properly
+class MappedMap {
+    map { _map }
+    keys { _keys }
+
+    new(map) {
+        _map = dict
+        _keys = keymap_of(_map)
+    }
+
+    static keymap_of(m) {
+        var res = []
+        for (k in m.keys) {
+            res.append(k)
+            if (m[k] is Map) {
+                res.append(keymap_of(m[k]))
+            }
+        }
+        return res
+    }
+}
+
 class Quest {
-    transport_task(payload, departure_planet, arrival_planet, deadline) {
-        return {
+    state { _state }
+    state=(x) { _state = x }
+    query { _query }
+
+    construct new (initial_state) {
+        _state = initial_state
+        _query = []
+        _query_it = 0
+    }
+       
+    serialize() {
+        var data = {}
+        data["state"] = state
+        return data
+    }
+    
+    deserialize(data) {
+        state = data["state"]
+    }
+
+    yield(action) {
+        _query.add(action)
+    }
+
+    transport_task(payload, departure_planet, arrival_planet, deadline, on_success, on_fail) {
+        yield({
             "type": "task",
             "payload_mass": payload,
             "departure_planet": departure_planet,
             "arrival_planet": arrival_planet,
             "departure_time_offset": deadline,
-            "arrival_time_offset": deadline
-        }
+            "arrival_time_offset": deadline,
+            "on_success": on_success,
+            "on_fail": on_fail,
+        })
     }
 
-    transport_task(payload, departure_planet, arrival_planet, departure_deadline, arrival_deadline) {
-        return {
+    transport_task(payload, departure_planet, arrival_planet, departure_deadline, arrival_deadline, on_success, on_fail) {
+        yield({
             "type": "task",
             "payload_mass": payload,
             "departure_planet": departure_planet,
             "arrival_planet": arrival_planet,
             "departure_time_offset": departure_deadline,
-            "arrival_time_offset": arrival_deadline
-        }
+            "arrival_time_offset": arrival_deadline,
+            "on_success": on_success,
+            "on_fail": on_fail,
+        })
     }
 
-    wait_seconds(wait_time) {
-        return {
+    wait_seconds(wait_time, next) {
+        yield({
             "type": "wait",
-            "wait_time": wait_time
-        }
+            "wait_time": wait_time,
+            "next": next
+        })
     }
 
     invalid_task {
-        return {
+        yield({
             "type": "invalid"
-        }
+        })
     }
 
     dialogue(speaker, text) {
-        return {
+        yield({
             "type": "dialogue",
             "speaker": speaker,
             "text": text,
-        }
+        })
     }
 
     dialogue(speaker, text, answer_choices) {
-        return {
-            "type": "dialogue_choice",
+        yield({
+            "type": "dialogue choice",
             "speaker": speaker,
             "text": text,
             "answer_choices": answer_choices
-        }
+        })
     }
 
-    foreign is_task_possible(task)
-    foreign gain_money(ammount)
-    foreign gain_item(item, location)
-    foreign gain_reputation(faction, ammount)
-    foreign gain_ship_impl(data, keylist)
-    gain_ship(data) { gain_ship_impl(data, data.keys.toList) }
-    
-    ensure_possible(fn) {
-        var res = fn.call()
-        var counter = 0
-        while (!is_quest_possible(quest)) {
-            if (counter > 1000) {
-                return invalid_task
-            }
-            res = fn.call()
+    gain_money(ammount) {
+        yield({
+            "type": "gain money",
+            "ammount": ammount
+        })
+    }
+
+    gain_module(item, location) {
+        yield({
+            "type": "gain module",
+            "module": item,
+            "location": location
+        })
+    }
+
+    gain_reputation(faction, ammount) {
+        yield({
+            "type": "gain reputation",
+            "faction": faction,
+            "ammount": ammount
+        })
+    }
+
+    gain_ship(ship) {
+        yield({
+            "type": "gain ship",
+            "ship": ship
+        })
+    }
+
+    goto(next) {
+        yield({
+            "type": "goto",
+            "next": next
+        })
+    }
+
+    next_result() {
+        if (_query_it < _query.count) {
+            // System.print("result %(_query[_query_it])")
+            var res = _query[_query_it]
+            _query_it = _query_it + 1
+            return res
         }
-        return res
+        return null
+    }
+
+    next() {
+        _query = []
+        _query_it = 0
     }
 }

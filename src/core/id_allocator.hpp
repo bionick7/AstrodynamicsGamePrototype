@@ -108,8 +108,8 @@ struct IDAllocatorList {
     Iterator GetIter() const {
         int start_index = 0;
         if (alloc_count != 0) {
-            while (start_index >= capacity 
-                && (verifier_array[start_index/64] & (UNIT64 << (start_index % 64)))
+            while (start_index < capacity 
+                && !(verifier_array[start_index/64] & (UNIT64 << (start_index % 64)))
             ) start_index++;
         }
         Iterator it;

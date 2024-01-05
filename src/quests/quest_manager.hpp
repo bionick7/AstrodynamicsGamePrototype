@@ -15,12 +15,8 @@ struct Ship;
 
 struct QuestManager {
     IDAllocatorList<Quest, EntityType::QUEST> available_quests;
-    //Quest available_quests[_AVAILABLE_QUESTS];
     IDAllocatorList<Quest, EntityType::ACTIVE_QUEST> active_quests;
     IDAllocatorList<Task, EntityType::TASK> active_tasks;
-
-    //QuestTemplate* templates;
-    int template_count;
 
     bool show_ui;
     

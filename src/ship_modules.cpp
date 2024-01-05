@@ -131,7 +131,7 @@ int ShipModules::Load(const DataNode* data) {
         for(int j=0; j < (int)ShipStats::MAX; j++) {
             if (add_data != NULL && add_data->Has(ship_stat_names[j])) {
                 ship_modules[i].delta_stats[j] = add_data->GetI(ship_stat_names[j]);
-                INFO("%s: delta %s = %d", ship_modules[i].name, ship_stat_names[j], ship_modules[i].delta_stats[j])
+                //INFO("%s: delta %s = %d", ship_modules[i].name, ship_stat_names[j], ship_modules[i].delta_stats[j])
             }
             if (require_data != NULL && require_data->Has(ship_stat_names[j])) {
                 ship_modules[i].required_stats[j] = require_data->GetF(ship_stat_names[j]);
@@ -143,7 +143,7 @@ int ShipModules::Load(const DataNode* data) {
         for(int j=0; j < (int)ShipStats::MAX; j++) {
             if (produce_data != NULL && produce_data->Has(resource_names[j])) {
                 ship_modules[i].production[j] = produce_data->GetI(resource_names[j]);
-                INFO("%s: produce %d %s", ship_modules[i].name, ship_modules[i].production[j], resource_names[j])
+                //INFO("%s: produce %d %s", ship_modules[i].name, ship_modules[i].production[j], resource_names[j])
             }
         }
 
