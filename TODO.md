@@ -14,7 +14,7 @@
 - Inventory (Done)
 - Quests drop modules & Ships (Done)
 - Drag & Drop (Done)
-- Dialogue
+- Dialogue (Done)
 - Actual quests
 - Shop
 //- Implement Ship Docking Rent?
@@ -26,10 +26,10 @@
 - Loadsaving loads default ephemerides (Done)
 - DATANODE: Can't distinguish between empty child array and empty string array
 - ASTRO: departure time optimization is reliable, but not accurate (found A solution)
-- QUESTS: First planneing a maneuver, then picking up the quest will bypass payload check
+- QUESTS: First planning a maneuver, then picking up the quest will bypass payload check
 - QUESTS: Accepting more than one quest fucks up the order
 
-## Necaissary Uncomplete features
+## Necessary Incomplete features
 - save wren quest state (Done)
 
 ## UX improvements wishlist
@@ -38,8 +38,9 @@ Near-term, realizable only
 - "loading"bars to show resource scarcity (Done)
 - departure time adjusts automatically to the optimum (with option to turn it off) (Done)
 - "ASAP" button for transfer UI (mathematically tricky problem tbh)
-- ability to show hohmann trnasfer period in transfer window (eh ... hard to make it be usefull)
-- questlog window is kinda outdated (repurpoed for dialogue)
+- ability to show hohmann transfer period in transfer window (eh ... hard to make it be useful)
+- quest-log window is kinda outdated (repurposed for dialogue)
+- Show tasks and wait times also in dialogue
 - front-end info and error log
 - different icons for different ships
 - good ui showing quests

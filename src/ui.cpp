@@ -272,22 +272,27 @@ int UIContextPushInset(int margin, int h)
 
 int UIContextPushScrollInset(int margin, int h, int allocated_height, int scroll) {
     // Returns the actual height
-    const int buildin_scrollbar_margin = 3;
-    const int buildin_scrollbar_width = 6;
+    int buildin_scrollbar_margin = 3;
+    int buildin_scrollbar_width = 6;
 
     TextBox& tb = UIContextCurrent();
     tb.EnsureLineBreak();
     int height = fmin(h, fmax(0, tb.height - tb.y_cursor - 2*margin));
     float scroll_progress = Clamp((float)scroll / (allocated_height - h), 0, 1);
     int scrollbar_height = h * h / allocated_height;
-    DrawRectangleRounded({
-        (float) tb.text_start_x + tb.width - buildin_scrollbar_margin,
-        (float) tb.text_start_y + scroll_progress * (h - scrollbar_height),
-        (float) buildin_scrollbar_width,
-        (float) scrollbar_height},
-         buildin_scrollbar_width/2,
-        4, tb.text_color
-    );
+    if (allocated_height > h) {
+        DrawRectangleRounded({
+            (float) tb.text_start_x + tb.width - buildin_scrollbar_margin,
+            (float) tb.text_start_y + scroll_progress * (h - scrollbar_height),
+            (float) buildin_scrollbar_width,
+            (float) scrollbar_height},
+            buildin_scrollbar_width/2,
+            4, tb.text_color
+        );
+    } else {
+        buildin_scrollbar_margin = 0;
+        buildin_scrollbar_width = 0;
+    }
     TextBox new_text_box = TextBox(
         tb.text_start_x + tb.x_cursor + margin,
         tb.text_start_y + tb.y_cursor + margin - scroll,

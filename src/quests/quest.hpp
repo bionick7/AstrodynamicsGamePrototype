@@ -29,7 +29,7 @@ struct Quest {
     
     // current, await_type and next_options can be regained by re-running the next
 
-    std::vector<RID> dialogue_backlog = std::vector<RID>();
+    IDList dialogue_backlog = IDList();
 
     union QuestUnion {
         RID task;

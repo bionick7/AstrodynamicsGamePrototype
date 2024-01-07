@@ -16,7 +16,10 @@ const char* GetSetting(int argc, const char** argv, const char* find) {
 }
 
 void TestingSetup(GlobalState* app) {
-    app->quest_manager.ForceQuest(GetWrenInterface()->GetWrenQuest("example"));
+    const WrenQuestTemplate* template_ = GetWrenInterface()->GetWrenQuest("raiders");
+    if (template_ != NULL) {
+        app->quest_manager.ForceQuest(template_);
+    }
 }
 
 void Load(int argc, const char** argv) {

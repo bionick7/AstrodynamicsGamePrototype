@@ -23,7 +23,7 @@ void ClearQuest(Quest* quest) {
         quest->next_options[i] = NULL;
     }
 
-    quest->dialogue_backlog.clear();
+    quest->dialogue_backlog.Clear();
 }
 
 Quest::Quest() {
@@ -147,7 +147,7 @@ bool Quest::StartQuest() {
 
 bool Quest::CompleteTask(bool success) {
     if (await_type != TASK) return false;
-    return _RunInState(next_options[(bool) success]);
+    return _RunInState(next_options[success ? 0 : 1]);
 }
 
 bool Quest::TimePassed() {
@@ -157,6 +157,7 @@ bool Quest::TimePassed() {
 
 bool Quest::AnswerDialogue(int choice) {
     if (await_type != DAILOGUE) return false;
+    dialogue_backlog.Append(current.dialogue);
     return _RunInState(next_options[choice]);
 }
 
@@ -228,8 +229,8 @@ void Quest::_NextTask() {
             const char* on_success = GetWrenInterface()->GetStringFromMap("on_success", "INVALID");
             const char* on_fail = GetWrenInterface()->GetStringFromMap("on_fail", "INVALID");
             for (int i=0; i < 2; i++) delete[] next_options[i];
-            next_options[0] = new char[strlen(on_success)];
-            next_options[1] = new char[strlen(on_fail)];
+            next_options[0] = new char[strlen(on_success) + 1];
+            next_options[1] = new char[strlen(on_fail) + 1];
             strcpy(next_options[0], on_success);
             strcpy(next_options[1], on_fail);
         }
@@ -238,17 +239,18 @@ void Quest::_NextTask() {
             current.wait_until = GlobalGetNow() + timemath::Time(GetWrenInterface()->GetNumFromMap("wait_time", 0));
 
             const char* next = GetWrenInterface()->GetStringFromMap("next", "INVALID");
-            delete[] next_options[0];
-            next_options[0] = new char[strlen(next)];
+            delete[] next_options[0];  
+            // deltete[] chrashes evcen though next_options[0] has been set intask ?!?
+            next_options[0] = new char[strlen(next) + 1];
             strcpy(next_options[0], next);
         }
         else if (strcmp(type, "dialogue") == 0) {
             await_type = DAILOGUE;
             const char* speaker = GetWrenInterface()->GetStringFromMap("speaker", "NO SPEAKER");
             const char* text = GetWrenInterface()->GetStringFromMap("text", "NO TEXT");
-            const char* replies[] = { "<continue>" };
+            //const char* replies[] = { "<continue>" };
 
-            current.dialogue = GlobalGetState()->quest_manager.CreateDialogue(speaker, text, &replies[0], 1);
+            dialogue_backlog.Append(GlobalGetState()->quest_manager.CreateDialogue(speaker, text, NULL, 0));
         }
         else if (strcmp(type, "dialogue choice") == 0) {
             await_type = DAILOGUE;
@@ -306,7 +308,7 @@ void Quest::_NextTask() {
             GetWrenInterface()->GetStringFromMap("faction", "");
             NOT_IMPLEMENTED
         }
-        else if (strcmp(type, "gain ship") == 0) {
+        else if (strcmp(type, "spawn ship") == 0) {
             GetWrenInterface()->PrepareMap("ship");
             WrenHandle* ship_handle = wrenGetSlotHandle(vm, 2);
             wrenSetSlotHandle(vm, 0, ship_handle);
@@ -316,6 +318,10 @@ void Quest::_NextTask() {
             GlobalGetState()->ships.AddShip(&dn);
         }
         
+        /*if (await_type == DONE) {
+            ERROR("Implicit done reached => no condition met");
+        }*/
+
         wrenEnsureSlots(vm, 1);
         wrenSetSlotHandle(vm, 0, quest_instance_handle);
         if(!GetWrenInterface()->CallFunc(next_result_handle)) return;

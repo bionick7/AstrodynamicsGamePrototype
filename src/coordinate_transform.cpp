@@ -15,18 +15,18 @@ void Calendar::Make(timemath::Time t0) {
 }
 
 void Calendar::Serialize(DataNode* data) const {
-    time.Serialize(data->SetChild("time", DataNode()));
-    current_migration_period.Serialize(data->SetChild("current_migration_period", DataNode()));
-    migration_arrrival_time.Serialize(data->SetChild("migration_arrrival_time", DataNode()));
+    time.Serialize(data, "time");
+    current_migration_period.Serialize(data, "current_migration_period");
+    migration_arrrival_time.Serialize(data, "migration_arrrival_time");
     //data->SetI("migration_arrrival_planet", (int) migration_arrrival_planet);
     data->SetF("time_scale", time_scale);
     data->Set("paused", paused ? "y": "n");
 }
 
 void Calendar::Deserialize(const DataNode* data) {
-    time.Deserialize(data->GetChild("time"));
-    current_migration_period.Deserialize(data->GetChild("current_migration_period"));
-    migration_arrrival_time.Deserialize(data->GetChild("migration_arrrival_time"));
+    time.Deserialize(data, "time");
+    current_migration_period.Deserialize(data, "current_migration_period");
+    migration_arrrival_time.Deserialize(data, "migration_arrrival_time");
     //migration_arrrival_planet = (RID) data->GetI("migration_arrrival_planet", (int) migration_arrrival_planet);
     time_scale = data->GetF("time_scale", time_scale);
     paused = strcmp(data->Get("paused", paused ? "y": "n"), "y") == 0;

@@ -1,6 +1,8 @@
 #include "dialogue.hpp"
 #include "utils.hpp"
 #include "tests.hpp"
+#include "ui.hpp"
+#include "constants.hpp"
 
 Dialogue::~Dialogue() {
     delete[] text;
@@ -84,8 +86,23 @@ const char* Dialogue::GetReply(int i) const {
     return &text[replies_offs[i]];
 }
 
-void Dialogue::DrawToUIContext() const {
+void Dialogue::DrawToUIContext() {
+    UIContextWrite(GetSpeaker());
+    UIContextWrite(GetBody());
+    int w = UIContextCurrent().width;
+    UIContextPushInset(0, 32);
+    for(int i=0; i < reply_count; i++) {
+        UIContextPushHSplit(i * w / reply_count, (i + 1) * w / reply_count);
+        UIContextEnclose(Palette::bg, Palette::ui_main);
+        ButtonStateFlags state_flags = UIContextAsButton();
+        if (state_flags & BUTTON_STATE_FLAG_JUST_PRESSED) {
+            reply = i;
+        }
 
+        UIContextWrite(GetReply(i));
+        UIContextPop();  // HSplit
+    }
+    UIContextPop();  // HSplit
 }
 
 int DialogueTests() {   

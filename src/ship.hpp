@@ -32,10 +32,13 @@ struct ShipClass {
     resource_count_t GetFuelRequiredFull(double dv) const;
 };
 
+void ShipBattle(const IDList* ships_1, const IDList* ships_2, double relative_velocity);
+
 struct Ship {
     // Inherent properties
     char name[SHIP_NAME_MAX_SIZE];
     RID ship_class;
+    int allegiance;  // currently 0 (player) or 1, can swap with RID
 
     // Current state
     bool is_parked;
@@ -46,7 +49,7 @@ struct Ship {
     int prepared_plans_count;
     TransferPlan prepared_plans[SHIP_MAX_PREPARED_PLANS];
     RID modules[SHIP_MAX_MODULES];
-    int stats[static_cast<int>(ShipStats::MAX)];
+    int stats[ShipStats::MAX];
     
     int plan_edit_index;
     int highlighted_plan_index;
@@ -54,7 +57,7 @@ struct Ship {
     // UI state
     Vector2 draw_pos;
     bool mouse_hover;
-    Color color;
+    //Color color;
 
     // Identifier
     RID id;
@@ -81,6 +84,11 @@ struct Ship {
     resource_count_t GetRemainingPayloadCapacity(double dv) const;
     resource_count_t GetFuelRequiredEmpty(double dv) const;
     double GetCapableDV() const;
+    bool IsPlayerFriend() const;
+    bool IsPlayerKnown() const;
+    bool IsTrajectoryKnown(int index) const;
+
+    Color GetColor() const;
 
     TransferPlan* GetEditedTransferPlan();
     void ConfirmEditedTransferPlan();
@@ -104,6 +112,7 @@ struct Ships {
     Ship* GetShip(RID uuid) const;
     RID GetShipClassIndexById(const char* id) const;
     const ShipClass* GetShipClassByIndex(RID index) const;
+    void GetOnPlanet(IDList* list, RID planet, int allegiance_bits) const;
 
     IDAllocatorList<Ship, EntityType::SHIP> alloc;
     std::map<std::string, RID> ship_classes_ids;

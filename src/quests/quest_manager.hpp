@@ -31,7 +31,7 @@ struct QuestManager {
     void Draw();
 
     void AcceptQuest(RID quest_index);
-    void ForceQuest(WrenQuestTemplate* template_);
+    void ForceQuest(const WrenQuestTemplate* template_);
     RID CreateTask(RID quest_index);
     int GetAvailableQuests() const;
 

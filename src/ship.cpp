@@ -24,6 +24,32 @@ resource_count_t ShipClass::GetFuelRequiredEmpty(double dv) const {
     return KGToResourceCounts(oem * (exp(dv/v_e) - 1));
 }
 
+void ShipBattle(const IDList* ships_1, const IDList* ships_2, double relative_velocity) {
+    int cum_stats_1[ShipStats::MAX] = {0};
+    for (int i=0; i < ships_1->size; i++) {
+        const Ship* ship = GetShip(ships_1->Get(i));
+        for(int stat=0; stat < ShipStats::MAX; stat++) {
+            cum_stats_1[stat] += ship->stats[stat];
+        }
+    }
+    int cum_stats_2[ShipStats::MAX] = {0};
+    for (int i=0; i < ships_2->size; i++) {
+        const Ship* ship = GetShip(ships_2->Get(i));
+        for(int stat=0; stat < ShipStats::MAX; stat++) {
+            cum_stats_2[stat] += ship->stats[stat];
+        }
+    }
+
+    int velocity_multiplier = relative_velocity / 3000 + 1;
+    int dmg_received_1 = 0;
+    int dmg_received_2 = 0;
+    dmg_received_1 += (cum_stats_2[ShipStats::KINETIC_OFFENSE] - cum_stats_2[ShipStats::KINETIC_DEFENSE]) * velocity_multiplier;
+    dmg_received_1 += cum_stats_2[ShipStats::ORDONANCE_OFFENSE] - cum_stats_2[ShipStats::ORDONANCE_DEFENSE];
+    dmg_received_2 += (cum_stats_1[ShipStats::KINETIC_OFFENSE] - cum_stats_2[ShipStats::KINETIC_DEFENSE]) * velocity_multiplier;
+    dmg_received_2 += cum_stats_1[ShipStats::ORDONANCE_OFFENSE] - cum_stats_2[ShipStats::ORDONANCE_DEFENSE];
+    INFO("Party 1 (%d) received %d dammage. Party 2 (%d) received (%d) dammage", ships_1->size, dmg_received_1, ships_2->size, dmg_received_2)
+}
+
 Ship::Ship() {
     for (int i=0; i < SHIP_MAX_MODULES; i++) {
         modules[i] = GetInvalidId();
@@ -86,6 +112,7 @@ void Ship::Serialize(DataNode *data) const
 {
     data->Set("name", name);
     data->Set("is_parked", is_parked ? "y" : "n");
+    data->SetI("allegiance", allegiance);
     
     data->Set("class_id", GetShipClassByIndex(ship_class)->id);
     data->SetI("resource_qtt", transporing.quantity);
@@ -109,13 +136,14 @@ void Ship::Serialize(DataNode *data) const
 void Ship::Deserialize(const DataNode* data) {
     strcpy(name, data->Get("name", "UNNAMED"));
     is_parked = strcmp(data->Get("is_parked", "y", true), "y") == 0;
+    allegiance = data->GetI("allegiance", allegiance);
     plan_edit_index = -1;
     ship_class = GlobalGetState()->ships.GetShipClassIndexById(data->Get("class_id"));
+    if (!IsIdValid(ship_class)) {
+        FAIL("Invalid ship class")  // TODO fail more gracefully
+    }
     transporing.quantity = data->GetI("resource_qtt", 0, true);
     transporing.resource_id = (ResourceType) data->GetI("resource_id", RESOURCE_NONE, true);
-
-    color = Palette::green;
-
 
     int modules_count = data->GetArrayLen("modules", true);
     if (modules_count > SHIP_MAX_MODULES) modules_count = SHIP_MAX_MODULES;
@@ -177,6 +205,32 @@ double Ship::GetCapableDV() const {
 
     // oem = max_capacity / (exp(max_dv/v_e) - 1);
     // sc->v_e * log(max_capacity / oem + 1);
+}
+
+bool Ship::IsPlayerFriend() const {
+    return allegiance == 0;
+}
+
+bool Ship::IsPlayerKnown() const {
+    if (IsPlayerFriend()) {
+        return true;
+    }
+    return !is_parked;
+}
+
+bool Ship::IsTrajectoryKnown(int index) const {
+    if (IsPlayerFriend()) {
+        return true;
+    }
+    if(!IsPlayerKnown()) {
+        return false;
+    }
+    return index == 0 && !is_parked;
+}
+
+Color Ship::GetColor() const {
+    return IsPlayerFriend() ? Palette::green : Palette::red;
+
 }
 
 TransferPlan* Ship::GetEditedTransferPlan() {
@@ -286,7 +340,7 @@ void Ship::Update() {
     // Gotta exist a more efficient way
     // And robust. Dependency graph (also a way to find circular dependencies)
 
-    for (int i=0; i < (int) ShipStats::MAX; i++) {
+    for (int i=0; i < ShipStats::MAX; i++) {
         stats[i] = 0;
     }
     for (int j=0; j < SHIP_MAX_MODULES; j++) {
@@ -311,9 +365,16 @@ void _DrawShipAt(Vector2 pos, Color color) {
 }
 
 void Ship::Draw(const CoordinateTransform* c_transf) const {
+    if (!IsPlayerKnown()) {
+        return;
+    }
+    Color color = GetColor();
     _DrawShipAt(draw_pos, color);
 
     for (int i=0; i < prepared_plans_count; i++) {
+        if (!IsTrajectoryKnown(i)) {
+            continue;
+        }
         if (i == plan_edit_index) {
             continue;
         }
@@ -331,7 +392,7 @@ void Ship::Draw(const CoordinateTransform* c_transf) const {
             plan.transfer_orbit[plan.primary_solution].DrawBounded(to_departure, to_arrival, 0, Palette::ui_main);
         }
     }
-    if (plan_edit_index >= 0 && IsIdValid(prepared_plans[plan_edit_index].arrival_planet)) {
+    if (plan_edit_index >= 0 && IsIdValid(prepared_plans[plan_edit_index].arrival_planet) && IsTrajectoryKnown(plan_edit_index)) {
         const TransferPlan& last_tp = prepared_plans[plan_edit_index];
         OrbitPos last_pos = GetPlanet(last_tp.arrival_planet)->orbit.GetPosition(
             last_tp.arrival_time
@@ -455,10 +516,13 @@ void _UIDrawQuests(Ship* ship) {
 }
 
 void Ship::DrawUI() {
+    if (!IsPlayerKnown()) {
+        return;
+    }
     if (mouse_hover) {
         // Hover
         DrawCircleLines(draw_pos.x, draw_pos.y, 10, Palette::red);
-        DrawTextEx(GetCustomDefaultFont(), name, Vector2Add(draw_pos, {5, 5}), 16, 1, color);
+        DrawTextEx(GetCustomDefaultFont(), name, Vector2Add(draw_pos, {5, 5}), 16, 1, GetColor());
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             _OnClicked();
@@ -482,8 +546,12 @@ void Ship::DrawUI() {
         GetScreenHeight() - 200 - OUTSET_MARGIN - 2*INSET_MARGIN,
         TEXT_SIZE, Palette::ui_main
     );
-    UIContextEnclose(Palette::bg, color);
+    UIContextEnclose(Palette::bg, GetColor());
     UIContextShrink(INSET_MARGIN, INSET_MARGIN);
+
+    if (!IsPlayerFriend()) {
+        return;
+    }
 
     UIContextWrite(name);
     StringBuilder sb;
@@ -497,7 +565,7 @@ void Ship::DrawUI() {
     sb.AddFormat("I_sp        %2.2f km/s\n", GetShipClassByIndex(ship_class)->v_e / 1000);
     sb.AddFormat("dv left     %2.2f km/s\n", GetCapableDV());
     
-    for(int i=0; i < (int) ShipStats::MAX; i++) {
+    for(int i=0; i < ShipStats::MAX; i++) {
         if (stats[i] != 0) {
             sb.AddFormat("%s: %d\n", ship_stat_names[i], (int) stats[i]);
         }
@@ -550,10 +618,22 @@ void Ship::_OnDeparture(const TransferPlan& tp) {
 }
 
 void Ship::_OnArrival(const TransferPlan& tp) {
+    // First: Combat. Is the ship is intercepted when/before entering orbit, it can't do anything else
+
+    IDList hostile_ships;
+    GlobalGetState()->ships.GetOnPlanet(&hostile_ships, tp.arrival_planet, ~(1 << allegiance));
+    IDList allied_ships;
+    allied_ships.Append(id);
+    if (hostile_ships.size > 0) {
+        ShipBattle(&allied_ships, &hostile_ships, Vector2Length(tp.arrival_dvs[tp.primary_solution]));
+    }
+
     GetPlanet(tp.arrival_planet)->economy.GiveResource(tp.resource_transfer);
     parent_planet = tp.arrival_planet;
     is_parked = true;
     position = GetPlanet(parent_planet)->position;
+
+    // Complete tasks
     for(auto it = GlobalGetState()->quest_manager.active_tasks.GetIter(); it; it++) {
         const Task* quest = GlobalGetState()->quest_manager.active_tasks[it];
         if (quest->ship == id && quest->arrival_planet == tp.arrival_planet) {
@@ -670,6 +750,16 @@ RID Ships::GetShipClassIndexById(const char *id) const {
     return find->second;
 }
 
+void Ships::GetOnPlanet(IDList* list, RID planet, int allegiance_bits) const {
+    for (auto it = GlobalGetState()->ships.alloc.GetIter(); it; it++) {
+        Ship* other_ship = GlobalGetState()->ships.alloc[it];
+        if (other_ship->is_parked && planet != other_ship->parent_planet) continue;
+        if (!other_ship->is_parked && planet != GetInvalidId()) continue;
+        if (((1 << other_ship->allegiance) & allegiance_bits) == 0) continue;
+        list->Append(it.GetId());
+    }
+}
+
 const ShipClass* Ships::GetShipClassByIndex(RID id) const {
     if (ship_classes == NULL) {
         ERROR("Ship Class uninitialized")
@@ -694,6 +784,7 @@ const ShipClass* GetShipClassByIndex(RID index) {
     return GlobalGetState()->ships.GetShipClassByIndex(index);
 }
 
-int LoadShipClasses(const DataNode* data) {
+int LoadShipClasses(const DataNode *data)
+{
     return GlobalGetState()->ships.LoadShipClasses(data);
 }

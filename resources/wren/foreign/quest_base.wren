@@ -1,3 +1,5 @@
+import "random" for Random
+
 class Constants {
     static mimas      { 0 }
     static encelladus { 1 }
@@ -17,28 +19,17 @@ class Constants {
 
     // Mass is in kg
     static count { 100000 }
-
 }
 
-// Because c cannot iterate through dictionaries properly
-class MappedMap {
-    map { _map }
-    keys { _keys }
+class Game {
+    static PlanetType {1}
+    static ShipType {2}
 
-    new(map) {
-        _map = dict
-        _keys = keymap_of(_map)
-    }
+    foreign static now
+    foreign static hohmann_tf(from, to, t0)
 
-    static keymap_of(m) {
-        var res = []
-        for (k in m.keys) {
-            res.append(k)
-            if (m[k] is Map) {
-                res.append(keymap_of(m[k]))
-            }
-        }
-        return res
+    static as_rid(index, type) {
+        return index | (type << 24)
     }
 }
 
@@ -46,11 +37,13 @@ class Quest {
     state { _state }
     state=(x) { _state = x }
     query { _query }
+    rand { _random }
 
     construct new (initial_state) {
         _state = initial_state
         _query = []
         _query_it = 0
+        _random = Random.new()
     }
        
     serialize() {
@@ -99,6 +92,7 @@ class Quest {
             "wait_time": wait_time,
             "next": next
         })
+        //System.print((_query))
     }
 
     invalid_task {
@@ -148,9 +142,9 @@ class Quest {
         })
     }
 
-    gain_ship(ship) {
+    spawn_ship(ship) {
         yield({
-            "type": "gain ship",
+            "type": "spawn ship",
             "ship": ship
         })
     }

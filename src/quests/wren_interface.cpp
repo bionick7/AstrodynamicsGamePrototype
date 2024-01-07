@@ -4,6 +4,77 @@
 #include "string_builder.hpp"
 #include "ship.hpp"
 
+static const char* WREN_TYPENAMES[] = {
+	"Bool",  // WREN_TYPE_BOOL
+	"Num",  // WREN_TYPE_NUM
+	"Foreign",  // WREN_TYPE_FOREIGN
+	"List",  // WREN_TYPE_LIST
+	"Map",  // WREN_TYPE_MAP
+	"Null",  // WREN_TYPE_NULL
+	"String",  // WREN_TYPE_STRING
+	"Unknown", // WREN_TYPE_UNKNOWN
+};
+
+bool _AssertSlot(WrenVM* vm, int slot, WrenType type) {
+	if (wrenGetSlotCount(vm) <= slot) {
+		wrenEnsureSlots(vm, 1);
+		char error_msg[40];
+		sprintf(error_msg, "Expected argument in slot %d", slot);
+		wrenSetSlotString(vm, 0, error_msg);
+		wrenAbortFiber(vm, 0);
+		return false;
+	}
+	if (wrenGetSlotType(vm, slot) != type) {
+		wrenEnsureSlots(vm, 1);
+		char error_msg[71];  // for up slot 999
+		INFO("%d", wrenGetSlotType(vm, slot))
+		sprintf(error_msg, 
+			"Expected argument of type '%s' in slot %d. Instead got '%s'", 
+			WREN_TYPENAMES[type], slot, WREN_TYPENAMES[wrenGetSlotType(vm, slot)]
+		);
+		wrenSetSlotString(vm, 0, error_msg);
+		wrenAbortFiber(vm, 0);
+		return false;
+	}
+	return true;
+}
+
+void GameNow(WrenVM* vm) {
+	wrenEnsureSlots(vm, 1);
+	wrenSetSlotDouble(vm, 0, GlobalGetNow().Seconds());
+}
+
+void GameHohmannTF(WrenVM* vm) {
+	// 0 is reserved for instance
+	if(!_AssertSlot(vm, 1, WREN_TYPE_NUM)) return;
+	if(!_AssertSlot(vm, 2, WREN_TYPE_NUM)) return;
+	if(!_AssertSlot(vm, 3, WREN_TYPE_NUM)) return;
+	const Orbit* from = &GetPlanetByIndex(wrenGetSlotDouble(vm, 1))->orbit;
+	const Orbit* to = &GetPlanetByIndex(wrenGetSlotDouble(vm, 2))->orbit;
+	timemath::Time t0 = timemath::Time(wrenGetSlotDouble(vm, 3));
+	timemath::Time departure_t, arrival_t;
+	double dv1, dv2;
+	HohmannTransfer(
+		from, to, t0,
+		&departure_t, &arrival_t, &dv1, &dv2
+	);
+
+	wrenEnsureSlots(vm, 3);  // Good practice
+	wrenSetSlotNewMap(vm, 0);
+	wrenSetSlotString(vm, 1, "t1");
+	wrenSetSlotDouble(vm, 2, departure_t.Seconds());
+	wrenSetMapValue(vm, 0, 1, 2);
+	wrenSetSlotString(vm, 1, "t2");
+	wrenSetSlotDouble(vm, 2, arrival_t.Seconds());
+	wrenSetMapValue(vm, 0, 1, 2);
+	wrenSetSlotString(vm, 1, "dv1");
+	wrenSetSlotDouble(vm, 2, dv1);
+	wrenSetMapValue(vm, 0, 1, 2);
+	wrenSetSlotString(vm, 1, "dv2");
+	wrenSetSlotDouble(vm, 2, dv2);
+	wrenSetMapValue(vm, 0, 1, 2);
+}
+
 bool _WrenCallEmptyMethod(WrenHandle* class_handle, const char* signature) {
 	WrenVM* vm = GetWrenVM();
 	wrenEnsureSlots(vm, 1);
@@ -135,31 +206,29 @@ WrenForeignMethodFn BindForeignMethod(
 	// Skip errormessage in these cases
 #ifdef WREN_OPT_RANDOM
 	if (strcmp(module, "random") == 0) {
-		return &DefaultMethod;
+		return NULL;
 	}
 #endif // WREN_OPT_RANDOM
 #ifdef WREN_OPT_META
 	if (strcmp(module, "meta") == 0) {
-		return &DefaultMethod;
+		return NULL;
 	}
 #endif // WREN_OPT_META
 
 	// Only gets called on startup
-	/*if (strcmp(className, "Quest") == 0) {
-		if (strcmp(signature, "is_task_possible(_)") == 0) {
-			return &QuestInterfaceIsTaskPossible;
-		} else if (strcmp(signature, "gain_money(_)") == 0) {
-			return &QuestInterfaceGainMoney;
-		} else if (strcmp(signature, "gain_item(_,_)") == 0) {
-			return &QuestInterfaceGainItem;
-		} else if (strcmp(signature, "gain_reputation(_,_)") == 0) {
-			return &QuestInterfaceGainReputation;
-		} else if (strcmp(signature, "gain_ship_impl(_,_)") == 0) {
-			return &QuestInterfaceGainShip;
+	if (strcmp(className, "Game") == 0) {
+		if (!isStatic) {
+			ERROR("'Game' methods must be static")
+		} else {
+			if (strcmp(signature, "now") == 0) {
+				return &GameNow;
+			} else if (strcmp(signature, "hohmann_tf(_,_,_)") == 0) {
+				return &GameHohmannTF;
+			}
 		}
 		ERROR("Unsupported foreign method '%s.%s'", className, signature)
-	}*/
-	ERROR("Unsupported foreign class '%s'", className)
+	}
+	ERROR("Unsupported foreign method class '%s'", className)
 	return &DefaultMethod;
 }
 
@@ -194,15 +263,15 @@ static void LoadModuleComplete(WrenVM* vm, const char* module, WrenLoadModuleRes
 WrenLoadModuleResult LoadModule(WrenVM* vm, const char* path) {
 	WrenLoadModuleResult res = { 0 };
 
-	res.source = "";
+	res.source = NULL;
 	// Skip errormessage in these cases
 #ifdef WREN_OPT_RANDOM
-	if (strcmp(name, "random") == 0) {
+	if (strcmp(path, "random") == 0) {
 		return res;
 	}
 #endif // WREN_OPT_RANDOM
 #ifdef WREN_OPT_META
-	if (strcmp(name, "meta") == 0) {
+	if (strcmp(path, "meta") == 0) {
 		return res;
 	}
 #endif // WREN_OPT_META
@@ -249,7 +318,10 @@ int WrenInterface::LoadWrenQuests() {
 	for (int i=0; i < fps.count; i++) {
 		const char* module_name = GetFileNameWithoutExt(fps.paths[i]);
 		INFO("Loading %s", module_name);
-		wrenInterpret(vm, module_name, LoadFileText(fps.paths[i]));
+		WrenInterpretResult res = wrenInterpret(vm, module_name, LoadFileText(fps.paths[i]));
+		if (res != WREN_RESULT_SUCCESS) {
+			continue;
+		}
 
 		wrenEnsureSlots(vm, 1);
 		//INFO("wren has '%s' in module '%s' ? %s", "ExampleQuest", name, wrenHasVariable(vm, name, "ExampleQuest") ? "yes" : "no");
@@ -372,7 +444,6 @@ void WrenInterface::_MapAsDataNodePopulateList(DataNode *dn, const char* key) co
 	}
 	wrenGetListElement(vm, VALUE_SLOT, 0, ELEM_SLOT);
 	if (wrenGetSlotType(vm, ELEM_SLOT) == WREN_TYPE_MAP) {  // Will not support mixed arrays
-		NOT_IMPLEMENTED  // Current method disallows recursion
 		dn->SetArrayChild(key, list_count);
 		WrenHandle* list_handle = wrenGetSlotHandle(vm, VALUE_SLOT);
 		for (int i=0; i < list_count; i++) {

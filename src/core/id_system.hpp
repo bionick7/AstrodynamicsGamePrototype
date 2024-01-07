@@ -36,15 +36,24 @@ private:
 
 //constexpr uint32_t GetInvalidId() { return UINT32_MAX; }
 inline RID GetInvalidId() { return RID(UINT32_MAX); }
-
-inline EntityType IdGetType(RID id) {
-    return (EntityType) ((id.AsInt() >> 24) & 0xff);
-}
-
-inline uint32_t IdGetIndex(RID id) { 
-    return id.AsInt() & 0x00fffffful; 
-}
+inline EntityType IdGetType(RID id) { return (EntityType) ((id.AsInt() >> 24) & 0xff); }
+inline uint32_t IdGetIndex(RID id) {  return id.AsInt() & 0x00fffffful; }
 
 bool IsIdValid(RID id);
+
+struct IDList {
+    int capacity;
+    int size;
+
+    RID* buffer;
+
+    IDList();
+    ~IDList();
+
+    void Append(RID id);
+    void EraseAt(int index);
+    RID Get(int index) const;
+    void Clear();
+};
 
 #endif  // ID_SYSTEM_H

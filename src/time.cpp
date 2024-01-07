@@ -56,12 +56,12 @@ double Time::Days() const {
     return __t / 86400;
 }
 
-void Time::Serialize(DataNode* data) const {
-    data->SetF("t", __t);
+void Time::Serialize(DataNode* data, const char* key) const {
+    data->SetF(key, __t);
 }
 
-void Time::Deserialize(const DataNode* data) {
-    __t = data->GetF("t", __t);
+void Time::Deserialize(const DataNode* data, const char* key) {
+    __t = data->GetF(key, __t);
 }
 
 bool Time::IsInvalid() const {
@@ -136,9 +136,9 @@ int TimeTests() {
         return 1;
     }
     DataNode dn = DataNode();
-    t1.Serialize(&dn);
+    t1.Serialize(&dn, "t");
     Time t1_prime;
-    t1_prime.Deserialize(&dn);
+    t1_prime.Deserialize(&dn, "t");
     if (fabs(Time::SecDiff(t1, t1_prime) > 1e-10)) {
         ERROR("Serialization is not the proper inverse of deserialization")
         return 1;

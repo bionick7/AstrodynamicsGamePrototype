@@ -34,14 +34,17 @@ planets:
 ships:
 - name: Bulk transport
   class_id: shp_bulk_transport
+  allegiance: 0
   planet: Tethys
   tf_plans: []
 - name: Light transport
   class_id: shp_light_transport
+  allegiance: 0
   planet: Tethys
   tf_plans: []
 - name: Extractor
   class_id: shp_light_transport
+  allegiance: 0
   planet: Encelladus
   tf_plans: []
   modules:
@@ -49,10 +52,12 @@ ships:
   - shpmod_water_extractor
 - name: Express
   class_id: shp_express
+  allegiance: 0
   planet: Tethys
   tf_plans: []
 - name: Tethys Shipyard
   class_id: shp_spacestation
+  allegiance: 0
   planet: Tethys
   tf_plans: []
   modules:
@@ -62,6 +67,7 @@ ships:
   - shpmod_small_yard_4
 - name: Military ship
   class_id: shp_express
+  allegiance: 0
   planet: Tethys
   tf_plans: []
   modules:

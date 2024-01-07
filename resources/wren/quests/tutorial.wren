@@ -142,7 +142,7 @@ class Tutorial is Quest {
 
             if (current_capital > 2e6) {
                 gain_money(-2e6)
-                gain_ship({
+                spawn_ship({
                     "class_id": "shp_spacestation",
                     "is_parked": true,
                     "name": "BB mining ship",

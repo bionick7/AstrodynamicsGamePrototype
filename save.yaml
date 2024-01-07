@@ -4,14 +4,11 @@ focused_ship: -1
 calendar:
   paused: y
   time_scale: 2048.000000
-  current_migration_period:
-    t: 5356800.000000
+  current_migration_period: 5356800.000000
 
-  migration_arrrival_time:
-    t: 5356800.000000
+  migration_arrrival_time: 5356800.000000
 
-  time:
-    t: 0.000000
+  time: 0.000000
 
 
 coordinate_transform:
@@ -22,37 +19,28 @@ coordinate_transform:
 quests:
   active_quests:
   - active: y
-    await_type: 2
+    await_type: 1
     id: 100663296
-    state: d1
+    state: t1
     template: example
 
   available_quests:
   - active: n
     await_type: 0
     id: 83886080
-    template: tutorial
+    template: example
 
   - active: n
     await_type: 0
     id: 83886081
-    template: example
+    template: tutorial
 
   - active: n
     await_type: 0
     id: 83886082
     template: tutorial
 
-  dialogues:
-  - body: What do you chose ?
-    id: 134217728
-    selected: -1
-    speaker: The enclave administrator
-    replies:
-    - end quest
-    - work for stuff
-    - work for glory
-
+  dialogues: []
 
 planets:
 - id: 16777216

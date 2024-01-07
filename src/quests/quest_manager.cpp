@@ -68,7 +68,8 @@ void QuestManager::Update(double dt) {
             case Quest::DAILOGUE:{
                 const Dialogue* dialogue = GetDialogue(active_quests[it]->current.dialogue);
                 if (dialogue->reply >= 0) {
-                    NOT_IMPLEMENTED
+                    bool success = active_quests[it]->AnswerDialogue(dialogue->reply);
+                    if (!success) active_quests.Erase(it.GetId());
                 }
                 break;}
             default: 
@@ -98,6 +99,7 @@ void QuestManager::Update(double dt) {
 }
 
 int current_available_quests_scroll = 0;
+int current_tab_qst;
 void QuestManager::Draw() {
     if (!show_ui) return;
     
@@ -107,36 +109,90 @@ void QuestManager::Draw() {
     int h = GetScreenHeight() - y_margin*2;
     UIContextCreateNew(x_margin, y_margin, w, h, 16, Palette::ui_main);
     UIContextEnclose(Palette::bg, Palette::ui_main);
-    UIContextPushHSplit(0, w/2);
-    UIContextShrink(5, 5);
-    // Active quests
-    if (active_tasks.Count() == 0) {
-        UIContextEnclose(Palette::bg, Palette::ui_main);
-    }
-    for(auto i = active_tasks.GetIter(); i; i++) {
-        active_tasks[i]->DrawUI(false, IsIdValid(active_tasks[i]->ship));
-    }
-    UIContextPop();  // HSplit
 
-    UIContextPushHSplit(w/2, w);
-    UIContextShrink(5, 5);
+    // TABS
 
-    if (GlobalGetState()->current_focus == GlobalState::QUEST_MANAGER) {
-        int max_scroll = MaxInt(TASK_PANEL_HEIGHT * GetAvailableQuests() - UIContextCurrent().height, 0);
-        current_available_quests_scroll = ClampInt(current_available_quests_scroll - GetMouseWheelMove() * 20, 0, max_scroll);
+    UIContextPushInset(4, 20);  // Tab container
+    const int n_tabs = active_quests.Count() + 1;
+    if (current_tab_qst >= n_tabs) {
+        current_tab_qst = 0;
     }
-
-    UIContextPushScrollInset(0, UIContextCurrent().height, TASK_PANEL_HEIGHT * GetAvailableQuests(), current_available_quests_scroll);
-    // Available Quests
-    for(auto it = available_quests.GetIter(); it; it++) {
-        if (!available_quests[it]->IsValid()) continue;
-        if (available_quests[it]->DrawUI(true, true) & BUTTON_STATE_FLAG_JUST_PRESSED) {
-            AcceptQuest(it.GetId());
+    auto it = active_quests.GetIter();
+    int tab_width = w / n_tabs;
+    if (tab_width > 150) tab_width = 150;
+    for (int i_tab = 0; i_tab < n_tabs; i_tab++) {
+        UIContextPushHSplit(i_tab * tab_width, (i_tab + 1) * tab_width);
+        ButtonStateFlags button_state = UIContextAsButton();
+        HandleButtonSound(button_state & BUTTON_STATE_FLAG_JUST_PRESSED);
+        if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+            current_tab_qst = i_tab;
         }
+        if (button_state & BUTTON_STATE_FLAG_HOVER || i_tab == current_tab_qst) {
+            UIContextEnclose(Palette::bg, Palette::ui_main);
+        }
+        if (i_tab == 0) {
+            UIContextWrite("tasks");
+        } else {
+            UIContextWrite(active_quests[it]->wren_interface->id);
+            it++;
+        }
+        UIContextPop();  // HSplit
     }
-    UIContextPop();  // ScrollInseet
+    UIContextPop();  // Tab container
 
-    UIContextPop();  // HSplit
+    UIContextPushInset(0, h - 20);
+    if (current_tab_qst == 0) {
+        UIContextPushHSplit(0, w/2);
+        UIContextShrink(5, 5);
+        // Active quests
+        if (active_tasks.Count() == 0) {
+            UIContextEnclose(Palette::bg, Palette::ui_main);
+        }
+        for(auto i = active_tasks.GetIter(); i; i++) {
+            active_tasks[i]->DrawUI(false, IsIdValid(active_tasks[i]->ship));
+        }
+        UIContextPop();  // HSplit
+
+        UIContextPushHSplit(w/2, w);
+        UIContextShrink(5, 5);
+
+        if (GetAvailableQuests() == 0) {
+            UIContextPop();  // HSplit
+            return;
+        }
+
+        if (GlobalGetState()->current_focus == GlobalState::QUEST_MANAGER) {
+            int max_scroll = MaxInt(TASK_PANEL_HEIGHT * GetAvailableQuests() - UIContextCurrent().height, 0);
+            current_available_quests_scroll = ClampInt(current_available_quests_scroll - GetMouseWheelMove() * 20, 0, max_scroll);
+        }
+
+        UIContextPushScrollInset(0, UIContextCurrent().height, TASK_PANEL_HEIGHT * GetAvailableQuests(), current_available_quests_scroll);
+        // Available Quests
+        for(auto it = available_quests.GetIter(); it; it++) {
+            if (!available_quests[it]->IsValid()) continue;
+            if (available_quests[it]->DrawUI(true, true) & BUTTON_STATE_FLAG_JUST_PRESSED) {
+                AcceptQuest(it.GetId());
+            }
+        }
+        UIContextPop();  // ScrollInseet
+        UIContextPop();  // HSplit
+    } else {
+        auto it = active_quests.GetIter();
+        for(int i=1; i < current_tab_qst; i++) it++;
+        Quest* q = active_quests[it];
+        for(int i=0; i < q->dialogue_backlog.size; i++) {
+            UIContextPushInset(0, 100);
+            dialogues[q->dialogue_backlog.Get(i)]->DrawToUIContext();
+            UIContextPop();  // Inset
+        }
+        if (active_quests[it]->await_type == Quest::DAILOGUE) {
+            UIContextPushInset(0, 100);
+            dialogues[active_quests[it]->current.dialogue]->DrawToUIContext();
+            UIContextPop();  // Inset
+        }
+        active_quests[it];
+    }
+    UIContextPop();  // Inset
 }
 
 void QuestManager::AcceptQuest(RID quest_index) {
@@ -149,7 +205,7 @@ void QuestManager::AcceptQuest(RID quest_index) {
     available_quests.Erase(quest_index);
 }
 
-void QuestManager::ForceQuest(WrenQuestTemplate *template_) {
+void QuestManager::ForceQuest(const WrenQuestTemplate *template_) {
     Quest* q;
     RID id = active_quests.Allocate(&q);
     q->AttachTemplate(template_);

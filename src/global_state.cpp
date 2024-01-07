@@ -334,6 +334,7 @@ void GlobalState::Deserialize(const DataNode* data) {
     }
     // ignore transferplanui for now
 
+
     money = data->GetF("capital", money);
 
     ships.alloc.Clear(); 

@@ -420,7 +420,7 @@ double DataNode::GetF(const char* key, double def, bool quiet) const {
 }
 
 timemath::Time DataNode::GetDate(const char *key, timemath::Time def, bool quiet) const {
-    def.Deserialize(GetChild(key, quiet));
+    def.Deserialize(this, key);
     return def;
 }
 
@@ -569,7 +569,7 @@ void DataNode::SetF(const char* key, double value) {
 }
 
 void DataNode::SetDate(const char* key, timemath::Time value) {
-    value.Serialize(SetChild(key, DataNode()));
+    value.Serialize(this, key);
 }
 
 DataNode* DataNode::SetChild(const char* key, const DataNode& val) {

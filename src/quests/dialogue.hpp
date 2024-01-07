@@ -27,7 +27,7 @@ struct Dialogue {
     const char* GetBody() const;
     const char* GetReply(int i) const;
 
-    void DrawToUIContext() const;
+    void DrawToUIContext();
 };
 
 int DialogueTests();

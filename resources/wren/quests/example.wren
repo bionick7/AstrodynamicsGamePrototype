@@ -35,20 +35,20 @@ class ExampleQuest is Quest {
         }
     }
     
-    get_random_stuff_task() {
+    get_random_stuff_task(path_1, path_2) {
         var departure_planet = rand.int(0, 7)
         var arrival_planet = rand.int(0, 7)
         var departure_time = -1
         var arrival_time = -1
-        return transport_task(1000, departure_planet, arrival_planet, departure_time, arrival_planet)
+        return transport_task(1000, departure_planet, arrival_planet, departure_time, path_1, path_2)
     }
     
-    get_random_glory_task() {
+    get_random_glory_task(path_1, path_2) {
         var departure_planet = rand.int(0, 7)
         var arrival_planet = rand.int(0, 7)
         var departure_time = -1
         var arrival_time = -1
-        return transport_task(500, departure_planet, arrival_planet, departure_planet, arrival_planet)
+        return transport_task(500, departure_planet, arrival_planet, departure_planet, path_1, path_2)
     }
 
     next() {
@@ -65,7 +65,7 @@ class ExampleQuest is Quest {
             })
             gain_module("shpmod_heatshield", Constants.tethys)
             gain_module("shpmod_farm", Constants.tethys)
-            goto("d1")
+            goto("t1")
         }
         if(state == "t1") {
             transport_task(
@@ -90,16 +90,10 @@ class ExampleQuest is Quest {
             )
         }
         if (state == "t1.1") {
-            var task = ensure_possible(get_random_stuff_task)
-            task["on_success"] = "t1.1S"
-            task["on_fail"] = "t1.1F"
-            yield(task)
+            get_random_stuff_task("t1.1S", "t1.1F")
         }
         if (state == "t1.2") {
-            var task = ensure_possible(get_random_glory_task)
-            task["on_success"] = "t1.2S"
-            task["on_fail"] = "t1.2F"
-            yield(task)
+            var task = get_random_glory_task("t1.2S", "t1.2F")
         }
         if (state == "t1.1S") {
             gain_item("shpmod_heatshield", Constants.titan)

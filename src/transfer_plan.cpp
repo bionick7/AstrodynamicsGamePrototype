@@ -306,23 +306,23 @@ void TransferPlanSoonest(TransferPlan* tp, double dv_limit) {
 void TransferPlan::Serialize(DataNode* data) const {
     data->SetI("resource_transfer_id", resource_transfer.resource_id);
     data->SetI("resource_transfer_qtt", resource_transfer.quantity);
-    data->SetI("fuel_mass", fuel_mass);
+    //data->SetI("fuel_mass", fuel_mass);
     data->SetI("departure_planet", departure_planet.AsInt());
     data->SetI("arrival_planet", arrival_planet.AsInt());
-    departure_time.Serialize(data->SetChild("departure_time", DataNode()));
-    arrival_time.Serialize(data->SetChild("arrival_time", DataNode()));
-    data->SetI("primary_solution", primary_solution);
+    departure_time.Serialize(data, "departure_time");
+    arrival_time.Serialize(data, "arrival_time");
+    //data->SetI("primary_solution", primary_solution);
 }
 
 void TransferPlan::Deserialize(const DataNode* data) {
     resource_transfer.resource_id = (ResourceType) data->GetI("resource_transfer_id", resource_transfer.resource_id);
     resource_transfer.quantity = data->GetI("resource_transfer_qtt", resource_transfer.quantity);
-    fuel_mass = data->GetI("fuel_mass", fuel_mass);
+    //fuel_mass = data->GetI("fuel_mass", fuel_mass);
     departure_planet = RID(data->GetI("departure_planet", departure_planet.AsInt()));
     arrival_planet = RID(data->GetI("arrival_planet", arrival_planet.AsInt()));
-    departure_time.Deserialize(data->GetChild("departure_time"));
-    arrival_time.Deserialize(data->GetChild("arrival_time"));
-    primary_solution = data->GetI("primary_solution", primary_solution);
+    departure_time.Deserialize(data, "departure_time");
+    arrival_time.Deserialize(data, "arrival_time");
+    //primary_solution = data->GetI("primary_solution", primary_solution);
 
     GetPlanet(departure_planet);
     HohmannTransfer(  // Initialize hohmann_departure_time & hohmann_arrival_time

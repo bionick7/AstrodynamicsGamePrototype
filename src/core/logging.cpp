@@ -8,11 +8,14 @@ FILE** outputs = NULL;
 int outputs_len = 0;
 bool log_to_console = true;
 
+// TODO: periodically save logs
+
 void LogSetOutput(const char* filename) {
     LogCloseOutputs();
     outputs_len = 1;
     outputs = new FILE*[1];
     outputs[0] = fopen(filename, "w");
+    fprintf(outputs[0], "Log Start");
 }
 
 void LogSetOutputs(const char* filenames[]) {
@@ -22,6 +25,7 @@ void LogSetOutputs(const char* filenames[]) {
     outputs = new FILE*[outputs_len];
     for (int i=0; i < outputs_len; i++){
         outputs[i] = fopen(filenames[i], "w");
+        fprintf(outputs[i], "Log Start");
     }
 }
 
@@ -44,7 +48,7 @@ void VLogImpl(const char* file, int line, LogType level, const char* format, va_
         vprintf(format, args);
         printf("\n");
     }
-    for (int i=0; i < outputs_len; i++) {
+    /*for (int i=0; i < outputs_len; i++) {
         char timeStr[64] = { 0 };
         time_t now = time(NULL);
         struct tm *tm_info = localtime(&now);
@@ -57,7 +61,7 @@ void VLogImpl(const char* file, int line, LogType level, const char* format, va_
         }
         vfprintf(outputs[i], format, args);
         fprintf(outputs[i], "\n");
-    }
+    }*/
 }
 
 void LogImpl(const char* file, int line, LogType level, const char* format, ...) {

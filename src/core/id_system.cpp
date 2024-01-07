@@ -49,3 +49,45 @@ bool IsIdValid(RID id) {
         return false;
     }
 }
+
+IDList::IDList() {
+    capacity = 5;
+    size = 0;
+    buffer = (RID*) malloc(sizeof(RID) * capacity);
+}
+
+IDList::~IDList() {
+    free(buffer);
+}
+
+void IDList::Append(RID id) {
+    if (size >= capacity) {
+        int extension = capacity/2;
+        if (extension < 5) extension = 5;
+        capacity += extension;
+        buffer = (RID*) realloc(buffer, sizeof(RID) * capacity);
+    }
+    buffer[size] = id;
+    size++;
+}
+
+void IDList::EraseAt(int index) {
+    // O(n) expensive
+    if (index >= size) return;
+    for(int i=index; i < size; i++) {
+        buffer[i] = buffer[i+1];
+    }
+    size--;
+}
+
+RID IDList::Get(int index) const {
+    if (index >= size) return GetInvalidId();
+    return buffer[index];
+}
+
+void IDList::Clear() {
+    capacity = 5;
+    size = 0;
+    free(buffer);
+    buffer = (RID*) malloc(sizeof(RID) * capacity);
+}

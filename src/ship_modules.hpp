@@ -12,16 +12,19 @@ struct Ship;
 #define SHIP_MODULE_HEIGHT 50
 
 
-enum class ShipStats {
-    POWER = 0,
-    KINETIC_OFFENSE,
-    ORDONANCE_OFFENSE,
-    BOARDING_OFFENSE,
-    KINETIC_DEFENSE,
-    ORDONANCE_DEFENSE,
-    BOARDING_DEFENSE,
-    MAX,
+struct ShipStats {  // Better enum class, since you can treat the enum as integer
+    enum {
+        POWER = 0,
+        KINETIC_OFFENSE,
+        ORDONANCE_OFFENSE,
+        BOARDING_OFFENSE,
+        KINETIC_DEFENSE,
+        ORDONANCE_DEFENSE,
+        BOARDING_DEFENSE,
+        MAX,
+    };
 };
+
 
 static const char* ship_stat_names[] = {
     "power",

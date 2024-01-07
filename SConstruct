@@ -1,7 +1,7 @@
 import os
 
-platform = "win"
-#platform = "linux"
+#platform = "win"
+platform = "linux"
 
 #build = "release"
 build = "debug"
@@ -12,6 +12,9 @@ include_dirs = ['include']
 
 # Platform specific libraries
 platform_libs = []
+
+GLOBAL_FLAGS = []
+GLOBAL_DEFINES = ["WREN_OPT_RANDOM"]
 
 
 def get_all_files(dirs, ending):
@@ -49,8 +52,8 @@ def build_wren():
     wren_src = get_all_files(wren_src_dirs, "c")
     env.Append(CPPPATH = wren_src_dirs + wren_include_dirs)
 
-    flags = []
-    defines = []
+    flags = GLOBAL_FLAGS[:]
+    defines = GLOBAL_DEFINES[:]
 
     if wren_debug:
         flags.append("-ggdb")
@@ -73,8 +76,8 @@ def build_app():
             'winmm',
         ]
 
-    flags = []
-    defines = []
+    flags = GLOBAL_FLAGS[:]
+    defines = GLOBAL_DEFINES[:]
     flags += ['-Wall', '-Wno-narrowing', '-Wno-sign-compare']  # Warnings we care about
     if build == 'debug':
         flags.append('-ggdb')

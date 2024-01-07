@@ -23,8 +23,8 @@ namespace timemath {
         double Seconds() const;
         double Days() const;
 
-        void Serialize(DataNode* data) const;
-        void Deserialize(const DataNode* data);
+        void Serialize(DataNode* data, const char* key) const;
+        void Deserialize(const DataNode* data, const char* key);
 
         bool IsInvalid() const;
 
