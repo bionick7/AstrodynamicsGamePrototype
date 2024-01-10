@@ -1,7 +1,8 @@
 .vscode/*
 .vs/*
 
-dependencies/*
+dependencies/libyaml/*
+dependencies/raylib/*
 screenshots/*
 dev_output/*
 
