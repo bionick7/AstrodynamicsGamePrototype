@@ -508,6 +508,11 @@ WREN_API void wrenSetListElement(WrenVM* vm, int listSlot, int index, int elemen
 // an element, use `-1` for the index.
 WREN_API void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot);
 
+// UNOFFICIAL PATCH!
+// Reads and modifies [interator] key from the map in [mapSlot] and stores it in
+// [elementSlot].
+// Initialize [iterator] to 0
+WREN_API void wrenGetMapKey(WrenVM* vm, int mapSlot, int* iterator, int elementSlot);
 // Returns the number of entries in the map stored in [slot].
 WREN_API int wrenGetMapCount(WrenVM* vm, int slot);
 

@@ -308,15 +308,6 @@ void Quest::_NextTask() {
             GetWrenInterface()->GetStringFromMap("faction", "");
             NOT_IMPLEMENTED
         }
-        else if (strcmp(type, "spawn ship") == 0) {
-            GetWrenInterface()->PrepareMap("ship");
-            WrenHandle* ship_handle = wrenGetSlotHandle(vm, 2);
-            wrenSetSlotHandle(vm, 0, ship_handle);
-            wrenReleaseHandle(vm, ship_handle);
-            DataNode dn;
-            GetWrenInterface()->MapAsDataNode(&dn);
-            GlobalGetState()->ships.AddShip(&dn);
-        }
         
         /*if (await_type == DONE) {
             ERROR("Implicit done reached => no condition met");

@@ -54,6 +54,8 @@ struct IDList {
     void EraseAt(int index);
     RID Get(int index) const;
     void Clear();
+
+    RID operator [] (int index);
 };
 
 #endif  // ID_SYSTEM_H

@@ -43,10 +43,10 @@ void ShipBattle(const IDList* ships_1, const IDList* ships_2, double relative_ve
     int velocity_multiplier = relative_velocity / 3000 + 1;
     int dmg_received_1 = 0;
     int dmg_received_2 = 0;
-    dmg_received_1 += (cum_stats_2[ShipStats::KINETIC_OFFENSE] - cum_stats_2[ShipStats::KINETIC_DEFENSE]) * velocity_multiplier;
-    dmg_received_1 += cum_stats_2[ShipStats::ORDONANCE_OFFENSE] - cum_stats_2[ShipStats::ORDONANCE_DEFENSE];
-    dmg_received_2 += (cum_stats_1[ShipStats::KINETIC_OFFENSE] - cum_stats_2[ShipStats::KINETIC_DEFENSE]) * velocity_multiplier;
-    dmg_received_2 += cum_stats_1[ShipStats::ORDONANCE_OFFENSE] - cum_stats_2[ShipStats::ORDONANCE_DEFENSE];
+    dmg_received_1 += cum_stats_2[ShipStats::KINETIC_OFFENSE] * velocity_multiplier;
+    dmg_received_1 += cum_stats_2[ShipStats::ORDONANCE_OFFENSE];
+    dmg_received_2 += cum_stats_1[ShipStats::KINETIC_OFFENSE] * velocity_multiplier;
+    dmg_received_2 += cum_stats_1[ShipStats::ORDONANCE_OFFENSE];
     INFO("Party 1 (%d) received %d dammage. Party 2 (%d) received (%d) dammage", ships_1->size, dmg_received_1, ships_2->size, dmg_received_2)
 }
 
@@ -215,7 +215,7 @@ bool Ship::IsPlayerKnown() const {
     if (IsPlayerFriend()) {
         return true;
     }
-    return !is_parked;
+    return is_detected;
 }
 
 bool Ship::IsTrajectoryKnown(int index) const {
@@ -328,10 +328,11 @@ void Ship::Update() {
         }
     }
 
+    // Draw
     draw_pos = GetScreenTransform()->TransformV(position.cartesian);
     if (is_parked) {
         double rad = fmax(GetScreenTransform()->TransformS(GetPlanet(parent_planet)->radius), 4) + 8.0;
-        double phase = 20.0 /  rad * index_on_planet;
+        double phase = fmin(20.0 / rad * index_on_planet, index_on_planet / (double)total_on_planet * 2 * PI);
         draw_pos = Vector2Add(FromPolar(rad, phase), draw_pos);
     }
     
@@ -613,6 +614,7 @@ void Ship::_OnDeparture(const TransferPlan& tp) {
 
     parent_planet = GetInvalidId();
     is_parked = false;
+    is_detected = true;
 
     Update();
 }
@@ -621,11 +623,14 @@ void Ship::_OnArrival(const TransferPlan& tp) {
     // First: Combat. Is the ship is intercepted when/before entering orbit, it can't do anything else
 
     IDList hostile_ships;
-    GlobalGetState()->ships.GetOnPlanet(&hostile_ships, tp.arrival_planet, ~(1 << allegiance));
+    GlobalGetState()->ships.GetOnPlanet(&hostile_ships, tp.arrival_planet, ~(1UL << allegiance));
     IDList allied_ships;
     allied_ships.Append(id);
     if (hostile_ships.size > 0) {
         ShipBattle(&allied_ships, &hostile_ships, Vector2Length(tp.arrival_dvs[tp.primary_solution]));
+        is_detected = true;
+    } else {
+        is_detected = false;
     }
 
     GetPlanet(tp.arrival_planet)->economy.GiveResource(tp.resource_transfer);
@@ -750,7 +755,7 @@ RID Ships::GetShipClassIndexById(const char *id) const {
     return find->second;
 }
 
-void Ships::GetOnPlanet(IDList* list, RID planet, int allegiance_bits) const {
+void Ships::GetOnPlanet(IDList* list, RID planet, uint32_t allegiance_bits) const {
     for (auto it = GlobalGetState()->ships.alloc.GetIter(); it; it++) {
         Ship* other_ship = GlobalGetState()->ships.alloc[it];
         if (other_ship->is_parked && planet != other_ship->parent_planet) continue;

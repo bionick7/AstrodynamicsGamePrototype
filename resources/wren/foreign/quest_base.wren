@@ -27,6 +27,7 @@ class Game {
 
     foreign static now
     foreign static hohmann_tf(from, to, t0)
+    foreign static spawn_ship(ship)
 
     static as_rid(index, type) {
         return index | (type << 24)
@@ -139,13 +140,6 @@ class Quest {
             "type": "gain reputation",
             "faction": faction,
             "ammount": ammount
-        })
-    }
-
-    spawn_ship(ship) {
-        yield({
-            "type": "spawn ship",
-            "ship": ship
         })
     }
 

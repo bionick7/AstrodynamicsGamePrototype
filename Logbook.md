@@ -76,3 +76,7 @@ Idea: raiding party, that randomly attacks certain planets (can be within htf wi
 Comabt is really easy to implement? And intel even more so! Simplicity pays off, it seams. We're on gamejam timescales here
 Quest system even helps with prototyping this kind of stuff.
 Focus on this and we can actually have a gameready prototype within a few hours.
+
+## Status 10 Jan 24
+I am kinda stuck on how exactly the combat system should work tbh.
+For threat, I am thinking of introducing a manager (can be in typst) properly schedule the attacks

@@ -187,6 +187,7 @@ void _UpdateShipsPlanets(GlobalState* gs) {
     Clickable hover = {TYPE_NONE, GetInvalidId()};
     double min_distance = INFINITY;
 
+    IDList ship_list;
     for (int planet_id = 0; planet_id < gs->planets.GetPlanetCount(); planet_id++) {
         Planet* planet = GetPlanetByIndex(planet_id);
         planet->Update();
@@ -194,19 +195,37 @@ void _UpdateShipsPlanets(GlobalState* gs) {
         if (planet->HasMouseHover(&min_distance)) {
             hover = {TYPE_PLANET, planet->id};
         }
+        ship_list.Clear();
+        gs->ships.GetOnPlanet(&ship_list, planet->id, 0xFFFFFFFFU);
+        for (int i=0; i < ship_list.size; i++) {
+            Ship* ship = GetShip(ship_list[i]);
+            ship->Update();
+            if (IsIdValid(ship->parent_planet)) {
+                ship->index_on_planet = i;
+                ship->total_on_planet = ship_list.size;
+            }
+            ship->mouse_hover = false;
+            if (ship->HasMouseHover(&min_distance)) {
+                hover = {TYPE_SHIP, ship->id};
+            }
+        }
     }
-    int total_ship_count = 0;
-    for (auto it = gs->ships.alloc.GetIter(); it.IsIterGoing(); it++) {
-        Ship* ship = gs->ships.alloc[it];
+
+    // Update "orphan" ships
+    gs->ships.GetOnPlanet(&ship_list, GetInvalidId(), 0xFFFFFFFFU);
+    for (int i=0; i < ship_list.size; i++) {
+        Ship* ship = GetShip(ship_list[i]);
         ship->Update();
         if (IsIdValid(ship->parent_planet)) {
-            ship->index_on_planet = total_ship_count++;
+            ship->index_on_planet = i;
+            ship->total_on_planet = ship_list.size;
         }
         ship->mouse_hover = false;
         if (ship->HasMouseHover(&min_distance)) {
             hover = {TYPE_SHIP, ship->id};
         }
     }
+
     switch (hover.type) {
     case TYPE_PLANET: GetPlanet(hover.id)->mouse_hover = true; break;
     case TYPE_SHIP: gs->ships.GetShip(hover.id)->mouse_hover = true; break;
@@ -255,7 +274,7 @@ void GlobalState::DrawState() {
     UIStart();
     calendar.DrawUI();
     char capital_str[21];
-    sprintf(capital_str, "M§M %6lld.%3lld .mil", money / (int)1e6, money % 1000000 / 1000);
+    sprintf(capital_str, "M§M %6"LONG_STRID".%3"LONG_STRID" .mil", money / (int)1e6, money % 1000000 / 1000);
     DrawTextAligned(capital_str, {GetScreenWidth() / 2.0f, 10}, TEXT_ALIGNMENT_HCENTER & TEXT_ALIGNMENT_TOP, Palette::ui_main);
 
     // planets

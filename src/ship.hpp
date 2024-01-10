@@ -42,9 +42,9 @@ struct Ship {
 
     // Current state
     bool is_parked;
+    bool is_detected;  // by the other faction
     OrbitPos position;
     RID parent_planet;
-    int index_on_planet;
 
     int prepared_plans_count;
     TransferPlan prepared_plans[SHIP_MAX_PREPARED_PLANS];
@@ -54,9 +54,11 @@ struct Ship {
     int plan_edit_index;
     int highlighted_plan_index;
 
-    // UI state
+    // UI/visual state
     Vector2 draw_pos;
     bool mouse_hover;
+    int index_on_planet;
+    int total_on_planet;
     //Color color;
 
     // Identifier
@@ -112,7 +114,7 @@ struct Ships {
     Ship* GetShip(RID uuid) const;
     RID GetShipClassIndexById(const char* id) const;
     const ShipClass* GetShipClassByIndex(RID index) const;
-    void GetOnPlanet(IDList* list, RID planet, int allegiance_bits) const;
+    void GetOnPlanet(IDList* list, RID planet, uint32_t allegiance_bits) const;
 
     IDAllocatorList<Ship, EntityType::SHIP> alloc;
     std::map<std::string, RID> ship_classes_ids;

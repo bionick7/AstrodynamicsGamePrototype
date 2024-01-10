@@ -91,3 +91,7 @@ void IDList::Clear() {
     free(buffer);
     buffer = (RID*) malloc(sizeof(RID) * capacity);
 }
+
+RID IDList::operator[](int index)  {
+    return Get(index);
+}

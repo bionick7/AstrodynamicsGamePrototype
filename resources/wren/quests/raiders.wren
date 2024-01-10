@@ -25,6 +25,7 @@ class Raiders is Quest {
     construct new () {
         super("loop")
         _wave_num = 0
+        _available_ships = []
     }
 
     spawn_enemy() {
@@ -65,7 +66,8 @@ class Raiders is Quest {
                 }
             ]
         }
-        spawn_ship(ship_data)
+        var id = Game.spawn_ship(ship_data)
+        _available_ships.add(id)
     }
     
     serialize() {
