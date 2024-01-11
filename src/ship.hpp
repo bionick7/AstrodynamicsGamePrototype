@@ -89,6 +89,7 @@ struct Ship {
     bool IsPlayerFriend() const;
     bool IsPlayerKnown() const;
     bool IsTrajectoryKnown(int index) const;
+    int GetCombatStrength() const;
 
     Color GetColor() const;
 
@@ -106,6 +107,9 @@ struct Ship {
 };
 
 struct Ships {
+    const static uint32_t MILITARY_SELECTION_FLAG = 0x0100;  // Allowing for 8 factions
+    const static uint32_t CIVILIAN_SELECTION_FLAG = 0x0200;
+
     Ships();
     RID AddShip(const DataNode* data);
     int LoadShipClasses(const DataNode* data);

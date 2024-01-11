@@ -15,12 +15,16 @@ struct Ship;
 struct ShipStats {  // Better enum class, since you can treat the enum as integer
     enum {
         POWER = 0,
+        INITIATIVE,
+
         KINETIC_OFFENSE,
         ORDONANCE_OFFENSE,
         BOARDING_OFFENSE,
+
         KINETIC_DEFENSE,
         ORDONANCE_DEFENSE,
         BOARDING_DEFENSE,
+
         MAX,
     };
 };
@@ -28,6 +32,7 @@ struct ShipStats {  // Better enum class, since you can treat the enum as intege
 
 static const char* ship_stat_names[] = {
     "power",
+    "initiative",
     "kinetic_offense",
     "ordnance_offense",
     "boarding_offense",

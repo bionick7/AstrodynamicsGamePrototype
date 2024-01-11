@@ -218,7 +218,7 @@ void ShipModules::UpdateDragging() {
     for (int planet_id = 0; planet_id < GlobalGetState()->planets.GetPlanetCount(); planet_id++) {
         release_slot.AssignIfValid(GetPlanetByIndex(planet_id)->current_slot);
     }
-    for (auto it = GlobalGetState()->ships.alloc.GetIter(); it.IsIterGoing(); it++) {
+    for (auto it = GlobalGetState()->ships.alloc.GetIter(); it; it++) {
         release_slot.AssignIfValid(GetShip(it.GetId())->current_slot);
     }
 

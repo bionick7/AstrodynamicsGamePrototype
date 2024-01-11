@@ -263,7 +263,7 @@ void GlobalState::DrawState() {
     for (int planet_id = 0; planet_id < planets.GetPlanetCount(); planet_id++) {
         GetPlanetByIndex(planet_id)->Draw(&c_transf);
     }
-    for (auto it = ships.alloc.GetIter(); it.IsIterGoing(); it++) {
+    for (auto it = ships.alloc.GetIter(); it; it++) {
         Ship* ship = ships.alloc[it];
         ship->Draw(&c_transf);
     }
@@ -274,7 +274,7 @@ void GlobalState::DrawState() {
     UIStart();
     calendar.DrawUI();
     char capital_str[21];
-    sprintf(capital_str, "M§M %6"LONG_STRID".%3"LONG_STRID" .mil", money / (int)1e6, money % 1000000 / 1000);
+    sprintf(capital_str, "M§M %6" LONG_STRID ".%3" LONG_STRID " .mil", money / (int)1e6, money % 1000000 / 1000);
     DrawTextAligned(capital_str, {GetScreenWidth() / 2.0f, 10}, TEXT_ALIGNMENT_HCENTER & TEXT_ALIGNMENT_TOP, Palette::ui_main);
 
     // planets
@@ -283,7 +283,7 @@ void GlobalState::DrawState() {
         planet->DrawUI();
     }
     //BuildingConstructionUI();
-    for (auto it = ships.alloc.GetIter(); it.IsIterGoing(); it++) {
+    for (auto it = ships.alloc.GetIter(); it; it++) {
         Ship* ship = ships.alloc[it];
         ship->DrawUI();
     }
@@ -323,7 +323,7 @@ void GlobalState::Serialize(DataNode* data) const {
 
     data->SetArrayChild("ships", ships.alloc.Count());
     i=0;
-    for (auto it = ships.alloc.GetIter(); it.IsIterGoing(); it++) {
+    for (auto it = ships.alloc.GetIter(); it; it++) {
         Ship* ship = ships.alloc.Get(it);
         DataNode dn2 = DataNode();
         dn2.SetI("id", it.GetId().AsInt());

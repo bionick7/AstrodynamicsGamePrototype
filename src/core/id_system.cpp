@@ -56,6 +56,21 @@ IDList::IDList() {
     buffer = (RID*) malloc(sizeof(RID) * capacity);
 }
 
+IDList::IDList(int initial_capacity){
+    capacity = initial_capacity;
+    size = 0;
+    buffer = (RID*) malloc(sizeof(RID) * capacity);
+}
+
+IDList::IDList(const IDList& other) {
+    capacity = other.size;
+    size = other.size;
+    buffer = (RID*) malloc(sizeof(RID) * capacity);
+    for(int i=0; i < size; i++) {
+        buffer[i] = other[i];
+    }
+}
+
 IDList::~IDList() {
     free(buffer);
 }
@@ -85,6 +100,17 @@ RID IDList::Get(int index) const {
     return buffer[index];
 }
 
+int IDList::Count() const {
+    return size;
+}
+
+int IDList::Find(RID id) const {
+    for(int i=0; i < size; i++) {
+        if (id == buffer[i]) return i;
+    }
+    return -1;
+}
+
 void IDList::Clear() {
     capacity = 5;
     size = 0;
@@ -92,6 +118,30 @@ void IDList::Clear() {
     buffer = (RID*) malloc(sizeof(RID) * capacity);
 }
 
-RID IDList::operator[](int index)  {
-    return Get(index);
+RID IDList::operator[](int index) const {
+    return buffer[index];
+}
+
+static IDList::SortFn* _current_fn = NULL;
+
+int cmp_func(const void * a, const void * b) {
+    if (_current_fn == NULL) {
+        FAIL("May only be called inside of Sort");
+    }
+    //SHOW_I(*(RID*)a)
+    //SHOW_I(*(RID*)b)
+    return _current_fn(*(RID*)a, *(RID*)b);
+}
+
+void IDList::Sort(SortFn *fn) {
+    if (size <= 1) return;
+    _current_fn = fn;
+    qsort(buffer, size, sizeof(RID), cmp_func);
+    _current_fn = NULL;
+}
+
+void IDList::Inspect() {
+    for(int i=0; i < size; i++) {
+        printf("%d: type %d, id %d\n", i, IdGetType(buffer[i]), IdGetIndex(buffer[i]));
+    }
 }

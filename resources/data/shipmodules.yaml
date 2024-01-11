@@ -76,6 +76,13 @@ shipmodules:
     ordnance_defense: 1
   mass: 0.5
 
+- id: shpmod_acs
+  name: High-fi Attitude Control System
+  description: TODO
+  add: 
+    initiative: 1
+  mass: 1
+
 # Support
 - id: shpmod_reactor
   name: Reactor

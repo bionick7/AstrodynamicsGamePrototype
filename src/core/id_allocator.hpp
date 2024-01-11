@@ -14,7 +14,55 @@ struct IDAllocatorList {
     uint32_t alloc_count;
     uint32_t capacity;
 
-    struct Iterator { 
+    class Iterator : public std::iterator<
+        std::input_iterator_tag,
+        RID, int, RID*, RID> {
+
+        const IDAllocatorList<T, E>* _list_ptr;
+    public:
+        uint32_t index;
+        uint32_t counter;
+
+        explicit Iterator(int p_index, int p_counter, const IDAllocatorList<T, E>* p_list_ptr) { 
+            index = p_index; 
+            counter = p_counter; 
+            _list_ptr = p_list_ptr;
+        }
+
+        Iterator& operator++() {
+            counter++;
+            do {
+                index++;
+                if (counter >= _list_ptr->alloc_count || index >= _list_ptr->capacity) {
+                    index = _list_ptr->capacity;
+                    counter = _list_ptr->alloc_count;
+                    return *this;
+                }
+            } while( !(_list_ptr->verifier_array[index/64] & (UNIT64 << (index % 64))) ); 
+            return *this;
+        }
+
+        Iterator operator++(int) { 
+            Iterator retval = *this;
+            ++(*this); 
+            return retval; 
+        }
+
+        bool operator==(Iterator other) const { 
+            return counter == other.counter && _list_ptr == other._list_ptr;
+        }
+
+        bool operator!=(Iterator other) const { return !(*this == other); }
+        RID operator*() const { return RID(index, E); }
+
+        operator bool () const {
+            return counter < _list_ptr->alloc_count && index < _list_ptr->capacity;
+        }
+
+        RID GetId() const { return RID(index, E); }
+    };
+
+    /*struct Iterator { 
         const IDAllocatorList<T, E>* list_ptr;
         uint32_t index;
         uint32_t counter;
@@ -36,7 +84,7 @@ struct IDAllocatorList {
                 !(list_ptr->verifier_array[index/64] & (UNIT64 << (index % 64)))
             ); 
         }
-    };
+    };*/
 
     ~IDAllocatorList() {
         _Destroy();
@@ -145,19 +193,20 @@ struct IDAllocatorList {
         return verifier_array[index/64] & (UNIT64 << (index % 64));
     }
 
-    Iterator GetIter() const {
+    Iterator Begin() const {
         int start_index = 0;
         if (alloc_count != 0) {
             while (start_index < capacity 
                 && !(verifier_array[start_index/64] & (UNIT64 << (start_index % 64)))
             ) start_index++;
         }
-        Iterator it;
-        it.index = start_index;
-        it.counter = 0;
-        it.count = alloc_count;
-        it.list_ptr = this;
-        return it;
+        return Iterator(start_index, 0, this);
+    }
+
+    Iterator GetIter() const { return Begin(); }
+
+    Iterator End() const {
+        return Iterator(capacity, alloc_count, this);
     }
 
     void Inpsect() {

@@ -27,6 +27,7 @@ struct RID {
     inline bool operator== (RID other) const { return _internal == other._internal; }
     inline bool operator!= (RID other) const { return _internal != other._internal; }
 
+    //RID& operator= (const RID& other) { _internal = other._internal; return *this; }
     explicit operator uint32_t() const { return _internal; }  // Prevent implicit conversion
     explicit operator int() const { return _internal; }  // Prevent implicit conversion
 
@@ -48,14 +49,23 @@ struct IDList {
     RID* buffer;
 
     IDList();
+    IDList(int initial_capacity);
+    IDList(const IDList&);
     ~IDList();
 
     void Append(RID id);
     void EraseAt(int index);
     RID Get(int index) const;
+    int Count() const;
+    int Find(RID id) const;
     void Clear();
 
-    RID operator [] (int index);
+    RID operator [] (int index) const;
+
+    typedef int SortFn(RID, RID);
+    void Sort(SortFn* fn);
+
+    void Inspect();
 };
 
 #endif  // ID_SYSTEM_H

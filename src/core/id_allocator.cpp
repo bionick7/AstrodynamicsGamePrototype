@@ -54,14 +54,14 @@ int IDAllocatorListTests() {
         mm->m0 = i;
     }
     TEST_ASSERT(!list.ContainsID(TSTID(45)))
-    for(auto i = list.GetIter(); i; i++) {
+    for(auto i = list.Begin(); i != list.End(); i++) {
         if (i.counter % 2 == 0) {
-            list.Erase(i.GetId());
+            list.Erase(*i);
         }
     }
-    for(auto i = list.GetIter(); i; i++) {
+    for(auto i = list.Begin(); i != list.End(); i++) {
         if (i.counter % 2 == 0) {
-            list.Erase(i.GetId());
+            list.Erase(*i);
         }
     }
     

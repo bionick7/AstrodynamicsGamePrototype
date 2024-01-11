@@ -94,6 +94,7 @@
         "xmemory": "cpp",
         "xstddef": "cpp",
         "xutility": "cpp",
-        "wren_vm.h": "c"
+        "wren_vm.h": "c",
+        "optional": "cpp"
     }
 }

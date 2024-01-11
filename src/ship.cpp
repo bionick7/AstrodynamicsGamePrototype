@@ -7,6 +7,8 @@
 #include "string_builder.hpp"
 #include "debug_drawing.hpp"
 
+#include <algorithm>
+
 double ShipClass::GetPayloadCapacityMass(double dv) const {
     //          dv = v_e * ln((max_cap + eom) / (x + eom))
     // <=> x + eom = (max_cap + eom) / exp(dv/v_e)
@@ -25,7 +27,7 @@ resource_count_t ShipClass::GetFuelRequiredEmpty(double dv) const {
 }
 
 void ShipBattle(const IDList* ships_1, const IDList* ships_2, double relative_velocity) {
-    int cum_stats_1[ShipStats::MAX] = {0};
+    /*int cum_stats_1[ShipStats::MAX] = {0};
     for (int i=0; i < ships_1->size; i++) {
         const Ship* ship = GetShip(ships_1->Get(i));
         for(int stat=0; stat < ShipStats::MAX; stat++) {
@@ -38,16 +40,70 @@ void ShipBattle(const IDList* ships_1, const IDList* ships_2, double relative_ve
         for(int stat=0; stat < ShipStats::MAX; stat++) {
             cum_stats_2[stat] += ship->stats[stat];
         }
-    }
+    }*/
 
     int velocity_multiplier = relative_velocity / 3000 + 1;
-    int dmg_received_1 = 0;
-    int dmg_received_2 = 0;
-    dmg_received_1 += cum_stats_2[ShipStats::KINETIC_OFFENSE] * velocity_multiplier;
-    dmg_received_1 += cum_stats_2[ShipStats::ORDONANCE_OFFENSE];
-    dmg_received_2 += cum_stats_1[ShipStats::KINETIC_OFFENSE] * velocity_multiplier;
-    dmg_received_2 += cum_stats_1[ShipStats::ORDONANCE_OFFENSE];
-    INFO("Party 1 (%d) received %d dammage. Party 2 (%d) received (%d) dammage", ships_1->size, dmg_received_1, ships_2->size, dmg_received_2)
+
+    // Pick ship order (alternating)
+    // Foreach ship:
+    //     pick opponent (random, strongest, ...)
+    //     tally dammages
+    //     remove if necaissary
+    // Sort by initiative instead
+
+    int total_ships = ships_1->size + ships_2->size;
+    IDList turn_order = IDList(total_ships);
+    for(int i=0; i < ships_1->size; i++) {
+        turn_order.Append(ships_1->Get(i));
+    }
+    for(int i=0; i < ships_2->size; i++) {
+        turn_order.Append(ships_2->Get(i));
+    }
+    IDList ships_1_strength = IDList(*ships_1);
+    IDList ships_2_strength = IDList(*ships_2);
+
+    turn_order.Sort([](RID ship1, RID ship2) {
+        return GetShip(ship2)->stats[ShipStats::INITIATIVE] - GetShip(ship1)->stats[ShipStats::INITIATIVE];
+    });
+
+    ships_1_strength.Sort([](RID ship1, RID ship2){
+        return GetShip(ship2)->GetCombatStrength() - GetShip(ship1)->GetCombatStrength();
+    });
+
+    ships_2_strength.Sort([](RID ship1, RID ship2){
+        return GetShip(ship2)->GetCombatStrength() - GetShip(ship1)->GetCombatStrength();
+    });
+
+    for (int i=0; i < total_ships; i++) {
+        /*
+        bool first_list;
+        int list_index;
+        if (i < MinInt(ships_1->size, ships_2->size)*2) {
+            // assuming ships_1 has the advantage
+            first_list = i % 2 == 0;
+            list_index = i / 2;
+        } else {
+            first_list = ships_1->size > ships_2->size;
+            list_index = first_list ? (i - ships_2->size) : (i - ships_1->size);
+        }
+        Ship* actor_ship = GetShip(first_list ? ships_1->Get(list_index) : ships_2->Get(list_index));
+        const IDList* target_ship_list = first_list ? ships_2 : ships_1;
+        Ship* target_ship = GetShip(target_ship_list->Get(GetRandomValue(0, target_ship_list->size-1)));
+        */
+        Ship* actor_ship = GetShip(turn_order[i]);
+        const IDList* target_ship_list = (ships_1_strength.Find(turn_order[i]) >= 0) ? &ships_2_strength : &ships_1_strength;
+        Ship* target_ship = GetShip(target_ship_list->Get(0));
+
+        target_ship->stats[ShipStats::KINETIC_DEFENSE] -= actor_ship->stats[ShipStats::KINETIC_OFFENSE] * velocity_multiplier;
+        target_ship->stats[ShipStats::ORDONANCE_DEFENSE] -= actor_ship->stats[ShipStats::ORDONANCE_OFFENSE];
+
+        INFO("%s vs %s", actor_ship->name, target_ship->name)
+        if(target_ship->stats[ShipStats::KINETIC_DEFENSE] < 0 || target_ship->stats[ShipStats::ORDONANCE_DEFENSE] < 0) {
+            INFO("%s killed %s in battle", actor_ship->name, target_ship->name)
+        }
+    }
+
+    //INFO("Party 1 (%d) received %d dammage. Party 2 (%d) received (%d) dammage", ships_1->size, dmg_received_1, ships_2->size, dmg_received_2)
 }
 
 Ship::Ship() {
@@ -226,6 +282,12 @@ bool Ship::IsTrajectoryKnown(int index) const {
         return false;
     }
     return index == 0 && !is_parked;
+}
+
+int Ship::GetCombatStrength() const {
+    int offensive = stats[ShipStats::KINETIC_OFFENSE] + stats[ShipStats::ORDONANCE_OFFENSE];
+    int defensive = stats[ShipStats::KINETIC_DEFENSE] + stats[ShipStats::ORDONANCE_DEFENSE];
+    return offensive * (defensive + 1);
 }
 
 Color Ship::GetColor() const {
@@ -623,10 +685,11 @@ void Ship::_OnArrival(const TransferPlan& tp) {
     // First: Combat. Is the ship is intercepted when/before entering orbit, it can't do anything else
 
     IDList hostile_ships;
-    GlobalGetState()->ships.GetOnPlanet(&hostile_ships, tp.arrival_planet, ~(1UL << allegiance));
+    GlobalGetState()->ships.GetOnPlanet(&hostile_ships, tp.arrival_planet, (~(1UL << allegiance) & 0xFF) | Ships::MILITARY_SELECTION_FLAG);
     IDList allied_ships;
     allied_ships.Append(id);
     if (hostile_ships.size > 0) {
+        // First, military ships vs. military ships
         ShipBattle(&allied_ships, &hostile_ships, Vector2Length(tp.arrival_dvs[tp.primary_solution]));
         is_detected = true;
     } else {
@@ -757,10 +820,12 @@ RID Ships::GetShipClassIndexById(const char *id) const {
 
 void Ships::GetOnPlanet(IDList* list, RID planet, uint32_t allegiance_bits) const {
     for (auto it = GlobalGetState()->ships.alloc.GetIter(); it; it++) {
-        Ship* other_ship = GlobalGetState()->ships.alloc[it];
-        if (other_ship->is_parked && planet != other_ship->parent_planet) continue;
-        if (!other_ship->is_parked && planet != GetInvalidId()) continue;
-        if (((1 << other_ship->allegiance) & allegiance_bits) == 0) continue;
+        Ship* ship = GlobalGetState()->ships.alloc[it];
+        if (ship->is_parked && planet != ship->parent_planet) continue;
+        if (!ship->is_parked && planet != GetInvalidId()) continue;
+        if (((1 << ship->allegiance) & allegiance_bits) == 0) continue;
+        if (!(allegiance_bits & MILITARY_SELECTION_FLAG) && ship->GetCombatStrength() > 0) continue;
+        if (!(allegiance_bits & CIVILIAN_SELECTION_FLAG) && ship->GetCombatStrength() == 0) continue;
         list->Append(it.GetId());
     }
 }
@@ -789,7 +854,6 @@ const ShipClass* GetShipClassByIndex(RID index) {
     return GlobalGetState()->ships.GetShipClassByIndex(index);
 }
 
-int LoadShipClasses(const DataNode *data)
-{
+int LoadShipClasses(const DataNode *data) {
     return GlobalGetState()->ships.LoadShipClasses(data);
 }
