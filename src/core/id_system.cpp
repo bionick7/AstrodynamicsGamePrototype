@@ -50,6 +50,13 @@ bool IsIdValid(RID id) {
     }
 }
 
+bool IsIdValidTyped(RID id, EntityType type) {
+    if (IdGetType(id) != type) {
+        return false;
+    }
+    return IsIdValid(id);
+}
+
 IDList::IDList() {
     capacity = 5;
     size = 0;

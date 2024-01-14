@@ -1,4 +1,5 @@
-import "foreign/quest_base" for Quest, Constants
+import "foreign/quest_base" for Quest
+import "foreign/game" for Constants
 
 // Basic idea
 
@@ -106,14 +107,6 @@ class ExampleQuest is Quest {
         }
         if (state == "t1.2F") {
             gain_reputation("The Enclave", -1000)
-        }
-
-
-        if (_step == "endF") {
-            return false
-        }
-        if (_step == "endS") {
-            return true
         }
 	}
 }

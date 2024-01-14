@@ -41,6 +41,7 @@ inline EntityType IdGetType(RID id) { return (EntityType) ((id.AsInt() >> 24) & 
 inline uint32_t IdGetIndex(RID id) {  return id.AsInt() & 0x00fffffful; }
 
 bool IsIdValid(RID id);
+bool IsIdValidTyped(RID id, EntityType type);
 
 struct IDList {
     int capacity;

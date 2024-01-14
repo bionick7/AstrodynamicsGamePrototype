@@ -112,6 +112,14 @@ shipmodules:
     boarding_defense: 1
   mass: 0
 
+# Developer
+- id: shpmod_boost_init
+  name: DEV - INITIAITVE BOOST
+  description: DEV - Free boost to initiativeTODO
+  add: 
+    initiative: 1
+  mass: 1
+
 # ... Weapons, time extenders
 # e.g. loadout for gunship:
 #   Armor, Accomodations, Torpedos

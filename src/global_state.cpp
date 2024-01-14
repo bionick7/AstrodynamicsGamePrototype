@@ -182,9 +182,9 @@ void _HandleDeselect(GlobalState* gs) {
     }
 }
 
-Clickable prev_hover {TYPE_NONE, GetInvalidId()};
+RID prev_hover = GetInvalidId();
 void _UpdateShipsPlanets(GlobalState* gs) {
-    Clickable hover = {TYPE_NONE, GetInvalidId()};
+    RID hover = GetInvalidId();
     double min_distance = INFINITY;
 
     IDList ship_list;
@@ -193,7 +193,7 @@ void _UpdateShipsPlanets(GlobalState* gs) {
         planet->Update();
         planet->mouse_hover = false;
         if (planet->HasMouseHover(&min_distance)) {
-            hover = {TYPE_PLANET, planet->id};
+            hover = planet->id;
         }
         ship_list.Clear();
         gs->ships.GetOnPlanet(&ship_list, planet->id, 0xFFFFFFFFU);
@@ -206,7 +206,7 @@ void _UpdateShipsPlanets(GlobalState* gs) {
             }
             ship->mouse_hover = false;
             if (ship->HasMouseHover(&min_distance)) {
-                hover = {TYPE_SHIP, ship->id};
+                hover = ship->id;
             }
         }
     }
@@ -222,22 +222,21 @@ void _UpdateShipsPlanets(GlobalState* gs) {
         }
         ship->mouse_hover = false;
         if (ship->HasMouseHover(&min_distance)) {
-            hover = {TYPE_SHIP, ship->id};
+            hover = ship->id;
         }
     }
 
-    switch (hover.type) {
-    case TYPE_PLANET: GetPlanet(hover.id)->mouse_hover = true; break;
-    case TYPE_SHIP: gs->ships.GetShip(hover.id)->mouse_hover = true; break;
-    case TYPE_NONE:
+    switch (IdGetType(hover)) {
+    case EntityType::PLANET: GetPlanet(hover)->mouse_hover = true; break;
+    case EntityType::SHIP: gs->ships.GetShip(hover)->mouse_hover = true; break;
     default: break;
     }
 
-    if (prev_hover.id != hover.id) {
+    if (prev_hover != hover) {
     //if (!IsIdValid(prev_hover.id) && IsIdValid(hover.id)) {
         HandleButtonSound(BUTTON_STATE_FLAG_JUST_HOVER_IN);
     }
-    if (IsIdValid(prev_hover.id) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+    if (IsIdValid(prev_hover) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         HandleButtonSound(BUTTON_STATE_FLAG_JUST_PRESSED);
     }
     prev_hover = hover;
@@ -253,6 +252,7 @@ void GlobalState::UpdateState(double delta_t) {
     _HandleDeselect(this);
     calendar.AdvanceTime(delta_t);
     active_transfer_plan.Update();
+    wren_interface.Update();
     quest_manager.Update(delta_t);
     _UpdateShipsPlanets(this);
 }

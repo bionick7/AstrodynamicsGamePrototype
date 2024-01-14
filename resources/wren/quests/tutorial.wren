@@ -1,17 +1,8 @@
-import "foreign/quest_base" for Quest, Constants
+import "foreign/quest_base" for Quest
+import "foreign/game" for Constants
 
 var class_name = "Tutorial"
-/*
-dialogue:
-    Alright, so THADCON recently reached out to some survivors on Encelladus. 
-    They are in need of a great many things, THADCON could somehow afford to bundle
-    together an entire count worth of emergency supplies. So that's our first real
-    job. No formal time limit, but hurry up, there's not a lot else to do anyway.
 
-    BR
-next: 
-
-*/
 class Tutorial is Quest {
 	static id { "tutorial" }
     static challenge_level { 0 }
@@ -157,12 +148,6 @@ class Tutorial is Quest {
         if (state == "d1-4.2") {
             wait_seconds(Constants.day)
             goto("d1-4")
-        }
-        if (state == "endF") {
-            return false
-        }
-        if (state == "endS") {
-            return true
         }
     }
     /*

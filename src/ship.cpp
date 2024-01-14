@@ -26,7 +26,7 @@ resource_count_t ShipClass::GetFuelRequiredEmpty(double dv) const {
     return KGToResourceCounts(oem * (exp(dv/v_e) - 1));
 }
 
-void ShipBattle(const IDList* ships_1, const IDList* ships_2, double relative_velocity) {
+void ShipBattle(IDList* ships_1, IDList* ships_2, double relative_velocity) {
     /*int cum_stats_1[ShipStats::MAX] = {0};
     for (int i=0; i < ships_1->size; i++) {
         const Ship* ship = GetShip(ships_1->Get(i));
@@ -74,6 +74,8 @@ void ShipBattle(const IDList* ships_1, const IDList* ships_2, double relative_ve
         return GetShip(ship2)->GetCombatStrength() - GetShip(ship1)->GetCombatStrength();
     });
 
+    IDList killed = IDList();
+
     for (int i=0; i < total_ships; i++) {
         /*
         bool first_list;
@@ -90,6 +92,10 @@ void ShipBattle(const IDList* ships_1, const IDList* ships_2, double relative_ve
         const IDList* target_ship_list = first_list ? ships_2 : ships_1;
         Ship* target_ship = GetShip(target_ship_list->Get(GetRandomValue(0, target_ship_list->size-1)));
         */
+
+        if (killed.Find(turn_order[i]) >= 0) {
+            continue;
+        }
         Ship* actor_ship = GetShip(turn_order[i]);
         const IDList* target_ship_list = (ships_1_strength.Find(turn_order[i]) >= 0) ? &ships_2_strength : &ships_1_strength;
         Ship* target_ship = GetShip(target_ship_list->Get(0));
@@ -97,10 +103,24 @@ void ShipBattle(const IDList* ships_1, const IDList* ships_2, double relative_ve
         target_ship->stats[ShipStats::KINETIC_DEFENSE] -= actor_ship->stats[ShipStats::KINETIC_OFFENSE] * velocity_multiplier;
         target_ship->stats[ShipStats::ORDONANCE_DEFENSE] -= actor_ship->stats[ShipStats::ORDONANCE_OFFENSE];
 
-        INFO("%s vs %s", actor_ship->name, target_ship->name)
+        //INFO("%s vs %s", actor_ship->name, target_ship->name)
         if(target_ship->stats[ShipStats::KINETIC_DEFENSE] < 0 || target_ship->stats[ShipStats::ORDONANCE_DEFENSE] < 0) {
             INFO("%s killed %s in battle", actor_ship->name, target_ship->name)
+            killed.Append(target_ship_list->Get(0));
         }
+    }
+
+    for(int i=0; i < killed.size; i++) {
+        RID kill_id = killed.Get(i);
+        /*turn_order.EraseAt(turn_order.Find(kill_id));
+        if (ships_1_strength.Find(turn_order[i]) >= 0) {
+            ships_1_strength.EraseAt(0);
+            ships_1->EraseAt(ships_1->Find(kill_id));
+        } else {
+            ships_2_strength.EraseAt(0);
+            ships_2->EraseAt(ships_2->Find(kill_id));
+        }*/
+        GlobalGetState()->ships.KillShip(kill_id, true);
     }
 
     //INFO("Party 1 (%d) received %d dammage. Party 2 (%d) received (%d) dammage", ships_1->size, dmg_received_1, ships_2->size, dmg_received_2)
@@ -110,6 +130,10 @@ Ship::Ship() {
     for (int i=0; i < SHIP_MAX_MODULES; i++) {
         modules[i] = GetInvalidId();
     }
+}
+
+Ship::~Ship() {
+    
 }
 
 bool Ship::HasMouseHover(double* min_distance) const {
@@ -828,6 +852,16 @@ void Ships::GetOnPlanet(IDList* list, RID planet, uint32_t allegiance_bits) cons
         if (!(allegiance_bits & CIVILIAN_SELECTION_FLAG) && ship->GetCombatStrength() == 0) continue;
         list->Append(it.GetId());
     }
+}
+
+void Ships::KillShip(RID uuid, bool notify_callback) {
+    if (!IsIdValidTyped(uuid, EntityType::SHIP)) {
+        return;
+    }
+    if (notify_callback) {
+        GetWrenInterface()->NotifyShipEvent(uuid, "die");
+    }
+    alloc.Erase(uuid);
 }
 
 const ShipClass* Ships::GetShipClassByIndex(RID id) const {

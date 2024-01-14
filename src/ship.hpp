@@ -15,6 +15,8 @@
 #define SHIPCLASS_DESCRIPTION_MAX_SIZE 1024
 #define SHIP_NAME_MAX_SIZE 64
 
+struct WrenHandle;
+
 struct ShipClass {
     char name[SHIPCLASS_NAME_MAX_SIZE];
     char description[SHIPCLASS_DESCRIPTION_MAX_SIZE];
@@ -69,6 +71,7 @@ struct Ship {
     ShipModuleSlot current_slot;
 
     Ship();
+    ~Ship();
 
     void Serialize(DataNode* data) const;
     void Deserialize(const DataNode* data);
@@ -119,8 +122,10 @@ struct Ships {
     RID GetShipClassIndexById(const char* id) const;
     const ShipClass* GetShipClassByIndex(RID index) const;
     void GetOnPlanet(IDList* list, RID planet, uint32_t allegiance_bits) const;
+    void KillShip(RID uuid, bool notify_callback);
 
     IDAllocatorList<Ship, EntityType::SHIP> alloc;
+
     std::map<std::string, RID> ship_classes_ids;
     ShipClass* ship_classes;
     uint32_t ship_classes_count;

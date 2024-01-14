@@ -11,17 +11,6 @@
 #include "audio_server.hpp"
 #include "wren_interface.hpp"
 
-enum AgentType {
-    TYPE_NONE,
-    TYPE_SHIP,
-    TYPE_PLANET,
-};
-
-struct Clickable {
-    AgentType type;
-    RID id;
-};
-
 struct GlobalState {
     enum FocusablesPanels {
         QUEST_MANAGER,

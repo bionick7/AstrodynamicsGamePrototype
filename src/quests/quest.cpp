@@ -182,6 +182,14 @@ bool Quest::_Activate() {
 
 bool Quest::_RunInState(const char *next_state) {
     WrenVM* vm = GetWrenVM();
+    if (strcmp(next_state, "endS") == 0) {
+        await_type = DONE;  // explicitly
+        return true;
+    }
+    if (strcmp(next_state, "endF") == 0) {
+        await_type = DONE;  // explicitly
+        return true;
+    }
 
     // call goto on the result
     wrenEnsureSlots(vm, 2);
@@ -202,11 +210,6 @@ void Quest::_NextTask() {
     WrenVM* vm = GetWrenVM();
     WrenType return_type = wrenGetSlotType(vm, 0);
     await_type = DONE;  // fallback
-    if (return_type == WREN_TYPE_BOOL) {
-        await_type = DONE;  // explicitly
-        bool quest_success = wrenGetSlotBool(vm, 0);
-        return;
-    }
     wrenEnsureSlots(vm, 1);
     wrenSetSlotHandle(vm, 0, quest_instance_handle);
     if(!GetWrenInterface()->CallFunc(next_result_handle)) return;

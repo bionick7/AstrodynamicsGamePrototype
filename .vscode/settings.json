@@ -95,6 +95,7 @@
         "xstddef": "cpp",
         "xutility": "cpp",
         "wren_vm.h": "c",
-        "optional": "cpp"
+        "optional": "cpp",
+        "queue": "cpp"
     }
 }

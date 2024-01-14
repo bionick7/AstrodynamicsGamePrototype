@@ -35,7 +35,7 @@ void Load(int argc, const char** argv) {
     GlobalState* app = GlobalGetState();
     app->Make(1e6);
     app->LoadData();
-    app->LoadGame("resources/data/start_state.yaml");
+    app->LoadGame("resources/data/start_saves/combat_waves.yaml");
     TestingSetup(app);
 
     // Interpreting cmdline

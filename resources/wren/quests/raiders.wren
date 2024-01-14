@@ -1,18 +1,6 @@
-import "foreign/quest_base" for Quest, Constants, Game
-
-// Basic idea
-
-// move a random ammount from Encelladus to Tethys
-// wait 2 days
-// dialogue
-// branch:
-// - end quest
-// - move 1kT between to plantes with time pressure, ensure quest is possible
-//   on loose: loose money
-//   on win: gain heatshield
-// - move 1/2kT between to plantes with time pressure
-//   on loose: loose reputation
-//   on win: gain reputation + gain access to other quest
+import "foreign/quest_base" for Quest
+import "foreign/game" for Constants, Game
+import "foreign/ship" for Ship
 
 var class_name = "Raiders"
 
@@ -66,8 +54,9 @@ class Raiders is Quest {
                 }
             ]
         }
-        var id = Game.spawn_ship(ship_data)
-        _available_ships.add(id)
+        var ship = Ship.spawn(ship_data)
+        //ship.on_death = on_ship_death
+        _available_ships.add(ship)
     }
     
     serialize() {
@@ -81,8 +70,29 @@ class Raiders is Quest {
         _wave_num = data["wave_num"]
     }
 
+    notify_event(event, args) {
+        super(event, args)
+        if (event == "die") {
+            on_ship_death(args[0])
+        }
+    }
+
+    on_ship_death(ship) {
+        //if (_available_ships.indexOf(ship) >= 0) {
+        if (_available_ships.any {|x| x == ship}) {
+            Game.spawn_quest("raiders_reward", _wave_num)
+        }
+    }
+
     next() {
         super()
+        // Remove redundant
+        for(ship in _available_ships) {
+            if (ship.exists && ship.get_plans().count == 0) {
+                _available_ships.remove(ship)
+                ship.kill(false)
+            }
+        }
         if (state == "loop") {
             spawn_enemy()
             //dialogue("???", "Raiders appear")
@@ -91,13 +101,6 @@ class Raiders is Quest {
         if (state == "wait") {
             _wave_num = _wave_num + 1
             wait_seconds(Constants.day * 7, "loop")
-        }
-
-        if (_step == "endF") {
-            return false
-        }
-        if (_step == "endS") {
-            return true
         }
 	}
 }

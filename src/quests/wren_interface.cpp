@@ -39,6 +39,38 @@ bool _AssertSlot(WrenVM* vm, int slot, WrenType type) {
 	return true;
 }
 
+void _AllocateShip(WrenVM* vm) {
+	if(!_AssertSlot(vm, 0, WREN_TYPE_NUM)) return;
+	int rid = wrenGetSlotDouble(vm, 0);
+	if (!wrenHasModule(vm, "foreign/ship") || !wrenHasVariable(vm, "foreign/ship", "Ship")) {
+		wrenEnsureSlots(vm, 1);
+		wrenSetSlotString(vm, 0, "Ship class not known");
+		wrenAbortFiber(vm, 0);
+		return;
+	}
+	wrenEnsureSlots(vm, 2);
+	wrenGetVariable(vm, "foreign/ship", "Ship", 1);
+	Ship* ship = GetShip(RID(rid));
+	/*if (ship->wren_handle == NULL) {
+		void* ptr = wrenSetSlotNewForeign(vm, 0, 1, sizeof(RID));
+		*((RID*)ptr) = RID(rid);
+		ship->wren_handle = wrenGetSlotHandle(vm, 0);
+	} else {
+		wrenSetSlotHandle(vm, 0, ship->wren_handle);
+	}*/
+	void* ptr = wrenSetSlotNewForeign(vm, 0, 1, sizeof(RID));
+	*((RID*)ptr) = RID(rid);
+}
+
+void _FinalizeShip(void* data) { 
+	RID rid = *(RID*)data;
+	if(!IsIdValidTyped(rid, EntityType::SHIP)) {
+		return;
+	}
+	Ship* ship = GetShip(rid);
+	//ship->wren_handle = NULL;
+}
+
 void GameNow(WrenVM* vm) {
 	wrenEnsureSlots(vm, 1);
 	wrenSetSlotDouble(vm, 0, GlobalGetNow().Seconds());
@@ -75,13 +107,96 @@ void GameHohmannTF(WrenVM* vm) {
 	wrenSetMapValue(vm, 0, 1, 2);
 }
 
-void SpawnShip(WrenVM* vm) {
+void SpawnQuest(WrenVM* vm) {
+	if(!_AssertSlot(vm, 1, WREN_TYPE_STRING)) return;
+	const char* quest_name = wrenGetSlotString(vm, 1);
+	GetWrenInterface()->PushQuest(quest_name);
+}
+
+void ShipSpawn(WrenVM* vm) {
 	if(!_AssertSlot(vm, 1, WREN_TYPE_MAP)) return;
 	GetWrenInterface()->MoveSlot(1, 0);
 	DataNode dn;
 	GetWrenInterface()->MapAsDataNode(&dn);
 	RID id = GlobalGetState()->ships.AddShip(&dn);
 	wrenSetSlotDouble(vm, 0, id.AsInt());
+	_AllocateShip(vm);
+}
+
+void ShipKill(WrenVM* vm) {
+	if(!_AssertSlot(vm, 1, WREN_TYPE_BOOL)) return;
+	bool call_callback = wrenGetSlotBool(vm, 1);
+	RID ship = GetWrenInterface()->GetShipFormWrenObject();
+	if (!IsIdValid(ship)) return;
+	GlobalGetState()->ships.KillShip(ship, call_callback);
+}
+
+void ShipSetStat(WrenVM* vm) {
+	if(!_AssertSlot(vm, 1, WREN_TYPE_NUM)) return;
+	if(!_AssertSlot(vm, 2, WREN_TYPE_NUM)) return;
+	int stat_index = wrenGetSlotDouble(vm, 1);
+	int stat_value = wrenGetSlotDouble(vm, 2);
+	RID ship = GetWrenInterface()->GetShipFormWrenObject();
+	if (!IsIdValid(ship)) return;
+	if (stat_index < 0 || stat_index >= ShipStats::MAX) {
+		wrenEnsureSlots(vm, 1);
+		wrenSetSlotString(vm, 0, "invalid stat index");
+		wrenAbortFiber(vm, 0);
+		return;
+	}
+	GetShip(ship)->stats[stat_index] = stat_value;
+}
+
+void ShipGetStat(WrenVM* vm) {
+	if(!_AssertSlot(vm, 1, WREN_TYPE_NUM)) return;
+	int stat_index = wrenGetSlotDouble(vm, 1);
+	RID ship = GetWrenInterface()->GetShipFormWrenObject();
+	if (!IsIdValid(ship)) return;
+	wrenEnsureSlots(vm, 1);
+	if (stat_index < 0 || stat_index >= ShipStats::MAX) {
+		wrenSetSlotString(vm, 0, "invalid stat index");
+		wrenAbortFiber(vm, 0);
+		return;
+	}
+	wrenSetSlotDouble(vm, 0, GetShip(ship)->stats[stat_index]);
+}
+
+void ShipGetPlans(WrenVM* vm) {
+	RID ship_id = GetWrenInterface()->GetShipFormWrenObject();
+	if (!IsIdValid(ship_id)) return;
+	Ship* ship = GetShip(ship_id);
+	wrenEnsureSlots(vm, 1);
+	wrenSetSlotNewList(vm, 0);
+	WrenHandle* list_handle = wrenGetSlotHandle(vm, 0);
+	for(int i=0; i < ship->prepared_plans_count; i++) {
+		DataNode dn;
+		ship->prepared_plans[i].Serialize(&dn);
+		GetWrenInterface()->DataNodeToMap(&dn);
+		wrenSetSlotHandle(vm, 1, list_handle);
+		wrenInsertInList(vm, 1, 0, i);
+	}
+	wrenSetSlotHandle(vm, 0, list_handle);
+}
+
+void ShipGetId(WrenVM* vm) {
+	RID ship = GetWrenInterface()->GetShipFormWrenObject();
+	if (!IsIdValid(ship)) return;
+	wrenEnsureSlots(vm, 1);
+	wrenSetSlotDouble(vm, 0, ship.AsInt());
+}
+
+void ShipGetName(WrenVM* vm) {
+	RID ship = GetWrenInterface()->GetShipFormWrenObject();
+	if (!IsIdValid(ship)) return;
+	wrenEnsureSlots(vm, 1);
+	wrenSetSlotString(vm, 0, GetShip(ship)->name);
+}
+
+void ShipExists(WrenVM* vm) {
+	RID ship = GetWrenInterface()->GetShipFormWrenObject();
+	if (!IsIdValid(ship)) return;
+	wrenEnsureSlots(vm, 1);
+	wrenSetSlotBool(vm, 0, IsIdValid(ship));
 }
 
 bool _WrenCallEmptyMethod(WrenHandle* class_handle, const char* signature) {
@@ -124,25 +239,11 @@ WrenInterface::WrenInterface() {
 }
 
 WrenInterface::~WrenInterface() {
-
-}
-
-bool _AssertSlotType(WrenVM* vm, int slot, WrenType type) {
-	if (wrenGetSlotCount(vm) <= slot) {
-		wrenEnsureSlots(vm, 1);
-		wrenSetSlotString(vm, 0, "Not enough slots provided");
-		wrenAbortFiber(vm, 0);
-		return false;
+	/*// Cry about it
+	for (WrenHandle** handle = &common_handles.ship_id; handle != &common_handles.END_HANDLE; handle++) {
+		wrenReleaseHandle(vm, *handle);
 	}
-	if (wrenGetSlotType(vm, slot) != type) {
-		wrenEnsureSlots(vm, 1);
-		char error_msg[40];
-		sprintf(error_msg, "Wrong argument type at slot %d", slot);
-		wrenSetSlotString(vm, 0, error_msg);
-		wrenAbortFiber(vm, 0);
-		return false;
-	}
-	return true;
+	wrenFreeVM(vm);*/
 }
 
 void QuestInterfaceIsTaskPossible(WrenVM* vm) {
@@ -233,8 +334,33 @@ WrenForeignMethodFn BindForeignMethod(
 				return &GameNow;
 			} else if (strcmp(signature, "hohmann_tf(_,_,_)") == 0) {
 				return &GameHohmannTF;
-			} else if (strcmp(signature, "spawn_ship(_)") == 0) {
-				return &SpawnShip;
+			} else if (strcmp(signature, "spawn_quest(_,_)") == 0) {
+				return &SpawnQuest;
+			}
+		}
+		ERROR("Unsupported foreign method '%s.%s'", className, signature)
+	}
+	
+	if (strcmp(className, "Ship") == 0) {
+		if (isStatic) {
+			if (strcmp(signature, "spawn(_)") == 0) {
+				return &ShipSpawn;
+			}
+		} else {
+			if (strcmp(signature, "kill(_)") == 0) {
+				return &ShipKill;
+			} else if (strcmp(signature, "set_stat(_,_)") == 0) {
+				return &ShipSetStat;
+			} else if (strcmp(signature, "get_stat(_)") == 0) {
+				return &ShipGetStat;
+			} else if (strcmp(signature, "get_plans()") == 0) {
+				return &ShipGetPlans;
+			} else if (strcmp(signature, "id") == 0) {
+				return &ShipGetId;
+			} else if (strcmp(signature, "name") == 0) {
+				return &ShipGetName;
+			} else if (strcmp(signature, "exists") == 0) {
+				return &ShipExists;
 			}
 		}
 		ERROR("Unsupported foreign method '%s.%s'", className, signature)
@@ -263,6 +389,13 @@ WrenForeignClassMethods BindForeignClass(
 		return res;
 	}
 #endif // WREN_OPT_META
+
+	if (strcmp(className, "Ship") == 0) {
+		res.allocate = &_AllocateShip;
+		res.finalize = &_FinalizeShip;
+		return res;
+	}
+	ERROR("Unsupported foreign class '%s' in module '%s", className, module)
 
     return res;
 }
@@ -310,6 +443,9 @@ void WrenInterface::MakeVM() {
 	config.bindForeignClassFn = &BindForeignClass;
 	config.loadModuleFn = &LoadModule;
 	vm = wrenNewVM(&config);
+	
+	// Allocate Handles for Common Handles 
+	common_handles.quest_notify = wrenMakeCallHandle(vm, "notify_event(_,_)");
 }
 
 int WrenInterface::LoadWrenQuests() {
@@ -396,6 +532,41 @@ void WrenInterface::MoveSlot(int from, int to) const {
 	WrenHandle* handle = wrenGetSlotHandle(vm, from);
 	wrenSetSlotHandle(vm, to, handle);
 	wrenReleaseHandle(vm, handle);
+}
+
+RID WrenInterface::GetShipFormWrenObject() const {
+	// Kills the stack
+	if(!_AssertSlot(vm, 0, WREN_TYPE_FOREIGN)) return GetInvalidId();
+	return *((RID*) wrenGetSlotForeign(vm, 0));
+}
+
+void WrenInterface::NotifyShipEvent(RID ship, const char *event) {
+	IDAllocatorList<Quest, EntityType::ACTIVE_QUEST>* active_quests = &GlobalGetState()->quest_manager.active_quests;
+	for (auto iter = active_quests->Begin(); iter != active_quests->End(); iter++) {
+		wrenEnsureSlots(vm, 4);
+		wrenSetSlotDouble(vm, 0, ship.AsInt());
+		_AllocateShip(vm);
+
+		wrenSetSlotNewList(vm, 2);
+		wrenInsertInList(vm, 2, 0, 0);
+		
+		wrenSetSlotString(vm, 1, event);
+
+		wrenSetSlotHandle(vm, 0, active_quests->Get(iter.GetId())->quest_instance_handle);
+		wrenCall(vm, common_handles.quest_notify);
+	}
+}
+
+void WrenInterface::PushQuest(const char *quest_id) {
+	quest_queue.push(GetWrenQuest(quest_id));
+}
+
+void WrenInterface::Update() {
+	while (!quest_queue.empty()) {
+		GlobalGetState()->quest_manager.ForceQuest(quest_queue.front());
+		quest_queue.pop();
+	}
+	
 }
 
 bool WrenInterface::PrepareMap(const char* key) const {

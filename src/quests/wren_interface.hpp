@@ -4,7 +4,9 @@
 #include "basic.hpp"
 #include "wren.hpp"
 #include "datanode.hpp"
-#include <type_traits>
+#include "id_system.hpp"
+
+#include <queue>
 
 struct WrenQuestTemplate {
     WrenHandle* class_handle = NULL;
@@ -21,8 +23,15 @@ struct WrenInterface {
     WrenVM* vm;
     int valid_quest_count = 0;
     WrenQuestTemplate* quests = NULL;
+    std::queue<const WrenQuestTemplate*> quest_queue = std::queue<const WrenQuestTemplate*>();
 
     WrenHandle* internals_class_handle = NULL;
+    struct {
+        // More handles here
+        WrenHandle* quest_notify;
+
+        WrenHandle* END_HANDLE = NULL;  // to access raw pointer
+    } common_handles;
 
     WrenInterface();
     ~WrenInterface();
@@ -35,6 +44,11 @@ struct WrenInterface {
     
     bool CallFunc(WrenHandle* func_handle) const;
     void MoveSlot(int from, int to) const;
+    RID GetShipFormWrenObject() const;
+    void NotifyShipEvent(RID ship, const char* event);
+    void PushQuest(const char* quest_id);
+
+    void Update();
 
     bool PrepareMap(const char* key) const;
     double GetNumFromMap(const char* key, double def) const;

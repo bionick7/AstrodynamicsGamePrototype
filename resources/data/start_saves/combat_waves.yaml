@@ -1,0 +1,81 @@
+capital: 1e6
+planets:
+  - name: Mimas
+    trading_accessible: n
+    resource_stock:
+      water: 1000
+    resource_delta:
+      water: 0
+      food: 0
+  - name: Encelladus
+    trading_accessible: n
+    resource_stock: {}
+  - name: Tethys
+    trading_accessible: y
+    resource_stock:
+      water: 1000
+      electronics: 6
+    resource_delta: {}
+  - name: Rhea
+    trading_accessible: n
+    resource_stock: {}
+  - name: Titan
+    trading_accessible: y
+    resource_stock: {}
+  - name: Iaeptus
+    trading_accessible: n
+    resource_stock: {}
+  - name: Phoebe
+    trading_accessible: n
+    resource_stock: {}
+
+ships:
+- name: Light transport
+  class_id: shp_light_transport
+  allegiance: 0
+  planet: Tethys
+  tf_plans: []
+
+- name: Extractor
+  class_id: shp_light_transport
+  allegiance: 0
+  planet: Encelladus
+  tf_plans: []
+  modules:
+  - shpmod_water_extractor
+  - shpmod_water_extractor
+
+- name: Tethys Shipyard
+  class_id: shp_spacestation
+  allegiance: 0
+  planet: Tethys
+  tf_plans: []
+  modules:
+  - shpmod_small_yard_1
+  - shpmod_small_yard_2
+  - shpmod_small_yard_3
+  - shpmod_small_yard_4
+
+- name: Military ship 1
+  class_id: shp_express
+  allegiance: 0
+  planet: Tethys
+  tf_plans: []
+  modules:
+  - shpmod_railgun
+  - shpmod_railgun
+  - shpmod_armor
+  - shpmod_reactor
+  - shpmod_boost_init
+  
+- name: Military ship 2
+  class_id: shp_express
+  allegiance: 0
+  planet: Encelladus
+  tf_plans: []
+  modules:
+  - shpmod_railgun
+  - shpmod_railgun
+  - shpmod_armor
+  - shpmod_reactor
+  - shpmod_boost_init
