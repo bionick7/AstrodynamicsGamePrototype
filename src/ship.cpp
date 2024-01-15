@@ -96,11 +96,11 @@ bool ShipBattle(IDList* ships_aggressor, IDList* ships_defender, double relative
             target_ship->variables[ShipVariables::KINETIC_ARMOR] -= kinetic_dammage;
             target_ship->variables[ShipVariables::ENERGY_ARMOR] -= ordonance_dammage;
 
-            INFO("Turn %d: %s vs %s: DMG: %d", turn, actor_ship->name, target_ship->name, ordonance_dammage + kinetic_dammage)
-            INFO("    >> %d - %d", 
-                 target_ship->variables[ShipVariables::KINETIC_ARMOR], 
-                 target_ship->variables[ShipVariables::ENERGY_ARMOR]
-                )
+            //INFO("Turn %d: %s vs %s: DMG: %d", turn, actor_ship->name, target_ship->name, ordonance_dammage + kinetic_dammage)
+            //INFO("    >> %d - %d", 
+            //     target_ship->variables[ShipVariables::KINETIC_ARMOR], 
+            //     target_ship->variables[ShipVariables::ENERGY_ARMOR]
+            //    )
             if(target_ship->variables[ShipVariables::KINETIC_ARMOR] < 0 || target_ship->variables[ShipVariables::ENERGY_ARMOR] < 0) {
                 INFO("%s killed %s in battle", actor_ship->name, target_ship->name)
                 killed.Append(target_id);
@@ -463,33 +463,30 @@ void Ship::_UpdateShipyard() {
         MinInt(collected_components[0], collected_components[1]),
         repair_stations
     );
-    for(int i=0; i < repair_stations; i++) {
-        if (GlobalGetState()->calendar.IsNewDay()) {
-            if (is_parked) {
-                IDList available_ships;
-                uint32_t filter = (1 << allegiance) & 0xFFU | 0xFFFFFF00U;
-                GlobalGetState()->ships.GetOnPlanet(&available_ships, parent_planet, filter);
-                available_ships.Sort([](RID ship1, RID ship2){
-                    return GetShip(ship2)->GetMissingHealth() - GetShip(ship1)->GetMissingHealth();
-                });
-                int hp_pool = 5;
-                for(int i=0; i < available_ships.size; i++) {
-                    // Knowingly include self
-                    int hp_needed = GetShip(available_ships[i])->GetMissingHealth();
-                    int hp_provided = MinInt(hp_pool, hp_needed);
-                    GetShip(available_ships[i])->Repair(hp_provided);
-                    hp_pool -= hp_provided;
-                    if (hp_pool <= 0) break;
-                }
-            } else {
-                NOT_IMPLEMENTED
+    if (GlobalGetState()->calendar.IsNewDay() && is_parked) {
+        for(int i=0; i < repair_stations; i++) {
+            IDList available_ships;
+            uint32_t filter = (1 << allegiance) & 0xFFU | 0xFFFFFF00U;
+            GlobalGetState()->ships.GetOnPlanet(&available_ships, parent_planet, filter);
+            available_ships.Sort([](RID ship1, RID ship2){
+                return GetShip(ship2)->GetMissingHealth() - GetShip(ship1)->GetMissingHealth();
+            });
+            int hp_pool = 5;
+            for(int i=0; i < available_ships.size; i++) {
+                // Knowingly include self
+                int hp_needed = GetShip(available_ships[i])->GetMissingHealth();
+                int hp_provided = MinInt(hp_pool, hp_needed);
+                GetShip(available_ships[i])->Repair(hp_provided);
+                hp_pool -= hp_provided;
+                if (hp_pool <= 0) break;
             }
         }
-    }
-    for(int i=0; i < ship_yards; i++) {
-        //DebugPrintText("Shipyard");
-        // TBD
-        // Should probably be managed by the planet
+        for(int i=0; i < ship_yards; i++) {
+            //DebugPrintText("Shipyard");
+            // TBD
+            GetPlanet(parent_planet)->ship_production_process++;
+            // Should probably be managed by the planet
+        }
     }
 }
 
@@ -908,6 +905,7 @@ RID Ships::AddShip(const DataNode* data) {
     if (!data->HasArray("variables")) {
         ship->Repair(1e6);
     }
+    INFO("Spawned %s (%s-class)", ship->name, GetShipClassByIndex(ship->ship_class)->name);
     return ship_entity;
 }
 
@@ -931,6 +929,7 @@ int Ships::LoadShipClasses(const DataNode* data) {
         sc.max_capacity = ship_data->GetI("capacity", 0);
         sc.max_dv = ship_data->GetF("dv", 0) * 1000;  // km/s -> m/s
         sc.v_e = ship_data->GetF("Isp", 0) * 1000;    // km/s -> m/s
+        sc.construction_time = ship_data->GetI("construction_time", 20);
         sc.oem = ResourceCountsToKG(sc.max_capacity) / (exp(sc.max_dv/sc.v_e) - 1);
 
         const DataNode* stats_data = ship_data->GetChild("stats", true);

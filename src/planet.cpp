@@ -10,6 +10,8 @@ Planet::Planet(const char* p_name, double p_mu, double p_radius) {
     strcpy(name, p_name);
     mu = p_mu;
     radius = p_radius;
+    ship_production_queue = IDList();
+    ship_production_process = 0;
 
     for (int i = 0; i < MAX_PLANET_INVENTORY; i++) {
         ship_module_inventory[i] = GetInvalidId();
@@ -19,6 +21,7 @@ Planet::Planet(const char* p_name, double p_mu, double p_radius) {
 void Planet::Serialize(DataNode* data) const {
     data->Set("name", name);
     data->Set("trading_accessible", economy.trading_accessible ? "y" : "n");
+    data->SetI("ship_production_process", 0);
     //data->SetF("mass", mu / G);
     //data->SetF("radius", radius);
 
@@ -46,6 +49,7 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
     //SettingOverridePush("datanode_quite", true);
     //SettingOverridePop("datanode_quite");
     strcpy(name, data->Get("name", name, true));
+    ship_production_process = data->GetI("ship_production_process", 0, true);
     RID index = planets->GetIndexByName(name);
     if (!IsIdValid(index)) {
         return;
@@ -149,6 +153,28 @@ void Planet::Update() {
     position = orbit.GetPosition(now);
     // RecalcStats();
     economy.Update();
+
+    // Update ship production
+    if (ship_production_queue.size > 0 && GlobalGetState()->calendar.IsNewDay()) {
+        const ShipClass* sc = GetShipClassByIndex(ship_production_queue[0]);
+        if (ship_production_process >= sc->construction_time) {
+            IDList list;
+            GlobalGetState()->ships.GetOnPlanet(&list, id, UINT32_MAX);
+            int allegiance = GetShip(list[0])->allegiance;// Assuming planets can't have split allegiance!
+
+            DataNode ship_data;
+            ship_data.Set("name", "TODO: random name");
+            ship_data.Set("class_id", sc->id);
+            ship_data.SetI("allegiance", allegiance); 
+            ship_data.Set("planet", name);
+            ship_data.SetArray("tf_plans", 0);
+            ship_data.SetArray("modules", 0);
+            GlobalGetState()->ships.AddShip(&ship_data);
+
+            ship_production_queue.EraseAt(0);
+            ship_production_process = 0;
+        }
+    }
 }
 
 void Planet::Draw(const CoordinateTransform* c_transf) {
@@ -209,12 +235,70 @@ void Planet::_UIDrawInventory() {
     UIContextPop();  // Inset
 }
 
+void Planet::_UIDrawShipProduction() {
+    // Draw options
+    const int COLUMNS = 4;
+    int rows = std::ceil(GlobalGetState()->ships.ship_classes_count / (double)COLUMNS);
+    UIContextPushInset(0, 50*rows);
+    UIContextShrink(5, 5);
+    for(int i=0; i < GlobalGetState()->ships.ship_classes_count; i++) {
+        RID id = RID(i, EntityType::SHIP_CLASS);
+        const ShipClass* ship_class = GetShipClassByIndex(id);  
+        UIContextPushGridCell(COLUMNS, rows, i % COLUMNS, i / COLUMNS);
+        
+        // Possible since Shipclasses get loaded once in continuous mempry
+        ButtonStateFlags button_state = UIContextAsButton();
+        if (button_state & BUTTON_STATE_FLAG_HOVER) {
+            UIContextEnclose(Palette::bg, Palette::ui_main);
+            UISetMouseHint(ship_class->description);
+        } else {
+            UIContextEnclose(Palette::bg, Palette::blue);
+        }
+        if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+            ship_production_queue.Append(id);
+        }
+
+        UIContextWrite(ship_class->name);
+        //UIContextFillline(1.0, Palette::ui_main, Palette::bg);
+        //UIContextWrite(ship_class->description);
+        UIContextPop();  // GridCell
+    }
+    UIContextPop();  // Inset
+
+    // Draw queue
+    for(int i=0; i < ship_production_queue.size; i++) {
+        RID id = ship_production_queue[i];
+        const ShipClass* ship_class = GetShipClassByIndex(id);
+        UIContextPushInset(0, 50);
+        UIContextShrink(3, 3);
+        ButtonStateFlags button_state = UIContextAsButton();
+        if (button_state & BUTTON_STATE_FLAG_HOVER) {
+            UIContextEnclose(Palette::bg, Palette::ui_main);
+            UISetMouseHint(ship_class->description);
+        } else {
+            UIContextEnclose(Palette::bg, Palette::blue);
+        }
+        if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+            ship_production_queue.EraseAt(i);
+            i--;
+        }
+        UIContextWrite(ship_class->name);
+        if (i == 0) {
+            float progress = Clamp(ship_production_process / (float)ship_class->construction_time, 0.0f, 1.0f);
+            UIContextFillline(progress, Palette::ui_main, Palette::bg);
+        }
+        UIContextWrite(ship_class->description);
+        UIContextPop();  // Inset
+    }
+}
+
 int current_tab = 0;  // Global variable, I suppose
 void Planet::DrawUI() {
     // Reset
     current_slot = ShipModuleSlot();
 
-    int show_quadrant = 0;
+    int y_start = -1;
+    int height = -1;
     ResourceTransfer transfer = ResourceTransfer();
     resource_count_t fuel_draw = -1;  // why not 0?
 
@@ -222,40 +306,40 @@ void Planet::DrawUI() {
 
     if (GlobalGetState()->active_transfer_plan.IsActive()){
         if (tp->departure_planet == id) {
-            show_quadrant = 1;
+            y_start = 10;
+            height = GetScreenHeight() / 2 - 20;
             transfer = tp->resource_transfer.Inverted();
             fuel_draw = tp->fuel_mass;
-        }
-        if (tp->arrival_planet == id) {
-            show_quadrant = 2;
+        } else if (tp->arrival_planet == id) {
+            y_start = GetScreenHeight() / 2 + 10;
+            height = GetScreenHeight() / 2 - 20;
             transfer = tp->resource_transfer;
+        } else {
+            return;
         }
-    }
-    if (mouse_hover || GlobalGetState()->focused_planet == id) {
-        show_quadrant = 1;
+    } else if (mouse_hover || GlobalGetState()->focused_planet == id) {
+        y_start = 10;
+        height = GetScreenHeight() - 20;
         transfer = ResourceTransfer();
         fuel_draw = -1;
-    }
-    if (show_quadrant == 0) {
+    } else {
         return;
     }
 
-    if (show_quadrant == 1) {
-        UIContextCreateNew(10, 10, 16*30, GetScreenHeight() / 2 - 20, 16, Palette::ui_main);
-    } else {
-        UIContextCreateNew(10, GetScreenHeight() / 2 + 10, 16*30, GetScreenHeight() / 2 - 20, 16, Palette::ui_main);
-    }
+    UIContextCreateNew(10, y_start, 16*30, height, 16, Palette::ui_main);
     UIContextCurrent().Enclose(2, 2, Palette::bg, Palette::ui_main);
 
     UIContextPushInset(4, 20);  // Tab container
     int w = UIContextCurrent().width;
-    const int n_tabs = 4;
-    const char* tab_descriptions[4] = {
-        "resources",
-        "economy",
-        "inventory",
-        "~quests~"
+    const int n_tabs = 5;
+    const char* tab_descriptions[] = {
+        "Resources",
+        "Economy",
+        "Inventory",
+        "Ship Production",
+        "~Quests~"
     };
+    static_assert(sizeof(tab_descriptions) / sizeof(tab_descriptions[0]) == n_tabs);
     for (int i=0; i < n_tabs; i++) {
         UIContextPushHSplit(i * w / n_tabs, (i + 1) * w / n_tabs);
         ButtonStateFlags button_state = UIContextAsButton();
@@ -288,6 +372,9 @@ void Planet::DrawUI() {
         break;
     case 2:
         _UIDrawInventory();
+        break;
+    case 3:
+        _UIDrawShipProduction();
         break;
     }
 

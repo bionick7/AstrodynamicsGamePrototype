@@ -7,6 +7,7 @@ ship_classes:
   dv: 6  # km/s
   Isp: 4.5  # km/s
   capacity: 30  # t
+  construction_time: 15
   stats:
     kinetic_hp: 1
     energy_hp: 1
@@ -25,6 +26,7 @@ ship_classes:
   dv: 6
   Isp: 4.5
   capacity: 10
+  construction_time: 5
   stats:
     kinetic_hp: 3
     energy_hp: 3
@@ -41,6 +43,7 @@ ship_classes:
   dv: 0
   Isp: 0
   capacity: 100
+  construction_time: 50
   stats:
     kinetic_hp: 10
     energy_hp: 10
@@ -54,6 +57,7 @@ ship_classes:
   dv: 12
   Isp: 10
   capacity: 10
+  construction_time: 20
   stats:
     kinetic_hp: 2
     energy_hp: 2

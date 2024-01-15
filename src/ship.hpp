@@ -9,7 +9,7 @@
 #include "ship_modules.hpp"
 
 #define SHIP_MAX_PREPARED_PLANS 10
-#define SHIP_MAX_MODULES 10
+#define SHIP_MAX_MODULES 16
 
 #define SHIPCLASS_NAME_MAX_SIZE 64
 #define SHIPCLASS_DESCRIPTION_MAX_SIZE 1024
@@ -34,6 +34,7 @@ struct ShipClass {
     double v_e;     // m/s
     resource_count_t max_capacity;  // counts
     int stats[ShipStats::MAX];
+    int construction_time;
 
     // Ease-of-use variables
     double oem;  // kg

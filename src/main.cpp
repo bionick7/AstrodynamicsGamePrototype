@@ -24,6 +24,7 @@ void TestingSetup(GlobalState* app) {
     double dv1_true = GetPlanet(planet_1)->GetDVFromExcessVelocity({0, dv1});
     double dv2_true = GetPlanet(planet_2)->GetDVFromExcessVelocity({0, dv2});
     INFO("dv1': %f, dv2': %f", dv1_true, dv2_true)*/
+    return;
 
     const WrenQuestTemplate* template_ = GetWrenInterface()->GetWrenQuest("raiders");
     if (template_ != NULL) {
@@ -44,7 +45,8 @@ void Load(int argc, const char** argv) {
     GlobalState* app = GlobalGetState();
     app->Make(1e6);
     app->LoadData();
-    app->LoadGame("resources/data/start_saves/combat_waves.yaml");
+    //app->LoadGame("resources/data/start_saves/combat_waves.yaml");
+    app->LoadGame("resources/data/start_saves/start_state.yaml");
     TestingSetup(app);
 
     // Interpreting cmdline

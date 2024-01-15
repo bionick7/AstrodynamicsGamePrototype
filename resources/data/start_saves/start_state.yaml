@@ -75,3 +75,25 @@ ships:
   - shpmod_railgun
   - shpmod_armor
   - shpmod_reactor
+- name: Super Shipyard
+  class_id: shp_spacestation
+  allegiance: 0
+  planet: Mimas
+  tf_plans: []
+  modules:
+  - shpmod_small_yard_1
+  - shpmod_small_yard_2
+  - shpmod_small_yard_3
+  - shpmod_small_yard_4
+  - shpmod_small_yard_1
+  - shpmod_small_yard_2
+  - shpmod_small_yard_3
+  - shpmod_small_yard_4
+  - shpmod_small_yard_1
+  - shpmod_small_yard_2
+  - shpmod_small_yard_3
+  - shpmod_small_yard_4
+  - shpmod_small_yard_1
+  - shpmod_small_yard_2
+  - shpmod_small_yard_3
+  - shpmod_small_yard_4

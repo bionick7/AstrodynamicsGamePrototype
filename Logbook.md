@@ -96,3 +96,5 @@ Key decision:
 - Choosing upgrades
 Only thing that needs to be done now is ship building queue
 Would probably need to be unrealistically fast
+
+Also implemented ship production in an unreasonably short time. The most daunting tasks are always the easiest
