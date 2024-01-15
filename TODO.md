@@ -1,4 +1,3 @@
-
 # TODO/Wishlists
 
 ## Immediate
@@ -8,7 +7,7 @@
 - Quest system (with wren?) (Done)
 - Sound (Done)
 - Automatically purchase fuel when possible (Done)
-- quantise resources (1 count = 100kT) (Done)
+- quantize resources (1 count = 100kT) (Done)
 - water mining ship (or other more techniques to deal with fuel management?,) (Done)
 - Transfer plan UX (Half)
 - Inventory (Done)
@@ -16,9 +15,9 @@
 - Drag & Drop (Done)
 - Dialogue (Done)
 - Actual quests
+- Build ships in shipyard
 - Shop
 //- Implement Ship Docking Rent?
-- Build ships in shipyard
 
 ## Known Bugs
 - Deleting a transfer plan while editing it is a problem  (Done)

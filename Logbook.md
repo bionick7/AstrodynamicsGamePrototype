@@ -80,3 +80,19 @@ Focus on this and we can actually have a gameready prototype within a few hours.
 ## Status 10 Jan 24
 I am kinda stuck on how exactly the combat system should work tbh.
 For threat, I am thinking of introducing a manager (can be in typst) properly schedule the attacks
+
+## Status 14 Jan 24
+Raider wave mvp. This system might have potential for core gameplay loop. Just needs balance, really.
+Main balance point is how much damage the ships do each 'turn', i.e. offense vs. defense.
+Also, how/where are new ships introduced and what are the remaining civilian ships.
+Civilian ship also should be damageable.
+Ships building only major implementation rn.
+
+## Status 14 Jan 24
+A lot of interesting detail going on if we can manage it.
+Key decision:
+- What to leave behind on longer journeys
+- Defending your stations vs. attacking. (natural bias towards defensive)
+- Choosing upgrades
+Only thing that needs to be done now is ship building queue
+Would probably need to be unrealistically fast

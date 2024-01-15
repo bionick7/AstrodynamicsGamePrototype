@@ -28,12 +28,11 @@ class Raiders is Quest {
             "is_parked": true,
             "allegiance": 1,
             "name": "The Blind Rat",
-            "planet": "Iaeptus",
+            "planet": "Titan",
             "modules": [
-                "shpmod_railgun",
-                "shpmod_railgun",
-                "shpmod_armor",
-                "shpmod_reactor",
+                "shpmod_light_armor",
+                "shpmod_missiles",
+                "shpmod_missiles",
             ],
             "prepared_plans": [
                 {

@@ -9,21 +9,26 @@ class RaidersReward is Quest {
     static subject { "---" }
     static contractor { "The enclave" }
 
-    static modules {[
+    static modules_util {[
         "shpmod_heatshield",
         "shpmod_droptank",
-        "shpmod_farm",
         "shpmod_water_extractor",
+        "shpmod_acs",
+        "shpmod_reactor",
+    ]}
+
+    static modules_shipyard {[
         "shpmod_small_yard_1",
         "shpmod_small_yard_2",
         "shpmod_small_yard_3",
         "shpmod_small_yard_4",
+    ]}
+
+    static modules_combat {[
         "shpmod_railgun",
         "shpmod_missiles",
         "shpmod_armor",
         "shpmod_pdc",
-        "shpmod_acs",
-        "shpmod_reactor",
     ]}
 
     construct new () {
@@ -32,10 +37,9 @@ class RaidersReward is Quest {
     }
 
     reward_choice() {
-        for (i in 0...3) {
-            var rand_index = rand.int(0, RaidersReward.modules.count-1)
-            _mods[i] = RaidersReward.modules[rand_index]
-        }
+        _mods[0] = RaidersReward.modules_util[rand.int(0, RaidersReward.modules_util.count-1)]
+        _mods[1] = RaidersReward.modules_shipyard[rand.int(0, RaidersReward.modules_shipyard.count-1)]
+        _mods[2] = RaidersReward.modules_combat[rand.int(0, RaidersReward.modules_combat.count-1)]
         dialogue(
             "Reward", "Choose your reward",
             _mods,

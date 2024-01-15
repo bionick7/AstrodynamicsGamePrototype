@@ -17,14 +17,23 @@
 
 struct WrenHandle;
 
+// Pseudo enum to use flags
+struct IntelLevel {
+    typedef uint32_t Type;
+    static const Type TRAJECTORY = 1;
+    static const Type STATS = 2;
+    static const Type FULL = UINT32_MAX;
+};
+
 struct ShipClass {
     char name[SHIPCLASS_NAME_MAX_SIZE];
     char description[SHIPCLASS_DESCRIPTION_MAX_SIZE];
     const char* id = "INVALID ID - SHIP CLASS LOADING ERROR";
 
-    double max_dv;
-    double v_e;
-    resource_count_t max_capacity;
+    double max_dv;  // m/s
+    double v_e;     // m/s
+    resource_count_t max_capacity;  // counts
+    int stats[ShipStats::MAX];
 
     // Ease-of-use variables
     double oem;  // kg
@@ -51,7 +60,10 @@ struct Ship {
     int prepared_plans_count;
     TransferPlan prepared_plans[SHIP_MAX_PREPARED_PLANS];
     RID modules[SHIP_MAX_MODULES];
+    // stats are more or less constat for the same ammount of modules
     int stats[ShipStats::MAX];
+    // variables vary
+    int variables[ShipVariables::MAX];
     
     int plan_edit_index;
     int highlighted_plan_index;
@@ -78,11 +90,14 @@ struct Ship {
     
     bool HasMouseHover(double* min_distance) const;
     void Update();
+    void _UpdateShipyard();
+    void _UpdateModules();
     void Draw(const CoordinateTransform* c_transf) const;
     void DrawUI();
     void Inspect();
 
     void RemoveShipModuleAt(int index);
+    void Repair(int hp);
 
     double GetPayloadMass() const;
     resource_count_t GetMaxCapacity() const;
@@ -90,11 +105,14 @@ struct Ship {
     resource_count_t GetFuelRequiredEmpty(double dv) const;
     double GetCapableDV() const;
     bool IsPlayerFriend() const;
-    bool IsPlayerKnown() const;
+    IntelLevel::Type GetIntelLevel() const;
     bool IsTrajectoryKnown(int index) const;
     int GetCombatStrength() const;
+    int GetMissingHealth() const;
+    bool CanDragModule(int index) const;
 
     Color GetColor() const;
+
 
     TransferPlan* GetEditedTransferPlan();
     void ConfirmEditedTransferPlan();
@@ -113,6 +131,11 @@ struct Ships {
     const static uint32_t MILITARY_SELECTION_FLAG = 0x0100;  // Allowing for 8 factions
     const static uint32_t CIVILIAN_SELECTION_FLAG = 0x0200;
 
+    IDAllocatorList<Ship, EntityType::SHIP> alloc;
+    std::map<std::string, RID> ship_classes_ids;
+    ShipClass* ship_classes;
+    uint32_t ship_classes_count;
+
     Ships();
     RID AddShip(const DataNode* data);
     int LoadShipClasses(const DataNode* data);
@@ -124,11 +147,6 @@ struct Ships {
     void GetOnPlanet(IDList* list, RID planet, uint32_t allegiance_bits) const;
     void KillShip(RID uuid, bool notify_callback);
 
-    IDAllocatorList<Ship, EntityType::SHIP> alloc;
-
-    std::map<std::string, RID> ship_classes_ids;
-    ShipClass* ship_classes;
-    uint32_t ship_classes_count;
 };
 
 Ship* GetShip(RID uuid);

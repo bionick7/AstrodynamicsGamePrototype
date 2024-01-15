@@ -66,16 +66,16 @@ ships:
   - shpmod_railgun
   - shpmod_armor
   - shpmod_reactor
-  - shpmod_boost_init
+  - shpmod_acs
   
 - name: Military ship 2
   class_id: shp_express
   allegiance: 0
-  planet: Encelladus
+  planet: Tethys
   tf_plans: []
   modules:
   - shpmod_railgun
   - shpmod_railgun
   - shpmod_armor
   - shpmod_reactor
-  - shpmod_boost_init
+  - shpmod_acs

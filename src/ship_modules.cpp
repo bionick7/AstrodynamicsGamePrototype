@@ -97,6 +97,9 @@ bool ShipModuleSlot::IsReachable(ShipModuleSlot other) {
         own_planet = entity;
     } else if (type == ShipModuleSlot::DRAGGING_FROM_SHIP) {
         own_planet = GetShip(entity)->parent_planet;  // Might be invalid
+        if (!GetShip(entity)->CanDragModule(index)) {
+            return false;
+        }
     }
     
     if (other.type == ShipModuleSlot::DRAGGING_FROM_PLANET) {
@@ -118,11 +121,11 @@ int ShipModules::Load(const DataNode* data) {
         strcpy(ship_modules[i].name, module_data->Get("name"));
         strcpy(ship_modules[i].description, module_data->Get("description"));
 
-        const char* id = module_data->Get("id", "_");
-        if (strcmp(id, "shpmod_water_extractor") == 0) {
+        const char* string_id = module_data->Get("id", "_");
+        if (strcmp(string_id, "shpmod_water_extractor") == 0) {
             ship_modules[i].module_type = ShipModuleClass::WATER_EXTRACTOR;
         }
-        if (strcmp(id, "shpmod_heatshield") == 0) {
+        if (strcmp(string_id, "shpmod_heatshield") == 0) {
             ship_modules[i].module_type = ShipModuleClass::HEAT_SHIELD;
         }
 
@@ -147,8 +150,22 @@ int ShipModules::Load(const DataNode* data) {
             }
         }
 
-        auto pair = shipmodule_ids.insert_or_assign(id, RID(i, EntityType::MODULE_CLASS));
+        RID rid = RID(i, EntityType::MODULE_CLASS);
+        auto pair = shipmodule_ids.insert_or_assign(string_id, rid);
         ship_modules[i].id = pair.first->first.c_str();  // points to string in dictionary
+
+        if (strcmp(string_id, "shpmod_small_yard_1") == 0) {
+            expected_modules.small_yard_1 = rid;
+        }
+        else if (strcmp(string_id, "shpmod_small_yard_2") == 0) {
+            expected_modules.small_yard_2 = rid;
+        }
+        else if (strcmp(string_id, "shpmod_small_yard_3") == 0) {
+            expected_modules.small_yard_3 = rid;
+        }
+        else if (strcmp(string_id, "shpmod_small_yard_4") == 0) {
+            expected_modules.small_yard_4 = rid;
+        }
     }
     return shipmodule_count;
 }

@@ -25,18 +25,18 @@ shipmodules:
 
 # Shipyard
 - id: shpmod_small_yard_1
-  name: Small shipyard administration
-  description: TODO
+  name: Small shipyard offices
+  description: Administrative and design offices. Needed in order to build ships
   mass: 1
 
 - id: shpmod_small_yard_2
   name: Shipyard storage facility
-  description: TODO
+  description: Part and material warehouses. Needed in order to build ships
   mass: 2
 
 - id: shpmod_small_yard_3
   name: Small shipyard workshop
-  description: TODO
+  description: Construction Workshops. Needed in order to build or repair ships
   mass: 4
 
 - id: shpmod_small_yard_4
@@ -58,15 +58,24 @@ shipmodules:
 - id: shpmod_missiles
   name: Missiles
   description: Ordonance Attk. +1
-  add: { ordnance_offense: 1 }
+  add: { ordnance_offense: 2 }
+  mass: 1
+
+- id: shpmod_light_armor
+  name: Light armor
+  description: TODO
+  add: 
+    kinetic_hp: 10
+    energy_hp: 5
   mass: 1
 
 - id: shpmod_armor
   name: Extra armor
   description: TODO
   add: 
-    kinetic_defense: 2
-    ordnance_defense: 1
+    kinetic_hp: 20
+    energy_hp: 10
+    kinetic_defense: 1
   mass: 2
   
 - id: shpmod_pdc
@@ -102,6 +111,7 @@ shipmodules:
   add:
     boarding_offense: 3
     boarding_defense: 2
+    crew: 16
   mass: 1
   
 - id: shpmod_armory
@@ -118,7 +128,7 @@ shipmodules:
   description: DEV - Free boost to initiativeTODO
   add: 
     initiative: 1
-  mass: 1
+  mass: 0
 
 # ... Weapons, time extenders
 # e.g. loadout for gunship:

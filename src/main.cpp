@@ -16,6 +16,15 @@ const char* GetSetting(int argc, const char** argv, const char* find) {
 }
 
 void TestingSetup(GlobalState* app) {
+    /*RID planet_1 = GlobalGetState()->planets.GetIndexByName("Tethys");
+    RID planet_2 = GlobalGetState()->planets.GetIndexByName("Titan");
+    double dv1, dv2;
+    HohmannTransfer(&GetPlanet(planet_1)->orbit, &GetPlanet(planet_2)->orbit, 0, NULL, NULL, &dv1, &dv2);
+    INFO("dv1: %f, dv2: %f", dv1, dv2)
+    double dv1_true = GetPlanet(planet_1)->GetDVFromExcessVelocity({0, dv1});
+    double dv2_true = GetPlanet(planet_2)->GetDVFromExcessVelocity({0, dv2});
+    INFO("dv1': %f, dv2': %f", dv1_true, dv2_true)*/
+
     const WrenQuestTemplate* template_ = GetWrenInterface()->GetWrenQuest("raiders");
     if (template_ != NULL) {
         app->quest_manager.ForceQuest(template_);

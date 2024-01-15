@@ -26,22 +26,8 @@ resource_count_t ShipClass::GetFuelRequiredEmpty(double dv) const {
     return KGToResourceCounts(oem * (exp(dv/v_e) - 1));
 }
 
-void ShipBattle(IDList* ships_1, IDList* ships_2, double relative_velocity) {
-    /*int cum_stats_1[ShipStats::MAX] = {0};
-    for (int i=0; i < ships_1->size; i++) {
-        const Ship* ship = GetShip(ships_1->Get(i));
-        for(int stat=0; stat < ShipStats::MAX; stat++) {
-            cum_stats_1[stat] += ship->stats[stat];
-        }
-    }
-    int cum_stats_2[ShipStats::MAX] = {0};
-    for (int i=0; i < ships_2->size; i++) {
-        const Ship* ship = GetShip(ships_2->Get(i));
-        for(int stat=0; stat < ShipStats::MAX; stat++) {
-            cum_stats_2[stat] += ship->stats[stat];
-        }
-    }*/
-
+bool ShipBattle(IDList* ships_aggressor, IDList* ships_defender, double relative_velocity) {
+    // Returns true if aggressor wins
     int velocity_multiplier = relative_velocity / 3000 + 1;
 
     // Pick ship order (alternating)
@@ -51,76 +37,76 @@ void ShipBattle(IDList* ships_1, IDList* ships_2, double relative_velocity) {
     //     remove if necaissary
     // Sort by initiative instead
 
-    int total_ships = ships_1->size + ships_2->size;
+    int total_ships = ships_aggressor->size + ships_defender->size;
     IDList turn_order = IDList(total_ships);
-    for(int i=0; i < ships_1->size; i++) {
-        turn_order.Append(ships_1->Get(i));
+    for(int i=0; i < ships_aggressor->size; i++) {
+        turn_order.Append(ships_aggressor->Get(i));
     }
-    for(int i=0; i < ships_2->size; i++) {
-        turn_order.Append(ships_2->Get(i));
+    for(int i=0; i < ships_defender->size; i++) {
+        turn_order.Append(ships_defender->Get(i));
     }
-    IDList ships_1_strength = IDList(*ships_1);
-    IDList ships_2_strength = IDList(*ships_2);
+    IDList ships_aggr_strength = IDList(*ships_aggressor);
+    IDList ships_defs_strength = IDList(*ships_defender);
 
     turn_order.Sort([](RID ship1, RID ship2) {
         return GetShip(ship2)->stats[ShipStats::INITIATIVE] - GetShip(ship1)->stats[ShipStats::INITIATIVE];
     });
 
-    ships_1_strength.Sort([](RID ship1, RID ship2){
+    ships_aggr_strength.Sort([](RID ship1, RID ship2){
         return GetShip(ship2)->GetCombatStrength() - GetShip(ship1)->GetCombatStrength();
     });
 
-    ships_2_strength.Sort([](RID ship1, RID ship2){
+    ships_defs_strength.Sort([](RID ship1, RID ship2){
         return GetShip(ship2)->GetCombatStrength() - GetShip(ship1)->GetCombatStrength();
     });
 
     IDList killed = IDList();
 
-    for (int i=0; i < total_ships; i++) {
-        /*
-        bool first_list;
-        int list_index;
-        if (i < MinInt(ships_1->size, ships_2->size)*2) {
-            // assuming ships_1 has the advantage
-            first_list = i % 2 == 0;
-            list_index = i / 2;
-        } else {
-            first_list = ships_1->size > ships_2->size;
-            list_index = first_list ? (i - ships_2->size) : (i - ships_1->size);
+    bool agressor_won;
+    int turn = 0;
+    for (;;) {
+        for (int i=0; i < total_ships; i++) {
+            if (killed.Find(turn_order[i]) >= 0) {
+                continue;
+            }
+            Ship* actor_ship = GetShip(turn_order[i]);
+            bool is_agressor = ships_aggr_strength.Find(turn_order[i]) >= 0;
+            const IDList* target_ship_list = is_agressor ? &ships_defs_strength : &ships_aggr_strength;
+            
+            int target_index = 0;
+            RID target_id;
+            do {
+                if (target_index >= target_ship_list->size) {
+                    // Kill all encaissary ships
+                    for(int i=0; i < killed.size; i++) {
+                        RID kill_id = killed.Get(i);
+                        GlobalGetState()->ships.KillShip(kill_id, true);
+                    }
+                    return is_agressor;
+                }
+                target_id = target_ship_list->Get(target_index++);
+            } while (killed.Find(target_id) >= 0);
+            Ship* target_ship = GetShip(target_id);
+
+            int kinetic_dammage = actor_ship->stats[ShipStats::KINETIC_OFFENSE] * velocity_multiplier - actor_ship->stats[ShipStats::KINETIC_DEFENSE];
+            if (kinetic_dammage < 0) kinetic_dammage = 0;
+            int ordonance_dammage = actor_ship->stats[ShipStats::ORDONANCE_OFFENSE] - actor_ship->stats[ShipStats::ORDONANCE_DEFENSE];
+            if (ordonance_dammage < 0) ordonance_dammage = 0;
+
+            target_ship->variables[ShipVariables::KINETIC_ARMOR] -= kinetic_dammage;
+            target_ship->variables[ShipVariables::ENERGY_ARMOR] -= ordonance_dammage;
+
+            INFO("Turn %d: %s vs %s: DMG: %d", turn, actor_ship->name, target_ship->name, ordonance_dammage + kinetic_dammage)
+            INFO("    >> %d - %d", 
+                 target_ship->variables[ShipVariables::KINETIC_ARMOR], 
+                 target_ship->variables[ShipVariables::ENERGY_ARMOR]
+                )
+            if(target_ship->variables[ShipVariables::KINETIC_ARMOR] < 0 || target_ship->variables[ShipVariables::ENERGY_ARMOR] < 0) {
+                INFO("%s killed %s in battle", actor_ship->name, target_ship->name)
+                killed.Append(target_id);
+            }
+            turn++;
         }
-        Ship* actor_ship = GetShip(first_list ? ships_1->Get(list_index) : ships_2->Get(list_index));
-        const IDList* target_ship_list = first_list ? ships_2 : ships_1;
-        Ship* target_ship = GetShip(target_ship_list->Get(GetRandomValue(0, target_ship_list->size-1)));
-        */
-
-        if (killed.Find(turn_order[i]) >= 0) {
-            continue;
-        }
-        Ship* actor_ship = GetShip(turn_order[i]);
-        const IDList* target_ship_list = (ships_1_strength.Find(turn_order[i]) >= 0) ? &ships_2_strength : &ships_1_strength;
-        Ship* target_ship = GetShip(target_ship_list->Get(0));
-
-        target_ship->stats[ShipStats::KINETIC_DEFENSE] -= actor_ship->stats[ShipStats::KINETIC_OFFENSE] * velocity_multiplier;
-        target_ship->stats[ShipStats::ORDONANCE_DEFENSE] -= actor_ship->stats[ShipStats::ORDONANCE_OFFENSE];
-
-        //INFO("%s vs %s", actor_ship->name, target_ship->name)
-        if(target_ship->stats[ShipStats::KINETIC_DEFENSE] < 0 || target_ship->stats[ShipStats::ORDONANCE_DEFENSE] < 0) {
-            INFO("%s killed %s in battle", actor_ship->name, target_ship->name)
-            killed.Append(target_ship_list->Get(0));
-        }
-    }
-
-    for(int i=0; i < killed.size; i++) {
-        RID kill_id = killed.Get(i);
-        /*turn_order.EraseAt(turn_order.Find(kill_id));
-        if (ships_1_strength.Find(turn_order[i]) >= 0) {
-            ships_1_strength.EraseAt(0);
-            ships_1->EraseAt(ships_1->Find(kill_id));
-        } else {
-            ships_2_strength.EraseAt(0);
-            ships_2->EraseAt(ships_2->Find(kill_id));
-        }*/
-        GlobalGetState()->ships.KillShip(kill_id, true);
     }
 
     //INFO("Party 1 (%d) received %d dammage. Party 2 (%d) received (%d) dammage", ships_1->size, dmg_received_1, ships_2->size, dmg_received_2)
@@ -197,6 +183,10 @@ void Ship::Serialize(DataNode *data) const
     data->Set("class_id", GetShipClassByIndex(ship_class)->id);
     data->SetI("resource_qtt", transporing.quantity);
     data->SetI("resource_id", transporing.resource_id);
+    data->SetArray("variables", ShipVariables::MAX);
+    for(int i=0; i < ShipVariables::MAX; i++) {
+        data->SetArrayElemI("variables", i, variables[i]);
+    }
 
     data->SetArray("modules", SHIP_MAX_MODULES);
     for(int i=0; i < SHIP_MAX_MODULES; i++) {
@@ -241,6 +231,10 @@ void Ship::Deserialize(const DataNode* data) {
         prepared_plans[i] = TransferPlan();
         prepared_plans[i].Deserialize(data->GetArrayChild("prepared_plans", i, true));
     }
+
+    variables[ShipVariables::KINETIC_ARMOR] = data->GetArrayI("variables", ShipVariables::KINETIC_ARMOR, stats[ShipStats::KINETIC_HP], true);
+    variables[ShipVariables::ENERGY_ARMOR] = data->GetArrayI("variables", ShipVariables::ENERGY_ARMOR, stats[ShipStats::ENERGY_HP], true);
+    variables[ShipVariables::CREW] = data->GetArrayI("variables", ShipVariables::CREW, stats[ShipStats::CREW], true);
 }
 
 double Ship::GetPayloadMass() const{
@@ -291,18 +285,20 @@ bool Ship::IsPlayerFriend() const {
     return allegiance == 0;
 }
 
-bool Ship::IsPlayerKnown() const {
+IntelLevel::Type Ship::GetIntelLevel() const {
+    return IntelLevel::FULL;
+
     if (IsPlayerFriend()) {
-        return true;
+        return IntelLevel::FULL;
     }
-    return is_detected;
+    return IntelLevel::STATS | (is_detected * IntelLevel::TRAJECTORY);
 }
 
 bool Ship::IsTrajectoryKnown(int index) const {
     if (IsPlayerFriend()) {
         return true;
     }
-    if(!IsPlayerKnown()) {
+    if(GetIntelLevel() & IntelLevel::TRAJECTORY == 0) {
         return false;
     }
     return index == 0 && !is_parked;
@@ -314,9 +310,37 @@ int Ship::GetCombatStrength() const {
     return offensive * (defensive + 1);
 }
 
+int Ship::GetMissingHealth() const {
+    //SHOW_I(stats[ShipStats::KINETIC_HP])
+    //SHOW_I(stats[ShipStats::ENERGY_HP])
+    //SHOW_I(stats[ShipStats::CREW])
+    //SHOW_I(variables[ShipVariables::KINETIC_ARMOR])
+    //SHOW_I(variables[ShipVariables::ENERGY_ARMOR])
+    //SHOW_I(variables[ShipVariables::CREW])
+    
+    return
+          (stats[ShipStats::KINETIC_HP] - variables[ShipVariables::KINETIC_ARMOR])
+        + (stats[ShipStats::ENERGY_HP] - variables[ShipVariables::ENERGY_ARMOR])
+        + (stats[ShipStats::CREW] - variables[ShipVariables::CREW]);
+}
+
+bool Ship::CanDragModule(int index) const {
+    if (!IsIdValid(modules[index]))
+        return true;
+    if (GetModule(modules[index])->delta_stats[ShipStats::KINETIC_HP] > 0 && variables[ShipVariables::KINETIC_ARMOR] == stats[ShipStats::KINETIC_HP]) {
+        return false;
+    }
+    if (GetModule(modules[index])->delta_stats[ShipStats::ENERGY_HP] > 0 && variables[ShipVariables::ENERGY_ARMOR] == stats[ShipStats::ENERGY_HP]) {
+        return false;
+    }
+    if (GetModule(modules[index])->delta_stats[ShipStats::CREW] > 0 && variables[ShipVariables::CREW] == stats[ShipStats::CREW]) {
+        return false;
+    }
+    return true;
+}
+
 Color Ship::GetColor() const {
     return IsPlayerFriend() ? Palette::green : Palette::red;
-
 }
 
 TransferPlan* Ship::GetEditedTransferPlan() {
@@ -422,13 +446,61 @@ void Ship::Update() {
         draw_pos = Vector2Add(FromPolar(rad, phase), draw_pos);
     }
     
+    _UpdateModules();
+    _UpdateShipyard();
+}
+
+void Ship::_UpdateShipyard() {
+    int collected_components[4] = {0};
+    for (int i=0; i < SHIP_MAX_MODULES; i++) {
+        if(modules[i] == GlobalGetState()->ship_modules.expected_modules.small_yard_1) collected_components[0]++;
+        if(modules[i] == GlobalGetState()->ship_modules.expected_modules.small_yard_2) collected_components[1]++;
+        if(modules[i] == GlobalGetState()->ship_modules.expected_modules.small_yard_3) collected_components[2]++;
+        if(modules[i] == GlobalGetState()->ship_modules.expected_modules.small_yard_4) collected_components[3]++;
+    }
+    int repair_stations = MinInt(collected_components[2], collected_components[3]);
+    int ship_yards = MinInt(
+        MinInt(collected_components[0], collected_components[1]),
+        repair_stations
+    );
+    for(int i=0; i < repair_stations; i++) {
+        if (GlobalGetState()->calendar.IsNewDay()) {
+            if (is_parked) {
+                IDList available_ships;
+                uint32_t filter = (1 << allegiance) & 0xFFU | 0xFFFFFF00U;
+                GlobalGetState()->ships.GetOnPlanet(&available_ships, parent_planet, filter);
+                available_ships.Sort([](RID ship1, RID ship2){
+                    return GetShip(ship2)->GetMissingHealth() - GetShip(ship1)->GetMissingHealth();
+                });
+                int hp_pool = 5;
+                for(int i=0; i < available_ships.size; i++) {
+                    // Knowingly include self
+                    int hp_needed = GetShip(available_ships[i])->GetMissingHealth();
+                    int hp_provided = MinInt(hp_pool, hp_needed);
+                    GetShip(available_ships[i])->Repair(hp_provided);
+                    hp_pool -= hp_provided;
+                    if (hp_pool <= 0) break;
+                }
+            } else {
+                NOT_IMPLEMENTED
+            }
+        }
+    }
+    for(int i=0; i < ship_yards; i++) {
+        //DebugPrintText("Shipyard");
+        // TBD
+        // Should probably be managed by the planet
+    }
+}
+
+void Ship::_UpdateModules() {
     // Recalculate every frame
 
     // Gotta exist a more efficient way
     // And robust. Dependency graph (also a way to find circular dependencies)
 
     for (int i=0; i < ShipStats::MAX; i++) {
-        stats[i] = 0;
+        stats[i] = GetShipClassByIndex(ship_class)->stats[i];
     }
     for (int j=0; j < SHIP_MAX_MODULES; j++) {
         if (IsIdValid(modules[j]) && !GetModule(modules[j])->HasDependencies()) {
@@ -452,7 +524,7 @@ void _DrawShipAt(Vector2 pos, Color color) {
 }
 
 void Ship::Draw(const CoordinateTransform* c_transf) const {
-    if (!IsPlayerKnown()) {
+    if (GetIntelLevel() & IntelLevel::TRAJECTORY == 0) {
         return;
     }
     Color color = GetColor();
@@ -603,9 +675,6 @@ void _UIDrawQuests(Ship* ship) {
 }
 
 void Ship::DrawUI() {
-    if (!IsPlayerKnown()) {
-        return;
-    }
     if (mouse_hover) {
         // Hover
         DrawCircleLines(draw_pos.x, draw_pos.y, 10, Palette::red);
@@ -636,7 +705,7 @@ void Ship::DrawUI() {
     UIContextEnclose(Palette::bg, GetColor());
     UIContextShrink(INSET_MARGIN, INSET_MARGIN);
 
-    if (!IsPlayerFriend()) {
+    if (GetIntelLevel() & IntelLevel::STATS == 0) {
         return;
     }
 
@@ -652,9 +721,16 @@ void Ship::DrawUI() {
     sb.AddFormat("I_sp        %2.2f km/s\n", GetShipClassByIndex(ship_class)->v_e / 1000);
     sb.AddFormat("dv left     %2.2f km/s\n", GetCapableDV());
     
+    // Very crude
     for(int i=0; i < ShipStats::MAX; i++) {
         if (stats[i] != 0) {
             sb.AddFormat("%s: %d\n", ship_stat_names[i], (int) stats[i]);
+        }
+    }
+    sb.AddFormat("++++++++++++++++++\n");
+    for(int i=0; i < ShipVariables::MAX; i++) {
+        if (variables[i] != 0) {
+            sb.AddFormat("%s: %d\n", ship_variable_names[i], variables[i]);
         }
     }
     UIContextWrite(sb.c_str);
@@ -671,13 +747,34 @@ void Ship::RemoveShipModuleAt(int index) {
     modules[index] = GetInvalidId();
 }
 
+void Ship::Repair(int hp) {
+    if (hp > stats[ShipStats::KINETIC_HP] + stats[ShipStats::ENERGY_HP] + stats[ShipStats::CREW]){
+        // for initializetion
+        variables[ShipVariables::KINETIC_ARMOR] = stats[ShipStats::KINETIC_HP];
+        variables[ShipVariables::ENERGY_ARMOR] = stats[ShipStats::ENERGY_HP];
+        variables[ShipVariables::CREW] = stats[ShipStats::CREW];
+        return;
+    }
+    int kinetic_repair = MinInt(hp, stats[ShipStats::KINETIC_HP] - variables[ShipVariables::KINETIC_ARMOR]);
+    hp -= kinetic_repair;
+    int energy_repair = MinInt(hp, stats[ShipStats::ENERGY_HP] - variables[ShipVariables::ENERGY_ARMOR]);
+    hp -= energy_repair;
+    int crew_repair = MinInt(hp, stats[ShipStats::CREW] - variables[ShipVariables::CREW]);
+    variables[ShipVariables::KINETIC_ARMOR] += kinetic_repair;
+    variables[ShipVariables::ENERGY_ARMOR] += energy_repair;
+    variables[ShipVariables::CREW] += crew_repair;
+}
+
 void Ship::_OnDeparture(const TransferPlan& tp) {
     PlanetaryEconomy* local_economy = &GetPlanet(tp.departure_planet)->economy;
 
     ResourceTransfer fuel_tf = local_economy->DrawResource(ResourceTransfer(RESOURCE_WATER, tp.fuel_mass));
-    if (fuel_tf.quantity < tp.fuel_mass) {
+    if (fuel_tf.quantity < tp.fuel_mass && IsPlayerFriend()) {
         resource_count_t remaining_fuel = tp.fuel_mass - fuel_tf.quantity;
-        if (local_economy->trading_accessible && local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) < GlobalGetState()->money) {
+        if (
+            local_economy->trading_accessible && 
+            local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) < GlobalGetState()->money
+        ) {
             USER_INFO("Automatically purchased %d of water for M§M %ld K", remaining_fuel, local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) / 1e3)
             local_economy->TryPlayerTransaction(ResourceTransfer(RESOURCE_WATER, remaining_fuel));
             local_economy->DrawResource(ResourceTransfer(RESOURCE_WATER, remaining_fuel));
@@ -709,14 +806,29 @@ void Ship::_OnArrival(const TransferPlan& tp) {
     // First: Combat. Is the ship is intercepted when/before entering orbit, it can't do anything else
 
     IDList hostile_ships;
-    GlobalGetState()->ships.GetOnPlanet(&hostile_ships, tp.arrival_planet, (~(1UL << allegiance) & 0xFF) | Ships::MILITARY_SELECTION_FLAG);
+    uint32_t selection_flags = (~(1UL << allegiance) & 0xFF) | Ships::MILITARY_SELECTION_FLAG;
+    GlobalGetState()->ships.GetOnPlanet(&hostile_ships, tp.arrival_planet, selection_flags);
     IDList allied_ships;
     allied_ships.Append(id);
     if (hostile_ships.size > 0) {
         // First, military ships vs. military ships
-        ShipBattle(&allied_ships, &hostile_ships, Vector2Length(tp.arrival_dvs[tp.primary_solution]));
+        bool victory = ShipBattle(&allied_ships, &hostile_ships, Vector2Length(tp.arrival_dvs[tp.primary_solution]));
+        if (victory) {
+            uint32_t selection_flags = (~(1UL << allegiance) & 0xFF) | 0xFFFFFF00;
+            IDList conquered;
+            GlobalGetState()->ships.GetOnPlanet(&conquered, tp.arrival_planet, selection_flags);
+            for(int i=0; i < conquered.size; i++) {
+                GetShip(conquered[i])->allegiance = allegiance;
+            }
+        }
         is_detected = true;
     } else {
+        uint32_t selection_flags = (~(1UL << allegiance) & 0xFF) | 0xFFFFFF00;
+        IDList conquered;
+        GlobalGetState()->ships.GetOnPlanet(&conquered, tp.arrival_planet, selection_flags);
+        for(int i=0; i < conquered.size; i++) {
+            GetShip(conquered[i])->allegiance = allegiance;
+        }
         is_detected = false;
     }
 
@@ -792,6 +904,10 @@ RID Ships::AddShip(const DataNode* data) {
 
     ship->id = ship_entity;
     ship->Update();
+    // If data doesn't specify variables, reset them to default (needs to be done after Update)
+    if (!data->HasArray("variables")) {
+        ship->Repair(1e6);
+    }
     return ship_entity;
 }
 
@@ -804,7 +920,7 @@ int Ships::LoadShipClasses(const DataNode* data) {
         WARNING("No ship classes loaded")
         return 0;
     }
-    ship_classes = (ShipClass*) malloc(sizeof(ShipClass) * ship_classes_count);
+    ship_classes = new ShipClass[ship_classes_count];
     for (int index=0; index < ship_classes_count; index++) {
         const DataNode* ship_data = data->GetArrayChild("ship_classes", index);
         ShipClass sc = {0};
@@ -816,6 +932,15 @@ int Ships::LoadShipClasses(const DataNode* data) {
         sc.max_dv = ship_data->GetF("dv", 0) * 1000;  // km/s -> m/s
         sc.v_e = ship_data->GetF("Isp", 0) * 1000;    // km/s -> m/s
         sc.oem = ResourceCountsToKG(sc.max_capacity) / (exp(sc.max_dv/sc.v_e) - 1);
+
+        const DataNode* stats_data = ship_data->GetChild("stats", true);
+        for(int i=0; i < (int)ShipStats::MAX; i++) {
+            if (stats_data != NULL && stats_data->Has(ship_stat_names[i])) {
+                sc.stats[i] = stats_data->GetI(ship_stat_names[i]);
+                //INFO("%s: delta %s = %d", ship_modules[i].name, ship_stat_names[j], ship_modules[i].delta_stats[j])
+            }
+        }
+
         ASSERT_ALOMST_EQUAL_FLOAT(sc.v_e * log((ResourceCountsToKG(sc.max_capacity) + sc.oem) / sc.oem), sc.max_dv)   // Remove when we're sure thisworks
 
         ship_classes[index] = sc;

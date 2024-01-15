@@ -163,9 +163,13 @@ void ShipGetStat(WrenVM* vm) {
 
 void ShipGetPlans(WrenVM* vm) {
 	RID ship_id = GetWrenInterface()->GetShipFormWrenObject();
-	if (!IsIdValid(ship_id)) return;
-	Ship* ship = GetShip(ship_id);
 	wrenEnsureSlots(vm, 1);
+	if (!IsIdValid(ship_id)) {
+		wrenSetSlotString(vm, 0, "Invalid ship");
+		wrenAbortFiber(vm, 0);
+		return;
+	}
+	Ship* ship = GetShip(ship_id);
 	wrenSetSlotNewList(vm, 0);
 	WrenHandle* list_handle = wrenGetSlotHandle(vm, 0);
 	for(int i=0; i < ship->prepared_plans_count; i++) {
@@ -173,28 +177,35 @@ void ShipGetPlans(WrenVM* vm) {
 		ship->prepared_plans[i].Serialize(&dn);
 		GetWrenInterface()->DataNodeToMap(&dn);
 		wrenSetSlotHandle(vm, 1, list_handle);
-		wrenInsertInList(vm, 1, 0, i);
+		wrenInsertInList(vm, 1, i, 0);
 	}
 	wrenSetSlotHandle(vm, 0, list_handle);
 }
 
 void ShipGetId(WrenVM* vm) {
 	RID ship = GetWrenInterface()->GetShipFormWrenObject();
-	if (!IsIdValid(ship)) return;
 	wrenEnsureSlots(vm, 1);
+	if (!IsIdValid(ship)) {
+		wrenSetSlotString(vm, 0, "Invalid ship");
+		wrenAbortFiber(vm, 0);
+		return;
+	}
 	wrenSetSlotDouble(vm, 0, ship.AsInt());
 }
 
 void ShipGetName(WrenVM* vm) {
 	RID ship = GetWrenInterface()->GetShipFormWrenObject();
-	if (!IsIdValid(ship)) return;
 	wrenEnsureSlots(vm, 1);
+	if (!IsIdValid(ship)) {
+		wrenSetSlotString(vm, 0, "Invalid ship");
+		wrenAbortFiber(vm, 0);
+		return;
+	}
 	wrenSetSlotString(vm, 0, GetShip(ship)->name);
 }
 
 void ShipExists(WrenVM* vm) {
 	RID ship = GetWrenInterface()->GetShipFormWrenObject();
-	if (!IsIdValid(ship)) return;
 	wrenEnsureSlots(vm, 1);
 	wrenSetSlotBool(vm, 0, IsIdValid(ship));
 }
@@ -244,12 +255,6 @@ WrenInterface::~WrenInterface() {
 		wrenReleaseHandle(vm, *handle);
 	}
 	wrenFreeVM(vm);*/
-}
-
-void QuestInterfaceIsTaskPossible(WrenVM* vm) {
-	NOT_IMPLEMENTED  // Details are blurry, bring more control to the wren side
-	wrenEnsureSlots(vm, 1);
-	wrenSetSlotBool(vm, 0, true);
 }
 
 static void WriteFn(WrenVM* vm, const char* text) {

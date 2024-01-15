@@ -17,6 +17,10 @@ struct ShipStats {  // Better enum class, since you can treat the enum as intege
         POWER = 0,
         INITIATIVE,
 
+        KINETIC_HP,
+        ENERGY_HP,
+        CREW,
+
         KINETIC_OFFENSE,
         ORDONANCE_OFFENSE,
         BOARDING_OFFENSE,
@@ -29,10 +33,12 @@ struct ShipStats {  // Better enum class, since you can treat the enum as intege
     };
 };
 
-
 static const char* ship_stat_names[] = {
     "power",
     "initiative",
+    "kinetic_hp",
+    "energy_hp",
+    "crew",
     "kinetic_offense",
     "ordnance_offense",
     "boarding_offense",
@@ -41,7 +47,25 @@ static const char* ship_stat_names[] = {
     "boarding_defense",
 };
 
-static_assert((int) ShipStats::MAX == sizeof(ship_stat_names) / sizeof(ship_stat_names[0]));
+static_assert(ShipStats::MAX == sizeof(ship_stat_names) / sizeof(ship_stat_names[0]));
+
+struct ShipVariables {
+    enum {
+        KINETIC_ARMOR,
+        ENERGY_ARMOR,
+        CREW,
+
+        MAX,
+    };
+};
+
+static const char* ship_variable_names[] = {
+    "kinetic_armor",
+    "energy_armor",
+    "crew",
+};
+
+static_assert(ShipVariables::MAX == sizeof(ship_variable_names) / sizeof(ship_variable_names[0]));
 
 /*
 shpmod_heatshield
@@ -66,8 +90,8 @@ struct ShipModuleClass {
         HEAT_SHIELD,
     } module_type = INVALID_MODULE;  // Placeholder for functionality
 
-    int delta_stats[static_cast<int>(ShipStats::MAX)];
-    int required_stats[static_cast<int>(ShipStats::MAX)];
+    int delta_stats[ShipStats::MAX];
+    int required_stats[ShipStats::MAX];
     resource_count_t production[RESOURCE_MAX];
 
     double mass;  // kg
@@ -115,6 +139,13 @@ struct ShipModules {
 
     void InitDragging(ShipModuleSlot slot, Rectangle current_draw_rect);
     void UpdateDragging();
+    
+    struct{
+        RID small_yard_1;
+        RID small_yard_2;
+        RID small_yard_3;
+        RID small_yard_4;
+    } expected_modules;
 };
 
 int LoadShipModules(const DataNode* data);
