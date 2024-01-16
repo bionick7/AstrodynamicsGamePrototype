@@ -75,7 +75,7 @@ void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
             x = previous_x + min_planet_spacing;
         }
         //DebugPrintText("%s: sma = %f, x = %d", planet->name, planet->orbit.sma, x);
-        Rectangle rect = DrawTextAligned(planet->name, {(float)x, (float)tcd->y0 + 18}, TEXT_ALIGNMENT_HCENTER | TEXT_ALIGNMENT_BOTTOM, Palette::ui_main);
+        Rectangle rect = DrawTextAligned(planet->name, {(float)x, (float)tcd->y0 + 18}, TextAlignment::HCENTER | TextAlignment::BOTTOM, Palette::ui_main);
         if(CheckCollisionPointRec(GetMousePosition(), rect)) {
             mouse_hover_planet = planet_index;
         }
@@ -98,7 +98,7 @@ void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
             DrawTextAligned(
                 sb.Clear().AddDate(t, true).c_str, 
                 { (float) tcd->x0 + 20, (float) y },
-                TEXT_ALIGNMENT_BOTTOM | TEXT_ALIGNMENT_LEFT,
+                TextAlignment::BOTTOM | TextAlignment::LEFT,
                 Palette::ui_alt
             );
         }
@@ -148,7 +148,7 @@ float  _QuestDrawLine(TimeLineCoordinateData* tcd, const Task* q, bool active) {
     DrawTextAligned(
         StringBuilder().AddI(KGToResourceCounts(q->payload_mass)).c_str, 
         Vector2Lerp(start_pos, end_pos, 0.15), 
-        TEXT_ALIGNMENT_HCENTER | TEXT_ALIGNMENT_BOTTOM, c
+        TextAlignment::HCENTER | TextAlignment::BOTTOM, c
     );
     start_pos = Vector2Add(start_pos, scaled_unit);
     end_pos = Vector2Subtract(end_pos, scaled_unit);
@@ -203,14 +203,14 @@ void _DrawQuests(TimeLineCoordinateData* tcd, QuestManager* qm) {
         }
     }
     if (closest_mouse_dist < 15) {
-        UIContextPushAligned(400, 100, TEXT_ALIGNMENT_TOP | TEXT_ALIGNMENT_RIGHT);
+        UIContextPushAligned(400, 100, TextAlignment::TOP | TextAlignment::RIGHT);
         if (closest_mouse_dist_quest_is_active) {
             qm->active_tasks.Get(closest_mouse_dist_quest)->DrawUI(false, false);
         } else {
             qm->available_quests.Get(closest_mouse_dist_quest)->DrawUI(false, false);
             UIContextWrite("Press enter to accept quest", true);
             if (IsKeyPressed(KEY_ENTER)) {
-                HandleButtonSound(BUTTON_STATE_FLAG_JUST_PRESSED);
+                HandleButtonSound(ButtonStateFlags::JUST_PRESSED);
                 qm->AcceptQuest(closest_mouse_dist_quest);
             }
         }
@@ -311,6 +311,7 @@ void DrawTimeline() {
     tcd.planet_coords = new int[gs->planets.planet_count];
 
     // Scrolling
+    GlobalUI()->scroll_lock = true;
     if (GlobalGetState()->current_focus == GlobalState::TIMELINE) {
         float scroll_ratio = 1 + 0.1 * GetMouseWheelMove();
         if (scroll_ratio > 1) {

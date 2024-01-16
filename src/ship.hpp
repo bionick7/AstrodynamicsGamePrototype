@@ -64,7 +64,14 @@ struct Ship {
     // stats are more or less constat for the same ammount of modules
     int stats[ShipStats::MAX];
     // variables vary
-    int variables[ShipVariables::MAX];
+    int dammage_taken[ShipVariables::MAX];
+
+    // Allows to refer to all the stats as variables.
+    // Still needs to be declared
+    //#define X(upper, lower) const int* lower = &dammage_taken[ShipStats::upper];
+    #define X(upper, lower) /*Auto-generated*/ int lower() const { return stats[ShipStats::upper]; };
+    X_SHIP_STATS
+    #undef X
     
     int plan_edit_index;
     int highlighted_plan_index;
@@ -74,6 +81,7 @@ struct Ship {
     bool mouse_hover;
     int index_on_planet;
     int total_on_planet;
+    int ui_scroll = 0;
     //Color color;
 
     // Identifier

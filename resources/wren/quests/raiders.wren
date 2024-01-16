@@ -16,8 +16,19 @@ class Raiders is Quest {
         _available_ships = []
     }
 
+    planet_names {[
+        "Mimas",
+        "Encelladus",
+        "Tethys",
+        "Rhea",
+        "Titan",
+        "Iaeptus",
+        "Phoebe"
+    ]}
+
     spawn_enemy() {
         var departure_planet = Constants.titan
+        //var target_planet = rand.int(Constants.mimas, Constants.tethys)
         var target_planet = Constants.tethys
 
         var hohmann_tf_result = Game.hohmann_tf(departure_planet, target_planet, Game.now)
@@ -28,7 +39,7 @@ class Raiders is Quest {
             "is_parked": true,
             "allegiance": 1,
             "name": "The Blind Rat",
-            "planet": "Titan",
+            "planet": planet_names[departure_planet],
             "modules": [
                 "shpmod_light_armor",
                 "shpmod_missiles",

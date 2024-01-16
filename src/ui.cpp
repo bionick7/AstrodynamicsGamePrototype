@@ -3,8 +3,7 @@
 #include "constants.hpp"
 #include "audio_server.hpp"
 #include "global_state.hpp"
-
-#include <stack>
+#include "utils.hpp"
 
 // Copy of raylib's DrawTextEx(), but will not draw over a certain rectangle
 void DrawTextConstrained(Font font, const char *text, Vector2 position, float fontSize, float spacing, Color tint, Rectangle render_rect) {
@@ -54,18 +53,18 @@ void DrawTextConstrained(Font font, const char *text, Vector2 position, float fo
     }
 }
 
-Rectangle DrawTextAligned(const char* text, Vector2 pos, TextAlignment alignment, Color c) {
+Rectangle DrawTextAligned(const char* text, Vector2 pos, TextAlignment::T alignment, Color c) {
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, 16, 1);
-    if (alignment & TEXT_ALIGNMENT_HCENTER) {
+    if (alignment & TextAlignment::HCENTER) {
         pos.x -= size.x / 2;
-    } else if (alignment & TEXT_ALIGNMENT_RIGHT) {
+    } else if (alignment & TextAlignment::RIGHT) {
         pos.x -= size.x;
     } else {  // left - aligned
         // Do nothing
     }
-    if (alignment & TEXT_ALIGNMENT_VCENTER) {
+    if (alignment & TextAlignment::VCENTER) {
         pos.y -= size.y / 2;
-    } else if (alignment & TEXT_ALIGNMENT_BOTTOM) {
+    } else if (alignment & TextAlignment::BOTTOM) {
         pos.y -= size.y;
     } else {  // top - aligned
         // Do nothing
@@ -75,26 +74,26 @@ Rectangle DrawTextAligned(const char* text, Vector2 pos, TextAlignment alignment
     return { pos.x, pos.y, size.x, size.y };
 }
 
-ButtonStateFlags GetButtonState(bool is_in_area, bool was_in_area) {
-    ButtonStateFlags res = BUTTON_STATE_FLAG_NONE;
+ButtonStateFlags::T GetButtonState(bool is_in_area, bool was_in_area) {
+    ButtonStateFlags::T res = ButtonStateFlags::NONE;
     if (is_in_area) {
-        res |= BUTTON_STATE_FLAG_HOVER;
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))     res |= BUTTON_STATE_FLAG_PRESSED;
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))  res |= BUTTON_STATE_FLAG_JUST_PRESSED;
-        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) res |= BUTTON_STATE_FLAG_JUST_UNPRESSED;
+        res |= ButtonStateFlags::HOVER;
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))     res |= ButtonStateFlags::PRESSED;
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))  res |= ButtonStateFlags::JUST_PRESSED;
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) res |= ButtonStateFlags::JUST_UNPRESSED;
 
-        if (!was_in_area) res |= BUTTON_STATE_FLAG_JUST_HOVER_IN;
+        if (!was_in_area) res |= ButtonStateFlags::JUST_HOVER_IN;
     }
-    if (was_in_area && !is_in_area) res |= BUTTON_STATE_FLAG_JUST_HOVER_OUT;
+    if (was_in_area && !is_in_area) res |= ButtonStateFlags::JUST_HOVER_OUT;
 
     return res;
 }
 
-void HandleButtonSound(ButtonStateFlags state) {
-    if (state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+void HandleButtonSound(ButtonStateFlags::T state) {
+    if (state & ButtonStateFlags::JUST_PRESSED) {
         PlaySFX(SFX_CLICK_BUTTON);
     }
-    if (state & BUTTON_STATE_FLAG_JUST_HOVER_IN) {
+    if (state & ButtonStateFlags::JUST_HOVER_IN) {
         PlaySFX(SFX_CLICK_SHORT);
     }
 }
@@ -201,14 +200,14 @@ void TextBox::WriteLine(const char* text) {
     LineBreak();
 }
 
-ButtonStateFlags TextBox::WriteButton(const char* text, int inset) {
+ButtonStateFlags::T TextBox::WriteButton(const char* text, int inset) {
     Vector2 pos = {text_start_x + x_cursor, text_start_y + y_cursor + text_margin_y};
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
     // text fully in render rectangle
     if (
         !CheckCollisionPointRec(pos, render_rec)
         || !CheckCollisionPointRec(Vector2Add(pos, size), render_rec)
-    ) return BUTTON_STATE_FLAG_DISABLED;
+    ) return ButtonStateFlags::DISABLED;
 
     if (inset >= 0) {
         size.x += 2*inset;
@@ -217,7 +216,7 @@ ButtonStateFlags TextBox::WriteButton(const char* text, int inset) {
         pos.y += inset;
     }
     bool is_in_area = CheckCollisionPointRec(GetMousePosition(), {pos.x, pos.y, size.x, size.y});
-    ButtonStateFlags res = GetButtonState(
+    ButtonStateFlags::T res = GetButtonState(
         is_in_area,
         CheckCollisionPointRec(Vector2Subtract(GetMousePosition(), GetMouseDelta()), {pos.x, pos.y, size.x, size.y})
     );
@@ -228,25 +227,23 @@ ButtonStateFlags TextBox::WriteButton(const char* text, int inset) {
     return res;
 }
 
-ButtonStateFlags TextBox::AsButton() const {
+ButtonStateFlags::T TextBox::AsButton() const {
     return GetButtonState(
         CheckCollisionPointRec(GetMousePosition(), {(float)text_start_x, (float)text_start_y, (float)width, (float)height}),
         CheckCollisionPointRec(Vector2Subtract(GetMousePosition(), GetMouseDelta()), {(float)text_start_x, (float)text_start_y, (float)width, (float)height})
     );
 }
 
-std::stack<TextBox> text_box_stack = std::stack<TextBox>();
-
 void UIContextCreateNew(int x, int y, int w, int h, int text_size, Color color) {
-    while (text_box_stack.size() > 0) {
-        text_box_stack.pop();
+    while (GlobalUI()->text_box_stack.size() > 0) {
+        GlobalUI()->text_box_stack.pop();
     }
     UIContextPushGlobal(x, y, w, h, text_size, color);
 }
 
 void UIContextPushGlobal(int x, int y, int w, int h, int text_size, Color color) {
     TextBox new_text_box = TextBox(x, y, w, h, text_size, color);
-    text_box_stack.push(new_text_box);
+    GlobalUI()->text_box_stack.push(new_text_box);
 }
 
 int UIContextPushInset(int margin, int h)
@@ -266,19 +263,25 @@ int UIContextPushInset(int margin, int h)
     new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb.render_rec);
 
     tb.y_cursor += h + 2*margin;
-    text_box_stack.push(new_text_box);
+    GlobalUI()->text_box_stack.push(new_text_box);
     return height;
 }
 
-int UIContextPushScrollInset(int margin, int h, int allocated_height, int scroll) {
+int UIContextPushScrollInset(int margin, int h, int allocated_height, int* scroll) {
     // Returns the actual height
     int buildin_scrollbar_margin = 3;
     int buildin_scrollbar_width = 6;
 
+    if (UIContextAsButton() & ButtonStateFlags::HOVER) {
+        int max_scroll = MaxInt(allocated_height - UIContextCurrent().height, 0);
+        *scroll = ClampInt(*scroll - GetMouseWheelMove() * 20, 0, max_scroll);
+        GlobalUI()->scroll_lock = true;
+    }
+
     TextBox& tb = UIContextCurrent();
     tb.EnsureLineBreak();
     int height = fmin(h, fmax(0, tb.height - tb.y_cursor - 2*margin));
-    float scroll_progress = Clamp((float)scroll / (allocated_height - h), 0, 1);
+    float scroll_progress = Clamp((float)(*scroll) / (allocated_height - h), 0, 1);
     int scrollbar_height = h * h / allocated_height;
     if (allocated_height > h) {
         DrawRectangleRounded({
@@ -295,7 +298,7 @@ int UIContextPushScrollInset(int margin, int h, int allocated_height, int scroll
     }
     TextBox new_text_box = TextBox(
         tb.text_start_x + tb.x_cursor + margin,
-        tb.text_start_y + tb.y_cursor + margin - scroll,
+        tb.text_start_y + tb.y_cursor + margin - *scroll,
         tb.width - tb.x_cursor - 2*margin - 2*buildin_scrollbar_margin - buildin_scrollbar_width,
         allocated_height,
         tb.text_size,
@@ -305,7 +308,7 @@ int UIContextPushScrollInset(int margin, int h, int allocated_height, int scroll
     new_text_box.render_rec.height = height;
 
     tb.y_cursor += h + 2*margin;
-    text_box_stack.push(new_text_box);
+    GlobalUI()->text_box_stack.push(new_text_box);
     return height;
 }
 
@@ -322,25 +325,25 @@ void UIContextPushInline(int margin) {
     new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb.render_rec);
 
     tb.x_cursor = tb.width;
-    text_box_stack.push(new_text_box);
+    GlobalUI()->text_box_stack.push(new_text_box);
 }
 
-void UIContextPushAligned(int width, int height, TextAlignment alignment) {
+void UIContextPushAligned(int width, int height, TextAlignment::T alignment) {
     TextBox& tb = UIContextCurrent();
     tb.EnsureLineBreak();
 
     int x = tb.text_start_x;
     int y = tb.text_start_y;
-    if (alignment & TEXT_ALIGNMENT_HCENTER) {
+    if (alignment & TextAlignment::HCENTER) {
         x += (tb.width - width) / 2;
-    } else if (alignment & TEXT_ALIGNMENT_RIGHT) {
+    } else if (alignment & TextAlignment::RIGHT) {
         x += tb.width - width;
     } else {  // left - aligned
         // Do nothing
     }
-    if (alignment & TEXT_ALIGNMENT_VCENTER) {
+    if (alignment & TextAlignment::VCENTER) {
         y += (tb.height - height) / 2;
-    } else if (alignment & TEXT_ALIGNMENT_BOTTOM) {
+    } else if (alignment & TextAlignment::BOTTOM) {
         y += (tb.height - height);
     } else {  // top - aligned
         // Do nothing
@@ -353,7 +356,7 @@ void UIContextPushAligned(int width, int height, TextAlignment alignment) {
     );
 
     new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb.render_rec);
-    text_box_stack.push(new_text_box);
+    GlobalUI()->text_box_stack.push(new_text_box);
 }
 
 void UIContextPushHSplit(int x_start, int x_end) {
@@ -370,7 +373,7 @@ void UIContextPushHSplit(int x_start, int x_end) {
     );
     new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb.render_rec);
 
-    text_box_stack.push(new_text_box);
+    GlobalUI()->text_box_stack.push(new_text_box);
 }
 
 void UIContextPushGridCell(int columns, int rows, int column, int row) {
@@ -385,15 +388,15 @@ void UIContextPushGridCell(int columns, int rows, int column, int row) {
     );
     new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb.render_rec);
 
-    text_box_stack.push(new_text_box);
+    GlobalUI()->text_box_stack.push(new_text_box);
 }
 
-ButtonStateFlags UIContextAsButton() {
+ButtonStateFlags::T UIContextAsButton() {
     return UIContextCurrent().AsButton();
 }
 
 void UIContextPop() {
-    text_box_stack.pop();
+    GlobalUI()->text_box_stack.pop();
 }
 
 Vector2 UIContextGetRelMousePos() {
@@ -425,58 +428,61 @@ void UIContextWrite(const char* text, bool linebreak) {
 
 void UIContextFillline(double value, Color fill_color, Color background_color) {
     TextBox& tb = UIContextCurrent();
-    int y_end = tb.text_start_y + tb.height;
-    int x_mid_point = tb.text_start_x + tb.width * value;
-    DrawLine(tb.text_start_x, y_end, tb.text_start_x + tb.width, y_end, background_color);
-    DrawLine(tb.text_start_x, y_end, x_mid_point, y_end, fill_color);
+    int y_end = tb.text_start_y + tb.y_cursor;
+    if (y_end > tb.render_rec.y + tb.render_rec.height || y_end < tb.render_rec.y)
+        return;
+    
+    int x_start = ClampInt(tb.text_start_x, tb.render_rec.x, tb.render_rec.x + tb.render_rec.width);
+    int x_end = ClampInt(tb.text_start_x + tb.width, tb.render_rec.x, tb.render_rec.x + tb.render_rec.width);
+    int x_mid_point = ClampInt(tb.text_start_x + tb.width * value, tb.render_rec.x, tb.render_rec.x + tb.render_rec.width);
+    DrawLine(x_start, y_end, x_end, y_end, background_color);
+    DrawLine(x_start, y_end, x_mid_point, y_end, fill_color);
     DrawLine(x_mid_point, y_end, x_mid_point, y_end - 4, fill_color);
 }
 
-ButtonStateFlags UIContextDirectButton(const char* text, int inset) {
+ButtonStateFlags::T UIContextDirectButton(const char* text, int inset) {
     TextBox& tb = UIContextCurrent();
-    ButtonStateFlags button_state = tb.WriteButton(text, inset);
+    ButtonStateFlags::T button_state = tb.WriteButton(text, inset);
     HandleButtonSound(button_state);
     return button_state;
 }
 
-
 TextBox& UIContextCurrent() {
-    return text_box_stack.top();
+    return GlobalUI()->text_box_stack.top();
 }
 
-static char mouseover_text[1024] = "";
-
 void UISetMouseHint(const char* text) {
-    strncpy(mouseover_text, text, 1024);
+    strncpy(GlobalUI()->mouseover_text, text, 1024);
 }
 
 void UIInit() {
-    GlobalGetState()->default_font = LoadFontEx("resources/fonts/OCRAEXT.TTF", 16, NULL, 256);
+    GlobalUI()->default_font = LoadFontEx("resources/fonts/OCRAEXT.TTF", 16, NULL, 256);
     //default_font = LoadFontEx("resources/fonts/GOTHIC.TTF", 16, NULL, 256);
 }
 
 void UIStart() {
     SetMouseCursor(MOUSE_CURSOR_CROSSHAIR);
     //SetMouseCursor(MOUSE_CURSOR_DEFAULT);
-    mouseover_text[0] = '\0';
+    GlobalUI()->scroll_lock = false;
+    GlobalUI()->mouseover_text[0] = '\0';
 }
 
 void UIEnd() {
-    if (strlen(mouseover_text) > 0) {
+    if (strlen(GlobalUI()->mouseover_text) > 0) {
         // Draw mouse
         Vector2 mouse_pos = GetMousePosition();
-        Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), mouseover_text, 16, 1);
+        Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), GlobalUI()->mouseover_text, 16, 1);
         DrawRectangleV(mouse_pos, text_size, Palette::bg);
         DrawRectangleLines(mouse_pos.x, mouse_pos.y, text_size.x, text_size.y, Palette::ui_main);
-        DrawTextEx(GetCustomDefaultFont(), mouseover_text, mouse_pos, 16, 1, Palette::ui_main);
+        DrawTextEx(GetCustomDefaultFont(), GlobalUI()->mouseover_text, mouse_pos, 16, 1, Palette::ui_main);
     }
 }
 
 Font GetCustomDefaultFont() {
-    return GlobalGetState()->default_font;
+    return GlobalUI()->default_font;
 }
 
-ButtonStateFlags DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color) {
+ButtonStateFlags::T DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color) {
     Vector2 base_pos = Vector2Add(point, base);
     Vector2 tangent_dir = Vector2Rotate(Vector2Normalize(base), PI/2);
     Vector2 side_1 =  Vector2Add(base_pos, Vector2Scale(tangent_dir, -width));
@@ -493,7 +499,7 @@ ButtonStateFlags DrawTriangleButton(Vector2 point, Vector2 base, double width, C
     );
 }
 
-ButtonStateFlags DrawCircleButton(Vector2 midpoint, double radius, Color color) {
+ButtonStateFlags::T DrawCircleButton(Vector2 midpoint, double radius, Color color) {
     bool is_in_area = CheckCollisionPointCircle(GetMousePosition(), midpoint, radius);
     if (is_in_area) {
         DrawCircleV(midpoint, radius, Palette::blue);

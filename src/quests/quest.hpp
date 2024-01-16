@@ -58,7 +58,7 @@ struct Quest {
     bool IsActive() const;
     void Serialize(DataNode* data) const;
     void Deserialize(const DataNode* data);
-    ButtonStateFlags DrawUI(bool show_as_button, bool highlight) const;
+    ButtonStateFlags::T DrawUI(bool show_as_button, bool highlight) const;
 
     void AttachTemplate(const WrenQuestTemplate* p_wren_interface);
 

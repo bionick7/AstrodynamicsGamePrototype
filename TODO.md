@@ -15,8 +15,8 @@
 - Drag & Drop (Done)
 - Dialogue (Done)
 - Actual quests
-- Build ships in shipyard
-- Shop
+- Build ships in shipyard (Done)
+- Shop  // ?
 //- Implement Ship Docking Rent?
 
 ## Known Bugs
@@ -39,6 +39,7 @@ Near-term, realizable only
 - "ASAP" button for transfer UI (mathematically tricky problem tbh)
 - ability to show hohmann transfer period in transfer window (eh ... hard to make it be useful)
 - quest-log window is kinda outdated (repurposed for dialogue)
+- Show battle-log after battle
 - Show tasks and wait times also in dialogue
 - front-end info and error log
 - different icons for different ships
@@ -63,7 +64,7 @@ Near-term, realizable only
 Regardless of implementability
 - planet modifiers
 - disruption events (can be tied to morale)
-- ship buildings
+- ship buildings (Done)
 - aerobreaking
 - ship maintenance
 - tanker fleets
@@ -71,7 +72,7 @@ Regardless of implementability
 - segment planets into regions
 - crew & population morale
 - construct new stations (Done, it's just a ship duh)
-- combat
+- combat (Done)
 - "policies"
 - expand to 3D
 - tech tree ?

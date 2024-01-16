@@ -63,18 +63,18 @@ bool Task::IsValid() const {
     return IsIdValid(departure_planet) && IsIdValid(arrival_planet);
 }
 
-ButtonStateFlags Task::DrawUI(bool show_as_button, bool highlight) const {
+ButtonStateFlags::T Task::DrawUI(bool show_as_button, bool highlight) const {
     // Assumes parent UI Context exists
     // Resturns if player wants to accept
     if (!IsValid()) {
-        return BUTTON_STATE_FLAG_NONE;
+        return ButtonStateFlags::NONE;
     }
 
     int height = UIContextPushInset(3, TASK_PANEL_HEIGHT);
 
     if (height == 0) {
         UIContextPop();
-        return BUTTON_STATE_FLAG_NONE;
+        return ButtonStateFlags::NONE;
     }
     if (highlight) {
         UIContextEnclose(Palette::bg, Palette::ship);
@@ -82,13 +82,13 @@ ButtonStateFlags Task::DrawUI(bool show_as_button, bool highlight) const {
         UIContextEnclose(Palette::bg, Palette::ui_main);
     }
     UIContextShrink(6, 6);
-    ButtonStateFlags button_state = UIContextAsButton();
+    ButtonStateFlags::T button_state = UIContextAsButton();
     if (show_as_button) {
-        HandleButtonSound(button_state & (BUTTON_STATE_FLAG_JUST_HOVER_IN | BUTTON_STATE_FLAG_JUST_PRESSED));
+        HandleButtonSound(button_state & (ButtonStateFlags::JUST_HOVER_IN | ButtonStateFlags::JUST_PRESSED));
     }
     if (height != TASK_PANEL_HEIGHT) {
         UIContextPop();
-        return button_state & BUTTON_STATE_FLAG_JUST_PRESSED;
+        return button_state & ButtonStateFlags::JUST_PRESSED;
     }
 
     StringBuilder sb_mouse;
@@ -99,7 +99,7 @@ ButtonStateFlags Task::DrawUI(bool show_as_button, bool highlight) const {
     StringBuilder sb;
     // Line 1
     sb.AddFormat("%s >> %s  %d cts", GetPlanet(departure_planet)->name, GetPlanet(arrival_planet)->name, KGToResourceCounts(payload_mass));
-    if (button_state == BUTTON_STATE_FLAG_HOVER) {
+    if (button_state == ButtonStateFlags::HOVER) {
         UISetMouseHint(sb_mouse.c_str);
     }
     if (IsIdValid(current_planet)) {

@@ -22,6 +22,8 @@ struct GlobalState {
     };
 
     FocusablesPanels current_focus;
+    RID focused_planet;
+    RID focused_ship;
 
     CoordinateTransform c_transf;
     Calendar calendar;
@@ -32,14 +34,11 @@ struct GlobalState {
     Planets planets;
     ShipModules ship_modules;
     
-    cost_t money;
-
     AudioServer audio_server;
     WrenInterface wren_interface;
-    Font default_font;
-    
-    RID focused_planet;
-    RID focused_ship;
+    UIGlobals ui;
+
+    cost_t money;
 
     // Lifecycle
     void Make(timemath::Time time);
@@ -65,5 +64,6 @@ GlobalState* GlobalGetState();
 timemath::Time GlobalGetNow();
 AudioServer* GetAudioServer();
 WrenInterface* GetWrenInterface();
+UIGlobals* GlobalUI();
 
 #endif // GLOBAL_STATE_H

@@ -199,11 +199,11 @@ void ShipModules::DrawShipModule(RID index) const {
     } else {  // filled
         const ShipModuleClass* smc = GetModuleByRID(index);
         UIContextEnclose(Palette::bg, Palette::ui_main);
-        ButtonStateFlags button_state = UIContextAsButton();
-        if (button_state & BUTTON_STATE_FLAG_HOVER) {
+        ButtonStateFlags::T button_state = UIContextAsButton();
+        if (button_state & ButtonStateFlags::HOVER) {
             UISetMouseHint(smc->name);
         }
-        if (button_state & BUTTON_STATE_FLAG_PRESSED) {
+        if (button_state & ButtonStateFlags::PRESSED) {
             return;
         }
         UIContextWrite(smc->name);

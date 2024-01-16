@@ -530,9 +530,9 @@ timemath::Time _DrawHandle(
     if (full_orbits > 0) {
         char text_content[4];
         sprintf(text_content, "%+3d", full_orbits);
-        DrawTextAligned(text_content, text_pos, TEXT_ALIGNMENT_HCENTER | TEXT_ALIGNMENT_RIGHT, c);
+        DrawTextAligned(text_content, text_pos, TextAlignment::HCENTER | TextAlignment::RIGHT, c);
     }
-    if (DrawTriangleButton(pos, Vector2Scale(radial_dir, 20), 10, c) & BUTTON_STATE_FLAG_JUST_PRESSED) {
+    if (DrawTriangleButton(pos, Vector2Scale(radial_dir, 20), 10, c) & ButtonStateFlags::JUST_PRESSED) {
         *is_dragging = true;
     }
     const int extend = 5;
@@ -551,10 +551,10 @@ timemath::Time _DrawHandle(
         Vector2Add(plus_pos, {0, extend}),
         c
     );
-    ButtonStateFlags button_state_plus  = DrawCircleButton(plus_pos, 10, c);
-    ButtonStateFlags button_state_minus = DrawCircleButton(minus_pos, 10, c);
-    if (button_state_plus & BUTTON_STATE_FLAG_JUST_PRESSED)  current = current + period;
-    if (button_state_minus & BUTTON_STATE_FLAG_JUST_PRESSED) current = current - period;
+    ButtonStateFlags::T button_state_plus  = DrawCircleButton(plus_pos, 10, c);
+    ButtonStateFlags::T button_state_minus = DrawCircleButton(minus_pos, 10, c);
+    if (button_state_plus & ButtonStateFlags::JUST_PRESSED)  current = current + period;
+    if (button_state_minus & ButtonStateFlags::JUST_PRESSED) current = current - period;
     HandleButtonSound(button_state_plus);
     HandleButtonSound(button_state_minus);
     if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
@@ -653,11 +653,11 @@ void TransferPlanUI::DrawUI() {
     UIContextPushInset(0, 20);
     {
         UIContextPushHSplit(0, w/3);
-        ButtonStateFlags button_state = UIContextAsButton();
-        if (button_state & BUTTON_STATE_FLAG_HOVER) {
+        ButtonStateFlags::T button_state = UIContextAsButton();
+        if (button_state & ButtonStateFlags::HOVER) {
             UIContextEnclose(Palette::bg, Palette::ui_main);
         }
-        if(button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+        if(button_state & ButtonStateFlags::JUST_PRESSED) {
             TransferPlanSoonest(plan, ship_instance->GetCapableDV() - 1);
         }
         UIContextWrite("ASAP");
@@ -665,11 +665,11 @@ void TransferPlanUI::DrawUI() {
     }
     {
         UIContextPushHSplit(w/3, 2*w/3);
-        ButtonStateFlags button_state = UIContextAsButton();
-        if (button_state & BUTTON_STATE_FLAG_HOVER) {
+        ButtonStateFlags::T button_state = UIContextAsButton();
+        if (button_state & ButtonStateFlags::HOVER) {
             UIContextEnclose(Palette::bg, Palette::ui_main);
         }
-        if(button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+        if(button_state & ButtonStateFlags::JUST_PRESSED) {
             if (is_valid) {
                 ship_instance->ConfirmEditedTransferPlan();
                 Reset();
@@ -680,11 +680,11 @@ void TransferPlanUI::DrawUI() {
     }
     {
         UIContextPushHSplit(2*w/3, w);
-        ButtonStateFlags button_state = UIContextAsButton();
-        if(button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+        ButtonStateFlags::T button_state = UIContextAsButton();
+        if(button_state & ButtonStateFlags::JUST_PRESSED) {
             departure_time_automatic = !departure_time_automatic;
         }
-        if (departure_time_automatic || (button_state & BUTTON_STATE_FLAG_HOVER)) {
+        if (departure_time_automatic || (button_state & ButtonStateFlags::HOVER)) {
             UIContextEnclose(Palette::bg, Palette::ui_main);
         }
         UIContextWrite("Lock");

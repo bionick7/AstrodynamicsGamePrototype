@@ -25,10 +25,10 @@ bool _PauseMenuButton(const char* label) {
     UIContextPushInset(0, 20);
     UIContextEnclose(Palette::bg, Palette::ui_main);
     UIContextWrite(label);
-    ButtonStateFlags button_state = UIContextAsButton();
-    HandleButtonSound(button_state & BUTTON_STATE_FLAG_JUST_PRESSED);
+    ButtonStateFlags::T button_state = UIContextAsButton();
+    HandleButtonSound(button_state & ButtonStateFlags::JUST_PRESSED);
     UIContextPop();
-    return button_state & BUTTON_STATE_FLAG_JUST_PRESSED;
+    return button_state & ButtonStateFlags::JUST_PRESSED;
 }
 
 bool is_in_pause_menu;
@@ -234,10 +234,10 @@ void _UpdateShipsPlanets(GlobalState* gs) {
 
     if (prev_hover != hover) {
     //if (!IsIdValid(prev_hover.id) && IsIdValid(hover.id)) {
-        HandleButtonSound(BUTTON_STATE_FLAG_JUST_HOVER_IN);
+        HandleButtonSound(ButtonStateFlags::JUST_HOVER_IN);
     }
     if (IsIdValid(prev_hover) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        HandleButtonSound(BUTTON_STATE_FLAG_JUST_PRESSED);
+        HandleButtonSound(ButtonStateFlags::JUST_PRESSED);
     }
     prev_hover = hover;
 }
@@ -275,7 +275,7 @@ void GlobalState::DrawState() {
     calendar.DrawUI();
     char capital_str[21];
     sprintf(capital_str, "M§M %6" LONG_STRID ".%3" LONG_STRID " .mil", money / (int)1e6, money % 1000000 / 1000);
-    DrawTextAligned(capital_str, {GetScreenWidth() / 2.0f, 10}, TEXT_ALIGNMENT_HCENTER & TEXT_ALIGNMENT_TOP, Palette::ui_main);
+    DrawTextAligned(capital_str, {GetScreenWidth() / 2.0f, 10}, TextAlignment::HCENTER & TextAlignment::TOP, Palette::ui_main);
 
     // planets
     for (int planet_id = 0; planet_id < planets.GetPlanetCount(); planet_id++) {
@@ -391,4 +391,8 @@ AudioServer* GetAudioServer() {
 
 WrenInterface* GetWrenInterface() {
     return &global_state.wren_interface;
+}
+
+UIGlobals* GlobalUI() {
+    return &global_state.ui;
 }

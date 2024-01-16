@@ -71,7 +71,7 @@ ships:
 - name: Military ship 2
   class_id: shp_express
   allegiance: 0
-  planet: Tethys
+  planet: Encelladus
   tf_plans: []
   modules:
   - shpmod_railgun

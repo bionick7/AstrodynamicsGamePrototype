@@ -222,11 +222,11 @@ void Planet::_UIDrawInventory() {
         //if (!IsIdValid(ship_module_inventory[i])) continue;
         UIContextPushGridCell(columns, rows, i % columns, i / columns);
         UIContextShrink(MARGIN, MARGIN);
-        ButtonStateFlags button_state = UIContextAsButton();
-        if (button_state & BUTTON_STATE_FLAG_HOVER) {
+        ButtonStateFlags::T button_state = UIContextAsButton();
+        if (button_state & ButtonStateFlags::HOVER) {
             current_slot = ShipModuleSlot(id, i, ShipModuleSlot::DRAGGING_FROM_PLANET);
         }
-        if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+        if (button_state & ButtonStateFlags::JUST_PRESSED) {
             sms->InitDragging(current_slot, UIContextCurrent().render_rec);
         }
         sms->DrawShipModule(ship_module_inventory[i]);
@@ -247,14 +247,14 @@ void Planet::_UIDrawShipProduction() {
         UIContextPushGridCell(COLUMNS, rows, i % COLUMNS, i / COLUMNS);
         
         // Possible since Shipclasses get loaded once in continuous mempry
-        ButtonStateFlags button_state = UIContextAsButton();
-        if (button_state & BUTTON_STATE_FLAG_HOVER) {
+        ButtonStateFlags::T button_state = UIContextAsButton();
+        if (button_state & ButtonStateFlags::HOVER) {
             UIContextEnclose(Palette::bg, Palette::ui_main);
             UISetMouseHint(ship_class->description);
         } else {
             UIContextEnclose(Palette::bg, Palette::blue);
         }
-        if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+        if (button_state & ButtonStateFlags::JUST_PRESSED) {
             ship_production_queue.Append(id);
         }
 
@@ -271,14 +271,14 @@ void Planet::_UIDrawShipProduction() {
         const ShipClass* ship_class = GetShipClassByIndex(id);
         UIContextPushInset(0, 50);
         UIContextShrink(3, 3);
-        ButtonStateFlags button_state = UIContextAsButton();
-        if (button_state & BUTTON_STATE_FLAG_HOVER) {
+        ButtonStateFlags::T button_state = UIContextAsButton();
+        if (button_state & ButtonStateFlags::HOVER) {
             UIContextEnclose(Palette::bg, Palette::ui_main);
             UISetMouseHint(ship_class->description);
         } else {
             UIContextEnclose(Palette::bg, Palette::blue);
         }
-        if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+        if (button_state & ButtonStateFlags::JUST_PRESSED) {
             ship_production_queue.EraseAt(i);
             i--;
         }
@@ -342,17 +342,17 @@ void Planet::DrawUI() {
     static_assert(sizeof(tab_descriptions) / sizeof(tab_descriptions[0]) == n_tabs);
     for (int i=0; i < n_tabs; i++) {
         UIContextPushHSplit(i * w / n_tabs, (i + 1) * w / n_tabs);
-        ButtonStateFlags button_state = UIContextAsButton();
-        HandleButtonSound(button_state & BUTTON_STATE_FLAG_JUST_PRESSED);
+        ButtonStateFlags::T button_state = UIContextAsButton();
+        HandleButtonSound(button_state & ButtonStateFlags::JUST_PRESSED);
         if (i == 1 && !economy.trading_accessible) {
             UIContextWrite("~economy~");
             UIContextPop();
             continue;
         }
-        if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+        if (button_state & ButtonStateFlags::JUST_PRESSED) {
             current_tab = i;
         }
-        if (button_state & BUTTON_STATE_FLAG_HOVER || i == current_tab) {
+        if (button_state & ButtonStateFlags::HOVER || i == current_tab) {
             UIContextEnclose(Palette::bg, Palette::ui_main);
         }
         UIContextWrite(tab_descriptions[i]);

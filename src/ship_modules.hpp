@@ -11,40 +11,32 @@ struct Ship;
 #define SHIP_MODULE_WIDTH 100
 #define SHIP_MODULE_HEIGHT 50
 
+#define X_SHIP_STATS \
+    X(POWER, power)\
+    X(INITIATIVE, initiative)\
+    X(KINETIC_HP, kinetic_hp)\
+    X(ENERGY_HP, energy_hp)\
+    X(CREW, crew)\
+    X(KINETIC_OFFENSE, kinetic_offense)\
+    X(ORDNANCE_OFFENSE, ordnance_offense)\
+    X(BOARDING_OFFENSE, boarding_offense)\
+    X(KINETIC_DEFENSE, kinetic_defense)\
+    X(ORDNANCE_DEFENSE, ordnance_defense)\
+    X(BOARDING_DEFENSE, boarding_defense)
 
 struct ShipStats {  // Better enum class, since you can treat the enum as integer
     enum {
-        POWER = 0,
-        INITIATIVE,
-
-        KINETIC_HP,
-        ENERGY_HP,
-        CREW,
-
-        KINETIC_OFFENSE,
-        ORDONANCE_OFFENSE,
-        BOARDING_OFFENSE,
-
-        KINETIC_DEFENSE,
-        ORDONANCE_DEFENSE,
-        BOARDING_DEFENSE,
-
+        #define X(upper, lower) upper,
+        X_SHIP_STATS
+        #undef X
         MAX,
     };
 };
 
 static const char* ship_stat_names[] = {
-    "power",
-    "initiative",
-    "kinetic_hp",
-    "energy_hp",
-    "crew",
-    "kinetic_offense",
-    "ordnance_offense",
-    "boarding_offense",
-    "kinetic_defense",
-    "ordnance_defense",
-    "boarding_defense",
+    #define X(upper, lower) #lower,
+    X_SHIP_STATS
+    #undef X
 };
 
 static_assert(ShipStats::MAX == sizeof(ship_stat_names) / sizeof(ship_stat_names[0]));

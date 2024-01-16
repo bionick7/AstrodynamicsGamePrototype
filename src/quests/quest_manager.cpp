@@ -122,12 +122,12 @@ void QuestManager::Draw() {
     if (tab_width > 150) tab_width = 150;
     for (int i_tab = 0; i_tab < n_tabs; i_tab++) {
         UIContextPushHSplit(i_tab * tab_width, (i_tab + 1) * tab_width);
-        ButtonStateFlags button_state = UIContextAsButton();
-        HandleButtonSound(button_state & BUTTON_STATE_FLAG_JUST_PRESSED);
-        if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+        ButtonStateFlags::T button_state = UIContextAsButton();
+        HandleButtonSound(button_state & ButtonStateFlags::JUST_PRESSED);
+        if (button_state & ButtonStateFlags::JUST_PRESSED) {
             current_tab_qst = i_tab;
         }
-        if (button_state & BUTTON_STATE_FLAG_HOVER || i_tab == current_tab_qst) {
+        if (button_state & ButtonStateFlags::HOVER || i_tab == current_tab_qst) {
             UIContextEnclose(Palette::bg, Palette::ui_main);
         }
         if (i_tab == 0) {
@@ -166,11 +166,11 @@ void QuestManager::Draw() {
             current_available_quests_scroll = ClampInt(current_available_quests_scroll - GetMouseWheelMove() * 20, 0, max_scroll);
         }
 
-        UIContextPushScrollInset(0, UIContextCurrent().height, TASK_PANEL_HEIGHT * GetAvailableQuests(), current_available_quests_scroll);
+        UIContextPushScrollInset(0, UIContextCurrent().height, TASK_PANEL_HEIGHT * GetAvailableQuests(), &current_available_quests_scroll);
         // Available Quests
         for(auto it = available_quests.GetIter(); it; it++) {
             if (!available_quests[it]->IsValid()) continue;
-            if (available_quests[it]->DrawUI(true, true) & BUTTON_STATE_FLAG_JUST_PRESSED) {
+            if (available_quests[it]->DrawUI(true, true) & ButtonStateFlags::JUST_PRESSED) {
                 AcceptQuest(it.GetId());
             }
         }

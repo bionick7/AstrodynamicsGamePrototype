@@ -39,6 +39,7 @@ bool ShipBattle(IDList* ships_aggressor, IDList* ships_defender, double relative
 
     int total_ships = ships_aggressor->size + ships_defender->size;
     IDList turn_order = IDList(total_ships);
+    // Aggressors or defender first?
     for(int i=0; i < ships_aggressor->size; i++) {
         turn_order.Append(ships_aggressor->Get(i));
     }
@@ -48,9 +49,9 @@ bool ShipBattle(IDList* ships_aggressor, IDList* ships_defender, double relative
     IDList ships_aggr_strength = IDList(*ships_aggressor);
     IDList ships_defs_strength = IDList(*ships_defender);
 
-    turn_order.Sort([](RID ship1, RID ship2) {
+    /*turn_order.Sort([](RID ship1, RID ship2) {
         return GetShip(ship2)->stats[ShipStats::INITIATIVE] - GetShip(ship1)->stats[ShipStats::INITIATIVE];
-    });
+    });*/
 
     ships_aggr_strength.Sort([](RID ship1, RID ship2){
         return GetShip(ship2)->GetCombatStrength() - GetShip(ship1)->GetCombatStrength();
@@ -63,13 +64,21 @@ bool ShipBattle(IDList* ships_aggressor, IDList* ships_defender, double relative
     IDList killed = IDList();
 
     bool agressor_won;
-    int turn = 0;
-    for (;;) {
+    int leading_turns = 0;
+    for (int i=0; i < total_ships; i++) {
+        if (GetShip(turn_order[i])->initiative() > leading_turns) {
+            leading_turns = GetShip(turn_order[i])->initiative();
+        }
+    }
+    for (int turn_nr=-leading_turns; true; turn_nr++) {
         for (int i=0; i < total_ships; i++) {
             if (killed.Find(turn_order[i]) >= 0) {
                 continue;
             }
             Ship* actor_ship = GetShip(turn_order[i]);
+            if (actor_ship->initiative() < -turn_nr) {
+                continue;
+            }
             bool is_agressor = ships_aggr_strength.Find(turn_order[i]) >= 0;
             const IDList* target_ship_list = is_agressor ? &ships_defs_strength : &ships_aggr_strength;
             
@@ -88,24 +97,26 @@ bool ShipBattle(IDList* ships_aggressor, IDList* ships_defender, double relative
             } while (killed.Find(target_id) >= 0);
             Ship* target_ship = GetShip(target_id);
 
-            int kinetic_dammage = actor_ship->stats[ShipStats::KINETIC_OFFENSE] * velocity_multiplier - actor_ship->stats[ShipStats::KINETIC_DEFENSE];
+            int kinetic_dammage = actor_ship->kinetic_offense() * velocity_multiplier - actor_ship->kinetic_defense();
             if (kinetic_dammage < 0) kinetic_dammage = 0;
-            int ordonance_dammage = actor_ship->stats[ShipStats::ORDONANCE_OFFENSE] - actor_ship->stats[ShipStats::ORDONANCE_DEFENSE];
+            int ordonance_dammage = actor_ship->ordnance_offense() - actor_ship->ordnance_defense();
             if (ordonance_dammage < 0) ordonance_dammage = 0;
 
-            target_ship->variables[ShipVariables::KINETIC_ARMOR] -= kinetic_dammage;
-            target_ship->variables[ShipVariables::ENERGY_ARMOR] -= ordonance_dammage;
+            target_ship->dammage_taken[ShipVariables::KINETIC_ARMOR] += kinetic_dammage;
+            target_ship->dammage_taken[ShipVariables::ENERGY_ARMOR] += ordonance_dammage;
 
-            //INFO("Turn %d: %s vs %s: DMG: %d", turn, actor_ship->name, target_ship->name, ordonance_dammage + kinetic_dammage)
-            //INFO("    >> %d - %d", 
-            //     target_ship->variables[ShipVariables::KINETIC_ARMOR], 
-            //     target_ship->variables[ShipVariables::ENERGY_ARMOR]
-            //    )
-            if(target_ship->variables[ShipVariables::KINETIC_ARMOR] < 0 || target_ship->variables[ShipVariables::ENERGY_ARMOR] < 0) {
+            INFO("Turn %d: %s vs %s: DMG: %d", turn_nr, actor_ship->name, target_ship->name, ordonance_dammage + kinetic_dammage)
+            INFO("    >> %d - %d", 
+                 target_ship->dammage_taken[ShipVariables::KINETIC_ARMOR], 
+                 target_ship->dammage_taken[ShipVariables::ENERGY_ARMOR]
+                )
+            if(
+                target_ship->dammage_taken[ShipVariables::KINETIC_ARMOR] > target_ship->stats[ShipStats::KINETIC_HP]
+                || target_ship->dammage_taken[ShipVariables::ENERGY_ARMOR] > target_ship->stats[ShipStats::ENERGY_HP]
+            ) {
                 INFO("%s killed %s in battle", actor_ship->name, target_ship->name)
                 killed.Append(target_id);
             }
-            turn++;
         }
     }
 
@@ -138,7 +149,7 @@ void Ship::_OnClicked() {
     } else {
         GlobalGetState()->focused_ship = id;
     }
-    HandleButtonSound(BUTTON_STATE_FLAG_JUST_PRESSED);
+    HandleButtonSound(ButtonStateFlags::JUST_PRESSED);
 }
 
 void Ship::_OnNewPlanClicked() {
@@ -185,7 +196,7 @@ void Ship::Serialize(DataNode *data) const
     data->SetI("resource_id", transporing.resource_id);
     data->SetArray("variables", ShipVariables::MAX);
     for(int i=0; i < ShipVariables::MAX; i++) {
-        data->SetArrayElemI("variables", i, variables[i]);
+        data->SetArrayElemI("dammage_taken", i, dammage_taken[i]);
     }
 
     data->SetArray("modules", SHIP_MAX_MODULES);
@@ -232,9 +243,9 @@ void Ship::Deserialize(const DataNode* data) {
         prepared_plans[i].Deserialize(data->GetArrayChild("prepared_plans", i, true));
     }
 
-    variables[ShipVariables::KINETIC_ARMOR] = data->GetArrayI("variables", ShipVariables::KINETIC_ARMOR, stats[ShipStats::KINETIC_HP], true);
-    variables[ShipVariables::ENERGY_ARMOR] = data->GetArrayI("variables", ShipVariables::ENERGY_ARMOR, stats[ShipStats::ENERGY_HP], true);
-    variables[ShipVariables::CREW] = data->GetArrayI("variables", ShipVariables::CREW, stats[ShipStats::CREW], true);
+    dammage_taken[ShipVariables::KINETIC_ARMOR] = data->GetArrayI("dammage_taken", ShipVariables::KINETIC_ARMOR, stats[ShipStats::KINETIC_HP], true);
+    dammage_taken[ShipVariables::ENERGY_ARMOR] = data->GetArrayI("dammage_taken", ShipVariables::ENERGY_ARMOR, stats[ShipStats::ENERGY_HP], true);
+    dammage_taken[ShipVariables::CREW] = data->GetArrayI("dammage_taken", ShipVariables::CREW, stats[ShipStats::CREW], true);
 }
 
 double Ship::GetPayloadMass() const{
@@ -305,8 +316,8 @@ bool Ship::IsTrajectoryKnown(int index) const {
 }
 
 int Ship::GetCombatStrength() const {
-    int offensive = stats[ShipStats::KINETIC_OFFENSE] + stats[ShipStats::ORDONANCE_OFFENSE];
-    int defensive = stats[ShipStats::KINETIC_DEFENSE] + stats[ShipStats::ORDONANCE_DEFENSE];
+    int offensive = kinetic_offense() + ordnance_offense();
+    int defensive = kinetic_defense() + ordnance_defense();
     return offensive * (defensive + 1);
 }
 
@@ -319,21 +330,22 @@ int Ship::GetMissingHealth() const {
     //SHOW_I(variables[ShipVariables::CREW])
     
     return
-          (stats[ShipStats::KINETIC_HP] - variables[ShipVariables::KINETIC_ARMOR])
-        + (stats[ShipStats::ENERGY_HP] - variables[ShipVariables::ENERGY_ARMOR])
-        + (stats[ShipStats::CREW] - variables[ShipVariables::CREW]);
+          dammage_taken[ShipVariables::KINETIC_ARMOR]
+        + dammage_taken[ShipVariables::ENERGY_ARMOR]
+        + dammage_taken[ShipVariables::CREW]
+    ;
 }
 
 bool Ship::CanDragModule(int index) const {
     if (!IsIdValid(modules[index]))
         return true;
-    if (GetModule(modules[index])->delta_stats[ShipStats::KINETIC_HP] > 0 && variables[ShipVariables::KINETIC_ARMOR] == stats[ShipStats::KINETIC_HP]) {
+    if (GetModule(modules[index])->delta_stats[ShipStats::KINETIC_HP] > kinetic_hp() - dammage_taken[ShipVariables::KINETIC_ARMOR]) {
         return false;
     }
-    if (GetModule(modules[index])->delta_stats[ShipStats::ENERGY_HP] > 0 && variables[ShipVariables::ENERGY_ARMOR] == stats[ShipStats::ENERGY_HP]) {
+    if (GetModule(modules[index])->delta_stats[ShipStats::ENERGY_HP] > energy_hp() - dammage_taken[ShipVariables::ENERGY_ARMOR]) {
         return false;
     }
-    if (GetModule(modules[index])->delta_stats[ShipStats::CREW] > 0 && variables[ShipVariables::CREW] == stats[ShipStats::CREW]) {
+    if (GetModule(modules[index])->delta_stats[ShipStats::CREW] > crew() - dammage_taken[ShipVariables::CREW]) {
         return false;
     }
     return true;
@@ -484,7 +496,9 @@ void Ship::_UpdateShipyard() {
         for(int i=0; i < ship_yards; i++) {
             //DebugPrintText("Shipyard");
             // TBD
-            GetPlanet(parent_planet)->ship_production_process++;
+            if (GetPlanet(parent_planet)->ship_production_queue.Count() > 0) {
+                GetPlanet(parent_planet)->ship_production_process++;
+            }
             // Should probably be managed by the planet
         }
     }
@@ -558,6 +572,25 @@ void Ship::Draw(const CoordinateTransform* c_transf) const {
     }
 }
 
+void _UIDrawStats(Ship* ship) {
+    StringBuilder sb;
+    sb.AddFormat("Payload %d / %d ", KGToResourceCounts(ship->GetPayloadMass()), ship->GetMaxCapacity());
+    UIContextWrite(sb.c_str);
+    UIContextFillline(ship->GetPayloadMass() / ResourceCountsToKG(ship->GetMaxCapacity()), Palette::ui_main, Palette::bg);
+    sb.Clear();
+    sb.AddFormat("dv %2.2f (I_sp: %2.2f)\n", ship->GetCapableDV(), GetShipClassByIndex(ship->ship_class)->v_e / 1000);
+    sb.AddFormat("Pw. %2d Init. %2d\n", ship->power(), ship->initiative());
+    sb.AddFormat("HP: %2d/%2d K - %2d/%2d E\n", 
+        ship->kinetic_hp() - ship->dammage_taken[ShipVariables::KINETIC_ARMOR], ship->kinetic_hp(),
+        ship->energy_hp() - ship->dammage_taken[ShipVariables::ENERGY_ARMOR], ship->energy_hp()
+    );
+    sb.AddFormat("Crew: %2d/%2d\n", ship->crew() - ship->dammage_taken[ShipVariables::CREW], ship->crew());
+    sb.AddFormat("Offense: %2d K - %2d O - %2d B\n", ship->kinetic_offense(), ship->ordnance_offense(), ship->boarding_offense());
+    sb.AddFormat("Defense: %2d K - %2d O - %2d B\n", ship->kinetic_defense(), ship->ordnance_defense(), ship->boarding_defense());
+    sb.AddFormat("++++++++++++++++++\n");
+    UIContextWrite(sb.c_str);
+}
+
 int ship_selecting_module_index = -1;
 void _UIDrawInventory(Ship* ship) {
     const int MARGIN = 3;
@@ -571,11 +604,11 @@ void _UIDrawInventory(Ship* ship) {
     for (int i=0; i < SHIP_MAX_MODULES; i++) {
         UIContextPushGridCell(columns, rows, i % columns, i / columns);
         UIContextShrink(MARGIN, MARGIN);
-        ButtonStateFlags button_state = UIContextAsButton();
-        if (button_state & BUTTON_STATE_FLAG_HOVER) {
+        ButtonStateFlags::T button_state = UIContextAsButton();
+        if (button_state & ButtonStateFlags::HOVER) {
             ship->current_slot = ShipModuleSlot(ship->id, i, ShipModuleSlot::DRAGGING_FROM_SHIP);
         }
-        if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+        if (button_state & ButtonStateFlags::JUST_PRESSED) {
             sms->InitDragging(ship->current_slot, UIContextCurrent().render_rec);
         }
         sms->DrawShipModule(ship->modules[i]);
@@ -622,12 +655,12 @@ void _UIDrawTransferplans(Ship* ship) {
         UIContextEnclose(Palette::bg, Palette::blue);
         UIContextWrite(tp_str[0]);
         UIContextWrite(tp_str[1]);
-        ButtonStateFlags button_state = UIContextAsButton();
-        HandleButtonSound(button_state & BUTTON_STATE_FLAG_JUST_PRESSED);
-        if (button_state & BUTTON_STATE_FLAG_HOVER) {
+        ButtonStateFlags::T button_state = UIContextAsButton();
+        HandleButtonSound(button_state & ButtonStateFlags::JUST_PRESSED);
+        if (button_state & ButtonStateFlags::HOVER) {
             ship->highlighted_plan_index = i;
         }
-        if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+        if (button_state & ButtonStateFlags::JUST_PRESSED) {
             ship->StartEditingPlan(i);
         }
         UIContextPop();  // HSplit
@@ -636,9 +669,9 @@ void _UIDrawTransferplans(Ship* ship) {
             UIContextPushHSplit(-32, -1);
             UIContextWrite("X");
             UIContextEnclose(Palette::bg, Palette::blue);
-            ButtonStateFlags button_state = UIContextAsButton();
-            HandleButtonSound(button_state & BUTTON_STATE_FLAG_JUST_PRESSED);
-            if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED) {
+            ButtonStateFlags::T button_state = UIContextAsButton();
+            HandleButtonSound(button_state & ButtonStateFlags::JUST_PRESSED);
+            if (button_state & ButtonStateFlags::JUST_PRESSED) {
                 ship->RemoveTransferPlan(i);
             }
             UIContextPop();  // HSplit
@@ -646,7 +679,7 @@ void _UIDrawTransferplans(Ship* ship) {
 
         UIContextPop();  // Insert
     }
-    if (UIContextDirectButton("+", 10) & BUTTON_STATE_FLAG_JUST_PRESSED) {
+    if (UIContextDirectButton("+", 10) & ButtonStateFlags::JUST_PRESSED) {
         ship->_OnNewPlanClicked();
     }
 }
@@ -660,8 +693,8 @@ void _UIDrawQuests(Ship* ship) {
         bool is_quest_in_cargo = quest->ship == ship->id;
         if (quest->current_planet != ship->parent_planet && !is_quest_in_cargo) continue;
         bool can_accept = quest->payload_mass <= max_mass;
-        ButtonStateFlags button_state = quest->DrawUI(true, is_quest_in_cargo);
-        if (button_state & BUTTON_STATE_FLAG_JUST_PRESSED && can_accept) {
+        ButtonStateFlags::T button_state = quest->DrawUI(true, is_quest_in_cargo);
+        if (button_state & ButtonStateFlags::JUST_PRESSED && can_accept) {
             if (is_quest_in_cargo) {
                 qm->PutbackTask(ship->id, it.GetId());
             } else {
@@ -692,48 +725,31 @@ void Ship::DrawUI() {
     const int OUTSET_MARGIN = 6;
     const int TEXT_SIZE = 16;
     UIContextCreateNew(
-        GetScreenWidth() - 20*TEXT_SIZE - 2*INSET_MARGIN - OUTSET_MARGIN, 
+        GetScreenWidth() - 430 - 2*INSET_MARGIN - OUTSET_MARGIN, 
         OUTSET_MARGIN + 200,
-
-        20*TEXT_SIZE + 2*INSET_MARGIN, 
+        430 + 2*INSET_MARGIN, 
         GetScreenHeight() - 200 - OUTSET_MARGIN - 2*INSET_MARGIN,
         TEXT_SIZE, Palette::ui_main
     );
     UIContextEnclose(Palette::bg, GetColor());
+
     UIContextShrink(INSET_MARGIN, INSET_MARGIN);
 
     if (GetIntelLevel() & IntelLevel::STATS == 0) {
         return;
     }
 
-    UIContextWrite(name);
-    StringBuilder sb;
-    sb.AddFormat("Payload %d / %d ", KGToResourceCounts(GetPayloadMass()), GetMaxCapacity());
-    UIContextWrite(sb.c_str);
-    UIContextPushInset(0, 3);
-    UIContextFillline(GetPayloadMass() / ResourceCountsToKG(GetMaxCapacity()), Palette::ui_main, Palette::bg);
-    //UIContextFillline(0.5, Palette::ui_main, Palette::bg);
-    UIContextPop();  // Inset
-    sb.Clear();
-    sb.AddFormat("I_sp        %2.2f km/s\n", GetShipClassByIndex(ship_class)->v_e / 1000);
-    sb.AddFormat("dv left     %2.2f km/s\n", GetCapableDV());
-    
-    // Very crude
-    for(int i=0; i < ShipStats::MAX; i++) {
-        if (stats[i] != 0) {
-            sb.AddFormat("%s: %d\n", ship_stat_names[i], (int) stats[i]);
-        }
-    }
-    sb.AddFormat("++++++++++++++++++\n");
-    for(int i=0; i < ShipVariables::MAX; i++) {
-        if (variables[i] != 0) {
-            sb.AddFormat("%s: %d\n", ship_variable_names[i], variables[i]);
-        }
-    }
-    UIContextWrite(sb.c_str);
+    const int allocated = 1000;
+
+    UIContextPushScrollInset(0, UIContextCurrent().height, allocated, &ui_scroll);
+
+    UIContextWrite(name);    
+    _UIDrawStats(this);
     _UIDrawInventory(this);
     _UIDrawTransferplans(this);
     _UIDrawQuests(this);
+
+    UIContextPop();  // ScrollInset
 }
 
 void Ship::Inspect() {
@@ -747,19 +763,19 @@ void Ship::RemoveShipModuleAt(int index) {
 void Ship::Repair(int hp) {
     if (hp > stats[ShipStats::KINETIC_HP] + stats[ShipStats::ENERGY_HP] + stats[ShipStats::CREW]){
         // for initializetion
-        variables[ShipVariables::KINETIC_ARMOR] = stats[ShipStats::KINETIC_HP];
-        variables[ShipVariables::ENERGY_ARMOR] = stats[ShipStats::ENERGY_HP];
-        variables[ShipVariables::CREW] = stats[ShipStats::CREW];
+        dammage_taken[ShipVariables::KINETIC_ARMOR] = 0;
+        dammage_taken[ShipVariables::ENERGY_ARMOR] = 0;
+        dammage_taken[ShipVariables::CREW] = 0;
         return;
     }
-    int kinetic_repair = MinInt(hp, stats[ShipStats::KINETIC_HP] - variables[ShipVariables::KINETIC_ARMOR]);
+    int kinetic_repair = MinInt(hp, dammage_taken[ShipVariables::KINETIC_ARMOR]);
     hp -= kinetic_repair;
-    int energy_repair = MinInt(hp, stats[ShipStats::ENERGY_HP] - variables[ShipVariables::ENERGY_ARMOR]);
+    int energy_repair = MinInt(hp, dammage_taken[ShipVariables::ENERGY_ARMOR]);
     hp -= energy_repair;
-    int crew_repair = MinInt(hp, stats[ShipStats::CREW] - variables[ShipVariables::CREW]);
-    variables[ShipVariables::KINETIC_ARMOR] += kinetic_repair;
-    variables[ShipVariables::ENERGY_ARMOR] += energy_repair;
-    variables[ShipVariables::CREW] += crew_repair;
+    int crew_repair = MinInt(hp, dammage_taken[ShipVariables::CREW]);
+    dammage_taken[ShipVariables::KINETIC_ARMOR] -= kinetic_repair;
+    dammage_taken[ShipVariables::ENERGY_ARMOR] -= energy_repair;
+    dammage_taken[ShipVariables::CREW] -= crew_repair;
 }
 
 void Ship::_OnDeparture(const TransferPlan& tp) {

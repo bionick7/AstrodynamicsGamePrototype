@@ -122,7 +122,7 @@ void PlanetaryEconomy::UIDrawResources(const ResourceTransfer& transfer, double 
         UIContextPushInset(0, 18);
         if (GlobalGetState()->active_transfer_plan.IsActive()) {
             // Button
-            if (UIContextDirectButton(transfer.resource_id == i ? "X" : " ", 2) & BUTTON_STATE_FLAG_JUST_PRESSED) {
+            if (UIContextDirectButton(transfer.resource_id == i ? "X" : " ", 2) & ButtonStateFlags::JUST_PRESSED) {
                 if (transfer.resource_id == i) 
                     GlobalGetState()->active_transfer_plan.SetResourceType(ResourceType::RESOURCE_NONE);
                 else
@@ -190,7 +190,7 @@ void PlanetaryEconomy::UIDrawEconomy(const ResourceTransfer& transfer, double fu
 
         if (GlobalGetState()->active_transfer_plan.IsActive()) {
             // Button
-            if (UIContextDirectButton(transfer.resource_id == i ? "X" : " ", 2) & BUTTON_STATE_FLAG_JUST_PRESSED) {
+            if (UIContextDirectButton(transfer.resource_id == i ? "X" : " ", 2) & ButtonStateFlags::JUST_PRESSED) {
                 GlobalGetState()->active_transfer_plan.SetResourceType(resource);
             }
         }
@@ -214,10 +214,10 @@ void PlanetaryEconomy::UIDrawEconomy(const ResourceTransfer& transfer, double fu
         }
 
         resource_count_t trade_ammount = 0;
-        if (UIContextDirectButton("+ 10", 0) & BUTTON_STATE_FLAG_JUST_PRESSED) trade_ammount = 10;
-        if (UIContextDirectButton("+ 1", 0) & BUTTON_STATE_FLAG_JUST_PRESSED) trade_ammount = 1;
-        if (UIContextDirectButton("- 1", 0) & BUTTON_STATE_FLAG_JUST_PRESSED) trade_ammount = -1;
-        if (UIContextDirectButton("- 10", 0) & BUTTON_STATE_FLAG_JUST_PRESSED) trade_ammount = -10;
+        if (UIContextDirectButton("+ 10", 0) & ButtonStateFlags::JUST_PRESSED) trade_ammount = 10;
+        if (UIContextDirectButton("+ 1", 0) & ButtonStateFlags::JUST_PRESSED) trade_ammount = 1;
+        if (UIContextDirectButton("- 1", 0) & ButtonStateFlags::JUST_PRESSED) trade_ammount = -1;
+        if (UIContextDirectButton("- 10", 0) & ButtonStateFlags::JUST_PRESSED) trade_ammount = -10;
 
         if (trade_ammount != 0) {
             TryPlayerTransaction({resource, trade_ammount});
