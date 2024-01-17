@@ -31,7 +31,10 @@ struct Planet {
     resource_count_t planet_stats[static_cast<int>(PlanetStats::MAX)];
     RID ship_module_inventory[MAX_PLANET_INVENTORY];
     IDList ship_production_queue;
+    IDList module_production_queue;
+
     int ship_production_process;
+    int module_production_process;
 
     bool mouse_hover;
     RID id;
@@ -54,8 +57,11 @@ struct Planet {
 
     bool HasMouseHover(double* distance) const;
     void Update();
+    void AdvanceShipProductionQueue();
+    void AdvanceModuleProductionQueue();
     void Draw(const CoordinateTransform* c_transf);
     void DrawUI();
+    void _UIDrawModuleProduction();
     void _UIDrawShipProduction();
     void _UIDrawInventory();
 };

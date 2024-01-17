@@ -59,22 +59,6 @@ static const char* ship_variable_names[] = {
 
 static_assert(ShipVariables::MAX == sizeof(ship_variable_names) / sizeof(ship_variable_names[0]));
 
-/*
-shpmod_heatshield
-shpmod_droptank
-shpmod_foodhouse
-shpmod_water_extractor
-shpmod_small_yard_1
-shpmod_small_yard_2
-shpmod_small_yard_3
-shpmod_small_yard_4
-shpmod_coilgun
-shpmod_missiles
-shpmod_armor
-shpmod_pdc
-shpmod_reactor
-*/
-
 struct ShipModuleClass {
     enum {
         INVALID_MODULE,
@@ -90,6 +74,7 @@ struct ShipModuleClass {
     char name[100];
     char description[512];
     bool has_activation_requirements;
+    int construction_time;
 
     ShipModuleClass();
     void UpdateStats(Ship* ship) const;

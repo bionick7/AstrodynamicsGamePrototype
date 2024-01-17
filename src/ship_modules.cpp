@@ -120,6 +120,7 @@ int ShipModules::Load(const DataNode* data) {
         ship_modules[i].mass = module_data->GetF("mass") * KG_PER_COUNT;
         strcpy(ship_modules[i].name, module_data->Get("name"));
         strcpy(ship_modules[i].description, module_data->Get("description"));
+        ship_modules[i].construction_time = data->GetI("construction_time", 20);
 
         const char* string_id = module_data->Get("id", "_");
         if (strcmp(string_id, "shpmod_water_extractor") == 0) {

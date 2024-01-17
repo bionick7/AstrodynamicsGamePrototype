@@ -24,6 +24,9 @@ shipmodules:
   mass: 1  # counts
 
 # Shipyard
+# Build modules: workshop + storage
+# Repair ships: workshop + scaffolding
+# Build ships: admin + workshop + storage + scaffolding
 - id: shpmod_small_yard_1
   name: Small shipyard offices
   description: Administrative and design offices. Needed in order to build ships
@@ -31,12 +34,12 @@ shipmodules:
 
 - id: shpmod_small_yard_2
   name: Shipyard storage facility
-  description: Part and material warehouses. Needed in order to build ships
+  description: Part and material warehouses. Needed in order to build ships or modules.
   mass: 2
 
 - id: shpmod_small_yard_3
   name: Small shipyard workshop
-  description: Construction Workshops. Needed in order to build or repair ships
+  description: Construction Workshops. Needed in order to build or repair ships or build modules.
   mass: 4
 
 - id: shpmod_small_yard_4

@@ -43,6 +43,8 @@ inline uint32_t IdGetIndex(RID id) {  return id.AsInt() & 0x00fffffful; }
 bool IsIdValid(RID id);
 bool IsIdValidTyped(RID id, EntityType type);
 
+struct DataNode;
+
 struct IDList {
     int capacity;
     int size;
@@ -54,6 +56,7 @@ struct IDList {
     IDList(const IDList&);
     ~IDList();
 
+    void Resize(int new_capacity);
     void Append(RID id);
     void EraseAt(int index);
     RID Get(int index) const;
@@ -61,6 +64,10 @@ struct IDList {
     int Find(RID id) const;
     void Clear();
 
+    void SerializeTo(DataNode* data, const char* key) const;
+    void DeserializeFrom(const DataNode* data, const char* key, bool quiet=false);
+
+    IDList& operator = (const IDList& other);
     RID operator [] (int index) const;
 
     typedef int SortFn(RID, RID);

@@ -470,6 +470,7 @@ void Ship::_UpdateShipyard() {
         if(modules[i] == GlobalGetState()->ship_modules.expected_modules.small_yard_3) collected_components[2]++;
         if(modules[i] == GlobalGetState()->ship_modules.expected_modules.small_yard_4) collected_components[3]++;
     }
+    int module_factories = MinInt(collected_components[1], collected_components[2]);
     int repair_stations = MinInt(collected_components[2], collected_components[3]);
     int ship_yards = MinInt(
         MinInt(collected_components[0], collected_components[1]),
@@ -493,13 +494,11 @@ void Ship::_UpdateShipyard() {
                 if (hp_pool <= 0) break;
             }
         }
+        for(int i=0; i < module_factories; i++) {
+            GetPlanet(parent_planet)->AdvanceModuleProductionQueue();
+        }
         for(int i=0; i < ship_yards; i++) {
-            //DebugPrintText("Shipyard");
-            // TBD
-            if (GetPlanet(parent_planet)->ship_production_queue.Count() > 0) {
-                GetPlanet(parent_planet)->ship_production_process++;
-            }
-            // Should probably be managed by the planet
+            GetPlanet(parent_planet)->AdvanceShipProductionQueue();
         }
     }
 }

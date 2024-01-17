@@ -1,6 +1,7 @@
 #include "id_system.hpp"
 #include "logging.hpp"
 #include "global_state.hpp"
+#include "datanode.hpp"
 
 RID::RID() {
     *this = GetInvalidId();
@@ -82,12 +83,22 @@ IDList::~IDList() {
     free(buffer);
 }
 
+void IDList::Resize(int new_capacity) {
+    capacity = new_capacity;
+    if (new_capacity == 0) {
+        free(buffer);
+        buffer = NULL;
+    } else {
+        buffer = (RID*) realloc(buffer, sizeof(RID) * capacity);
+    }
+}
+
 void IDList::Append(RID id) {
     if (size >= capacity) {
         int extension = capacity/2;
         if (extension < 5) extension = 5;
         capacity += extension;
-        buffer = (RID*) realloc(buffer, sizeof(RID) * capacity);
+        Resize(capacity + extension);
     }
     buffer[size] = id;
     size++;
@@ -121,8 +132,32 @@ int IDList::Find(RID id) const {
 void IDList::Clear() {
     capacity = 5;
     size = 0;
-    free(buffer);
+    Resize(5);
+}
+
+void IDList::SerializeTo(DataNode* data, const char * key) const {
+    data->SetArray(key, size);
+    for(int i=0; i < size; i++) {
+        data->SetArrayElemI(key, i, buffer[i].AsInt());
+    }
+}
+
+void IDList::DeserializeFrom(const DataNode *data, const char *key, bool quiet) {
+    int p_size = data->GetArrayLen(key);
+    Resize(p_size);
+    size = p_size;
+    for(int i=0; i < size; i++) {
+        buffer[i] = RID(data->GetArrayI(key, i));
+    }
+}
+
+IDList& IDList::operator=(const IDList& other) {
+    capacity = other.size;
+    size = other.size;
     buffer = (RID*) malloc(sizeof(RID) * capacity);
+    for(int i=0; i < size; i++) {
+        buffer[i] = other[i];
+    }
 }
 
 RID IDList::operator[](int index) const {
@@ -149,6 +184,6 @@ void IDList::Sort(SortFn *fn) {
 
 void IDList::Inspect() {
     for(int i=0; i < size; i++) {
-        printf("%d: type %d, id %d\n", i, IdGetType(buffer[i]), IdGetIndex(buffer[i]));
+        printf("%d: type %d, id %d\n", i, (int) IdGetType(buffer[i]), IdGetIndex(buffer[i]));
     }
 }
