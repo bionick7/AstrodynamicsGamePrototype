@@ -946,16 +946,12 @@ int Ships::LoadShipClasses(const DataNode* data) {
         sc.v_e = ship_data->GetF("Isp", 0) * 1000;    // km/s -> m/s
         sc.construction_time = ship_data->GetI("construction_time", 20);
         sc.oem = ResourceCountsToKG(sc.max_capacity) / (exp(sc.max_dv/sc.v_e) - 1);
+        sc.build_batch_size = data->GetI("batch_size", 1, true);
 
-        const DataNode* stats_data = ship_data->GetChild("stats", true);
-        for(int i=0; i < (int)ShipStats::MAX; i++) {
-            if (stats_data != NULL && stats_data->Has(ship_stat_names[i])) {
-                sc.stats[i] = stats_data->GetI(ship_stat_names[i]);
-                //INFO("%s: delta %s = %d", ship_modules[i].name, ship_stat_names[j], ship_modules[i].delta_stats[j])
-            }
-        }
+        ship_data->FillBufferWithChild("build_resources", sc.build_resources, RESOURCE_MAX, resource_names);
+        ship_data->FillBufferWithChild("stats", sc.stats, ShipStats::MAX, ship_stat_names);
 
-        ASSERT_ALOMST_EQUAL_FLOAT(sc.v_e * log((ResourceCountsToKG(sc.max_capacity) + sc.oem) / sc.oem), sc.max_dv)   // Remove when we're sure thisworks
+        //ASSERT_ALOMST_EQUAL_FLOAT(sc.v_e * log((ResourceCountsToKG(sc.max_capacity) + sc.oem) / sc.oem), sc.max_dv)   // Remove when we're sure thisworks
 
         ship_classes[index] = sc;
         RID rid = RID(index, EntityType::SHIP_CLASS);

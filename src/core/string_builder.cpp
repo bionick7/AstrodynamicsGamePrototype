@@ -36,6 +36,28 @@ StringBuilder& StringBuilder::Clear() {
     return *this;
 }
 
+StringBuilder & StringBuilder::AutoBreak(int max_width) {
+    int character_toll = 0;
+    int last_space = 0;
+    int num_words = 0;
+    for(int i=0; i < length; i++) {
+        if (c_str[i] == ' ' || c_str[i] == '\t' || i == length-1) {
+            if (character_toll > max_width && num_words > 0) {
+                c_str[last_space] = '\n';
+                int word_length = i - last_space - 1;
+                character_toll = word_length;
+                num_words = 0;
+            }
+            num_words++;
+            last_space = i;
+        }
+        character_toll++;
+        if (c_str[i] == '\n') {
+            character_toll = 0;
+        }
+    }
+}
+
 StringBuilder& StringBuilder::Add(const char* add_str) {
     int write_offset = length - 1;
     length += strlen(add_str);
@@ -125,5 +147,12 @@ int StringBuilderTests() {
     sb.Clear();
     sb.AddFormat("%05d %X , %s", 17, 32, "Trololo");
     TEST_ASSERT_STREQUAL(sb.c_str, "00017 20 , Trololo")
+
+    sb.Clear();
+    sb.Add("########## ########## ############### ########## ## ## ## ## ############################## ##");
+    sb.AutoBreak(21);
+    const char* test_str_1 = "########## ##########\n###############\n########## ## ## ##\n##\n##############################\n##";
+    TEST_ASSERT_STREQUAL(sb.c_str, test_str_1)
+
     return 0;
 }

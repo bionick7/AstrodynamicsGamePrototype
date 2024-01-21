@@ -33,8 +33,10 @@ struct ShipClass {
     double max_dv;  // m/s
     double v_e;     // m/s
     resource_count_t max_capacity;  // counts
-    int stats[ShipStats::MAX];
+    int stats[ShipStats::MAX] = {0};
     int construction_time;
+    resource_count_t build_resources[RESOURCE_MAX] = {0};
+    int build_batch_size;
 
     // Ease-of-use variables
     double oem;  // kg

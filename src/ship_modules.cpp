@@ -14,6 +14,11 @@ ShipModuleClass::ShipModuleClass() {
         delta_stats[i] = 0;
         required_stats[i] = 0;
     }
+
+    for (int i=0; i < (int) RESOURCE_MAX; i++) {
+        production[i] = 0;
+        build_resources[i] = 0;
+    }
 }
 
 void ShipModuleClass::UpdateStats(Ship* ship) const {
@@ -39,21 +44,6 @@ void ShipModuleClass::UpdateCustom(Ship* ship) const {
         for (int i=0; i < RESOURCE_MAX; i++) {
             planet->economy.GiveResource(ResourceTransfer((ResourceType) i, production[i]));
         }
-    }
-    // Special behavior
-    switch (module_type) {
-    case WATER_EXTRACTOR:{
-        if (!ship->is_parked) break;
-        if (!new_day) break;
-        Planet* planet = GetPlanet(ship->parent_planet);
-        planet->economy.GiveResource(ResourceTransfer(RESOURCE_WATER, 1));
-        break;}
-    case HEAT_SHIELD:{
-        // nothing rn
-        break;}
-    default:
-    case INVALID_MODULE:
-        break;
     }
 }
 
@@ -121,52 +111,27 @@ int ShipModules::Load(const DataNode* data) {
         strcpy(ship_modules[i].name, module_data->Get("name"));
         strcpy(ship_modules[i].description, module_data->Get("description"));
         ship_modules[i].construction_time = data->GetI("construction_time", 20);
+        ship_modules[i].build_batch_size = data->GetI("batch_size", 1, true);
+
+        module_data->FillBufferWithChild("add", ship_modules[i].delta_stats, ShipStats::MAX, ship_stat_names);
+        module_data->FillBufferWithChild("require", ship_modules[i].required_stats, ShipStats::MAX, ship_stat_names);
+        ship_modules[i].has_activation_requirements = module_data->HasChild("require");
+
+        module_data->FillBufferWithChild("build_resources", ship_modules[i].build_resources, RESOURCE_MAX, resource_names);
+        module_data->FillBufferWithChild("produce", ship_modules[i].production, RESOURCE_MAX, resource_names);
 
         const char* string_id = module_data->Get("id", "_");
-        if (strcmp(string_id, "shpmod_water_extractor") == 0) {
-            ship_modules[i].module_type = ShipModuleClass::WATER_EXTRACTOR;
-        }
-        if (strcmp(string_id, "shpmod_heatshield") == 0) {
-            ship_modules[i].module_type = ShipModuleClass::HEAT_SHIELD;
-        }
-
-        const DataNode* add_data = module_data->GetChild("add", true);
-        const DataNode* require_data = module_data->GetChild("require", true);
-        for(int j=0; j < (int)ShipStats::MAX; j++) {
-            if (add_data != NULL && add_data->Has(ship_stat_names[j])) {
-                ship_modules[i].delta_stats[j] = add_data->GetI(ship_stat_names[j]);
-                //INFO("%s: delta %s = %d", ship_modules[i].name, ship_stat_names[j], ship_modules[i].delta_stats[j])
-            }
-            if (require_data != NULL && require_data->Has(ship_stat_names[j])) {
-                ship_modules[i].required_stats[j] = require_data->GetF(ship_stat_names[j]);
-                ship_modules[i].has_activation_requirements = true;
-            }
-        }
-
-        const DataNode* produce_data = module_data->GetChild("produce", true);
-        for(int j=0; j < (int)ShipStats::MAX; j++) {
-            if (produce_data != NULL && produce_data->Has(resource_names[j])) {
-                ship_modules[i].production[j] = produce_data->GetI(resource_names[j]);
-                //INFO("%s: produce %d %s", ship_modules[i].name, ship_modules[i].production[j], resource_names[j])
-            }
-        }
-
         RID rid = RID(i, EntityType::MODULE_CLASS);
         auto pair = shipmodule_ids.insert_or_assign(string_id, rid);
         ship_modules[i].id = pair.first->first.c_str();  // points to string in dictionary
 
-        if (strcmp(string_id, "shpmod_small_yard_1") == 0) {
-            expected_modules.small_yard_1 = rid;
-        }
-        else if (strcmp(string_id, "shpmod_small_yard_2") == 0) {
-            expected_modules.small_yard_2 = rid;
-        }
-        else if (strcmp(string_id, "shpmod_small_yard_3") == 0) {
-            expected_modules.small_yard_3 = rid;
-        }
-        else if (strcmp(string_id, "shpmod_small_yard_4") == 0) {
-            expected_modules.small_yard_4 = rid;
-        }
+        #define CHECK_FOR_ID(name) else if (strcmp(string_id, "shpmod_"#name) == 0) { expected_modules.name = rid; }
+        if(false) {}
+        CHECK_FOR_ID(small_yard_1)
+        CHECK_FOR_ID(small_yard_2)
+        CHECK_FOR_ID(small_yard_3)
+        CHECK_FOR_ID(small_yard_4)
+        #undef CHECK_FOR_ID
     }
     return shipmodule_count;
 }

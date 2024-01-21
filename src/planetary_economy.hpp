@@ -5,7 +5,7 @@
 
 const double KG_PER_COUNT = 100e3;
 
-typedef int16_t resource_count_t;
+typedef int resource_count_t;
 
 double ResourceCountsToKG(resource_count_t counts);
 resource_count_t KGToResourceCounts(double mass);
@@ -43,18 +43,6 @@ struct ResourceTransfer {
 
 typedef int64_t cost_t;
 
-enum PlanetStats {
-    NONE = -1,
-    POPULATION = 0,
-    WORKFORCE,
-    MAX,
-};
-
-static const char planet_stat_names[static_cast<int>(PlanetStats::MAX)][RESOURCE_NAME_MAX_SIZE] = {
-    "population", // STAT_POPULATION
-    "workforce" // STAT_WORKFORCE
-};
-
 struct ResourceData {
     char name[RESOURCE_NAME_MAX_SIZE];
     char descrption[RESOURCE_DESCRIPTION_MAX_SIZE];
@@ -66,7 +54,7 @@ struct ResourceData {
     cost_t max_noise;        // Allowable aplitude of error
 };
 
-static const char resource_names[RESOURCE_MAX][RESOURCE_NAME_MAX_SIZE] = {
+static const char* resource_names[RESOURCE_MAX] = {
     "water", // RESOURCE_WATER
     "food",  // RESOURCE_FOOD
     "metal",  // RESOURCE_METAL

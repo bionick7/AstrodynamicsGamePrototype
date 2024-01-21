@@ -4,11 +4,20 @@ shipmodules:
   name: Heatshield
   description: Allows more efficient maneuvers around Titan and low Saturn orbit
   mass: 1
+  build_resources: 
+    metal: 1
+  construction_time: 10
+  construction_batch: 1
 
 - id: shpmod_droptank
   name: Drop-tank
   description: The ship can hold 1 extra count of fuel. Lost after use
   mass: 0
+  build_resources:
+    metal: 1
+    water: 10
+  construction_time: 10
+  construction_batch: 10
 
 # Production
 - id: shpmod_farm
@@ -16,12 +25,20 @@ shipmodules:
   description: Provides + 1 count food / day
   produce: { food: 1 }
   mass: 1
+  construction_time: 30
+  build_resources:
+    metal: 1
+    electronics: 1
 
 - id: shpmod_water_extractor
   name: Water extractor
   description: Provides + 1 count water / day if stationned on an icey moon
   produce: {  }  # Special behaviour, since it needs to check for environemnet
   mass: 1  # counts
+  construction_time: 15
+  build_resources:
+    metal: 1
+    electronics: 1
 
 # Shipyard
 # Build modules: workshop + storage
@@ -31,21 +48,35 @@ shipmodules:
   name: Small shipyard offices
   description: Administrative and design offices. Needed in order to build ships
   mass: 1
+  construction_time: 20
+  build_resources:
+    metal: 1
+    electronics: 1
 
 - id: shpmod_small_yard_2
   name: Shipyard storage facility
   description: Part and material warehouses. Needed in order to build ships or modules.
   mass: 2
+  construction_time: 10
+  build_resources:
+    metal: 2
 
 - id: shpmod_small_yard_3
   name: Small shipyard workshop
   description: Construction Workshops. Needed in order to build or repair ships or build modules.
   mass: 4
+  construction_time: 60
+  build_resources:
+    metal: 4
+    electronics: 5
 
 - id: shpmod_small_yard_4
   name: Small shipyard scaffolding
   description: TODO
   mass: 2
+  construction_time: 30
+  build_resources:
+    metal: 3
 
 # Military
 - id: shpmod_railgun
@@ -71,6 +102,8 @@ shipmodules:
     kinetic_hp: 10
     energy_hp: 5
   mass: 1
+  build_resources:
+    metal: 1
 
 - id: shpmod_armor
   name: Extra armor
@@ -80,6 +113,8 @@ shipmodules:
     energy_hp: 10
     kinetic_defense: 1
   mass: 2
+  build_resources:
+    metal: 2
   
 - id: shpmod_pdc
   name: Point-defence cannons
@@ -87,6 +122,10 @@ shipmodules:
   add: 
     ordnance_defense: 1
   mass: 0.5
+  batch_size: 2
+  build_resources:
+    metal: 1
+    electronics: 1
 
 - id: shpmod_acs
   name: High-fi Attitude Control System

@@ -234,16 +234,25 @@ ButtonStateFlags::T TextBox::AsButton() const {
     );
 }
 
+void UIContextPushGlobal(int x, int y, int w, int h, int text_size, Color color) {
+    TextBox new_text_box = TextBox(x, y, w, h, text_size, color);
+    GlobalUI()->text_box_stack.push(new_text_box);
+}
+
 void UIContextCreateNew(int x, int y, int w, int h, int text_size, Color color) {
     while (GlobalUI()->text_box_stack.size() > 0) {
         GlobalUI()->text_box_stack.pop();
     }
     UIContextPushGlobal(x, y, w, h, text_size, color);
 }
+void UIContextPushMouseHint(int width, int height) {
+    Vector2 m_pos = GetMousePosition();
+    int x_pos = m_pos.x;
+    int y_pos = m_pos.y;
+    if (x_pos > GetScreenWidth() - width) x_pos = GetScreenWidth() - width;
+    if (y_pos > GetScreenHeight() - width) y_pos = GetScreenHeight() - height;
 
-void UIContextPushGlobal(int x, int y, int w, int h, int text_size, Color color) {
-    TextBox new_text_box = TextBox(x, y, w, h, text_size, color);
-    GlobalUI()->text_box_stack.push(new_text_box);
+    UIContextPushGlobal(x_pos, y_pos, width, height, 16, Palette::ui_main);
 }
 
 int UIContextPushInset(int margin, int h)

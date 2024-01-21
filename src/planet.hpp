@@ -28,7 +28,6 @@ struct Planet {
 
     PlanetaryEconomy economy;
 
-    resource_count_t planet_stats[static_cast<int>(PlanetStats::MAX)];
     RID ship_module_inventory[MAX_PLANET_INVENTORY];
     IDList ship_production_queue;
     IDList module_production_queue;

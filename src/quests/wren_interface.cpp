@@ -547,7 +547,7 @@ RID WrenInterface::GetShipFormWrenObject() const {
 
 void WrenInterface::NotifyShipEvent(RID ship, const char *event) {
 	IDAllocatorList<Quest, EntityType::ACTIVE_QUEST>* active_quests = &GlobalGetState()->quest_manager.active_quests;
-	for (auto iter = active_quests->Begin(); iter != active_quests->End(); iter++) {
+	for (auto iter = active_quests->GetIter(); iter; iter++) {
 		wrenEnsureSlots(vm, 4);
 		wrenSetSlotDouble(vm, 0, ship.AsInt());
 		_AllocateShip(vm);

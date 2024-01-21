@@ -12,6 +12,8 @@ struct StringBuilder {
     ~StringBuilder();
     int CountLines() const;
     StringBuilder& Clear();
+    StringBuilder & AutoBreak(int max_width);
+
     StringBuilder& Add(const char* add_str);
     StringBuilder& _AddBuffer(char buffer[]);
     StringBuilder& AddFormat(const char* fmt, ...);

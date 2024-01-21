@@ -98,3 +98,7 @@ Only thing that needs to be done now is ship building queue
 Would probably need to be unrealistically fast
 
 Also implemented ship production in an unreasonably short time. The most daunting tasks are always the easiest
+
+## Status 17 Jan 24
+Module building implemented. A way to enforce the control of multiple planets is to force the
+acquisition of materials from multiple sources for production of ships and mudules

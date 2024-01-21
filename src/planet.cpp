@@ -5,6 +5,7 @@
 #include "constants.hpp"
 #include "ship_modules.hpp"
 #include "logging.hpp"
+#include "string_builder.hpp"
 
 Planet::Planet(const char* p_name, double p_mu, double p_radius) {
     strcpy(name, p_name);
@@ -69,18 +70,8 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
     orbit = nature->orbit;
     economy.trading_accessible = strcmp(data->Get("trading_accessible", economy.trading_accessible ? "y" : "n", true), "y") == 0;
 
-    const DataNode* resource_node = data->GetChild("resource_stock", true);
-    if (resource_node != NULL) {
-        for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-            economy.resource_stock[resource_index] = resource_node->GetI(GetResourceData(resource_index)->name, 0, true);
-        }
-    }
-    const DataNode* resource_delta_node = data->GetChild("resource_delta", true);
-    if (resource_delta_node != NULL) {
-        for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-            economy.resource_delta[resource_index] = resource_delta_node->GetI(GetResourceData(resource_index)->name, 0, true);
-        }
-    }
+    data->FillBufferWithChild("resource_stock", economy.resource_stock, RESOURCE_MAX, resource_names);
+    data->FillBufferWithChild("resource_delta", economy.resource_delta, RESOURCE_MAX, resource_names);
     
     if (data->HasArray("inventory")) {
         int ship_module_inventory_count = data->GetArrayLen("inventory", true);
@@ -163,9 +154,39 @@ void Planet::Update() {
     economy.Update();
 }
 
+bool _CanProduce(RID id, const resource_count_t* planet_resource_array) {
+    if (!IsIdValid(id)) return false;
+    const resource_count_t* build_resources = NULL;
+    switch (IdGetType(id)) {
+        case EntityType::SHIP_CLASS: {
+            const ShipClass* ship_class = GetShipClassByIndex(id);
+            build_resources = &ship_class->build_resources[0];
+            break;
+        }
+        case EntityType::MODULE_CLASS: {
+            const ShipModuleClass* module_class = GetModule(id);
+            build_resources = &module_class->build_resources[0];
+            break;
+        }
+        default: break;
+    }
+
+    if (build_resources == NULL) return false;
+    for (int i=0; i < RESOURCE_MAX; i++) {
+        if (build_resources[i] > planet_resource_array[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void Planet::AdvanceShipProductionQueue() {
     // Update ship production
     if (ship_production_queue.size == 0) return;
+    if (!_CanProduce(ship_production_queue[0], &economy.resource_stock[0])) {
+        // TODO: notify the player
+        return;
+    }
     ship_production_process++;
     const ShipClass* sc = GetShipClassByIndex(ship_production_queue[0]);
     if (ship_production_process < sc->construction_time) return;
@@ -183,17 +204,33 @@ void Planet::AdvanceShipProductionQueue() {
     ship_data.SetArray("modules", 0);
     GlobalGetState()->ships.AddShip(&ship_data);
 
+    for (int i=0; i < RESOURCE_MAX; i++) {
+        if (sc->build_resources != 0) {
+            economy.DrawResource(ResourceTransfer((ResourceType) i, sc->build_resources[i]));
+        }
+    }
+
     ship_production_queue.EraseAt(0);
     ship_production_process = 0;
 }
 
 void Planet::AdvanceModuleProductionQueue() {
     if (module_production_queue.size == 0) return;
+    if (!_CanProduce(module_production_queue[0], &economy.resource_stock[0])) {
+        // TODO: notify the player
+        return;
+    }
     module_production_process++;
     const ShipModuleClass* smc = GetModule(module_production_queue[0]);
     if (module_production_process < smc->construction_time) return;
 
     AddShipModuleToInventory(module_production_queue[0]);
+    for (int i=0; i < RESOURCE_MAX; i++) {
+        if (smc->build_resources != 0) {
+            economy.DrawResource(ResourceTransfer((ResourceType) i, smc->build_resources[i]));
+        }
+    }
+
     module_production_queue.EraseAt(0);
     module_production_process = 0;
 }
@@ -216,15 +253,6 @@ void Planet::Draw(const CoordinateTransform* c_transf) {
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             _OnClicked();
         }
-    }
-}
-
-void _UIDrawStats(const resource_count_t planet_stats[]) {
-    for (int i=0; i < PlanetStats::MAX; i++) {
-        char buffer[50];
-        sprintf(buffer, "%-10s %3d", planet_stat_names[i], planet_stats[i]);
-        UIContextWrite(buffer);
-        //TextBoxLineBreak(&tb);
     }
 }
 
@@ -256,14 +284,66 @@ void Planet::_UIDrawInventory() {
     UIContextPop();  // Inset
 }
 
-void _UIDrawProduction(int option_size, IDList* queue, int progress,
-    const char* name_getter(RID), const char* description_getter(RID), RID id_getter(int)
+void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_array) {
+    if (!IsIdValid(id)) return;
+    // Assuming monospace font
+    int char_width = MeasureTextEx(
+        GetCustomDefaultFont(), 
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 
+        16, 1.0
+    ).x/62;
+    StringBuilder sb;
+    const resource_count_t* build_resources = NULL;
+    switch (IdGetType(id)) {
+        case EntityType::SHIP_CLASS: {
+            const ShipClass* ship_class = GetShipClassByIndex(id);
+            sb.Add(ship_class->description);
+            build_resources = &ship_class->build_resources[0];
+            break;
+        }
+        case EntityType::MODULE_CLASS: {
+            const ShipModuleClass* module_class = GetModule(id);
+            sb.Add(module_class->description);
+            build_resources = &module_class->build_resources[0];
+            break;
+        }
+        default: break;
+    }
+
+    if (build_resources == NULL) return;
+
+    sb.AutoBreak(UIContextCurrent().width / char_width);
+    if (planet_resource_array == NULL) {
+        UIContextWrite(sb.c_str);
+        return;
+    }
+    UIContextWrite("++++++++");
+    for (int i=0; i < RESOURCE_MAX; i++) {
+        if (build_resources[i] == 0) {
+            continue;
+        }
+        sb.Clear();
+        sb.AddFormat("%s: %d\n", resource_names[i], build_resources[i]);
+        if (build_resources[i] <= planet_resource_array[i]) {
+            UIContextWrite(sb.c_str);
+        } else {
+            UIContextCurrent().text_color = Palette::red;
+            UIContextWrite(sb.c_str);
+            UIContextCurrent().text_color = Palette::ui_main;
+        }
+    }
+}
+
+void _UIDrawProduction(int option_size, IDList* queue, resource_count_t resources[], double progress,
+    RID id_getter(int), const char* name_getter(RID)
 ) {
     // Draw options
     const int COLUMNS = 4;
     int rows = std::ceil(option_size / (double)COLUMNS);
     UIContextPushInset(0, 50*rows);
     UIContextShrink(5, 5);
+
+    RID hovered_id = GetInvalidId();
     for(int i=0; i < option_size; i++) {
         RID id = id_getter(i);
         UIContextPushGridCell(COLUMNS, rows, i % COLUMNS, i / COLUMNS);
@@ -273,12 +353,12 @@ void _UIDrawProduction(int option_size, IDList* queue, int progress,
         ButtonStateFlags::T button_state = UIContextAsButton();
         if (button_state & ButtonStateFlags::HOVER) {
             UIContextEnclose(Palette::bg, Palette::ui_main);
-            UISetMouseHint(description_getter(id));
+            hovered_id = id;
         } else {
             UIContextEnclose(Palette::bg, Palette::blue);
         }
         HandleButtonSound(button_state);
-        if (button_state & ButtonStateFlags::JUST_PRESSED) {
+        if ((button_state & ButtonStateFlags::JUST_PRESSED) && _CanProduce(id, &resources[0])) {
             queue->Append(id);
         }
 
@@ -290,15 +370,16 @@ void _UIDrawProduction(int option_size, IDList* queue, int progress,
     UIContextPop();  // Inset
 
     // Draw queue
+    bool hover_over_queue = false;
     for(int i=0; i < queue->size; i++) {
         RID id = queue->Get(i);
-        const ShipModuleClass* module_class = GetModule(id);  
         UIContextPushInset(0, 50);
         UIContextShrink(3, 3);
         ButtonStateFlags::T button_state = UIContextAsButton();
         if (button_state & ButtonStateFlags::HOVER) {
             UIContextEnclose(Palette::bg, Palette::ui_main);
-            UISetMouseHint(module_class->description);
+            hovered_id = id;
+            hover_over_queue = true;
         } else {
             UIContextEnclose(Palette::bg, Palette::blue);
         }
@@ -306,36 +387,54 @@ void _UIDrawProduction(int option_size, IDList* queue, int progress,
             queue->EraseAt(i);
             i--;
         }
-        UIContextWrite(module_class->name);
+        UIContextWrite(name_getter(id));
         if (i == 0) {
-            float progress = Clamp(progress / (float)module_class->construction_time, 0.0f, 1.0f);
             UIContextFillline(progress, Palette::ui_main, Palette::bg);
         }
-        UIContextWrite(module_class->description);
+        _ProductionQueueMouseHint(id, NULL);
         UIContextPop();  // Inset
     }
-
+    if (IsIdValid(hovered_id)) {
+        UIContextPushMouseHint(400, 400);
+        UIContextEnclose(Palette::bg, Palette::ui_main);
+        if (hover_over_queue) {
+            _ProductionQueueMouseHint(hovered_id, NULL);
+        } else {
+            _ProductionQueueMouseHint(hovered_id, resources);
+        }
+        UIContextPop();
+    }
 }
 
 void Planet::_UIDrawModuleProduction() {
+    double progress = 0.0;
+    if (module_production_queue.Count() > 0) {
+        const ShipModuleClass* module_class = GetModule(module_production_queue[0]);
+        progress = Clamp(module_production_process / (float)module_class->construction_time, 0.0f, 1.0f);
+    }
     _UIDrawProduction(
         GlobalGetState()->ship_modules.shipmodule_count,
         &module_production_queue,
-        module_production_process,
-        [](RID id) { return GetModule(id)->name; },
-        [](RID id) { return GetModule(id)->description; },
-        [](int i) { return RID(i, EntityType::MODULE_CLASS); }
+        economy.resource_stock,
+        progress,
+        [](int i) { return RID(i, EntityType::MODULE_CLASS); },
+        [](RID id) { return GetModule(id)->name; }
     );
 }
 
 void Planet::_UIDrawShipProduction() {
+    double progress = 0.0;
+    if (module_production_queue.Count() > 0) {
+        const ShipClass* ship_class = GetShipClassByIndex(module_production_queue[0]);
+        progress = Clamp(ship_production_process / (float)ship_class->construction_time, 0.0f, 1.0f);
+    }
     _UIDrawProduction(
         GlobalGetState()->ships.ship_classes_count,
         &ship_production_queue,
-        ship_production_process,
-        [](RID id) { return GetShipClassByIndex(id)->name; },
-        [](RID id) { return GetShipClassByIndex(id)->description; },
-        [](int i) { return RID(i, EntityType::SHIP_CLASS); }
+        economy.resource_stock,
+        progress,
+        [](int i) { return RID(i, EntityType::SHIP_CLASS); },
+        [](RID id) { return GetShipClassByIndex(id)->name; }
     );
 }
 
@@ -412,7 +511,6 @@ void Planet::DrawUI() {
 
     UIContextWrite(name);
     UIContextFillline(1, Palette::ui_main, Palette::ui_main);
-    //_UIDrawStats(planet_stats);
     switch (current_tab) {
     case 0:
         economy.UIDrawResources(transfer, fuel_draw);

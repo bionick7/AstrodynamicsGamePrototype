@@ -60,15 +60,11 @@ static const char* ship_variable_names[] = {
 static_assert(ShipVariables::MAX == sizeof(ship_variable_names) / sizeof(ship_variable_names[0]));
 
 struct ShipModuleClass {
-    enum {
-        INVALID_MODULE,
-        WATER_EXTRACTOR,
-        HEAT_SHIELD,
-    } module_type = INVALID_MODULE;  // Placeholder for functionality
-
     int delta_stats[ShipStats::MAX];
     int required_stats[ShipStats::MAX];
     resource_count_t production[RESOURCE_MAX];
+    resource_count_t build_resources[RESOURCE_MAX];
+    int build_batch_size;
 
     double mass;  // kg
     char name[100];

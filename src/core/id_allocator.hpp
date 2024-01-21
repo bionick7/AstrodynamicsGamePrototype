@@ -33,9 +33,8 @@ struct IDAllocatorList {
             counter++;
             do {
                 index++;
-                if (counter >= _list_ptr->alloc_count || index >= _list_ptr->capacity) {
+                if (index >= _list_ptr->capacity) {
                     index = _list_ptr->capacity;
-                    counter = _list_ptr->alloc_count;
                     return *this;
                 }
             } while( !(_list_ptr->verifier_array[index/64] & (UNIT64 << (index % 64))) ); 
@@ -204,10 +203,6 @@ struct IDAllocatorList {
     }
 
     Iterator GetIter() const { return Begin(); }
-
-    Iterator End() const {
-        return Iterator(capacity, alloc_count, this);
-    }
 
     void Inpsect() {
         SHOW_I(free_index_array[0])

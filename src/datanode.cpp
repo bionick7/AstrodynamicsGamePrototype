@@ -515,6 +515,18 @@ size_t DataNode::GetChildArrayCount() const {
     return ChildArrays.size();
 }
 
+void DataNode::FillBufferWithChild(const char* name, int buffer[], int buffer_size, const char* names[]) const {
+    if (!HasChild(name)) {
+        return;
+    }
+    const DataNode* child = GetChild(name);
+    for(int i=0; i < buffer_size; i++) {
+        if (child->Has(names[i])) {
+            buffer[i] = child->GetI(names[i]);
+        }
+    }
+}
+
 const char* DataNode::GetKey(int index) const {
     if (index < 0 || index >= Fields.size()) return "[Out Of Bounds]";
     auto it = Fields.begin();
