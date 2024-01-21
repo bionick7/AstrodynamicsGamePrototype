@@ -17,7 +17,7 @@ ShipModuleClass::ShipModuleClass() {
 
     for (int i=0; i < (int) RESOURCE_MAX; i++) {
         production[i] = 0;
-        build_resources[i] = 0;
+        construction_resources[i] = 0;
     }
 }
 
@@ -110,14 +110,15 @@ int ShipModules::Load(const DataNode* data) {
         ship_modules[i].mass = module_data->GetF("mass") * KG_PER_COUNT;
         strcpy(ship_modules[i].name, module_data->Get("name"));
         strcpy(ship_modules[i].description, module_data->Get("description"));
-        ship_modules[i].construction_time = data->GetI("construction_time", 20);
-        ship_modules[i].build_batch_size = data->GetI("batch_size", 1, true);
+        ship_modules[i].construction_time = module_data->GetI("construction_time", 20);
+        INFO("%d", ship_modules[i].construction_time)
+        ship_modules[i].construction_batch_size = module_data->GetI("construction_batch_size", 1, true);
 
         module_data->FillBufferWithChild("add", ship_modules[i].delta_stats, ShipStats::MAX, ship_stat_names);
         module_data->FillBufferWithChild("require", ship_modules[i].required_stats, ShipStats::MAX, ship_stat_names);
         ship_modules[i].has_activation_requirements = module_data->HasChild("require");
 
-        module_data->FillBufferWithChild("build_resources", ship_modules[i].build_resources, RESOURCE_MAX, resource_names);
+        module_data->FillBufferWithChild("construction_resources", ship_modules[i].construction_resources, RESOURCE_MAX, resource_names);
         module_data->FillBufferWithChild("produce", ship_modules[i].production, RESOURCE_MAX, resource_names);
 
         const char* string_id = module_data->Get("id", "_");

@@ -101,4 +101,4 @@ Also implemented ship production in an unreasonably short time. The most dauntin
 
 ## Status 17 Jan 24
 Module building implemented. A way to enforce the control of multiple planets is to force the
-acquisition of materials from multiple sources for production of ships and mudules
+acquisition of materials from multiple sources for production of ships and modules

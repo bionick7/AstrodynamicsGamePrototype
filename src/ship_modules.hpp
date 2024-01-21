@@ -63,8 +63,8 @@ struct ShipModuleClass {
     int delta_stats[ShipStats::MAX];
     int required_stats[ShipStats::MAX];
     resource_count_t production[RESOURCE_MAX];
-    resource_count_t build_resources[RESOURCE_MAX];
-    int build_batch_size;
+    resource_count_t construction_resources[RESOURCE_MAX];
+    int construction_batch_size;
 
     double mass;  // kg
     char name[100];

@@ -27,7 +27,7 @@ void Planet::Serialize(DataNode* data) const {
     data->SetI("ship_production_process", ship_production_process);
     data->SetI("module_production_process", module_production_process);
     ship_production_queue.SerializeTo(data, "ship_production_queue");
-    module_production_queue.SerializeTo(data, "module_production_process");
+    module_production_queue.SerializeTo(data, "module_production_queue");
     //data->SetF("mass", mu / G);
     //data->SetF("radius", radius);
 
@@ -57,8 +57,8 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
     strcpy(name, data->Get("name", name, true));
     ship_production_process = data->GetI("ship_production_process", 0, true);
     module_production_process = data->GetI("module_production_process", 0, true);
-    ship_production_queue.DeserializeFrom(data, "ship_production_queue");
-    module_production_queue.DeserializeFrom(data, "module_production_process");
+    ship_production_queue.DeserializeFrom(data, "ship_production_queue", true);
+    module_production_queue.DeserializeFrom(data, "module_production_queue", true);
     RID index = planets->GetIndexByName(name);
     if (!IsIdValid(index)) {
         return;
@@ -156,24 +156,24 @@ void Planet::Update() {
 
 bool _CanProduce(RID id, const resource_count_t* planet_resource_array) {
     if (!IsIdValid(id)) return false;
-    const resource_count_t* build_resources = NULL;
+    const resource_count_t* construction_resources = NULL;
     switch (IdGetType(id)) {
         case EntityType::SHIP_CLASS: {
             const ShipClass* ship_class = GetShipClassByIndex(id);
-            build_resources = &ship_class->build_resources[0];
+            construction_resources = &ship_class->construction_resources[0];
             break;
         }
         case EntityType::MODULE_CLASS: {
             const ShipModuleClass* module_class = GetModule(id);
-            build_resources = &module_class->build_resources[0];
+            construction_resources = &module_class->construction_resources[0];
             break;
         }
         default: break;
     }
 
-    if (build_resources == NULL) return false;
+    if (construction_resources == NULL) return false;
     for (int i=0; i < RESOURCE_MAX; i++) {
-        if (build_resources[i] > planet_resource_array[i]) {
+        if (construction_resources[i] > planet_resource_array[i]) {
             return false;
         }
     }
@@ -205,8 +205,8 @@ void Planet::AdvanceShipProductionQueue() {
     GlobalGetState()->ships.AddShip(&ship_data);
 
     for (int i=0; i < RESOURCE_MAX; i++) {
-        if (sc->build_resources != 0) {
-            economy.DrawResource(ResourceTransfer((ResourceType) i, sc->build_resources[i]));
+        if (sc->construction_resources != 0) {
+            economy.DrawResource(ResourceTransfer((ResourceType) i, sc->construction_resources[i]));
         }
     }
 
@@ -226,8 +226,8 @@ void Planet::AdvanceModuleProductionQueue() {
 
     AddShipModuleToInventory(module_production_queue[0]);
     for (int i=0; i < RESOURCE_MAX; i++) {
-        if (smc->build_resources != 0) {
-            economy.DrawResource(ResourceTransfer((ResourceType) i, smc->build_resources[i]));
+        if (smc->construction_resources != 0) {
+            economy.DrawResource(ResourceTransfer((ResourceType) i, smc->construction_resources[i]));
         }
     }
 
@@ -293,24 +293,30 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
         16, 1.0
     ).x/62;
     StringBuilder sb;
-    const resource_count_t* build_resources = NULL;
+    const resource_count_t* construction_resources = NULL;
+    int build_time = 0;
+    int batch_size = 0;
     switch (IdGetType(id)) {
         case EntityType::SHIP_CLASS: {
             const ShipClass* ship_class = GetShipClassByIndex(id);
             sb.Add(ship_class->description);
-            build_resources = &ship_class->build_resources[0];
+            construction_resources = &ship_class->construction_resources[0];
+            build_time = ship_class->construction_time;
+            batch_size = ship_class->construction_batch_size;
             break;
         }
         case EntityType::MODULE_CLASS: {
             const ShipModuleClass* module_class = GetModule(id);
             sb.Add(module_class->description);
-            build_resources = &module_class->build_resources[0];
+            construction_resources = &module_class->construction_resources[0];
+            build_time = module_class->construction_time;
+            batch_size = module_class->construction_batch_size;
             break;
         }
         default: break;
     }
 
-    if (build_resources == NULL) return;
+    if (construction_resources == NULL) return;
 
     sb.AutoBreak(UIContextCurrent().width / char_width);
     if (planet_resource_array == NULL) {
@@ -319,12 +325,12 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
     }
     UIContextWrite("++++++++");
     for (int i=0; i < RESOURCE_MAX; i++) {
-        if (build_resources[i] == 0) {
+        if (construction_resources[i] == 0) {
             continue;
         }
         sb.Clear();
-        sb.AddFormat("%s: %d\n", resource_names[i], build_resources[i]);
-        if (build_resources[i] <= planet_resource_array[i]) {
+        sb.AddFormat("%s: %d\n", resource_names[i], construction_resources[i]);
+        if (construction_resources[i] <= planet_resource_array[i]) {
             UIContextWrite(sb.c_str);
         } else {
             UIContextCurrent().text_color = Palette::red;
@@ -332,6 +338,12 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
             UIContextCurrent().text_color = Palette::ui_main;
         }
     }
+    sb.Clear();
+    sb.AddI(build_time).Add("D");
+    if(batch_size > 1) {
+        sb.AddFormat(" (x%d)", batch_size);
+    }
+    UIContextWrite(sb.c_str);
 }
 
 void _UIDrawProduction(int option_size, IDList* queue, resource_count_t resources[], double progress,
@@ -424,8 +436,8 @@ void Planet::_UIDrawModuleProduction() {
 
 void Planet::_UIDrawShipProduction() {
     double progress = 0.0;
-    if (module_production_queue.Count() > 0) {
-        const ShipClass* ship_class = GetShipClassByIndex(module_production_queue[0]);
+    if (ship_production_queue.Count() > 0) {
+        const ShipClass* ship_class = GetShipClassByIndex(ship_production_queue[0]);
         progress = Clamp(ship_production_process / (float)ship_class->construction_time, 0.0f, 1.0f);
     }
     _UIDrawProduction(

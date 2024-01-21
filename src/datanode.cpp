@@ -392,7 +392,7 @@ const char* DataNode::Get(const char* key, const char* def, bool quiet) const {
         return it->second.c_str();
     }
     if (!quiet) {
-        WARNING("Key %s not found", key)
+        WARNING("Key '%s' not found", key)
     }
     return def;
 }
@@ -766,7 +766,7 @@ void RemoveAt(const char* key, int index) {
 //    return !(*this == other);
 //}
 
-#define DN_TEST_FAIL(msg, exit_code) {printf("DataNodeTest failed with: %s\n", msg); return exit_code;}
+#define DN_TEST_FAIL(msg, exit_code) {ERROR("DataNodeTest failed with: %s\n", msg); return exit_code;}
 #define DN_TEST_ASSERTKV(node, key, value) if(strcmp(node.Get(key), value) != 0){ \
     printf("DataNodeTest failed with: %s != %s\n", key, value); \
     return 1; \

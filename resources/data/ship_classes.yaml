@@ -12,7 +12,7 @@ ship_classes:
     energy_hp: 1
     crew: 10
   construction_time: 45
-  build_resources:
+  construction_resources:
     metal: 9
     electronics: 6
   
@@ -34,7 +34,7 @@ ship_classes:
     energy_hp: 3
     crew: 17
   construction_time: 15
-  build_resources:
+  construction_resources:
     metal: 3
     electronics: 2
   
@@ -55,7 +55,7 @@ ship_classes:
     crew: 200
     boarding_defense: 5
   construction_time: 50
-  build_resources:
+  construction_resources:
     metal: 20
     electronics: 2
 
@@ -71,6 +71,6 @@ ship_classes:
     energy_hp: 2
     crew: 20
   construction_time: 40
-  build_resources:
+  construction_resources:
     metal: 3
     electronics: 6

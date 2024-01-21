@@ -946,9 +946,9 @@ int Ships::LoadShipClasses(const DataNode* data) {
         sc.v_e = ship_data->GetF("Isp", 0) * 1000;    // km/s -> m/s
         sc.construction_time = ship_data->GetI("construction_time", 20);
         sc.oem = ResourceCountsToKG(sc.max_capacity) / (exp(sc.max_dv/sc.v_e) - 1);
-        sc.build_batch_size = data->GetI("batch_size", 1, true);
+        sc.construction_batch_size = data->GetI("batch_size", 1, true);
 
-        ship_data->FillBufferWithChild("build_resources", sc.build_resources, RESOURCE_MAX, resource_names);
+        ship_data->FillBufferWithChild("construction_resources", sc.construction_resources, RESOURCE_MAX, resource_names);
         ship_data->FillBufferWithChild("stats", sc.stats, ShipStats::MAX, ship_stat_names);
 
         //ASSERT_ALOMST_EQUAL_FLOAT(sc.v_e * log((ResourceCountsToKG(sc.max_capacity) + sc.oem) / sc.oem), sc.max_dv)   // Remove when we're sure thisworks

@@ -143,11 +143,11 @@ void IDList::SerializeTo(DataNode* data, const char * key) const {
 }
 
 void IDList::DeserializeFrom(const DataNode *data, const char *key, bool quiet) {
-    int p_size = data->GetArrayLen(key);
+    int p_size = data->GetArrayLen(key, quiet);
     Resize(p_size);
     size = p_size;
     for(int i=0; i < size; i++) {
-        buffer[i] = RID(data->GetArrayI(key, i));
+        buffer[i] = RID(data->GetArrayI(key, i, quiet));
     }
 }
 
