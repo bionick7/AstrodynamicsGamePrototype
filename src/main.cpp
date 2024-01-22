@@ -37,11 +37,10 @@ void Load(int argc, const char** argv) {
         SetRandomSeed(0);  // For consistency
     }
 
-    UIInit();
-    GetAudioServer()->LoadSFX("unused string input :)");
+    GlobalState* app = GlobalGetState();
+    GetAudioServer()->LoadSFX();
     //GetAudioServer()->StartMusic();
 
-    GlobalState* app = GlobalGetState();
     app->Make(1e6);
     app->LoadData();
     //app->LoadGame("resources/data/start_saves/combat_waves.yaml");

@@ -464,19 +464,19 @@ void UISetMouseHint(const char* text) {
     strncpy(GlobalUI()->mouseover_text, text, 1024);
 }
 
-void UIInit() {
+void UIGlobals::UIInit() {
     GlobalUI()->default_font = LoadFontEx("resources/fonts/OCRAEXT.TTF", 16, NULL, 256);
     //default_font = LoadFontEx("resources/fonts/GOTHIC.TTF", 16, NULL, 256);
 }
 
-void UIStart() {
+void UIGlobals::UIStart() {
     SetMouseCursor(MOUSE_CURSOR_CROSSHAIR);
     //SetMouseCursor(MOUSE_CURSOR_DEFAULT);
     GlobalUI()->scroll_lock = false;
     GlobalUI()->mouseover_text[0] = '\0';
 }
 
-void UIEnd() {
+void UIGlobals::UIEnd() {
     if (strlen(GlobalUI()->mouseover_text) > 0) {
         // Draw mouse
         Vector2 mouse_pos = GetMousePosition();

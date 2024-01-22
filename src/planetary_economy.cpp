@@ -69,11 +69,10 @@ void PlanetaryEconomy::Update() {
     if (*global_resource_data[0].name == '\n') {
         FAIL("Resources uninititalized")
     }
-    double delta_T = GetCalendar()->GetFrameElapsedGameTime().Seconds();
-    for (int i=0; i < RESOURCE_MAX; i++) {
-        resource_stock[i] = Clamp(resource_stock[i] + resource_delta[i] * delta_T, 0, resource_capacity[i]);
-    }
     if (GetCalendar()->IsNewDay()) {
+        for (int i=0; i < RESOURCE_MAX; i++) {
+            resource_stock[i] = Clamp(resource_stock[i] + resource_delta[i], 0, resource_capacity[i]);
+        }
         AdvanceEconomy();
     }
 }
@@ -118,7 +117,7 @@ void PlanetaryEconomy::UIDrawResources(const ResourceTransfer& transfer, double 
     for (int i=0; i < RESOURCE_MAX; i++) {
         char buffer[50];
         //sprintf(buffer, "%-10s %5d/%5d (%+3d)", GetResourceData(i)->name, qtt, cap, delta);
-        sprintf(buffer, "%-10s %3d (%+3.3f /d)", GetResourceData(i)->name, resource_stock[i], (double)resource_delta[i]/1e3);
+        sprintf(buffer, "%-10s %3d (%+2d /d)", GetResourceData(i)->name, resource_stock[i], resource_delta[i]);
         UIContextPushInset(0, 18);
         if (GlobalGetState()->active_transfer_plan.IsActive()) {
             // Button

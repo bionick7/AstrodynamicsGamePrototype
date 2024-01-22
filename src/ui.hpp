@@ -76,6 +76,10 @@ struct UIGlobals {
     char mouseover_text[1024] = "";
     bool scroll_lock;
     Font default_font;
+
+    void UIInit();
+    void UIStart();
+    void UIEnd();
 };
 
 void UIContextPushGlobal(int x, int y, int w, int h, int text_size, Color color);
@@ -100,9 +104,6 @@ ButtonStateFlags::T UIContextDirectButton(const char* text, int inset);
 TextBox& UIContextCurrent();
 void HandleButtonSound(ButtonStateFlags::T button_state_flags);
 
-void UIInit();
-void UIStart();
-void UIEnd();
 Font GetCustomDefaultFont();
 void UISetMouseHint(const char* text);
 

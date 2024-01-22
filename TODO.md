@@ -16,8 +16,8 @@
 - Dialogue (Done)
 - Actual quests
 - Build ships in shipyard (Done)
-- Shop  // ?
-//- Implement Ship Docking Rent?
+- Group ships and form fleets
+- AI shits :(
 
 ## Known Bugs
 - Deleting a transfer plan while editing it is a problem  (Done)
@@ -39,13 +39,13 @@ Near-term, realizable only
 - "ASAP" button for transfer UI (mathematically tricky problem tbh)
 - ability to show hohmann transfer period in transfer window (eh ... hard to make it be useful)
 - quest-log window is kinda outdated (repurposed for dialogue)
-- Show battle-log after battle
+- Show battle-log after battle (done)
+- ships icons
+- modules icons
 - Show tasks and wait times also in dialogue
 - front-end info and error log
-- different icons for different ships
 - good ui showing quests
 - good ui showing tasks
-- icons for modules
 //- make clear which buildings are buildable
 - warn before committing to an empty transform ("empty" in red or required to choose it explicitly)
 - highlight more important statistics
@@ -59,6 +59,7 @@ Near-term, realizable only
 - global settings (with push_override etc.)
 - debug console
 - Hot reloading
+- Animation tracker system
 
 ## Gameplay wishlist
 Regardless of implementability

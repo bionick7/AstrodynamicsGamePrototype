@@ -10,15 +10,17 @@
 #include "quest_manager.hpp"
 #include "audio_server.hpp"
 #include "wren_interface.hpp"
+#include "combat.hpp"
 
 struct GlobalState {
     enum FocusablesPanels {
+        COMBAT_LOG,
         QUEST_MANAGER,
         TIMELINE,
         BUILDING_CONSTRUCTION,
         TRANSFER_PLAN_UI,
         PLANET_SHIP_DETAILS,
-        MAP
+        MAP,
     };
 
     FocusablesPanels current_focus;
@@ -37,6 +39,8 @@ struct GlobalState {
     AudioServer audio_server;
     WrenInterface wren_interface;
     UIGlobals ui;
+
+    BattleLog last_battle_log;
 
     cost_t money;
 

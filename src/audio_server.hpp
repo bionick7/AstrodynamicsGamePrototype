@@ -14,7 +14,7 @@ enum SFX_ID {
 };
 
 struct AudioServer {
-    int LoadSFX(const char* directory_name);
+    int LoadSFX();
     void PlaySFX(SFX_ID id);
     void StartMusic();
     void Update(double delta_t);

@@ -46,8 +46,6 @@ struct ShipClass {
     resource_count_t GetFuelRequiredFull(double dv) const;
 };
 
-void ShipBattle(const IDList* ships_1, const IDList* ships_2, double relative_velocity);
-
 struct Ship {
     // Inherent properties
     char name[SHIP_NAME_MAX_SIZE];

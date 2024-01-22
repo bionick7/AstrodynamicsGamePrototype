@@ -42,7 +42,9 @@ void ShipModuleClass::UpdateCustom(Ship* ship) const {
     if (new_day && ship->is_parked) {
         Planet* planet = GetPlanet(ship->parent_planet);
         for (int i=0; i < RESOURCE_MAX; i++) {
-            planet->economy.GiveResource(ResourceTransfer((ResourceType) i, production[i]));
+            if (production[i] != 0) {
+                planet->economy.GiveResource(ResourceTransfer((ResourceType) i, production[i]));
+            }
         }
     }
 }
@@ -111,7 +113,6 @@ int ShipModules::Load(const DataNode* data) {
         strcpy(ship_modules[i].name, module_data->Get("name"));
         strcpy(ship_modules[i].description, module_data->Get("description"));
         ship_modules[i].construction_time = module_data->GetI("construction_time", 20);
-        INFO("%d", ship_modules[i].construction_time)
         ship_modules[i].construction_batch_size = module_data->GetI("construction_batch_size", 1, true);
 
         module_data->FillBufferWithChild("add", ship_modules[i].delta_stats, ShipStats::MAX, ship_stat_names);

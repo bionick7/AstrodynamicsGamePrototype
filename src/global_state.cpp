@@ -63,6 +63,7 @@ void _PauseMenu() {
 }
 
 void GlobalState::Make(timemath::Time p_time) {
+    ui.UIInit();
     calendar.Make(p_time);
     active_transfer_plan.Reset();
     c_transf.Make();
@@ -129,10 +130,15 @@ void GlobalState::LoadGame(const char* file_path) {
 }
 
 GlobalState::FocusablesPanels _GetCurrentFocus(GlobalState* gs) {
+    // out of combat_log
+    if (gs->last_battle_log.shown) {
+        return GlobalState::COMBAT_LOG;
+    }
+
     // out of quest menu
     if (gs->quest_manager.show_ui) {
         return GlobalState::QUEST_MANAGER;
-    } 
+    }
 
     // out of timeline
     if (TimelineIsOpen()) {
@@ -177,6 +183,9 @@ void _HandleDeselect(GlobalState* gs) {
         is_in_pause_menu = !is_in_pause_menu;
         if (is_in_pause_menu) 
             gs->calendar.paused = true;
+        break;}
+    case GlobalState::COMBAT_LOG:{
+        gs->last_battle_log.shown = false;
         break;}
     default: NOT_REACHABLE;
     }
@@ -271,7 +280,7 @@ void GlobalState::DrawState() {
     active_transfer_plan.Draw(&c_transf);
 
     // UI
-    UIStart();
+    ui.UIStart();
     calendar.DrawUI();
     char capital_str[21];
     sprintf(capital_str, "M§M %6" LONG_STRID ".%3" LONG_STRID " .mil", money / (int)1e6, money % 1000000 / 1000);
@@ -282,7 +291,6 @@ void GlobalState::DrawState() {
         Planet* planet = GetPlanetByIndex(planet_id);
         planet->DrawUI();
     }
-    //BuildingConstructionUI();
     for (auto it = ships.alloc.GetIter(); it; it++) {
         Ship* ship = ships.alloc[it];
         ship->DrawUI();
@@ -291,14 +299,15 @@ void GlobalState::DrawState() {
     ship_modules.UpdateDragging();
     DrawTimeline();
     quest_manager.Draw();
+    last_battle_log.DrawUI();
     
     if (is_in_pause_menu){
         _PauseMenu();
     }
-    UIEnd();
+    ui.UIEnd();
 
     DebugFlushText();
-    DrawFPS(0, 0);
+    //DrawFPS(0, 0);
 }
 
 void GlobalState::Serialize(DataNode* data) const {

@@ -6,8 +6,7 @@
 #include "id_allocator.hpp"
 #include "string_builder.hpp"
 #include "debug_drawing.hpp"
-
-#include <algorithm>
+#include "combat.hpp"
 
 double ShipClass::GetPayloadCapacityMass(double dv) const {
     //          dv = v_e * ln((max_cap + eom) / (x + eom))
@@ -24,103 +23,6 @@ resource_count_t ShipClass::GetFuelRequiredFull(double dv) const {
 resource_count_t ShipClass::GetFuelRequiredEmpty(double dv) const {
     // assuming no payload
     return KGToResourceCounts(oem * (exp(dv/v_e) - 1));
-}
-
-bool ShipBattle(IDList* ships_aggressor, IDList* ships_defender, double relative_velocity) {
-    // Returns true if aggressor wins
-    int velocity_multiplier = relative_velocity / 3000 + 1;
-
-    // Pick ship order (alternating)
-    // Foreach ship:
-    //     pick opponent (random, strongest, ...)
-    //     tally dammages
-    //     remove if necaissary
-    // Sort by initiative instead
-
-    int total_ships = ships_aggressor->size + ships_defender->size;
-    IDList turn_order = IDList(total_ships);
-    // Aggressors or defender first?
-    for(int i=0; i < ships_aggressor->size; i++) {
-        turn_order.Append(ships_aggressor->Get(i));
-    }
-    for(int i=0; i < ships_defender->size; i++) {
-        turn_order.Append(ships_defender->Get(i));
-    }
-    IDList ships_aggr_strength = IDList(*ships_aggressor);
-    IDList ships_defs_strength = IDList(*ships_defender);
-
-    /*turn_order.Sort([](RID ship1, RID ship2) {
-        return GetShip(ship2)->stats[ShipStats::INITIATIVE] - GetShip(ship1)->stats[ShipStats::INITIATIVE];
-    });*/
-
-    ships_aggr_strength.Sort([](RID ship1, RID ship2){
-        return GetShip(ship2)->GetCombatStrength() - GetShip(ship1)->GetCombatStrength();
-    });
-
-    ships_defs_strength.Sort([](RID ship1, RID ship2){
-        return GetShip(ship2)->GetCombatStrength() - GetShip(ship1)->GetCombatStrength();
-    });
-
-    IDList killed = IDList();
-
-    bool agressor_won;
-    int leading_turns = 0;
-    for (int i=0; i < total_ships; i++) {
-        if (GetShip(turn_order[i])->initiative() > leading_turns) {
-            leading_turns = GetShip(turn_order[i])->initiative();
-        }
-    }
-    for (int turn_nr=-leading_turns; true; turn_nr++) {
-        for (int i=0; i < total_ships; i++) {
-            if (killed.Find(turn_order[i]) >= 0) {
-                continue;
-            }
-            Ship* actor_ship = GetShip(turn_order[i]);
-            if (actor_ship->initiative() < -turn_nr) {
-                continue;
-            }
-            bool is_agressor = ships_aggr_strength.Find(turn_order[i]) >= 0;
-            const IDList* target_ship_list = is_agressor ? &ships_defs_strength : &ships_aggr_strength;
-            
-            int target_index = 0;
-            RID target_id;
-            do {
-                if (target_index >= target_ship_list->size) {
-                    // Kill all encaissary ships
-                    for(int i=0; i < killed.size; i++) {
-                        RID kill_id = killed.Get(i);
-                        GlobalGetState()->ships.KillShip(kill_id, true);
-                    }
-                    return is_agressor;
-                }
-                target_id = target_ship_list->Get(target_index++);
-            } while (killed.Find(target_id) >= 0);
-            Ship* target_ship = GetShip(target_id);
-
-            int kinetic_dammage = actor_ship->kinetic_offense() * velocity_multiplier - actor_ship->kinetic_defense();
-            if (kinetic_dammage < 0) kinetic_dammage = 0;
-            int ordonance_dammage = actor_ship->ordnance_offense() - actor_ship->ordnance_defense();
-            if (ordonance_dammage < 0) ordonance_dammage = 0;
-
-            target_ship->dammage_taken[ShipVariables::KINETIC_ARMOR] += kinetic_dammage;
-            target_ship->dammage_taken[ShipVariables::ENERGY_ARMOR] += ordonance_dammage;
-
-            INFO("Turn %d: %s vs %s: DMG: %d", turn_nr, actor_ship->name, target_ship->name, ordonance_dammage + kinetic_dammage)
-            INFO("    >> %d - %d", 
-                 target_ship->dammage_taken[ShipVariables::KINETIC_ARMOR], 
-                 target_ship->dammage_taken[ShipVariables::ENERGY_ARMOR]
-                )
-            if(
-                target_ship->dammage_taken[ShipVariables::KINETIC_ARMOR] > target_ship->stats[ShipStats::KINETIC_HP]
-                || target_ship->dammage_taken[ShipVariables::ENERGY_ARMOR] > target_ship->stats[ShipStats::ENERGY_HP]
-            ) {
-                INFO("%s killed %s in battle", actor_ship->name, target_ship->name)
-                killed.Append(target_id);
-            }
-        }
-    }
-
-    //INFO("Party 1 (%d) received %d dammage. Party 2 (%d) received (%d) dammage", ships_1->size, dmg_received_1, ships_2->size, dmg_received_2)
 }
 
 Ship::Ship() {

@@ -18,7 +18,6 @@ struct TimeLineCoordinateData {
     int* planet_coords;
 };
 
-
 int GetPlanetCoord(const TimeLineCoordinateData* tcd, RID planet) {
     return tcd->planet_coords[IdGetIndex(planet)];
 }
@@ -112,7 +111,6 @@ void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
         }
     }
 }
-
 
 float _SDSegment(Vector2 p, Vector2 a, Vector2 b) {
     Vector2 pa = Vector2Subtract(p, a);
@@ -218,10 +216,11 @@ void _DrawQuests(TimeLineCoordinateData* tcd, QuestManager* qm) {
     }
 }
 
-void _ShipDrawPathLine(const TimeLineCoordinateData* tcd, int* x_pos, int* y_pos, RID to_planet, timemath::Time to_time, int x_offset) {
+void _ShipDrawPathLine(const TimeLineCoordinateData* tcd, int* x_pos, int* y_pos, 
+                       RID to_planet, timemath::Time to_time, int x_offset, Color color) {
     int new_x = GetPlanetCoord(tcd, to_planet) + x_offset;
     int new_y = GetTimeCoord(tcd, to_time);
-    DrawLine(*x_pos, *y_pos, new_x, new_y, Palette::ship);
+    DrawLine(*x_pos, *y_pos, new_x, new_y, color);
     *x_pos = new_x;
     *y_pos = new_y;
 }
@@ -229,26 +228,27 @@ void _ShipDrawPathLine(const TimeLineCoordinateData* tcd, int* x_pos, int* y_pos
 void _DrawShips(TimeLineCoordinateData* tcd, const Ships* ships) {
     for (auto it = ships->alloc.GetIter(); it; it++) {
         const Ship* ship = ships->alloc.Get(it);
-        int x_offset = (it.counter + 1) * 4;
+        int x_offset = (ship->index_on_planet + 1) * 4;
 
         int start_tp_index = 0;
         int end_point_x = 0;
         int end_point_y = GetTimeCoord(tcd, GlobalGetNow());
 
-        RID end_planet = GetInvalidId();
-        if (ship->prepared_plans_count > 0 && !(ship->prepared_plans_count == 1 && ship->plan_edit_index == 0)) {
+        /*if (ship->prepared_plans_count > 0) {
             int last_index = ship->prepared_plans_count - 1;
-            if (ship->plan_edit_index == last_index) last_index--;
             end_planet = ship->prepared_plans[last_index].arrival_planet;
+            if (!IsIdValid(end_planet)) {
+                end_planet = ship->parent_planet;
+            }
         } else {
             end_planet = ship->parent_planet;
-        }
+        }*/ 
 
         if (ship->is_parked) {
             end_point_x = GetPlanetCoord(tcd, ship->parent_planet) + x_offset;
             if (ship->prepared_plans_count > 0) {
                 // vertical line to the first tp
-                _ShipDrawPathLine(tcd, &end_point_x, &end_point_y, ship->parent_planet, ship->prepared_plans[0].departure_time, x_offset);
+                _ShipDrawPathLine(tcd, &end_point_x, &end_point_y, ship->parent_planet, ship->prepared_plans[0].departure_time, x_offset, ship->GetColor());
             }
         } else {
             ASSERT(ship->prepared_plans_count > 0)
@@ -258,26 +258,28 @@ void _DrawShips(TimeLineCoordinateData* tcd, const Ships* ships) {
                 (tp->arrival_time - tp->departure_time).Seconds();
             
             end_point_x = Lerp(GetPlanetCoord(tcd, tp->departure_planet), GetPlanetCoord(tcd, tp->arrival_planet), travel_progress) + x_offset;
-            _ShipDrawPathLine(tcd, &end_point_x, &end_point_y, tp->arrival_planet, tp->arrival_time, x_offset);
+            _ShipDrawPathLine(tcd, &end_point_x, &end_point_y, tp->arrival_planet, tp->arrival_time, x_offset, ship->GetColor());
 
             start_tp_index++;
         }
+
         for(int i=start_tp_index; i < ship->prepared_plans_count; i++) {
             const TransferPlan* tp = &ship->prepared_plans[i];
 
-            if (i == ship->plan_edit_index && !IsIdValid(tp->arrival_planet)) {
-                continue;
-            }
+            if (!ship->IsTrajectoryKnown(i)) continue;
+            if (i == ship->plan_edit_index && !IsIdValid(tp->arrival_planet)) continue;
 
             // transfer plan itself
-            _ShipDrawPathLine(tcd, &end_point_x, &end_point_y, tp->arrival_planet, tp->arrival_time, x_offset);
+            _ShipDrawPathLine(tcd, &end_point_x, &end_point_y, tp->arrival_planet, tp->arrival_time, x_offset, ship->GetColor());
             // vertical line to the next tp
             if (i != ship->prepared_plans_count - 1) {
                 const TransferPlan* tp_next = &ship->prepared_plans[i+1];
-                _ShipDrawPathLine(tcd, &end_point_x, &end_point_y, tp_next->departure_planet, tp_next->departure_time, x_offset);
+                _ShipDrawPathLine(tcd, &end_point_x, &end_point_y, tp_next->departure_planet, tp_next->departure_time, x_offset, ship->GetColor());
             }
         }
-        _ShipDrawPathLine(tcd, &end_point_x, &end_point_y, end_planet, GetEndTime(tcd), x_offset);
+
+        DrawLine(end_point_x, end_point_y, end_point_x, GetTimeCoord(tcd, GetEndTime(tcd)), ship->GetColor());
+        //_ShipDrawPathLine(tcd, &end_point_x, &end_point_y, end_planet, GetEndTime(tcd), x_offset, ship->GetColor());
     }
 }
 

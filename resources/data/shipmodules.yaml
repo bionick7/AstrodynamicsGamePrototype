@@ -33,7 +33,7 @@ shipmodules:
 - id: shpmod_water_extractor
   name: Water extractor
   description: Provides + 1 count water / day if stationned on an icey moon
-  produce: {  }  # Special behaviour, since it needs to check for environemnet
+  produce: { water: 1 }  # Special behaviour, since it needs to check for environemnet
   mass: 1  # counts
   construction_time: 15
   construction_resources:

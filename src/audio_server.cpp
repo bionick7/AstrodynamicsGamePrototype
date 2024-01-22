@@ -2,7 +2,7 @@
 #include "global_state.hpp"
 #include "logging.hpp"
 
-int AudioServer::LoadSFX(const char* directory_name) {
+int AudioServer::LoadSFX() {
     sound_array[SFX_CLICK_BUTTON] = LoadSound("resources/sound/SFX/Click_Standard_00.wav");
     sound_array[SFX_ERROR]        = LoadSound("resources/sound/SFX/Click_Electronic_01.wav");
     sound_array[SFX_CLICK_SHORT]  = LoadSound("resources/sound/SFX/ClickMechanic1.wav");
