@@ -6,7 +6,7 @@
 
 static inline Vector2 GetScreenCenter() { return {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f}; }
 
-struct TextAlignment {
+namespace TextAlignment {
     typedef uint8_t T;
     const static T LEFT      = 0x00;
     const static T HCENTER   = 0x01;
@@ -18,7 +18,7 @@ struct TextAlignment {
 
 Rectangle DrawTextAligned(const char* text, Vector2 pos, TextAlignment::T alignment, Color c);
 
-struct ButtonStateFlags {
+namespace ButtonStateFlags {
     typedef uint8_t T;
     const static T NONE            = 0x00;
     const static T HOVER           = 0x01;

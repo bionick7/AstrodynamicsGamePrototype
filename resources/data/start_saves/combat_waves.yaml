@@ -74,7 +74,7 @@ ships:
 - name: Military ship 2
   class_id: shp_express
   allegiance: 0
-  planet: Encelladus
+  planet: Tethys
   tf_plans: []
   modules:
   - shpmod_railgun
@@ -82,4 +82,15 @@ ships:
   - shpmod_armor
   - shpmod_reactor
   - shpmod_acs
+  
+- name: Enemy ship
+  class_id: shp_express
+  allegiance: 1
+  planet: Mimas
+  tf_plans: []
+  modules:
+  - shpmod_railgun
+  - shpmod_railgun
+  - shpmod_armor
+  - shpmod_reactor
   

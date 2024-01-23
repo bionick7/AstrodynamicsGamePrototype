@@ -44,7 +44,7 @@ void QuestManager::Update(double dt) {
             case Quest::TASK: {
                 RID task_id = active_quests[it]->current.task;
                 Task* task = active_tasks[task_id];
-                bool is_in_transit = IsIdValid(task->ship) && !GetShip(task->ship)->is_parked;
+                bool is_in_transit = IsIdValid(task->ship) && !GetShip(task->ship)->IsParked();
                 if (task->pickup_expiration_time < now && !is_in_transit) {
                     bool success = active_quests[it]->CompleteTask(false);
                     if (!success) active_quests.Erase(it.GetId());
@@ -239,7 +239,7 @@ void QuestManager::PutbackTask(RID ship_index, RID task_index) {
         ERROR("Quest %d not currently on ship '%s'", task_index, ship->name)
         return;
     }
-    if (!ship->is_parked) {
+    if (!ship->IsParked()) {
         ERROR("'%s' must be parked on planet to deliver quest", task_index, ship->name)
         return;
     }

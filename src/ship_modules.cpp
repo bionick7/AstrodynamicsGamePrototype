@@ -39,8 +39,8 @@ void ShipModuleClass::UpdateCustom(Ship* ship) const {
         }
     }
     bool new_day = GlobalGetState()->calendar.IsNewDay();
-    if (new_day && ship->is_parked) {
-        Planet* planet = GetPlanet(ship->parent_planet);
+    if (new_day && ship->IsParked()) {
+        Planet* planet = GetPlanet(ship->GetParentPlanet());
         for (int i=0; i < RESOURCE_MAX; i++) {
             if (production[i] != 0) {
                 planet->economy.GiveResource(ResourceTransfer((ResourceType) i, production[i]));
@@ -88,7 +88,7 @@ bool ShipModuleSlot::IsReachable(ShipModuleSlot other) {
     if (type == ShipModuleSlot::DRAGGING_FROM_PLANET) {
         own_planet = entity;
     } else if (type == ShipModuleSlot::DRAGGING_FROM_SHIP) {
-        own_planet = GetShip(entity)->parent_planet;  // Might be invalid
+        own_planet = GetShip(entity)->GetParentPlanet();  // Might be invalid
         if (!GetShip(entity)->CanDragModule(index)) {
             return false;
         }
@@ -97,7 +97,7 @@ bool ShipModuleSlot::IsReachable(ShipModuleSlot other) {
     if (other.type == ShipModuleSlot::DRAGGING_FROM_PLANET) {
         other_planet = other.entity;
     } else if (other.type == ShipModuleSlot::DRAGGING_FROM_SHIP) {
-        other_planet = GetShip(other.entity)->parent_planet;  // Might be invalid
+        other_planet = GetShip(other.entity)->GetParentPlanet();  // Might be invalid
     }
 
     return own_planet == other_planet;

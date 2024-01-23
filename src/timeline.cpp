@@ -234,21 +234,16 @@ void _DrawShips(TimeLineCoordinateData* tcd, const Ships* ships) {
         int end_point_x = 0;
         int end_point_y = GetTimeCoord(tcd, GlobalGetNow());
 
-        /*if (ship->prepared_plans_count > 0) {
-            int last_index = ship->prepared_plans_count - 1;
-            end_planet = ship->prepared_plans[last_index].arrival_planet;
-            if (!IsIdValid(end_planet)) {
-                end_planet = ship->parent_planet;
-            }
-        } else {
-            end_planet = ship->parent_planet;
-        }*/ 
+        if (!ship->IsLeading()) {
+            // TODO
+            continue;
+        }
 
-        if (ship->is_parked) {
-            end_point_x = GetPlanetCoord(tcd, ship->parent_planet) + x_offset;
+        if (ship->IsParked()) {
+            end_point_x = GetPlanetCoord(tcd, ship->GetParentPlanet()) + x_offset;
             if (ship->prepared_plans_count > 0) {
                 // vertical line to the first tp
-                _ShipDrawPathLine(tcd, &end_point_x, &end_point_y, ship->parent_planet, ship->prepared_plans[0].departure_time, x_offset, ship->GetColor());
+                _ShipDrawPathLine(tcd, &end_point_x, &end_point_y, ship->GetParentPlanet(), ship->prepared_plans[0].departure_time, x_offset, ship->GetColor());
             }
         } else {
             ASSERT(ship->prepared_plans_count > 0)

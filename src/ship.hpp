@@ -53,10 +53,16 @@ struct Ship {
     int allegiance;  // currently 0 (player) or 1, can swap with RID
 
     // Current state
-    bool is_parked;
+    enum MovemebntBehaviourEnum{
+        PARKED,
+        TRANSFERING,
+        FOLLOW_SHIP,
+    } movement_behaviour;
+    RID parent_obj;
+
     bool is_detected;  // by the other faction
     OrbitPos position;
-    RID parent_planet;
+
 
     int prepared_plans_count;
     TransferPlan prepared_plans[SHIP_MAX_PREPARED_PLANS];
@@ -68,7 +74,6 @@ struct Ship {
 
     // Allows to refer to all the stats as variables.
     // Still needs to be declared
-    //#define X(upper, lower) const int* lower = &dammage_taken[ShipStats::upper];
     #define X(upper, lower) /*Auto-generated*/ int lower() const { return stats[ShipStats::upper]; };
     X_SHIP_STATS
     #undef X
@@ -107,6 +112,8 @@ struct Ship {
 
     void RemoveShipModuleAt(int index);
     void Repair(int hp);
+    void AttachTo(RID parent_ship);
+    void Detach();
 
     double GetPayloadMass() const;
     resource_count_t GetMaxCapacity() const;
@@ -119,9 +126,11 @@ struct Ship {
     int GetCombatStrength() const;
     int GetMissingHealth() const;
     bool CanDragModule(int index) const;
+    bool IsParked() const;
+    bool IsLeading() const;
+    RID GetParentPlanet() const;
 
     Color GetColor() const;
-
 
     TransferPlan* GetEditedTransferPlan();
     void ConfirmEditedTransferPlan();
@@ -129,8 +138,8 @@ struct Ship {
     void RemoveTransferPlan(int index);
     void StartEditingPlan(int index);
 
-    void _OnDeparture(const TransferPlan &tp);
-    void _OnArrival(const TransferPlan &tp);
+    void _OnDeparture(const TransferPlan *tp);
+    void _OnArrival(const TransferPlan *tp);
     void _EnsureContinuity();
     void _OnNewPlanClicked();
     void _OnClicked();
@@ -154,6 +163,7 @@ struct Ships {
     RID GetShipClassIndexById(const char* id) const;
     const ShipClass* GetShipClassByIndex(RID index) const;
     void GetOnPlanet(IDList* list, RID planet, uint32_t allegiance_bits) const;
+    void GetFleet(IDList* list, RID ship) const;
     void KillShip(RID uuid, bool notify_callback);
 
 };

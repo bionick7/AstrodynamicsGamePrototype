@@ -16,7 +16,7 @@
 - Dialogue (Done)
 - Actual quests
 - Build ships in shipyard (Done)
-- Group ships and form fleets
+- Group ships and form fleets (Done)
 - AI shits :(
 
 ## Known Bugs
@@ -25,7 +25,7 @@
 - Loadsaving loads default ephemerides (Done)
 - DATANODE: Can't distinguish between empty child array and empty string array
 - ASTRO: departure time optimization is reliable, but not accurate (found A solution)
-- QUESTS: First planning a maneuver, then picking up the quest will bypass payload check
+- QUESTS: First planning a maneuver, then picking up the quest will bypass payload check (Done)
 - QUESTS: Accepting more than one quest fucks up the order
 
 ## Necessary Incomplete features
@@ -51,32 +51,33 @@ Near-term, realizable only
 - highlight more important statistics
 
 ## Graphics improvements wishlist
-- UI labels as underlined by thin lines pointing to the thing
-- preview small 3D models for flavor
 - Post-processing shader
+- preview small 3D models for flavor
+- UI labels as underlined by thin lines pointing to the thing
+- Render to different buffers/layers
 
 ## Tech wishlist
 - global settings (with push_override etc.)
 - debug console
-- Hot reloading
 - Animation tracker system
+- Hot reloading
 
 ## Gameplay wishlist
 Regardless of implementability
-- planet modifiers
 - disruption events (can be tied to morale)
 - ship buildings (Done)
-- aerobreaking
-- ship maintenance
-- tanker fleets
-- gravity assists
-- segment planets into regions
-- crew & population morale
 - construct new stations (Done, it's just a ship duh)
 - combat (Done)
-- "policies"
+- tanker fleets (share dv among fleet)
+- aerobreaking
 - expand to 3D
+- gravity assists
+- crew & population morale
+- "policies"
+- planet modifiers
+- segment planets into regions
+- ship maintenance
 - tech tree ?
-- need for first colony ships
 - expand to planets + moons
+- need for first colony ships
 - lagrange points & 3-body mechanics

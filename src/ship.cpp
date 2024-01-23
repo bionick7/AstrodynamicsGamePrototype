@@ -64,7 +64,7 @@ void Ship::_OnNewPlanClicked() {
 
     // Append new plan
 
-    ASSERT(prepared_plans_count != 0 || is_parked)
+    ASSERT(prepared_plans_count != 0 || IsParked())
     if (prepared_plans_count >= SHIP_MAX_PREPARED_PLANS) {
         ERROR("Maximum transfer plan stack reached (ship %s)", name);
         return;
@@ -75,7 +75,7 @@ void Ship::_OnNewPlanClicked() {
 
     timemath::Time min_time = 0;
     if (plan_edit_index == 0) {
-        prepared_plans[plan_edit_index].departure_planet = parent_planet;
+        prepared_plans[plan_edit_index].departure_planet = parent_obj;
         min_time = GlobalGetNow();
     } else {
         prepared_plans[plan_edit_index].departure_planet = prepared_plans[plan_edit_index - 1].arrival_planet;
@@ -87,16 +87,22 @@ void Ship::_OnNewPlanClicked() {
     prepared_plans_count++;
 }
 
+static const char* movement_behaviour_lookup[3] = {
+    "parked",
+    "transfering",
+    "follow_ship",
+};
+
 void Ship::Serialize(DataNode *data) const
 {
     data->Set("name", name);
-    data->Set("is_parked", is_parked ? "y" : "n");
+    data->Get("movement_behaviour", movement_behaviour_lookup[movement_behaviour]);
     data->SetI("allegiance", allegiance);
     
     data->Set("class_id", GetShipClassByIndex(ship_class)->id);
     data->SetI("resource_qtt", transporing.quantity);
     data->SetI("resource_id", transporing.resource_id);
-    data->SetArray("variables", ShipVariables::MAX);
+    data->SetArray("dammage_taken", ShipVariables::MAX);
     for(int i=0; i < ShipVariables::MAX; i++) {
         data->SetArrayElemI("dammage_taken", i, dammage_taken[i]);
     }
@@ -118,7 +124,11 @@ void Ship::Serialize(DataNode *data) const
 
 void Ship::Deserialize(const DataNode* data) {
     strcpy(name, data->Get("name", "UNNAMED"));
-    is_parked = strcmp(data->Get("is_parked", "y", true), "y") == 0;
+    const char* movement_behaviour_str = data->Get("movement_behaviour", movement_behaviour_lookup[0], true);
+    for(int i=0; i < 3; i++) {
+        if (strcmp(movement_behaviour_str, movement_behaviour_lookup[i]) == 0)
+            movement_behaviour = (MovemebntBehaviourEnum) i;
+    }
     allegiance = data->GetI("allegiance", allegiance);
     plan_edit_index = -1;
     ship_class = GlobalGetState()->ships.GetShipClassIndexById(data->Get("class_id"));
@@ -211,10 +221,10 @@ bool Ship::IsTrajectoryKnown(int index) const {
     if (IsPlayerFriend()) {
         return true;
     }
-    if(GetIntelLevel() & IntelLevel::TRAJECTORY == 0) {
+    if((GetIntelLevel() & IntelLevel::TRAJECTORY) == 0) {
         return false;
     }
-    return index == 0 && !is_parked;
+    return index == 0 && !IsParked();
 }
 
 int Ship::GetCombatStrength() const {
@@ -257,24 +267,46 @@ Color Ship::GetColor() const {
     return IsPlayerFriend() ? Palette::green : Palette::red;
 }
 
+bool Ship::IsParked() const {
+    switch (movement_behaviour) {
+    case PARKED: return true;
+    case TRANSFERING: return false;
+    case FOLLOW_SHIP: return GetShip(parent_obj)->IsParked();
+    default: NOT_REACHABLE
+    }
+}
+
+bool Ship::IsLeading() const {
+    return movement_behaviour != FOLLOW_SHIP;
+}
+
+RID Ship::GetParentPlanet() const {
+    switch (movement_behaviour) {
+    case PARKED: return parent_obj;
+    case TRANSFERING: return GetInvalidId();
+    case FOLLOW_SHIP: return GetShip(parent_obj)->GetParentPlanet();
+    default: NOT_REACHABLE
+    }
+}
+
 TransferPlan* Ship::GetEditedTransferPlan() {
     if (plan_edit_index < 0) return NULL;
     return &prepared_plans[plan_edit_index];
 }
 
 void Ship::ConfirmEditedTransferPlan() {
-    ASSERT(prepared_plans_count != 0 || is_parked)
-    ASSERT(!is_parked || IsIdValid(parent_planet))
-    TransferPlan& tp = prepared_plans[prepared_plans_count - 1];
-    if (prepared_plans_count == 1 && parent_planet != tp.departure_planet) {
+    ASSERT(prepared_plans_count != 0 || IsParked())
+    ASSERT(!IsParked() || IsIdValid(parent_obj))
+    TransferPlan* tp = &prepared_plans[prepared_plans_count - 1];
+    if (prepared_plans_count == 1 && parent_obj != tp->departure_planet) {
         ERROR("Inconsistent transfer plan pushed for ship %s (does not start at current planet)", name);
         return;
     }
-    else if (prepared_plans_count > 1 && prepared_plans[prepared_plans_count - 2].arrival_planet != tp.departure_planet) {
+    else if (prepared_plans_count > 1 && prepared_plans[prepared_plans_count - 2].arrival_planet != tp->departure_planet) {
         ERROR("Inconsistent transfer plan pushed for ship %s (does not start at planet last visited)", name);
         return;
     }
-    double dv_tot = tp.dv1[tp.primary_solution] + tp.dv2[tp.primary_solution];
+    double dv_tot = tp->dv1[tp->primary_solution] + tp->dv2[tp->primary_solution];
     if (dv_tot > GetShipClassByIndex(ship_class)->max_dv) {
         ERROR("Not enough DV %f > %f", dv_tot, GetShipClassByIndex(ship_class));
         return;
@@ -315,8 +347,8 @@ void Ship::StartEditingPlan(int index) {
     TransferPlanUI& tp_ui = GlobalGetState()->active_transfer_plan;
     timemath::Time min_time = 0;
     if (index == 0) {
-        if (is_parked) {
-            prepared_plans[index].departure_planet = parent_planet;
+        if (IsParked()) {
+            prepared_plans[index].departure_planet = parent_obj;
             min_time = GlobalGetNow();
         } else {
             return;
@@ -333,33 +365,42 @@ void Ship::StartEditingPlan(int index) {
 void Ship::Update() {
     timemath::Time now = GlobalGetNow();
 
-    if (prepared_plans_count == 0 || (plan_edit_index == 0 && prepared_plans_count == 1)) {
-        position = GetPlanet(parent_planet)->position;
+    if (!IsLeading()) {
+        // Following other ship
+        if (IsParked()) {
+            position = GetPlanet(GetParentPlanet())->position;
+        } else {
+            const TransferPlan* tp = &GetShip(parent_obj)->prepared_plans[0];
+            position = tp->transfer_orbit[tp->primary_solution].GetPosition(now);
+        }
+    } else if (prepared_plans_count == 0 || (plan_edit_index == 0 && prepared_plans_count == 1)) {
+        // No departure plans to draw from
+        position = GetPlanet(parent_obj)->position;
     } else {
-        const TransferPlan& tp = prepared_plans[0];
-        if (is_parked) {
-            if (tp.departure_time < now) {
+        const TransferPlan* tp = &prepared_plans[0];
+        if (IsParked()) {
+            if (tp->departure_time < now) {
                 _OnDeparture(tp);
             } else {
-                position = GetPlanet(parent_planet)->position;
+                position = GetPlanet(parent_obj)->position;
             }
         } else {
-            if (tp.arrival_time < now) {
+            if (tp->arrival_time < now) {
                 _OnArrival(tp);
             } else {
-                position = tp.transfer_orbit[tp.primary_solution].GetPosition(now);
+                position = tp->transfer_orbit[tp->primary_solution].GetPosition(now);
             }
         }
     }
 
     // Draw
     draw_pos = GetScreenTransform()->TransformV(position.cartesian);
-    if (is_parked) {
-        double rad = fmax(GetScreenTransform()->TransformS(GetPlanet(parent_planet)->radius), 4) + 8.0;
+    if (IsParked()) {
+        double rad = fmax(GetScreenTransform()->TransformS(GetPlanet(parent_obj)->radius), 4) + 8.0;
         double phase = fmin(20.0 / rad * index_on_planet, index_on_planet / (double)total_on_planet * 2 * PI);
         draw_pos = Vector2Add(FromPolar(rad, phase), draw_pos);
     }
-    
+
     _UpdateModules();
     _UpdateShipyard();
 }
@@ -378,11 +419,11 @@ void Ship::_UpdateShipyard() {
         MinInt(collected_components[0], collected_components[1]),
         repair_stations
     );
-    if (GlobalGetState()->calendar.IsNewDay() && is_parked) {
+    if (GlobalGetState()->calendar.IsNewDay() && IsParked()) {
         for(int i=0; i < repair_stations; i++) {
             IDList available_ships;
-            uint32_t filter = (1 << allegiance) & 0xFFU | 0xFFFFFF00U;
-            GlobalGetState()->ships.GetOnPlanet(&available_ships, parent_planet, filter);
+            uint32_t filter = ((1 << allegiance) & 0xFFU) | 0xFFFFFF00U;
+            GlobalGetState()->ships.GetOnPlanet(&available_ships, parent_obj, filter);
             available_ships.Sort([](RID ship1, RID ship2){
                 return GetShip(ship2)->GetMissingHealth() - GetShip(ship1)->GetMissingHealth();
             });
@@ -397,10 +438,10 @@ void Ship::_UpdateShipyard() {
             }
         }
         for(int i=0; i < module_factories; i++) {
-            GetPlanet(parent_planet)->AdvanceModuleProductionQueue();
+            GetPlanet(parent_obj)->AdvanceModuleProductionQueue();
         }
         for(int i=0; i < ship_yards; i++) {
-            GetPlanet(parent_planet)->AdvanceShipProductionQueue();
+            GetPlanet(parent_obj)->AdvanceShipProductionQueue();
         }
     }
 }
@@ -436,7 +477,7 @@ void _DrawShipAt(Vector2 pos, Color color) {
 }
 
 void Ship::Draw(const CoordinateTransform* c_transf) const {
-    if (GetIntelLevel() & IntelLevel::TRAJECTORY == 0) {
+    if ((GetIntelLevel() & IntelLevel::TRAJECTORY) == 0) {
         return;
     }
     Color color = GetColor();
@@ -449,31 +490,31 @@ void Ship::Draw(const CoordinateTransform* c_transf) const {
         if (i == plan_edit_index) {
             continue;
         }
-        const TransferPlan& plan = prepared_plans[i];
-        OrbitPos to_departure = plan.transfer_orbit[plan.primary_solution].GetPosition(
-            timemath::Time::Latest(plan.departure_time, GlobalGetNow())
+        const TransferPlan* plan = &prepared_plans[i];
+        OrbitPos to_departure = plan->transfer_orbit[plan->primary_solution].GetPosition(
+            timemath::Time::Latest(plan->departure_time, GlobalGetNow())
         );
-        OrbitPos to_arrival = plan.transfer_orbit[plan.primary_solution].GetPosition( 
-            plan.arrival_time
+        OrbitPos to_arrival = plan->transfer_orbit[plan->primary_solution].GetPosition( 
+            plan->arrival_time
         );
-        plan.transfer_orbit[plan.primary_solution].DrawBounded(to_departure, to_arrival, 0, 
+        plan->transfer_orbit[plan->primary_solution].DrawBounded(to_departure, to_arrival, 0, 
             ColorAlpha(color, i == highlighted_plan_index ? 1 : 0.5)
         );
         if (i == plan_edit_index){
-            plan.transfer_orbit[plan.primary_solution].DrawBounded(to_departure, to_arrival, 0, Palette::ui_main);
+            plan->transfer_orbit[plan->primary_solution].DrawBounded(to_departure, to_arrival, 0, Palette::ui_main);
         }
     }
     if (plan_edit_index >= 0 && IsIdValid(prepared_plans[plan_edit_index].arrival_planet) && IsTrajectoryKnown(plan_edit_index)) {
-        const TransferPlan& last_tp = prepared_plans[plan_edit_index];
-        OrbitPos last_pos = GetPlanet(last_tp.arrival_planet)->orbit.GetPosition(
-            last_tp.arrival_time
+        const TransferPlan* last_tp = &prepared_plans[plan_edit_index];
+        OrbitPos last_pos = GetPlanet(last_tp->arrival_planet)->orbit.GetPosition(
+            last_tp->arrival_time
         );
         Vector2 last_draw_pos = c_transf->TransformV(last_pos.cartesian);
         _DrawShipAt(last_draw_pos, ColorAlpha(color, 0.5));
     }
 }
 
-void _UIDrawStats(Ship* ship) {
+void _UIDrawStats(const Ship* ship) {
     StringBuilder sb;
     sb.AddFormat("Payload %d / %d ", KGToResourceCounts(ship->GetPayloadMass()), ship->GetMaxCapacity());
     UIContextWrite(sb.c_str);
@@ -585,6 +626,44 @@ void _UIDrawTransferplans(Ship* ship) {
     }
 }
 
+void _UIDrawFleet(Ship* ship) {
+    // Following
+    if (!ship->IsLeading()) {
+        UIContextPushInset(0, 20);
+        StringBuilder sb;
+        if (ship->IsParked()) {
+            sb.Add("Detach from").Add(GetShip(ship->parent_obj)->name);
+            ButtonStateFlags::T button_state = UIContextDirectButton(sb.c_str, 0);
+            HandleButtonSound(button_state);
+            if (button_state & ButtonStateFlags::JUST_PRESSED) {
+                ship->Detach();
+            }
+        } else {
+            sb.Add("Following").Add(GetShip(ship->parent_obj)->name);
+            UIContextWrite(sb.c_str);
+        }
+        UIContextPop();  // Inset
+        return;
+    }
+    IDList candidates;
+    uint32_t selection_flags = ((1UL << ship->allegiance) & 0xFF) | 0xFFFFFF00;
+    GlobalGetState()->ships.GetOnPlanet(&candidates, ship->GetParentPlanet(), selection_flags);
+    for (int i=0; i < candidates.size; i++) {
+        if (candidates[i] == ship->id) continue;
+        const Ship* candidate = GetShip(candidates[i]);
+        if (!candidate->IsLeading()) continue;
+        UIContextPushInset(0, 20);
+        UIContextWrite("Attach to ", false);
+        UIContextWrite(candidate->name);
+        ButtonStateFlags::T button_state = UIContextAsButton();
+        HandleButtonSound(button_state);
+        if (button_state & ButtonStateFlags::JUST_PRESSED) {
+            ship->AttachTo(candidate->id);
+        }
+        UIContextPop();  // Inset
+    }
+}
+
 void _UIDrawQuests(Ship* ship) {
     QuestManager* qm = &GlobalGetState()->quest_manager;
     double max_mass = ResourceCountsToKG(ship->GetMaxCapacity()) - ship->GetPayloadMass();
@@ -592,7 +671,7 @@ void _UIDrawQuests(Ship* ship) {
     for(auto it = qm->active_tasks.GetIter(); it; it++) {
         Task* quest = qm->active_tasks.Get(it);
         bool is_quest_in_cargo = quest->ship == ship->id;
-        if (quest->current_planet != ship->parent_planet && !is_quest_in_cargo) continue;
+        if (quest->current_planet != ship->parent_obj && !is_quest_in_cargo) continue;
         bool can_accept = quest->payload_mass <= max_mass;
         ButtonStateFlags::T button_state = quest->DrawUI(true, is_quest_in_cargo);
         if (button_state & ButtonStateFlags::JUST_PRESSED && can_accept) {
@@ -636,7 +715,7 @@ void Ship::DrawUI() {
 
     UIContextShrink(INSET_MARGIN, INSET_MARGIN);
 
-    if (GetIntelLevel() & IntelLevel::STATS == 0) {
+    if ((GetIntelLevel() & IntelLevel::STATS) == 0) {
         return;
     }
 
@@ -644,10 +723,15 @@ void Ship::DrawUI() {
 
     UIContextPushScrollInset(0, UIContextCurrent().height, allocated, &ui_scroll);
 
-    UIContextWrite(name);    
+    UIContextWrite(name);
     _UIDrawStats(this);
+    if (!IsPlayerFriend()) {
+        UIContextPop();  // ScrollInset
+        return;
+    }
     _UIDrawInventory(this);
     _UIDrawTransferplans(this);
+    _UIDrawFleet(this);
     _UIDrawQuests(this);
 
     UIContextPop();  // ScrollInset
@@ -679,12 +763,46 @@ void Ship::Repair(int hp) {
     dammage_taken[ShipVariables::CREW] -= crew_repair;
 }
 
-void Ship::_OnDeparture(const TransferPlan& tp) {
-    PlanetaryEconomy* local_economy = &GetPlanet(tp.departure_planet)->economy;
+void Ship::AttachTo(RID parent_ship) {
+    if (!GetShip(parent_ship)->IsLeading()) {
+        ERROR("Can only attach to leading ships")
+        return;
+    }
+    parent_obj = parent_ship;
+    movement_behaviour = Ship::FOLLOW_SHIP;
+}
 
-    ResourceTransfer fuel_tf = local_economy->DrawResource(ResourceTransfer(RESOURCE_WATER, tp.fuel_mass));
-    if (fuel_tf.quantity < tp.fuel_mass && IsPlayerFriend()) {
-        resource_count_t remaining_fuel = tp.fuel_mass - fuel_tf.quantity;
+void Ship::Detach() {
+    if (!IsParked()) {
+        ERROR("Must be parked to detach")
+        return;
+    }
+    parent_obj = GetParentPlanet();
+    movement_behaviour = Ship::PARKED;
+}
+
+void Ship::_OnDeparture(const TransferPlan* tp) {
+    // Make sure this is called first on the leading ship
+
+    if (GetCapableDV() <= tp->tot_dv || GetRemainingPayloadCapacity(tp->tot_dv) && tp->resource_transfer.quantity) {
+        // Abort last minute
+        // Untested!
+        if (IsLeading()) {
+            while (prepared_plans_count > 0) {
+                RemoveTransferPlan(0);
+            }
+        } else {
+            parent_obj = tp->departure_planet;
+            movement_behaviour = Ship::PARKED;
+        }
+        return;
+    }
+
+    PlanetaryEconomy* local_economy = &GetPlanet(tp->departure_planet)->economy;
+
+    ResourceTransfer fuel_tf = local_economy->DrawResource(ResourceTransfer(RESOURCE_WATER, tp->fuel_mass));
+    if (fuel_tf.quantity < tp->fuel_mass && IsPlayerFriend()) {
+        resource_count_t remaining_fuel = tp->fuel_mass - fuel_tf.quantity;
         if (
             local_economy->trading_accessible && 
             local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) < GlobalGetState()->money
@@ -694,68 +812,102 @@ void Ship::_OnDeparture(const TransferPlan& tp) {
             local_economy->DrawResource(ResourceTransfer(RESOURCE_WATER, remaining_fuel));
         } else {
             // Abort
-            USER_INFO("Not enough fuel. Could not afford/access remaining fuel %d cts on %s", remaining_fuel, GetPlanet(tp.departure_planet)->name)
+            USER_INFO(
+                "Not enough fuel. Could not afford/access remaining fuel %d cts on %s", 
+                remaining_fuel, GetPlanet(tp->departure_planet)->name
+            )
             local_economy->GiveResource(fuel_tf);
             prepared_plans_count = 0;
             return;
         }
     }
 
-    transporing = local_economy->DrawResource(tp.resource_transfer);
+    transporing = local_economy->DrawResource(tp->resource_transfer);
 
     for(auto it = GlobalGetState()->quest_manager.active_tasks.GetIter(); it; it++) {
         if (GlobalGetState()->quest_manager.active_tasks[it]->ship == id) {
-            GlobalGetState()->quest_manager.TaskDepartedFrom(it.GetId(), parent_planet);
+            GlobalGetState()->quest_manager.TaskDepartedFrom(it.GetId(), parent_obj);
         }
     }
 
-    parent_planet = GetInvalidId();
-    is_parked = false;
+    if (IsLeading()) {
+        parent_obj = GetInvalidId();
+        movement_behaviour = TRANSFERING;
+
+        IDList following;
+        GlobalGetState()->ships.GetFleet(&following, id);
+        for (int i=0; i < following.size; i++) {
+            GetShip(following[i])->_OnDeparture(tp);
+        }
+    }
+    
     is_detected = true;
 
     Update();
 }
 
-void Ship::_OnArrival(const TransferPlan& tp) {
-    // First: Combat. Is the ship is intercepted when/before entering orbit, it can't do anything else
-
+void _OnFleetArrival(Ship* leading_ship, const TransferPlan* tp) {
+    // Collects ships for combat
     IDList hostile_ships;
-    uint32_t selection_flags = (~(1UL << allegiance) & 0xFF) | Ships::MILITARY_SELECTION_FLAG;
-    GlobalGetState()->ships.GetOnPlanet(&hostile_ships, tp.arrival_planet, selection_flags);
+    uint32_t selection_flags = (~(1UL << leading_ship->allegiance) & 0xFF) | Ships::MILITARY_SELECTION_FLAG;
+    GlobalGetState()->ships.GetOnPlanet(&hostile_ships, tp->arrival_planet, selection_flags);
     IDList allied_ships;
-    allied_ships.Append(id);
+    GlobalGetState()->ships.GetFleet(&allied_ships, leading_ship->id);
+    allied_ships.Append(leading_ship->id);
     if (hostile_ships.size > 0) {
         // First, military ships vs. military ships
-        bool victory = ShipBattle(&allied_ships, &hostile_ships, Vector2Length(tp.arrival_dvs[tp.primary_solution]));
+        bool victory = ShipBattle(&allied_ships, &hostile_ships, Vector2Length(tp->arrival_dvs[tp->primary_solution]));
+        // allied ship and hostile ship might contain dead ships
         if (victory) {
-            uint32_t selection_flags = (~(1UL << allegiance) & 0xFF) | 0xFFFFFF00;
+            uint32_t selection_flags = (~(1UL << leading_ship->allegiance) & 0xFF) | 0xFFFFFF00;
             IDList conquered;
-            GlobalGetState()->ships.GetOnPlanet(&conquered, tp.arrival_planet, selection_flags);
+            GlobalGetState()->ships.GetOnPlanet(&conquered, tp->arrival_planet, selection_flags);
             for(int i=0; i < conquered.size; i++) {
-                GetShip(conquered[i])->allegiance = allegiance;
+                GetShip(conquered[i])->allegiance = leading_ship->allegiance;
             }
         }
-        is_detected = true;
-    } else {
-        uint32_t selection_flags = (~(1UL << allegiance) & 0xFF) | 0xFFFFFF00;
-        IDList conquered;
-        GlobalGetState()->ships.GetOnPlanet(&conquered, tp.arrival_planet, selection_flags);
-        for(int i=0; i < conquered.size; i++) {
-            GetShip(conquered[i])->allegiance = allegiance;
+        for (int i=0; i < allied_ships.size; i++) {
+            if (IsIdValid(allied_ships[i])) {
+                GetShip(allied_ships[i])->is_detected = true;
+            }
         }
-        is_detected = false;
+    } else {
+        uint32_t selection_flags = (~(1UL << leading_ship->allegiance) & 0xFF) | 0xFFFFFF00;
+        IDList conquered;
+        GlobalGetState()->ships.GetOnPlanet(&conquered, tp->arrival_planet, selection_flags);
+        for(int i=0; i < conquered.size; i++) {
+            GetShip(conquered[i])->allegiance = leading_ship->allegiance;
+        }
+        for (int i=0; i < allied_ships.size; i++) {
+            GetShip(allied_ships[i])->is_detected = false;
+        }
+    }
+}
+
+void Ship::_OnArrival(const TransferPlan* tp) {
+    // Make sure this is called first on the leading ship
+    // First: Combat. Is the ship is intercepted when/before entering orbit, it can't do anything else
+
+    if (IsLeading()) {
+        _OnFleetArrival(this, tp);
+        parent_obj = tp->arrival_planet;
+        movement_behaviour = PARKED;
+
+        IDList following;
+        GlobalGetState()->ships.GetFleet(&following, id);
+        for (int i=0; i < following.size; i++) {
+            GetShip(following[i])->_OnArrival(tp);
+        }
     }
 
-    GetPlanet(tp.arrival_planet)->economy.GiveResource(tp.resource_transfer);
-    parent_planet = tp.arrival_planet;
-    is_parked = true;
-    position = GetPlanet(parent_planet)->position;
+    GetPlanet(tp->arrival_planet)->economy.GiveResource(tp->resource_transfer);
+    position = GetPlanet(GetParentPlanet())->position;
 
     // Complete tasks
     for(auto it = GlobalGetState()->quest_manager.active_tasks.GetIter(); it; it++) {
         const Task* quest = GlobalGetState()->quest_manager.active_tasks[it];
-        if (quest->ship == id && quest->arrival_planet == tp.arrival_planet) {
-            GlobalGetState()->quest_manager.TaskArrivedAt(it.GetId(), tp.arrival_planet);
+        if (quest->ship == id && quest->arrival_planet == tp->arrival_planet) {
+            GlobalGetState()->quest_manager.TaskArrivedAt(it.GetId(), tp->arrival_planet);
         }
     }
 
@@ -766,9 +918,9 @@ void Ship::_OnArrival(const TransferPlan& tp) {
 void Ship::_EnsureContinuity() {
     INFO("Ensure Continuity Call");
     if (prepared_plans_count == 0) return;
-    RID planet_tracker = parent_planet;
+    RID planet_tracker = parent_obj;
     int start_index = 0;
-    if (!is_parked) {
+    if (!IsParked()) {
         planet_tracker = prepared_plans[0].arrival_planet;
         start_index = 1;
     }
@@ -807,13 +959,13 @@ RID Ships::AddShip(const DataNode* data) {
     }
     
     ship->Deserialize(data);
-    if (ship->is_parked) {
+    if (ship->IsParked()) {
         const char* planet_name = data->Get("planet", "NO NAME SPECIFIED");
         RID planet_id = GlobalGetState()->planets.GetIndexByName(planet_name);
         if (!IsIdValid(planet_id)) {
             FAIL("Error while initializing ship '%s': no such planet '%s'", ship->name, planet_name)
         }
-        ship->parent_planet = planet_id;
+        ship->parent_obj = planet_id;
     }
 
     ship->id = ship_entity;
@@ -880,14 +1032,28 @@ RID Ships::GetShipClassIndexById(const char *id) const {
 }
 
 void Ships::GetOnPlanet(IDList* list, RID planet, uint32_t allegiance_bits) const {
-    for (auto it = GlobalGetState()->ships.alloc.GetIter(); it; it++) {
-        Ship* ship = GlobalGetState()->ships.alloc[it];
-        if (ship->is_parked && planet != ship->parent_planet) continue;
-        if (!ship->is_parked && planet != GetInvalidId()) continue;
-        if (((1 << ship->allegiance) & allegiance_bits) == 0) continue;
-        if (!(allegiance_bits & MILITARY_SELECTION_FLAG) && ship->GetCombatStrength() > 0) continue;
-        if (!(allegiance_bits & CIVILIAN_SELECTION_FLAG) && ship->GetCombatStrength() == 0) continue;
+    for (auto it = alloc.GetIter(); it; it++) {
+        Ship* ship = GetShip(it.GetId());
+        if (ship->IsParked() && planet != ship->GetParentPlanet()) 
+            continue;
+        if (!ship->IsParked() && planet != GetInvalidId()) 
+            continue;
+        if (((1 << ship->allegiance) & allegiance_bits) == 0) 
+            continue;
+        if (!(allegiance_bits & MILITARY_SELECTION_FLAG) && ship->GetCombatStrength() > 0) 
+            continue;
+        if (!(allegiance_bits & CIVILIAN_SELECTION_FLAG) && ship->GetCombatStrength() == 0) 
+            continue;
         list->Append(it.GetId());
+    }
+}
+
+void Ships::GetFleet(IDList *list, RID leading) const {
+    for (auto it = alloc.GetIter(); it; it++) {
+        Ship* ship = GetShip(it.GetId());
+        if (ship->movement_behaviour == Ship::FOLLOW_SHIP && ship->parent_obj == leading) {
+            list->Append(it.GetId());
+        }
     }
 }
 

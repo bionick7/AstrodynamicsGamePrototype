@@ -106,7 +106,7 @@ ButtonStateFlags::T Task::DrawUI(bool show_as_button, bool highlight) const {
         sb.Add("  Now: [").Add(GetPlanet(current_planet)->name).AddLine("]");
     } else sb.AddLine("");
     // Line 2
-    bool is_in_transit = IsIdValid(ship) && !GetShip(ship)->is_parked;
+    bool is_in_transit = IsIdValid(ship) && !GetShip(ship)->IsParked();
     if (is_in_transit) {
         sb.Add("Expires in ").AddTime(delivery_expiration_time - GlobalGetNow());
     } else {

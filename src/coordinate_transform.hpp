@@ -8,8 +8,6 @@ struct Calendar {
     timemath::Time time;
     timemath::Time prev_time;
 
-    timemath::Time current_migration_period;
-    timemath::Time migration_arrrival_time;
     //RID migration_arrrival_planet;  // Doesn't really fit anywhere right now ...
 
     double time_scale;

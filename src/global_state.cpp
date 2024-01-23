@@ -209,10 +209,8 @@ void _UpdateShipsPlanets(GlobalState* gs) {
         for (int i=0; i < ship_list.size; i++) {
             Ship* ship = GetShip(ship_list[i]);
             ship->Update();
-            if (IsIdValid(ship->parent_planet)) {
-                ship->index_on_planet = i;
-                ship->total_on_planet = ship_list.size;
-            }
+            ship->index_on_planet = i;
+            ship->total_on_planet = ship_list.size;
             ship->mouse_hover = false;
             if (ship->HasMouseHover(&min_distance)) {
                 hover = ship->id;
@@ -225,10 +223,6 @@ void _UpdateShipsPlanets(GlobalState* gs) {
     for (int i=0; i < ship_list.size; i++) {
         Ship* ship = GetShip(ship_list[i]);
         ship->Update();
-        if (IsIdValid(ship->parent_planet)) {
-            ship->index_on_planet = i;
-            ship->total_on_planet = ship_list.size;
-        }
         ship->mouse_hover = false;
         if (ship->HasMouseHover(&min_distance)) {
             hover = ship->id;
@@ -336,8 +330,8 @@ void GlobalState::Serialize(DataNode* data) const {
         Ship* ship = ships.alloc.Get(it);
         DataNode dn2 = DataNode();
         dn2.SetI("id", it.GetId().AsInt());
-        if (ship->is_parked) {
-            dn2.Set("planet", planets.GetPlanet(ship->parent_planet)->name);
+        if (ship->IsParked()) {
+            dn2.Set("planet", planets.GetPlanet(ship->GetParentPlanet())->name);
         }
         ship->Serialize(data->SetArrayElemChild("ships", i++, dn2));
     }

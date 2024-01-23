@@ -1,15 +1,12 @@
-capital: 1000001.000000
+capital: 1000000.000000
 focused_planet: -1
 focused_ship: -1
 calendar:
-  paused: y
-  time_scale: 2048.000000
   current_migration_period: 5356800.000000
-
   migration_arrrival_time: 5356800.000000
-
+  paused: y
   time: 0.000000
-
+  time_scale: 2048.000000
 
 coordinate_transform:
   focus_x: 0.000000
@@ -19,21 +16,22 @@ coordinate_transform:
 quests:
   active_quests:
   - active: y
-    await_type: 1
+    await_type: 3
     id: 100663296
-    state: t1
-    template: example
+    state: wait
+    template: raiders
+    wave_num: 1
 
   available_quests:
   - active: n
     await_type: 0
     id: 83886080
-    template: example
+    template: raiders_reward
 
   - active: n
     await_type: 0
     id: 83886081
-    template: tutorial
+    template: raiders
 
   - active: n
     await_type: 0
@@ -44,19 +42,21 @@ quests:
 
 planets:
 - id: 16777216
+  module_production_process: 0
   name: Mimas
+  ship_production_process: 0
   trading_accessible: n
   resource_delta:
     electronics: 0
     food: 0
-    metal: 0
-    water: 0
+    metal: 1
+    water: 1
 
   resource_stock:
     electronics: 0
     food: 0
     metal: 0
-    water: 100
+    water: 1000
 
   inventory:
   - ---
@@ -99,14 +99,18 @@ planets:
   - ---
   - ---
   - ---
+  module_production_queue: []
+  ship_production_queue: []
 
 - id: 16777217
+  module_production_process: 0
   name: Encelladus
+  ship_production_process: 0
   trading_accessible: n
   resource_delta:
     electronics: 0
     food: 0
-    metal: 0
+    metal: 2
     water: 0
 
   resource_stock:
@@ -156,12 +160,16 @@ planets:
   - ---
   - ---
   - ---
+  module_production_queue: []
+  ship_production_queue: []
 
 - id: 16777218
+  module_production_process: 0
   name: Tethys
+  ship_production_process: 0
   trading_accessible: y
   resource_delta:
-    electronics: 0
+    electronics: 1
     food: 0
     metal: 0
     water: 0
@@ -170,11 +178,9 @@ planets:
     electronics: 6
     food: 0
     metal: 0
-    water: 100
+    water: 1000
 
   inventory:
-  - shpmod_heatshield
-  - shpmod_farm
   - ---
   - ---
   - ---
@@ -213,9 +219,15 @@ planets:
   - ---
   - ---
   - ---
+  - ---
+  - ---
+  module_production_queue: []
+  ship_production_queue: []
 
 - id: 16777219
+  module_production_process: 0
   name: Rhea
+  ship_production_process: 0
   trading_accessible: n
   resource_delta:
     electronics: 0
@@ -270,9 +282,13 @@ planets:
   - ---
   - ---
   - ---
+  module_production_queue: []
+  ship_production_queue: []
 
 - id: 16777220
+  module_production_process: 0
   name: Titan
+  ship_production_process: 0
   trading_accessible: y
   resource_delta:
     electronics: 0
@@ -327,9 +343,13 @@ planets:
   - ---
   - ---
   - ---
+  module_production_queue: []
+  ship_production_queue: []
 
 - id: 16777221
+  module_production_process: 0
   name: Iaeptus
+  ship_production_process: 0
   trading_accessible: n
   resource_delta:
     electronics: 0
@@ -384,9 +404,13 @@ planets:
   - ---
   - ---
   - ---
+  module_production_queue: []
+  ship_production_queue: []
 
 - id: 16777222
+  module_production_process: 0
   name: Phoebe
+  ship_production_process: 0
   trading_accessible: n
   resource_delta:
     electronics: 0
@@ -441,36 +465,29 @@ planets:
   - ---
   - ---
   - ---
+  module_production_queue: []
+  ship_production_queue: []
 
 ships:
-- class_id: shp_bulk_transport
+- allegiance: 0
+  class_id: shp_light_transport
   id: 33554432
-  is_parked: y
-  name: Bulk transport
-  planet: Tethys
-  resource_id: -1
-  resource_qtt: 0
-  modules:
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  prepared_plans: []
-
-- class_id: shp_light_transport
-  id: 33554433
   is_parked: y
   name: Light transport
   planet: Tethys
   resource_id: -1
   resource_qtt: 0
+  dammage_taken:
+  - 0
+  - 0
+  - 0
   modules:
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
   - ---
   - ---
   - ---
@@ -483,13 +500,18 @@ ships:
   - ---
   prepared_plans: []
 
-- class_id: shp_light_transport
-  id: 33554434
+- allegiance: 0
+  class_id: shp_light_transport
+  id: 33554433
   is_parked: y
   name: Extractor
   planet: Encelladus
   resource_id: -1
   resource_qtt: 0
+  dammage_taken:
+  - 0
+  - 0
+  - 0
   modules:
   - shpmod_water_extractor
   - shpmod_water_extractor
@@ -497,20 +519,6 @@ ships:
   - ---
   - ---
   - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  prepared_plans: []
-
-- class_id: shp_express
-  id: 33554435
-  is_parked: y
-  name: Express
-  planet: Tethys
-  resource_id: -1
-  resource_qtt: 0
-  modules:
   - ---
   - ---
   - ---
@@ -523,13 +531,18 @@ ships:
   - ---
   prepared_plans: []
 
-- class_id: shp_spacestation
-  id: 33554436
+- allegiance: 0
+  class_id: shp_spacestation
+  id: 33554434
   is_parked: y
   name: Tethys Shipyard
   planet: Tethys
   resource_id: -1
   resource_qtt: 0
+  dammage_taken:
+  - 0
+  - 0
+  - 0
   modules:
   - shpmod_small_yard_1
   - shpmod_small_yard_2
@@ -541,20 +554,37 @@ ships:
   - ---
   - ---
   - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
   prepared_plans: []
 
-- class_id: shp_express
-  id: 33554437
+- allegiance: 0
+  class_id: shp_express
+  id: 33554435
   is_parked: y
-  name: Military ship
+  name: Military ship 1
   planet: Tethys
   resource_id: -1
   resource_qtt: 0
+  dammage_taken:
+  - 0
+  - 0
+  - 0
   modules:
   - shpmod_railgun
   - shpmod_railgun
   - shpmod_armor
   - shpmod_reactor
+  - shpmod_acs
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
   - ---
   - ---
   - ---
@@ -563,16 +593,27 @@ ships:
   - ---
   prepared_plans: []
 
-- class_id: shp_spacestation
-  id: 33554438
+- allegiance: 0
+  class_id: shp_express
+  id: 33554436
   is_parked: y
-  name: BB mining ship
+  name: Military ship 2
   planet: Encelladus
   resource_id: -1
   resource_qtt: 0
+  dammage_taken:
+  - 0
+  - 0
+  - 0
   modules:
-  - shpmod_water_extractor
-  - shpmod_water_extractor
+  - shpmod_railgun
+  - shpmod_railgun
+  - shpmod_armor
+  - shpmod_reactor
+  - shpmod_acs
+  - ---
+  - ---
+  - ---
   - ---
   - ---
   - ---
@@ -582,5 +623,50 @@ ships:
   - ---
   - ---
   prepared_plans: []
+
+- allegiance: 1
+  class_id: shp_express
+  id: 33554437
+  is_parked: y
+  name: The Blind Rat
+  planet: Titan
+  resource_id: -1
+  resource_qtt: 0
+  dammage_taken:
+  - 0
+  - 0
+  - 0
+  modules:
+  - shpmod_light_armor
+  - shpmod_missiles
+  - shpmod_missiles
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  prepared_plans:
+  - arrival_planet: 16777218
+    arrival_time: 360236.193001
+    departure_planet: 16777220
+    departure_time: 23426.898244
+    resource_transfer_id: -1
+    resource_transfer_qtt: 0
+
+  - arrival_planet: 16777220
+    arrival_time: 789508.879041
+    departure_planet: 16777218
+    departure_time: 452699.584284
+    resource_transfer_id: -1
+    resource_transfer_qtt: 0
+
 
 

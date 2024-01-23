@@ -37,6 +37,7 @@ void DatedScreenShot() {
 
 void AppMetaInit() {
     SetConfigFlags(FLAG_MSAA_4X_HINT);
+    SetConfigFlags(FLAG_VSYNC_HINT);
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
     InitAudioDevice();
