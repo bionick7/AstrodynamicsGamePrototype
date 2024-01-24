@@ -123,13 +123,49 @@ Let's start with 3 factions:
 The enclave:
     Iaeptus, Phoebe
     High tech, high discipline
+    Focuses on military (Access to better shipclasses/modules)
+    
+    Ships:
+        2 express
+        2 express (military)
+        shipyard on Iaeptus (+repair)
+    Resources:
+        1 tech on Iaeptus
+        1 metal on Iaeptus
+        4 water on Iaeptus
+
 Monarch:
     Titan, Rhea
     Low tech, high resources richness
+    Focuses on resources
+    
+    Ships:
+        1 big transport
+        2 express (military)
+        4 small transports
+        shipyard on titan
+        shipyard on rhea
+    Resources:
+        2 metal on titan
+        8 water on titan
+        4 metal on rhea
+        5 water on rhea
+    
 TADCON:
     Mimas, Encelladus, Thetys
     Mid tech, high infrastructure
-    Thetys provides
+    Focuses on logistics (what does that mean practically? Low dv transfers)
+    
+    Ships:
+        2 big transports
+        2 small transports
+        1 express
+        2 small transports (military)
+        shipyard + workshop in thetys
+    Resources:
+        1/2 tech on tethys
+        2 metal on encelladus
+        1 metal on mimas
 
 Also, maybe set construction time always to 1 to feel out the game and focus on logistics
 The player should not be bottlenecked by construction time and accumulate resources

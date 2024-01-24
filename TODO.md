@@ -17,6 +17,8 @@
 - Actual quests
 - Build ships in shipyard (Done)
 - Group ships and form fleets (Done)
+- Let player choose faction
+- Fractional production (1 count every 3 days)
 - AI shits :(
 
 ## Known Bugs

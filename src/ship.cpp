@@ -770,10 +770,10 @@ void Ship::Detach() {
 void Ship::_OnDeparture(const TransferPlan* tp) {
     // Make sure this is called first on the leading ship
 
-    if (GetCapableDV() < tp->tot_dv || GetRemainingPayloadCapacity(tp->tot_dv) > tp->resource_transfer.quantity) {
+    if (GetCapableDV() < tp->tot_dv || GetRemainingPayloadCapacity(tp->tot_dv) < tp->resource_transfer.quantity) {
         // Abort last minute
         INFO("DV: %f < %f, or", GetCapableDV(), tp->tot_dv)
-        INFO("payload: %f > %f", GetRemainingPayloadCapacity(tp->tot_dv), tp->resource_transfer.quantity)
+        INFO("payload: %d < %d", GetRemainingPayloadCapacity(tp->tot_dv), tp->resource_transfer.quantity)
         if (IsLeading()) {
             while (prepared_plans_count > 0) {
                 RemoveTransferPlan(0);
