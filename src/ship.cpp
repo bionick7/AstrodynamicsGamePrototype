@@ -87,16 +87,9 @@ void Ship::_OnNewPlanClicked() {
     prepared_plans_count++;
 }
 
-static const char* movement_behaviour_lookup[3] = {
-    "parked",
-    "transfering",
-    "follow_ship",
-};
-
 void Ship::Serialize(DataNode *data) const
 {
     data->Set("name", name);
-    data->Get("movement_behaviour", movement_behaviour_lookup[movement_behaviour]);
     data->SetI("allegiance", allegiance);
     
     data->Set("class_id", GetShipClassByIndex(ship_class)->id);
@@ -124,11 +117,6 @@ void Ship::Serialize(DataNode *data) const
 
 void Ship::Deserialize(const DataNode* data) {
     strcpy(name, data->Get("name", "UNNAMED"));
-    const char* movement_behaviour_str = data->Get("movement_behaviour", movement_behaviour_lookup[0], true);
-    for(int i=0; i < 3; i++) {
-        if (strcmp(movement_behaviour_str, movement_behaviour_lookup[i]) == 0)
-            movement_behaviour = (MovemebntBehaviourEnum) i;
-    }
     allegiance = data->GetI("allegiance", allegiance);
     plan_edit_index = -1;
     ship_class = GlobalGetState()->ships.GetShipClassIndexById(data->Get("class_id"));
@@ -268,23 +256,23 @@ Color Ship::GetColor() const {
 }
 
 bool Ship::IsParked() const {
-    switch (movement_behaviour) {
-    case PARKED: return true;
-    case TRANSFERING: return false;
-    case FOLLOW_SHIP: return GetShip(parent_obj)->IsParked();
+    switch (IdGetType(parent_obj)) {
+    case EntityType::PLANET: return true;
+    case EntityType::INVALID: return false;
+    case EntityType::SHIP: return GetShip(parent_obj)->IsParked();
     default: NOT_REACHABLE
     }
 }
 
 bool Ship::IsLeading() const {
-    return movement_behaviour != FOLLOW_SHIP;
+    return IdGetType(parent_obj) != EntityType::SHIP;
 }
 
 RID Ship::GetParentPlanet() const {
-    switch (movement_behaviour) {
-    case PARKED: return parent_obj;
-    case TRANSFERING: return GetInvalidId();
-    case FOLLOW_SHIP: return GetShip(parent_obj)->GetParentPlanet();
+    switch (IdGetType(parent_obj)) {
+    case EntityType::PLANET: return parent_obj;
+    case EntityType::INVALID: return GetInvalidId();
+    case EntityType::SHIP: return GetShip(parent_obj)->GetParentPlanet();
     default: NOT_REACHABLE
     }
 }
@@ -769,7 +757,6 @@ void Ship::AttachTo(RID parent_ship) {
         return;
     }
     parent_obj = parent_ship;
-    movement_behaviour = Ship::FOLLOW_SHIP;
 }
 
 void Ship::Detach() {
@@ -778,7 +765,6 @@ void Ship::Detach() {
         return;
     }
     parent_obj = GetParentPlanet();
-    movement_behaviour = Ship::PARKED;
 }
 
 void Ship::_OnDeparture(const TransferPlan* tp) {
@@ -793,7 +779,6 @@ void Ship::_OnDeparture(const TransferPlan* tp) {
             }
         } else {
             parent_obj = tp->departure_planet;
-            movement_behaviour = Ship::PARKED;
         }
         return;
     }
@@ -832,7 +817,6 @@ void Ship::_OnDeparture(const TransferPlan* tp) {
 
     if (IsLeading()) {
         parent_obj = GetInvalidId();
-        movement_behaviour = TRANSFERING;
 
         IDList following;
         GlobalGetState()->ships.GetFleet(&following, id);
@@ -891,7 +875,6 @@ void Ship::_OnArrival(const TransferPlan* tp) {
     if (IsLeading()) {
         _OnFleetArrival(this, tp);
         parent_obj = tp->arrival_planet;
-        movement_behaviour = PARKED;
 
         IDList following;
         GlobalGetState()->ships.GetFleet(&following, id);
@@ -959,8 +942,8 @@ RID Ships::AddShip(const DataNode* data) {
     }
     
     ship->Deserialize(data);
-    if (ship->IsParked()) {
-        const char* planet_name = data->Get("planet", "NO NAME SPECIFIED");
+    if (data->Has("planet")) {  // not necaissary strictly, but far more human-readable
+        const char* planet_name = data->Get("planet");
         RID planet_id = GlobalGetState()->planets.GetIndexByName(planet_name);
         if (!IsIdValid(planet_id)) {
             FAIL("Error while initializing ship '%s': no such planet '%s'", ship->name, planet_name)
@@ -1051,7 +1034,7 @@ void Ships::GetOnPlanet(IDList* list, RID planet, uint32_t allegiance_bits) cons
 void Ships::GetFleet(IDList *list, RID leading) const {
     for (auto it = alloc.GetIter(); it; it++) {
         Ship* ship = GetShip(it.GetId());
-        if (ship->movement_behaviour == Ship::FOLLOW_SHIP && ship->parent_obj == leading) {
+        if (ship->parent_obj == leading) {
             list->Append(it.GetId());
         }
     }

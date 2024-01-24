@@ -53,16 +53,10 @@ struct Ship {
     int allegiance;  // currently 0 (player) or 1, can swap with RID
 
     // Current state
-    enum MovemebntBehaviourEnum{
-        PARKED,
-        TRANSFERING,
-        FOLLOW_SHIP,
-    } movement_behaviour;
     RID parent_obj;
 
     bool is_detected;  // by the other faction
     OrbitPos position;
-
 
     int prepared_plans_count;
     TransferPlan prepared_plans[SHIP_MAX_PREPARED_PLANS];
