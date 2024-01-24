@@ -90,7 +90,8 @@ class Raiders is Quest {
     on_ship_death(ship) {
         //if (_available_ships.indexOf(ship) >= 0) {
         if (_available_ships.any {|x| x == ship}) {
-            Game.spawn_quest("raiders_reward", _wave_num)
+            //Game.spawn_quest("raiders_reward", _wave_num)
+            Game.spawn_quest("raiders_reward")
         }
     }
 

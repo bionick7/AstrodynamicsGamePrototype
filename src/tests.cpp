@@ -6,6 +6,7 @@
 #include "id_allocator.hpp"
 #include "string_builder.hpp"
 #include "dialogue.hpp"
+#include "wren_interface.hpp"
 
 void OnTestFail(const char* identifier) {
     // Seperated, so you can put a breakpoint in here
@@ -29,6 +30,7 @@ int UnitTests() {
     RETURN_OR_CONTINUE(IDAllocatorListTests());
     RETURN_OR_CONTINUE(StringBuilderTests());
     RETURN_OR_CONTINUE(DialogueTests());
+    RETURN_OR_CONTINUE(WrenTests());
     INFO("All tests Sucessfull\n");
     return 0;
 }

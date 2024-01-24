@@ -39,6 +39,118 @@ bool _AssertSlot(WrenVM* vm, int slot, WrenType type) {
 	return true;
 }
 
+namespace function_call_globals {
+	int arg_count;
+	WrenType arg_types[16];
+	WrenType ret_type;
+
+	union Argument {
+		double as_num;
+		bool as_bool;
+		const char* as_string;
+
+		operator double() const { return as_num; }
+		operator int() const { return as_num; }
+		operator bool() const { return as_bool; }
+		operator const char*() const { return as_string; }
+	};
+
+	Argument (*func)(Argument a[]);
+}
+
+void _WrenFunctionName(WrenVM* vm) {
+	function_call_globals::Argument args[16];
+	for (int i=0; i < function_call_globals::arg_count; i++) {
+		_AssertSlot(vm, i+1, function_call_globals::arg_types[i]);
+	}
+	for (int i=0; i < function_call_globals::arg_count; i++) {
+		switch(function_call_globals::arg_types[i]) {
+		case WREN_TYPE_NUM: 
+			args[i].as_num = wrenGetSlotDouble(vm, i+1);
+			break;
+		case WREN_TYPE_BOOL: 
+			args[i].as_bool = wrenGetSlotBool(vm, i+1);
+			break;
+		case WREN_TYPE_STRING: 
+			args[i].as_string = wrenGetSlotString(vm, i+1);
+			break;
+		default:
+			NOT_IMPLEMENTED
+		}
+	}
+
+	function_call_globals::Argument res = function_call_globals::func(args);
+	
+	switch(function_call_globals::ret_type) {
+	case WREN_TYPE_NUM: 
+		wrenSetSlotDouble(vm, 0, res.as_bool);
+		break;
+	case WREN_TYPE_BOOL: 
+		wrenSetSlotBool(vm, 0, res.as_bool);
+		break;
+	case WREN_TYPE_STRING: 
+		wrenSetSlotString(vm, 0, res.as_string);
+		break;
+	case WREN_TYPE_NULL:
+		break;
+	default:
+		NOT_IMPLEMENTED
+	}
+}
+
+bool _IsSignature(const char* method_name, int arg_count, const char* test_signature) {
+	ASSERT(strlen(method_name) < 100)
+	ASSERT(arg_count <= 16)
+	ASSERT(arg_count >= 0)
+	char method_signature[134];
+	if (arg_count == 0) {
+		sprintf(method_signature, "%s()", method_name);
+		return strcmp(method_signature, test_signature) == 0 || strcmp(method_name, test_signature) == 0;
+	} else {
+		char comma_array[] = "_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,";
+		comma_array[2*arg_count-1] = '\0';
+		sprintf(method_signature, "%s(%s)", method_name, comma_array);
+	}
+	//INFO("'%s' =? '%s' : %s", method_signature, test_signature, match ? "y": "n")
+	return strcmp(method_signature, test_signature) == 0;
+}
+
+#define BIND(class_name, method_name, operation, T_ret, ...) {\
+	int arg_count = sizeof((WrenType[]) {WREN_TYPE_NULL, __VA_ARGS__}) / sizeof(WrenType) - 1; \
+	if (strcmp(className, #class_name) == 0 && _IsSignature(#method_name, arg_count, signature)) { \
+		return &function_call_globals::_wren_outer_##class_name##method_name;\
+	} \
+}
+
+#define _DEF_FUNC_INTERNAL(class_name, method_name, operation) \
+	Argument _wren_internal_##class_name##method_name(Argument args[]) { \
+		Argument res; \
+		operation \
+		return res; \
+	} \
+
+#define DEF_FUNC(class_name, method_name, operation, T_ret, ...) \
+	_DEF_FUNC_INTERNAL(class_name, method_name, operation) \
+	void _wren_outer_##class_name##method_name(WrenVM* vm) { \
+		const static WrenType temp_arg_types[] = {WREN_TYPE_NULL, __VA_ARGS__}; \
+		arg_count = sizeof(temp_arg_types) / sizeof(WrenType) - 1;\
+		for(int i=0; i < arg_count; i++) { arg_types[i] = temp_arg_types[i+1]; }\
+		ret_type = T_ret;\
+		func = &_wren_internal_##class_name##method_name; \
+		_WrenFunctionName(vm); \
+	} \
+
+#define X_WREN_FUNCTION_BINDS \
+	X(Game, now, { res.as_num = GlobalGetNow().Seconds(); }, WREN_TYPE_NUM) \
+	X(Game, spawn_quest, { GetWrenInterface()->PushQuest(args[0].as_string); }, WREN_TYPE_NULL, WREN_TYPE_STRING) \
+
+
+namespace function_call_globals {
+	#define X(...) DEF_FUNC(__VA_ARGS__)
+	X_WREN_FUNCTION_BINDS
+	#undef X
+}
+
 void _AllocateShip(WrenVM* vm) {
 	if(!_AssertSlot(vm, 0, WREN_TYPE_NUM)) return;
 	int rid = wrenGetSlotDouble(vm, 0);
@@ -51,13 +163,6 @@ void _AllocateShip(WrenVM* vm) {
 	wrenEnsureSlots(vm, 2);
 	wrenGetVariable(vm, "foreign/ship", "Ship", 1);
 	Ship* ship = GetShip(RID(rid));
-	/*if (ship->wren_handle == NULL) {
-		void* ptr = wrenSetSlotNewForeign(vm, 0, 1, sizeof(RID));
-		*((RID*)ptr) = RID(rid);
-		ship->wren_handle = wrenGetSlotHandle(vm, 0);
-	} else {
-		wrenSetSlotHandle(vm, 0, ship->wren_handle);
-	}*/
 	void* ptr = wrenSetSlotNewForeign(vm, 0, 1, sizeof(RID));
 	*((RID*)ptr) = RID(rid);
 }
@@ -105,12 +210,6 @@ void GameHohmannTF(WrenVM* vm) {
 	wrenSetSlotString(vm, 1, "dv2");
 	wrenSetSlotDouble(vm, 2, dv2);
 	wrenSetMapValue(vm, 0, 1, 2);
-}
-
-void SpawnQuest(WrenVM* vm) {
-	if(!_AssertSlot(vm, 1, WREN_TYPE_STRING)) return;
-	const char* quest_name = wrenGetSlotString(vm, 1);
-	GetWrenInterface()->PushQuest(quest_name);
 }
 
 void ShipSpawn(WrenVM* vm) {
@@ -339,11 +438,9 @@ WrenForeignMethodFn BindForeignMethod(
 				return &GameNow;
 			} else if (strcmp(signature, "hohmann_tf(_,_,_)") == 0) {
 				return &GameHohmannTF;
-			} else if (strcmp(signature, "spawn_quest(_,_)") == 0) {
-				return &SpawnQuest;
 			}
 		}
-		ERROR("Unsupported foreign method '%s.%s'", className, signature)
+		//ERROR("Unsupported foreign method '%s.%s'", className, signature)
 	}
 	
 	if (strcmp(className, "Ship") == 0) {
@@ -368,9 +465,14 @@ WrenForeignMethodFn BindForeignMethod(
 				return &ShipExists;
 			}
 		}
-		ERROR("Unsupported foreign method '%s.%s'", className, signature)
+		//ERROR("Unsupported foreign method '%s.%s'", className, signature)
 	}
-	ERROR("Unsupported foreign method class '%s'", className)
+	
+	#define X(...) BIND(__VA_ARGS__)
+	X_WREN_FUNCTION_BINDS
+	#undef X
+
+	ERROR("Unsupported foreign method '%s' in class '%s'", signature, className)
 	return &DefaultMethod;
 }
 
@@ -472,6 +574,7 @@ int WrenInterface::LoadWrenQuests() {
 		INFO("Loading %s", module_name);
 		WrenInterpretResult res = wrenInterpret(vm, module_name, LoadFileText(fps.paths[i]));
 		if (res != WREN_RESULT_SUCCESS) {
+			ERROR("Could not load module '%s'", module_name)
 			continue;
 		}
 
@@ -495,8 +598,30 @@ int WrenInterface::LoadWrenQuests() {
 		}
 		WrenHandle* class_handle = wrenGetSlotHandle(vm, 0);
 		quests[valid_quest_count++].Attach(class_handle);
+
 	}
 	UnloadDirectoryFiles(fps);
+
+	wrenGetVariable(vm, "_internals", "Internals", 0);
+	// todo
+
+	// Testing
+	const char* tests_path = "resources/wren/testing.wren";
+	if (FileExists(tests_path)) {
+		WrenInterpretResult res = wrenInterpret(vm, "testing", LoadFileText(tests_path));
+		if (wrenHasModule(vm, "testing") && wrenHasVariable(vm, "testing", "Tests")) {
+			wrenEnsureSlots(vm, 1);
+			wrenGetVariable(vm, "testing", "Tests", 0);
+			common_handles.test_class = wrenGetSlotHandle(vm, 0);
+		} else {
+			common_handles.test_class = NULL;
+		}
+		common_handles.test_call_handle = wrenMakeCallHandle(vm, "tests()");
+	} else {
+		INFO("No file found at '%s'. Skipping testing", tests_path)
+		common_handles.test_class = NULL;
+	}
+
 	return valid_quest_count;
 
 	//INFO("start")
@@ -823,4 +948,17 @@ bool WrenInterface::DataNodeToMap(const DataNode* dn) const {
 
 WrenVM* GetWrenVM() {
     return GetWrenInterface()->vm;
+}
+
+int WrenTests() {
+	WrenInterface* interface = GetWrenInterface();
+	interface->MakeVM();
+	interface->LoadWrenQuests();
+	if (interface->common_handles.test_class == NULL) {
+		ERROR("No 'Tests' class found in 'testing.wren'")
+		return 2;
+	}
+	wrenSetSlotHandle(interface->vm, 0, interface->common_handles.test_class);
+	bool success = interface->CallFunc(interface->common_handles.test_call_handle);
+	return success ? 0 : 1;
 }

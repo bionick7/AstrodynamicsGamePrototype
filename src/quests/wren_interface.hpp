@@ -28,6 +28,8 @@ struct WrenInterface {
     WrenHandle* internals_class_handle = NULL;
     struct {
         // More handles here
+        WrenHandle* test_call_handle;
+        WrenHandle* test_class;
         WrenHandle* quest_notify;
 
         WrenHandle* END_HANDLE = NULL;  // to access raw pointer
@@ -60,5 +62,7 @@ struct WrenInterface {
 };
 
 WrenVM* GetWrenVM();
+
+int WrenTests();
 
 #endif  // WREN_INTERFACE_H

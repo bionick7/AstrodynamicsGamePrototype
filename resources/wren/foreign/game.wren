@@ -26,7 +26,7 @@ class Game {
 
     foreign static now
     foreign static hohmann_tf(from, to, t0)
-    foreign static spawn_quest(name, add_data)
+    foreign static spawn_quest(name)
     
     static as_rid(index, type) {
         return index | (type << 24)
