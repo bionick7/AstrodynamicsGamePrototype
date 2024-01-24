@@ -397,10 +397,10 @@ const char* DataNode::Get(const char* key, const char* def, bool quiet) const {
     return def;
 }
 
-int DataNode::GetI(const char* key, int def, bool quiet) const {
+long DataNode::GetI(const char* key, long def, bool quiet) const {
     const char* str = Get(key, "needs non-empty string", quiet);
     char *p; 
-    int res = (int) strtol(str, &p, 10);
+    long res = strtol(str, &p, 10);
     if (p == str) {  // intentionally comparing pointers because of how strtoX works
         if (!quiet) WARNING("Could not convert '%s' to int", str)
         return def;
@@ -448,10 +448,10 @@ const char* DataNode::GetArray(const char* key, int index, const char* def, bool
     return def;
 }
 
-int DataNode::GetArrayI(const char* key, int index, int def, bool quiet) const {
+long DataNode::GetArrayI(const char* key, int index, long def, bool quiet) const {
     const char *str = GetArray(key, index, "needs non-empty string", quiet); 
     char *p; 
-    int res = (int) strtol(str, &p, 10);
+    long res = strtol(str, &p, 10);
     return p == str ? def : res;
 }
 

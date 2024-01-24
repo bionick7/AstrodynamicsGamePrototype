@@ -329,7 +329,7 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
             continue;
         }
         sb.Clear();
-        sb.AddFormat("%s: %d\n", resource_names[i], construction_resources[i]);
+        sb.AddFormat("%s: %d", resource_names[i], construction_resources[i]);
         if (construction_resources[i] <= planet_resource_array[i]) {
             UIContextWrite(sb.c_str);
         } else {
@@ -347,7 +347,7 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
 }
 
 void _UIDrawProduction(int option_size, IDList* queue, resource_count_t resources[], double progress,
-    RID id_getter(int), const char* name_getter(RID)
+    RID id_getter(int), const char* name_getter(RID), bool include_getter(RID)
 ) {
     // Draw options
     const int COLUMNS = 4;
@@ -358,6 +358,9 @@ void _UIDrawProduction(int option_size, IDList* queue, resource_count_t resource
     RID hovered_id = GetInvalidId();
     for(int i=0; i < option_size; i++) {
         RID id = id_getter(i);
+        if (!include_getter(id)) {
+            continue;
+        }
         UIContextPushGridCell(COLUMNS, rows, i % COLUMNS, i / COLUMNS);
         UIContextShrink(3, 3);
         
@@ -430,7 +433,8 @@ void Planet::_UIDrawModuleProduction() {
         economy.resource_stock,
         progress,
         [](int i) { return RID(i, EntityType::MODULE_CLASS); },
-        [](RID id) { return GetModule(id)->name; }
+        [](RID id) { return GetModule(id)->name; },
+        [](RID id) { return !GetModule(id)->is_hidden; }
     );
 }
 
@@ -446,7 +450,8 @@ void Planet::_UIDrawShipProduction() {
         economy.resource_stock,
         progress,
         [](int i) { return RID(i, EntityType::SHIP_CLASS); },
-        [](RID id) { return GetShipClassByIndex(id)->name; }
+        [](RID id) { return GetShipClassByIndex(id)->name; },
+        [](RID id) { return !GetShipClassByIndex(id)->is_hidden; }
     );
 }
 

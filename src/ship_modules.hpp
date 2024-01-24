@@ -71,6 +71,7 @@ struct ShipModuleClass {
     char description[512];
     bool has_activation_requirements;
     int construction_time;
+    bool is_hidden;
 
     ShipModuleClass();
     void UpdateStats(Ship* ship) const;

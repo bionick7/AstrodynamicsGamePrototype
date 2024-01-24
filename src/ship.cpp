@@ -770,9 +770,10 @@ void Ship::Detach() {
 void Ship::_OnDeparture(const TransferPlan* tp) {
     // Make sure this is called first on the leading ship
 
-    if (GetCapableDV() <= tp->tot_dv || GetRemainingPayloadCapacity(tp->tot_dv) && tp->resource_transfer.quantity) {
+    if (GetCapableDV() < tp->tot_dv || GetRemainingPayloadCapacity(tp->tot_dv) > tp->resource_transfer.quantity) {
         // Abort last minute
-        // Untested!
+        INFO("DV: %f < %f, or", GetCapableDV(), tp->tot_dv)
+        INFO("payload: %f > %f", GetRemainingPayloadCapacity(tp->tot_dv), tp->resource_transfer.quantity)
         if (IsLeading()) {
             while (prepared_plans_count > 0) {
                 RemoveTransferPlan(0);
@@ -932,8 +933,8 @@ RID Ships::AddShip(const DataNode* data) {
     Ship *ship;
     RID ship_entity;
     if (data->Has("id")) {
-        RID rid = RID(data->GetI("id"));
-        if(!alloc.AllocateAtID(rid, &ship)) {
+        ship_entity = RID(data->GetI("id"));
+        if(!alloc.AllocateAtID(ship_entity, &ship)) {
             ERROR("INVALID while loading ship RID")
             return GetInvalidId();
         } 
@@ -983,7 +984,10 @@ int Ships::LoadShipClasses(const DataNode* data) {
         sc.v_e = ship_data->GetF("Isp", 0) * 1000;    // km/s -> m/s
         sc.construction_time = ship_data->GetI("construction_time", 20);
         sc.oem = ResourceCountsToKG(sc.max_capacity) / (exp(sc.max_dv/sc.v_e) - 1);
-        sc.construction_batch_size = data->GetI("batch_size", 1, true);
+        sc.construction_batch_size = ship_data->GetI("batch_size", 1, true);
+        sc.is_hidden = strcmp(ship_data->Get("hidden", "n", true), "y") == 0;
+
+        sc.construction_time = 1;
 
         ship_data->FillBufferWithChild("construction_resources", sc.construction_resources, RESOURCE_MAX, resource_names);
         ship_data->FillBufferWithChild("stats", sc.stats, ShipStats::MAX, ship_stat_names);

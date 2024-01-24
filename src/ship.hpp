@@ -37,6 +37,7 @@ struct ShipClass {
     int construction_time;
     resource_count_t construction_resources[RESOURCE_MAX] = {0};
     int construction_batch_size;
+    bool is_hidden;
 
     // Ease-of-use variables
     double oem;  // kg

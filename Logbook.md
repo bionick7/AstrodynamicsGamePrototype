@@ -117,3 +117,19 @@ Each starting on one planet. Different planets can have different boni. + Differ
 - Titan: Monarch larper
 - Iaeptus: The Enclave
 - Phoebe: ???
+
+## Status 24 Jan 24
+Let's start with 3 factions:
+The enclave:
+    Iaeptus, Phoebe
+    High tech, high discipline
+Monarch:
+    Titan, Rhea
+    Low tech, high resources richness
+TADCON:
+    Mimas, Encelladus, Thetys
+    Mid tech, high infrastructure
+    Thetys provides
+
+Also, maybe set construction time always to 1 to feel out the game and focus on logistics
+The player should not be bottlenecked by construction time and accumulate resources

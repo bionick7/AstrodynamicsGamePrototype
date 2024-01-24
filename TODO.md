@@ -26,6 +26,8 @@
 - DATANODE: Can't distinguish between empty child array and empty string array
 - ASTRO: departure time optimization is reliable, but not accurate (found A solution)
 - QUESTS: First planning a maneuver, then picking up the quest will bypass payload check (Done)
+- SAVING: Ships don't reload correctly (Done)
+- ASTRO: Transfer plan cancels wen it shouldn't (Done)
 - QUESTS: Accepting more than one quest fucks up the order
 
 ## Necessary Incomplete features

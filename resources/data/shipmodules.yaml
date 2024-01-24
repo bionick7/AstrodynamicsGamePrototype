@@ -88,12 +88,21 @@ shipmodules:
   require:
     power: 2
   mass: 1
+  construction_time: 10
+  construction_resources:
+    metal: 2
+
   
 - id: shpmod_missiles
   name: Missiles
   description: Ordonance Attk. +1
   add: { ordnance_offense: 2 }
   mass: 1
+  construction_time: 10
+  construction_resources:
+    metal: 1
+    electronics: 1
+    water: 1
 
 - id: shpmod_light_armor
   name: Light armor
@@ -102,6 +111,7 @@ shipmodules:
     kinetic_hp: 10
     energy_hp: 5
   mass: 1
+  construction_time: 5
   construction_resources:
     metal: 1
 
@@ -113,6 +123,7 @@ shipmodules:
     energy_hp: 10
     kinetic_defense: 1
   mass: 2
+  construction_time: 10
   construction_resources:
     metal: 2
   
@@ -123,6 +134,7 @@ shipmodules:
     ordnance_defense: 1
   mass: 0.5
   batch_size: 2
+  construction_time: 10
   construction_resources:
     metal: 1
     electronics: 1
@@ -133,6 +145,9 @@ shipmodules:
   add: 
     initiative: 1
   mass: 1
+  construction_time: 10
+  construction_resources:
+    electronics: 2
 
 # Support
 - id: shpmod_reactor
@@ -144,6 +159,11 @@ shipmodules:
   add:
     power: 4
   mass: 2
+  construction_time: 40
+  construction_resources:
+    electronics: 5
+    metal: 3
+    water: 1
 
 # Boarding
 - id: shpmod_exp_brigade
@@ -155,6 +175,7 @@ shipmodules:
     boarding_defense: 2
     crew: 16
   mass: 1
+  hidden: y
   
 - id: shpmod_armory
   name: Armory
@@ -163,6 +184,7 @@ shipmodules:
   add:
     boarding_defense: 1
   mass: 0
+  hidden: y
 
 # Developer
 - id: shpmod_boost_init
@@ -171,6 +193,7 @@ shipmodules:
   add: 
     initiative: 1
   mass: 0
+  hidden: y
 
 # ... Weapons, time extenders
 # e.g. loadout for gunship:
