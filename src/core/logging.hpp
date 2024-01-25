@@ -35,9 +35,11 @@
 #define SHOW_I(var) LogImpl(__FILE__, __LINE__, LOGTYPE_INFO, "%s = %d", #var, var);
 #define SHOW_V2(var) LogImpl(__FILE__, __LINE__, LOGTYPE_INFO, "%s = (%f, %f)", #var, (var).x, (var).y);
 
-#define NOT_IMPLEMENTED {ERROR("Not Implemented") exit(1);}
-#define NOT_REACHABLE {ERROR("Should not be reachable") exit(1);}
-#define FAIL(...) {ERROR(__VA_ARGS__) exit(1);}
+//#define CRASH exit(1);
+#define CRASH *((int*)(0)) += 1;
+#define NOT_IMPLEMENTED {ERROR("Not Implemented") CRASH }
+#define NOT_REACHABLE {ERROR("Should not be reachable") CRASH }
+#define FAIL(...) {ERROR(__VA_ARGS__) CRASH }
 
 #define ASSERT(condition) if (!(condition)) { ERROR("Assertion failed: (%s)", #condition); }
 #define ASSERT_EQUAL_INT(v1, v2) if (v1 != v2) { ERROR("Assertion failed: %s (%d)  != %s (%d)", #v1, v1, #v2, v2); }

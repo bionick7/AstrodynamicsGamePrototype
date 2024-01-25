@@ -67,6 +67,7 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
     const PlanetNature* nature = planets->GetPlanetNature(index);
     mu = nature->mu;
     radius = nature->radius;
+    has_atmosphere = nature->has_atmosphere;
     orbit = nature->orbit;
     economy.trading_accessible = strcmp(data->Get("trading_accessible", economy.trading_accessible ? "y" : "n", true), "y") == 0;
 
@@ -319,8 +320,8 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
     if (construction_resources == NULL) return;
 
     sb.AutoBreak(UIContextCurrent().width / char_width);
+    UIContextWrite(sb.c_str);
     if (planet_resource_array == NULL) {
-        UIContextWrite(sb.c_str);
         return;
     }
     UIContextWrite("++++++++");
@@ -635,6 +636,7 @@ int Planets::LoadEphemerides(const DataNode* data) {
             epoch, 
             strcmp(planet_data->Get("retrograde", "y", true), "y") != 0
         );
+        nature->has_atmosphere = strcmp(planet_data->Get("has_atmosphere", "n", true), "y") == 0;
     }
     return planet_count;
 }

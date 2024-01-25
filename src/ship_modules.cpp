@@ -134,6 +134,8 @@ int ShipModules::Load(const DataNode* data) {
         CHECK_FOR_ID(small_yard_2)
         CHECK_FOR_ID(small_yard_3)
         CHECK_FOR_ID(small_yard_4)
+        CHECK_FOR_ID(heatshield)
+        CHECK_FOR_ID(droptank)
         #undef CHECK_FOR_ID
     }
     return shipmodule_count;

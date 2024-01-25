@@ -23,7 +23,7 @@ PlanetaryEconomy::PlanetaryEconomy(){
     for (int i=0; i < RESOURCE_MAX; i++) {
         resource_stock[i] = 0;
         resource_delta[i] = 0;
-        resource_capacity[i] = 100;
+        resource_capacity[i] = 1000;
         resource_price[i] = GetResourceData(i)->default_cost;
     }
     for (int i=0; i < RESOURCE_MAX*PRICE_TREND_SIZE; i++) {

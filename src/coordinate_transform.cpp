@@ -6,7 +6,7 @@
 
 
 void Calendar::Make(timemath::Time t0) {
-    time_scale = 2048;
+    time_scale = 2048*8;
     paused = true;
     time = t0;
     prev_time = t0;

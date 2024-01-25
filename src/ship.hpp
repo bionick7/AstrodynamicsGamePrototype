@@ -18,11 +18,11 @@
 struct WrenHandle;
 
 // Pseudo enum to use flags
-struct IntelLevel {
-    typedef uint32_t Type;
-    static const Type TRAJECTORY = 1;
-    static const Type STATS = 2;
-    static const Type FULL = UINT32_MAX;
+namespace IntelLevel {
+    typedef uint32_t T;
+    static const T TRAJECTORY = 1;
+    static const T STATS = 2;
+    static const T FULL = UINT32_MAX;
 };
 
 struct ShipClass {
@@ -42,9 +42,9 @@ struct ShipClass {
     // Ease-of-use variables
     double oem;  // kg
 
-    double GetPayloadCapacityMass(double dv) const;
+    double GetPayloadCapacityMass(double dv, int drop_tanks) const;
+    resource_count_t GetFuelRequiredFull(double dv, int drop_tanks) const;
     resource_count_t GetFuelRequiredEmpty(double dv) const;
-    resource_count_t GetFuelRequiredFull(double dv) const;
 };
 
 struct Ship {
@@ -116,7 +116,7 @@ struct Ship {
     resource_count_t GetFuelRequiredEmpty(double dv) const;
     double GetCapableDV() const;
     bool IsPlayerControlled() const;
-    IntelLevel::Type GetIntelLevel() const;
+    IntelLevel::T GetIntelLevel() const;
     bool IsTrajectoryKnown(int index) const;
     int GetCombatStrength() const;
     int GetMissingHealth() const;
@@ -124,6 +124,7 @@ struct Ship {
     bool IsParked() const;
     bool IsLeading() const;
     RID GetParentPlanet() const;
+    int CountModulesOfClass(RID module_class) const;
 
     Color GetColor() const;
 

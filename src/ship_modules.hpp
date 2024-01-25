@@ -119,6 +119,8 @@ struct ShipModules {
         RID small_yard_2;
         RID small_yard_3;
         RID small_yard_4;
+        RID heatshield;
+        RID droptank;
     } expected_modules;
 };
 

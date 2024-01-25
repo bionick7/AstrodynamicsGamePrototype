@@ -13,9 +13,9 @@ shipmodules:
   description: The ship can hold 10 extra count of fuel. Lost after use
   mass: 12
   construction_resources:
-    metal: 1
+    metal: 3
     water: 10
-  construction_time: 10
+  construction_time: 2
   construction_batch_size: 1
 
 # Production

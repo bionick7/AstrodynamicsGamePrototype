@@ -16,6 +16,7 @@ struct PlanetNature {
     char name[100];
     double mu;
     double radius;
+    bool has_atmosphere;
     Orbit orbit;
 };
 
@@ -23,9 +24,10 @@ struct Planet {
     char name[100];
     double mu;
     double radius;
+    bool has_atmosphere;
     Orbit orbit;
-    OrbitPos position;
 
+    OrbitPos position;
     PlanetaryEconomy economy;
 
     RID ship_module_inventory[MAX_PLANET_INVENTORY];

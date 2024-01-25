@@ -10,13 +10,13 @@ planets:
     resource_stock:
       water: 1000
     resource_delta:
-      water: 10
-      metal: 10
+      water: 5
+      metal: 1
   - name: Encelladus
     trading_accessible: n
     resource_stock: {}
     resource_delta:
-      metal: 20
+      metal: 2
   - name: Tethys
     trading_accessible: y
     resource_stock:
@@ -27,19 +27,27 @@ planets:
   - name: Rhea
     trading_accessible: n
     resource_delta:
-      metal: 40
-      water: 50
+      metal: 4
+      water: 5
+    inventory:
+    - shpmod_heatshield
   - name: Titan
     trading_accessible: y
+    resource_stock:
+      water: 100
+      metal: 100
     resource_delta:
-      metal: 20
-      water: 80
+      metal: 2
+      water: 8
+    inventory:
+    - shpmod_droptank
+    - shpmod_droptank
   - name: Iaeptus
     trading_accessible: n
     resource_delta: 
       electronics: 1
-      metal: 10
-      water: 40
+      metal: 1
+      water: 4
   - name: Phoebe
     trading_accessible: n
     resource_stock: {}

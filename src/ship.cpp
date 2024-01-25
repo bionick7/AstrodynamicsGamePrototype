@@ -8,16 +8,21 @@
 #include "debug_drawing.hpp"
 #include "combat.hpp"
 
-double ShipClass::GetPayloadCapacityMass(double dv) const {
-    //          dv = v_e * ln((max_cap + eom) / (x + eom))
-    // <=> x + eom = (max_cap + eom) / exp(dv/v_e)
+double ShipClass::GetPayloadCapacityMass(double dv, int drop_tanks) const {
+    //          dv_n = v_e * ln((max_cap + oem + extra_fuel * n) / (max_cap + oem + extra_fuel * (n - 1)))
+    //          dv_0 = v_e * ln((max_cap + oem) / (x + eom))
+    // <=> x + eom = (max_cap + oem + extra) / exp((dv - dv_extra)/v_e)
 
-    return (ResourceCountsToKG(max_capacity) + oem) / exp(dv/v_e) - oem;
+    const resource_count_t fuel_per_droptank = 10;
+    
+    return (ResourceCountsToKG(max_capacity + fuel_per_droptank * drop_tanks) + oem) / exp(dv/v_e) - oem;
 }
 
-resource_count_t ShipClass::GetFuelRequiredFull(double dv) const {
+resource_count_t ShipClass::GetFuelRequiredFull(double dv, int drop_tanks) const {
     // assuming max payload
-    return max_capacity - KGToResourceCounts(GetPayloadCapacityMass(dv));
+    const resource_count_t fuel_per_droptank = 10;
+    double extra_fuel = fuel_per_droptank * drop_tanks;
+    return max_capacity + extra_fuel - KGToResourceCounts(GetPayloadCapacityMass(dv, extra_fuel));
 }
 
 resource_count_t ShipClass::GetFuelRequiredEmpty(double dv) const {
@@ -159,8 +164,9 @@ double Ship::GetPayloadMass() const{
     }
 
     for(int i=0; i < SHIP_MAX_MODULES; i++) {
-        if (IsIdValid(modules[i])) 
+        if (IsIdValid(modules[i]) && modules[i] != GlobalGetState()->ship_modules.expected_modules.droptank) {
             res += GetModule(modules[i])->mass;
+        }
     }
 
     return res - 0;
@@ -172,7 +178,8 @@ resource_count_t Ship::GetMaxCapacity() const {
 
 resource_count_t Ship::GetRemainingPayloadCapacity(double dv) const {
     const ShipClass* sc = GetShipClassByIndex(ship_class);
-    double capacity = sc->GetPayloadCapacityMass(dv);
+    int drop_tanks = CountModulesOfClass(GlobalGetState()->ship_modules.expected_modules.droptank);
+    double capacity = sc->GetPayloadCapacityMass(dv, drop_tanks);
     return KGToResourceCounts(capacity - GetPayloadMass());
 }
 
@@ -183,7 +190,11 @@ resource_count_t Ship::GetFuelRequiredEmpty(double dv) const {
 
 double Ship::GetCapableDV() const {
     const ShipClass* sc = GetShipClassByIndex(ship_class);
-    return sc->v_e * log((ResourceCountsToKG(sc->max_capacity) + sc->oem) / (GetPayloadMass() + sc->oem));
+    int drop_tanks = CountModulesOfClass(GlobalGetState()->ship_modules.expected_modules.droptank);
+
+    const resource_count_t fuel_per_droptank = 10;
+    
+    return sc->v_e * log((ResourceCountsToKG(sc->max_capacity + fuel_per_droptank * drop_tanks) + sc->oem) / (GetPayloadMass() + sc->oem));
 
     // max_dv = v_e * log(max_capacity / oem + 1)
     // exp(max_dv / v_e) - 1
@@ -196,7 +207,7 @@ bool Ship::IsPlayerControlled() const {
     return allegiance == GlobalGetState()->player_faction;
 }
 
-IntelLevel::Type Ship::GetIntelLevel() const {
+IntelLevel::T Ship::GetIntelLevel() const {
     return IntelLevel::FULL;
 
     if (IsPlayerControlled()) {
@@ -277,6 +288,14 @@ RID Ship::GetParentPlanet() const {
     }
 }
 
+int Ship::CountModulesOfClass(RID module_class) const {
+    int res = 0;
+    for(int i=0; i < SHIP_MAX_MODULES; i++) {
+        if (modules[i] == module_class) res++;
+    }
+    return res;
+}
+
 TransferPlan* Ship::GetEditedTransferPlan() {
     if (plan_edit_index < 0) return NULL;
     return &prepared_plans[plan_edit_index];
@@ -294,9 +313,9 @@ void Ship::ConfirmEditedTransferPlan() {
         ERROR("Inconsistent transfer plan pushed for ship %s (does not start at planet last visited)", name);
         return;
     }
-    double dv_tot = tp->dv1[tp->primary_solution] + tp->dv2[tp->primary_solution];
-    if (dv_tot > GetShipClassByIndex(ship_class)->max_dv) {
-        ERROR("Not enough DV %f > %f", dv_tot, GetShipClassByIndex(ship_class));
+    double available_dv = GetCapableDV();
+    if (tp->tot_dv > GetCapableDV()) {
+        ERROR("Not enough DV %f > %f", tp->tot_dv, GetCapableDV());
         return;
     }
     //payload.push_back(TransportContainer(tp.resource_transfer));
@@ -363,14 +382,14 @@ void Ship::Update() {
         }
     } else if (prepared_plans_count == 0 || (plan_edit_index == 0 && prepared_plans_count == 1)) {
         // No departure plans to draw from
-        position = GetPlanet(parent_obj)->position;
+        position = GetPlanet(GetParentPlanet())->position;
     } else {
         const TransferPlan* tp = &prepared_plans[0];
         if (IsParked()) {
             if (tp->departure_time < now) {
                 _OnDeparture(tp);
             } else {
-                position = GetPlanet(parent_obj)->position;
+                position = GetPlanet(GetParentPlanet())->position;
             }
         } else {
             if (tp->arrival_time < now) {
@@ -384,7 +403,7 @@ void Ship::Update() {
     // Draw
     draw_pos = GetScreenTransform()->TransformV(position.cartesian);
     if (IsParked()) {
-        double rad = fmax(GetScreenTransform()->TransformS(GetPlanet(parent_obj)->radius), 4) + 8.0;
+        double rad = fmax(GetScreenTransform()->TransformS(GetPlanet(GetParentPlanet())->radius), 4) + 8.0;
         double phase = fmin(20.0 / rad * index_on_planet, index_on_planet / (double)total_on_planet * 2 * PI);
         draw_pos = Vector2Add(FromPolar(rad, phase), draw_pos);
     }
@@ -426,10 +445,10 @@ void Ship::_UpdateShipyard() {
             }
         }
         for(int i=0; i < module_factories; i++) {
-            GetPlanet(parent_obj)->AdvanceModuleProductionQueue();
+            GetPlanet(GetParentPlanet())->AdvanceModuleProductionQueue();
         }
         for(int i=0; i < ship_yards; i++) {
-            GetPlanet(parent_obj)->AdvanceShipProductionQueue();
+            GetPlanet(GetParentPlanet())->AdvanceShipProductionQueue();
         }
     }
 }
@@ -793,7 +812,7 @@ void Ship::_OnDeparture(const TransferPlan* tp) {
             local_economy->trading_accessible && 
             local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) < GlobalGetState()->GetMoney(allegiance)
         ) {
-            USER_INFO("Automatically purchased %d of water for M§M %ld K", remaining_fuel, local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) / 1e3)
+            USER_INFO("Automatically purchased %d of water for M§M %d K", remaining_fuel, local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) / 1e3)
             local_economy->TryPlayerTransaction(ResourceTransfer(RESOURCE_WATER, remaining_fuel));
             local_economy->DrawResource(ResourceTransfer(RESOURCE_WATER, remaining_fuel));
         } else {
@@ -892,6 +911,12 @@ void Ship::_OnArrival(const TransferPlan* tp) {
         const Task* quest = GlobalGetState()->quest_manager.active_tasks[it];
         if (quest->ship == id && quest->arrival_planet == tp->arrival_planet) {
             GlobalGetState()->quest_manager.TaskArrivedAt(it.GetId(), tp->arrival_planet);
+        }
+    }
+
+    for(int i=0; i < SHIP_MAX_MODULES; i++) {
+        if (modules[i] == GlobalGetState()->ship_modules.expected_modules.droptank) {
+            RemoveShipModuleAt(i);
         }
     }
 

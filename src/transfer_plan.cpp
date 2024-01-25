@@ -439,6 +439,12 @@ void TransferPlanUI::Update() {
             TransferPlanSetBestDeparture(plan, time_bounds[0], plan->arrival_time - timemath::Time(60));
         }
         TransferPlanSolve(plan);
+        double required_dv = plan->tot_dv;
+        bool ship_can_aerobrake = ship_instance->CountModulesOfClass(GlobalGetState()->ship_modules.expected_modules.heatshield) > 0;
+        if (GetPlanet(plan->arrival_planet)->has_atmosphere && ship_can_aerobrake) {
+            // Is overriding tot_dv a good idea?
+            plan->tot_dv = plan->dv1[plan->primary_solution];
+        }
         is_valid = plan->num_solutions > 0 && plan->tot_dv <= ship_instance->GetCapableDV();
         is_valid = is_valid && GlobalGetNow() < plan->departure_time;
 
@@ -632,8 +638,12 @@ void TransferPlanUI::DrawUI() {
     UIContextPop();  // Inset
     sb.Clear();
 
-    double total_dv = plan->dv1[plan->primary_solution] + plan->dv2[plan->primary_solution];
+    double total_dv = plan->tot_dv;
     sb.AddFormat("DV Tot    %5.3f km/s\n", total_dv/1000.0);
+    double savings = plan->dv1[plan->primary_solution] + plan->dv2[plan->primary_solution] - total_dv;
+    if (savings != 0) {
+        sb.AddFormat("  Saved   %5.3f km/s\n", savings/1000.0);
+    }
     resource_count_t capacity = ship_instance->GetRemainingPayloadCapacity(total_dv);
     resource_count_t max_capacity = ship_instance->GetRemainingPayloadCapacity(0);
     double capacity_ratio = (float)capacity / (float)max_capacity;
