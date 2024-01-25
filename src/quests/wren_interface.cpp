@@ -751,17 +751,17 @@ void WrenInterface::_MapAsDataNodePopulateList(DataNode *dn, const char* key) co
 
 	int list_count = wrenGetListCount(vm, VALUE_SLOT);
 	if (list_count == 0) {
-		dn->SetArray(key, list_count);
+		dn->CreateArray(key, list_count);
 		return;
 	}
 	wrenGetListElement(vm, VALUE_SLOT, 0, ELEM_SLOT);
 	if (wrenGetSlotType(vm, ELEM_SLOT) == WREN_TYPE_MAP) {  // Will not support mixed arrays
-		dn->SetArrayChild(key, list_count);
+		dn->CreatChildArray(key, list_count);
 		WrenHandle* list_handle = wrenGetSlotHandle(vm, VALUE_SLOT);
 		for (int i=0; i < list_count; i++) {
 			wrenGetListElement(vm, VALUE_SLOT, i, ELEM_SLOT);
 			MoveSlot(ELEM_SLOT, 0);
-			DataNode* child = dn->SetArrayElemChild(key, i, DataNode());
+			DataNode* child = dn->InsertIntoChildArray(key, i);
 			MapAsDataNode(child);
 
 			// Restore state
@@ -772,29 +772,29 @@ void WrenInterface::_MapAsDataNodePopulateList(DataNode *dn, const char* key) co
 		}
 		return;
 	}
-	dn->SetArray(key, list_count);
+	dn->CreateArray(key, list_count);
 	for (int i=0; i < list_count; i++) {
 		wrenGetListElement(vm, VALUE_SLOT, i, ELEM_SLOT);
 		WrenType value_type = wrenGetSlotType(vm, ELEM_SLOT);
 		switch (value_type) {
 		case WREN_TYPE_BOOL: {
 			bool value = wrenGetSlotBool(vm, ELEM_SLOT);
-			dn->SetArrayElem(key, i, value ? "y" : "n");
+			dn->InsertIntoArray(key, i, value ? "y" : "n");
 			break;}
 		case WREN_TYPE_NUM: {
 			double value = wrenGetSlotDouble(vm, ELEM_SLOT);
 			if (std::fmod(value, 1.0) == 0.0) {
-				dn->SetArrayElemI(key, i, (int)value);
+				dn->InsertIntoArrayI(key, i, (int)value);
 			} else {
-				dn->SetArrayElemF(key, i, value);
+				dn->InsertIntoArrayF(key, i, value);
 			}
 			break;}
 		case WREN_TYPE_NULL: {
-			dn->SetArrayElem(key, i, "NONE");
+			dn->InsertIntoArray(key, i, "NONE");
 			break;}
 		case WREN_TYPE_STRING: {
 			const char* value = wrenGetSlotString(vm, ELEM_SLOT);
-			dn->SetArrayElem(key, i, value);
+			dn->InsertIntoArray(key, i, value);
 			break;}
 		default: break; // Unsupported types
 		}
@@ -872,7 +872,7 @@ bool WrenInterface::MapAsDataNode(DataNode *dn) const {
 			break;}
 		case WREN_TYPE_MAP: {
 			NOT_IMPLEMENTED  // Current method disallows recursion
-			DataNode* child = dn->SetChild(key, DataNode());
+			DataNode* child = dn->SetChild(key);
 			MoveSlot(VALUE_SLOT, 0);
 			bool success = MapAsDataNode(child);
 			wrenEnsureSlots(vm, 4);
@@ -922,7 +922,7 @@ bool WrenInterface::DataNodeToMap(const DataNode* dn) const {
 		wrenSetSlotString(vm, KEY_SLOT, key);
 		wrenSetSlotNewList(vm, VALUE_SLOT);
 		for(int j=dn->GetArrayLen(key); j >= 0; j--) {  // Minimizes list resizing
-			wrenSetSlotString(vm, ELEM_SLOT, dn->GetArray(key, j));
+			wrenSetSlotString(vm, ELEM_SLOT, dn->GetArrayElem(key, j));
 			wrenInsertInList(vm, VALUE_SLOT, j, ELEM_SLOT);
 		}
 		wrenSetMapValue(vm, MAP_SLOT, KEY_SLOT, VALUE_SLOT);
@@ -933,7 +933,7 @@ bool WrenInterface::DataNodeToMap(const DataNode* dn) const {
 		WrenHandle* handle_map = wrenGetSlotHandle(vm, MAP_SLOT);
 		for(int j=dn->GetArrayLen(key); j >= 0; j--) {  // Minimizes list resizing
 
-			DataNodeToMap(dn->GetArrayChild(key, j));
+			DataNodeToMap(dn->GetChildArrayElem(key, j));
 			wrenInsertInList(vm, VALUE_SLOT, j, MAP_SLOT);
 		}
 		// restore current map

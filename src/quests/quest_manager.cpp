@@ -262,7 +262,6 @@ void QuestManager::TaskArrivedAt(RID task_index, RID planet_index) {
 void QuestManager::CompleteTask(RID task_index) {
     Task* q = active_tasks[task_index];
     INFO("Task completed (M§M %f)", q->payout)
-    //GlobalGetState()->CompleteTransaction(q->payout, "Completed quest");
     active_quests[q->quest]->CompleteTask(true);
     active_tasks.Erase(task_index);
 }

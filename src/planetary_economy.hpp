@@ -3,7 +3,7 @@
 #include "basic.hpp"
 #include "datanode.hpp"
 
-const double KG_PER_COUNT = 100e3;
+const double KG_PER_COUNT = 10e3;
 
 typedef int resource_count_t;
 

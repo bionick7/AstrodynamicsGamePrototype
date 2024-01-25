@@ -115,7 +115,7 @@ struct Ship {
     resource_count_t GetRemainingPayloadCapacity(double dv) const;
     resource_count_t GetFuelRequiredEmpty(double dv) const;
     double GetCapableDV() const;
-    bool IsPlayerFriend() const;
+    bool IsPlayerControlled() const;
     IntelLevel::Type GetIntelLevel() const;
     bool IsTrajectoryKnown(int index) const;
     int GetCombatStrength() const;

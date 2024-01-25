@@ -39,7 +39,6 @@ ResourceTransfer PlanetaryEconomy::DrawResource(ResourceTransfer request) {
     
     resource_count_t transferred_resources = ClampInt(request.quantity, 0, resource_stock[request.resource_id]);
     resource_stock[request.resource_id] -= transferred_resources;
-    //GlobalGetState()->CompleteTransaction(-GetPrice(resource, quantity), "purchased resource");
 
     return ResourceTransfer(request.resource_id, transferred_resources);
 }
@@ -52,7 +51,6 @@ ResourceTransfer PlanetaryEconomy::GiveResource(ResourceTransfer request) {
 
     resource_count_t transferred_resources = ClampInt(request.quantity, 0, resource_capacity[request.resource_id] - resource_stock[request.resource_id]);
     resource_stock[request.resource_id] += transferred_resources;
-    //GlobalGetState()->CompleteTransaction(-GetPrice(resource, quantity), "sold resource");
 
     return ResourceTransfer(request.resource_id, transferred_resources);
 }
@@ -169,14 +167,15 @@ void _UIDrawResourceGrpah(const cost_t price_history[], int resource_index) {
 }
 
 void PlanetaryEconomy::TryPlayerTransaction(ResourceTransfer rt) {
+    int faction = GlobalGetState()->player_faction;
     if (rt.quantity < 0) {  // Sell
         ResourceTransfer actual = DrawResource(rt.Inverted());
-        GlobalGetState()->CompleteTransaction(GetPrice(actual.resource_id, actual.quantity), "Sold on market");
+        GlobalGetState()->CompleteTransaction(faction, GetPrice(actual.resource_id, actual.quantity));
     }
     else if (rt.quantity > 0) {  // Buy
-        rt.quantity = fmin(GetForPrice(rt.resource_id, GlobalGetState()->money), rt.quantity);
+        rt.quantity = fmin(GetForPrice(rt.resource_id, GlobalGetState()->GetMoney(faction)), rt.quantity);
         ResourceTransfer actual = GiveResource(rt);
-        GlobalGetState()->CompleteTransaction(-GetPrice(actual.resource_id, actual.quantity), "Bought on market");
+        GlobalGetState()->CompleteTransaction(faction, -GetPrice(actual.resource_id, actual.quantity));
     }
 }
 

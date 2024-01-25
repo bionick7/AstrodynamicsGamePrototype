@@ -1,40 +1,45 @@
-capital: 1e6
+player_faction: 1
+factions:
+- money: 2e6
+- money: 1e6
+- money: 0
+
 planets:
   - name: Mimas
     trading_accessible: n
     resource_stock:
       water: 1000
     resource_delta:
-      water: 1
-      metal: 1
+      water: 10
+      metal: 10
   - name: Encelladus
     trading_accessible: n
     resource_stock: {}
     resource_delta:
-      metal: 2
+      metal: 20
   - name: Tethys
     trading_accessible: y
     resource_stock:
-      water: 1000
+      water: 10000
       electronics: 6
     resource_delta:
       electronics: 1
   - name: Rhea
     trading_accessible: n
-    resource_stock:
-      metal: 4
-      water: 5
+    resource_delta:
+      metal: 40
+      water: 50
   - name: Titan
     trading_accessible: y
-    resource_stock:
-      metal: 2
-      water: 8
+    resource_delta:
+      metal: 20
+      water: 80
   - name: Iaeptus
     trading_accessible: n
-    resource_stock: 
+    resource_delta: 
       electronics: 1
-      metal: 1
-      water: 4
+      metal: 10
+      water: 40
   - name: Phoebe
     trading_accessible: n
     resource_stock: {}

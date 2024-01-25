@@ -222,8 +222,8 @@ struct IDAllocatorList {
 
     void DeserializeFrom(const DataNode* dn, const char* key, DeserializationFn* fn) {
         Clear();
-        for(int i=0; i < dn->GetArrayChildLen(key); i++) {
-            DataNode* child = dn->GetArrayChild(key, i);
+        for(int i=0; i < dn->GetChildArrayLen(key); i++) {
+            DataNode* child = dn->GetChildArrayElem(key, i);
             T* d;
             AllocateAtID(RID(child->GetI("id")), &d);
             fn(child, d);
@@ -231,9 +231,9 @@ struct IDAllocatorList {
     }
     
     void SerializeInto(DataNode* dn, const char* key, SerializationFn* fn) const {
-        dn->SetArrayChild(key, alloc_count);
+        dn->CreatChildArray(key, alloc_count);
         for(auto it = GetIter(); it; it++) {
-            DataNode* child = dn->SetArrayElemChild(key, it.counter, DataNode());
+            DataNode* child = dn->InsertIntoChildArray(key, it.counter);
             child->SetI("id", it.GetId().AsInt());
             fn(child, Get(it));
         }        

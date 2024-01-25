@@ -28,7 +28,7 @@ struct DataNode {
     ~DataNode();
     DataNode(const DataNode& other);
 
-    static void CopyTo(const DataNode& from, DataNode* to);
+    static void CopyTo(const DataNode* from, DataNode* to);
 
     static int FromFile(DataNode* out, const char* filepath, FileFormat fmt = FileFormat::Auto, bool isReadonly = false, bool quiet = false);
     //static std::vector<DataNode> ManyFromFile(const char* filepath, FileFormat fmt = FileFormat::Auto);
@@ -49,18 +49,18 @@ struct DataNode {
     void SetI(const char* key, int value);
     void SetF(const char* key, double value);
     void SetDate(const char* key, timemath::Time value);
-    DataNode* SetChild(const char* key, const DataNode& child);
+    DataNode* SetChild(const char* key);
 
-    void SetArray(const char* key, size_t size);
-    void SetArrayChild(const char* key, size_t size);
+    void CreateArray(const char* key, size_t size);
+    void CreatChildArray(const char* key, size_t size);
 
-    void SetArrayElem(const char* key, int index, const char* value);
-    void SetArrayElemI(const char* key, int index, int value);
-    void SetArrayElemF(const char* key, int index, double value);
-    DataNode* SetArrayElemChild(const char* key, int index, const DataNode& value);
+    void InsertIntoArray(const char* key, int index, const char* value);
+    void InsertIntoArrayI(const char* key, int index, int value);
+    void InsertIntoArrayF(const char* key, int index, double value);
+    DataNode* InsertIntoChildArray(const char* key, int index);
 
-    void AddArrayElem(const char* key, const char* value);
-    DataNode* AddArrayElemChild(const char* key, const DataNode& value);
+    void AppendToArray(const char* key, const char* value);
+    DataNode* AppendToChildArray(const char* key, const DataNode& value);
 
     const char* Get(const char* key, const char* def="", bool quiet=false) const;
     long GetI(const char* key, long def=0, bool quiet=false) const;
@@ -69,11 +69,11 @@ struct DataNode {
     DataNode* GetChild(const char* key, bool quiet=false) const;
 
     size_t GetArrayLen(const char* key, bool quiet=false) const;
-    size_t GetArrayChildLen(const char* key, bool quiet=false) const;
-    const char* GetArray(const char* key, int index, const char* def = "", bool quiet=false) const;
-    long GetArrayI(const char* key, int index, long def=0, bool quiet=false) const;
-    double GetArrayF(const char* key, int index, double def=0, bool quiet=false) const;
-    DataNode* GetArrayChild(const char* key, int index, bool quiet=false) const;
+    size_t GetChildArrayLen(const char* key, bool quiet=false) const;
+    const char* GetArrayElem(const char* key, int index, const char* def = "", bool quiet=false) const;
+    long GetArrayElemI(const char* key, int index, long def=0, bool quiet=false) const;
+    double GetArrayElemF(const char* key, int index, double def=0, bool quiet=false) const;
+    DataNode* GetChildArrayElem(const char* key, int index, bool quiet=false) const;
 
     size_t GetFieldCount() const;
     size_t GetChildCount() const;

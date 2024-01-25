@@ -7,7 +7,7 @@
 - Quest system (with wren?) (Done)
 - Sound (Done)
 - Automatically purchase fuel when possible (Done)
-- quantize resources (1 count = 100kT) (Done)
+- quantize resources (1 count = 100T) (Done)
 - water mining ship (or other more techniques to deal with fuel management?,) (Done)
 - Transfer plan UX (Half)
 - Inventory (Done)
@@ -17,8 +17,8 @@
 - Actual quests
 - Build ships in shipyard (Done)
 - Group ships and form fleets (Done)
-- Let player choose faction
-- Fractional production (1 count every 3 days)
+- Let player choose faction (Done)
+- counts should be 10 T to allow more flexibility (Done)
 - AI shits :(
 
 ## Known Bugs
@@ -44,6 +44,7 @@ Near-term, realizable only
 - ability to show hohmann transfer period in transfer window (eh ... hard to make it be useful)
 - quest-log window is kinda outdated (repurposed for dialogue)
 - Show battle-log after battle (done)
+- list ships to select next to planet
 - ships icons
 - modules icons
 - Show tasks and wait times also in dialogue

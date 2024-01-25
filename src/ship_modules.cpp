@@ -104,19 +104,17 @@ bool ShipModuleSlot::IsReachable(ShipModuleSlot other) {
 }
 
 int ShipModules::Load(const DataNode* data) {
-    shipmodule_count = data->GetArrayChildLen("shipmodules");
+    shipmodule_count = data->GetChildArrayLen("shipmodules");
     delete[] ship_modules;
     ship_modules = new ShipModuleClass[shipmodule_count];
     for(int i=0; i < shipmodule_count; i++) {
-        DataNode* module_data = data->GetArrayChild("shipmodules", i);
+        DataNode* module_data = data->GetChildArrayElem("shipmodules", i);
         ship_modules[i].mass = module_data->GetF("mass") * KG_PER_COUNT;
         strcpy(ship_modules[i].name, module_data->Get("name"));
         strcpy(ship_modules[i].description, module_data->Get("description"));
         ship_modules[i].is_hidden = strcmp(module_data->Get("hidden", "n", true), "y") == 0;
         ship_modules[i].construction_time = module_data->GetI("construction_time", 20, !ship_modules[i].is_hidden);
         ship_modules[i].construction_batch_size = module_data->GetI("construction_batch_size", 1, true);
-
-        ship_modules[i].construction_time = 1;
 
         module_data->FillBufferWithChild("add", ship_modules[i].delta_stats, ShipStats::MAX, ship_stat_names);
         module_data->FillBufferWithChild("require", ship_modules[i].required_stats, ShipStats::MAX, ship_stat_names);

@@ -31,20 +31,20 @@ void Planet::Serialize(DataNode* data) const {
     //data->SetF("mass", mu / G);
     //data->SetF("radius", radius);
 
-    DataNode* resource_node = data->SetChild("resource_stock", DataNode());
-    DataNode* resource_delta_node = data->SetChild("resource_delta", DataNode());
+    DataNode* resource_node = data->SetChild("resource_stock");
+    DataNode* resource_delta_node = data->SetChild("resource_delta");
     for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
         resource_node->SetI(GetResourceData(resource_index)->name, economy.resource_stock[resource_index]);
         resource_delta_node->SetI(GetResourceData(resource_index)->name, economy.resource_delta[resource_index]);
     }
     
     // modules
-    data->SetArray("inventory", MAX_PLANET_INVENTORY);
+    data->CreateArray("inventory", MAX_PLANET_INVENTORY);
     for(int i=0; i < MAX_PLANET_INVENTORY; i++) {
         if (IsIdValid(ship_module_inventory[i])) {
-            data->SetArrayElem("inventory", i, GetModule(ship_module_inventory[i])->id);
+            data->InsertIntoArray("inventory", i, GetModule(ship_module_inventory[i])->id);
         } else {
-            data->SetArrayElem("inventory", i, "---");
+            data->InsertIntoArray("inventory", i, "---");
         }
     }
 
@@ -80,7 +80,7 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
         }
         
         for (int i = 0; i < ship_module_inventory_count; i++) {
-            const char* module_id = data->GetArray("inventory", i);
+            const char* module_id = data->GetArrayElem("inventory", i);
             ship_module_inventory[i] = GlobalGetState()->ship_modules.GetModuleRIDFromStringId(module_id);
         }
     }
@@ -200,8 +200,8 @@ void Planet::AdvanceShipProductionQueue() {
     ship_data.Set("class_id", sc->id);
     ship_data.SetI("allegiance", allegiance); 
     ship_data.Set("planet", name);
-    ship_data.SetArray("tf_plans", 0);
-    ship_data.SetArray("modules", 0);
+    ship_data.CreateArray("tf_plans", 0);
+    ship_data.CreateArray("modules", 0);
     GlobalGetState()->ships.AddShip(&ship_data);
 
     for (int i=0; i < RESOURCE_MAX; i++) {
@@ -611,13 +611,13 @@ int Planets::LoadEphemerides(const DataNode* data) {
     parent = {0};
     parent.radius = data->GetF("radius");
     parent.mu = data->GetF("mass") * G;
-    planet_count = data->GetArrayChildLen("satellites");
+    planet_count = data->GetChildArrayLen("satellites");
     ephemerides = new PlanetNature[planet_count];
     planet_array = new Planet[planet_count];
     //if (num_planets > 100) num_planets = 100;
     //RID planets[100];
     for(int i=0; i < planet_count; i++) {
-        const DataNode* planet_data = data->GetArrayChild("satellites", i);
+        const DataNode* planet_data = data->GetChildArrayElem("satellites", i);
         PlanetNature* nature = &ephemerides[i];
         strcpy(nature->name, planet_data->Get("name"));
         

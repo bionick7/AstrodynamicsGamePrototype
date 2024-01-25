@@ -297,8 +297,9 @@ void Quest::_NextTask() {
             _NextTask();
         }
         else if (strcmp(type, "gain money") == 0) {
+            int faction = GetWrenInterface()->GetNumFromMap("faction", 0);
             cost_t delta = GetWrenInterface()->GetNumFromMap("ammount", 0);
-            GlobalGetState()->CompleteTransaction(delta, "");
+            GlobalGetState()->CompleteTransaction(faction, delta);
         }
         else if (strcmp(type, "gain module") == 0) {
             const char* module_string_id = GetWrenInterface()->GetStringFromMap("module", "");
@@ -307,8 +308,8 @@ void Quest::_NextTask() {
             GetPlanetByIndex(planet_index)->AddShipModuleToInventory(module_id);
         }
         else if (strcmp(type, "gain reputation") == 0) {
-            GetWrenInterface()->GetNumFromMap("ammount", 0);
             GetWrenInterface()->GetStringFromMap("faction", "");
+            GetWrenInterface()->GetNumFromMap("ammount", 0);
             NOT_IMPLEMENTED
         }
         

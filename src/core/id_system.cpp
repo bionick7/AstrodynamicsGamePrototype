@@ -136,9 +136,9 @@ void IDList::Clear() {
 }
 
 void IDList::SerializeTo(DataNode* data, const char * key) const {
-    data->SetArray(key, size);
+    data->CreateArray(key, size);
     for(int i=0; i < size; i++) {
-        data->SetArrayElemI(key, i, buffer[i].AsInt());
+        data->InsertIntoArrayI(key, i, buffer[i].AsInt());
     }
 }
 
@@ -147,7 +147,7 @@ void IDList::DeserializeFrom(const DataNode *data, const char *key, bool quiet) 
     Resize(p_size);
     size = p_size;
     for(int i=0; i < size; i++) {
-        buffer[i] = RID(data->GetArrayI(key, i, quiet));
+        buffer[i] = RID(data->GetArrayElemI(key, i, quiet));
     }
 }
 

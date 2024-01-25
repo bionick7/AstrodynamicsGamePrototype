@@ -6,15 +6,15 @@ ship_classes:
     of a traditional C1K-998. 
   dv: 6  # km/s
   Isp: 4.5  # km/s
-  capacity: 30  # t
+  capacity: 300  # t
   stats:
     kinetic_hp: 1
     energy_hp: 1
     crew: 10
   construction_time: 45
   construction_resources:
-    metal: 9
-    electronics: 6
+    metal: 90
+    electronics: 4
   
 - id: shp_light_transport
   name: C1K-998
@@ -28,27 +28,27 @@ ship_classes:
     of nuclear fuel.
   dv: 6
   Isp: 4.5
-  capacity: 10
+  capacity: 100
   stats:
     kinetic_hp: 3
     energy_hp: 3
     crew: 17
   construction_time: 15
   construction_resources:
-    metal: 3
+    metal: 30
     electronics: 2
   
 - id: shp_spacestation
   name: Station 10M
   description: >
     General Cosmonautics space station bus is a structural framework that can 
-    hold 10 metric kilotonns of cargo. It is often used for medium sized habitats
-    ,shipyards and logistics points. 
+    hold 10 metric kilotonns of cargo. It is often used for medium sized habitats, 
+    shipyards and logistics points. 
     The station has just enough propulsion to maintain orbit and attitude 
     and cannot be used to transport equipment between points
   dv: 0
   Isp: 0
-  capacity: 100
+  capacity: 1000
   stats:
     kinetic_hp: 10
     energy_hp: 10
@@ -56,7 +56,7 @@ ship_classes:
     boarding_defense: 5
   construction_time: 50
   construction_resources:
-    metal: 20
+    metal: 200
     electronics: 2
 
 - id: shp_express
@@ -65,12 +65,13 @@ ship_classes:
     High-end ship
   dv: 12
   Isp: 10
-  capacity: 10
+  capacity: 100
   stats:
     kinetic_hp: 2
     energy_hp: 2
     crew: 20
   construction_time: 40
   construction_resources:
-    metal: 3
-    electronics: 6
+    metal: 30
+    electronics: 12
+    uranium: 4

@@ -3,41 +3,40 @@ shipmodules:
 - id: shpmod_heatshield
   name: Heatshield
   description: Allows more efficient maneuvers around Titan and low Saturn orbit
-  mass: 1
+  mass: 10
   construction_resources: 
-    metal: 1
+    metal: 10
   construction_time: 10
-  construction_batch_size: 1
 
 - id: shpmod_droptank
   name: Drop-tank
-  description: The ship can hold 1 extra count of fuel. Lost after use
-  mass: 0
+  description: The ship can hold 10 extra count of fuel. Lost after use
+  mass: 12
   construction_resources:
     metal: 1
     water: 10
   construction_time: 10
-  construction_batch_size: 10
+  construction_batch_size: 1
 
 # Production
 - id: shpmod_farm
   name: Food house
   description: Provides + 1 count food / day
-  produce: { food: 1 }
-  mass: 1
+  produce: { food: 10 }
+  mass: 10
   construction_time: 30
   construction_resources:
-    metal: 1
+    metal: 10
     electronics: 1
 
 - id: shpmod_water_extractor
   name: Water extractor
   description: Provides + 1 count water / day if stationned on an icey moon
-  produce: { water: 1 }  # Special behaviour, since it needs to check for environemnet
-  mass: 1  # counts
+  produce: { water: 10 }  # Special behaviour, since it needs to check for environemnet
+  mass: 10  # counts
   construction_time: 15
   construction_resources:
-    metal: 1
+    metal: 10
     electronics: 1
 
 # Shipyard
@@ -47,36 +46,36 @@ shipmodules:
 - id: shpmod_small_yard_1
   name: Small shipyard offices
   description: Administrative and design offices. Needed in order to build ships
-  mass: 1
+  mass: 10
   construction_time: 20
   construction_resources:
-    metal: 1
+    metal: 10
     electronics: 1
 
 - id: shpmod_small_yard_2
   name: Shipyard storage facility
   description: Part and material warehouses. Needed in order to build ships or modules.
-  mass: 2
+  mass: 20
   construction_time: 10
   construction_resources:
-    metal: 2
+    metal: 20
 
 - id: shpmod_small_yard_3
   name: Small shipyard workshop
   description: Construction Workshops. Needed in order to build or repair ships or build modules.
-  mass: 4
+  mass: 40
   construction_time: 60
   construction_resources:
-    metal: 4
+    metal: 40
     electronics: 5
 
 - id: shpmod_small_yard_4
   name: Small shipyard scaffolding
   description: TODO
-  mass: 2
+  mass: 20
   construction_time: 30
   construction_resources:
-    metal: 3
+    metal: 20
 
 # Military
 - id: shpmod_railgun
@@ -87,22 +86,21 @@ shipmodules:
     power: -2
   require:
     power: 2
-  mass: 1
+  mass: 10
   construction_time: 10
   construction_resources:
-    metal: 2
-
+    metal: 20
   
 - id: shpmod_missiles
   name: Missiles
   description: Ordonance Attk. +1
   add: { ordnance_offense: 2 }
-  mass: 1
+  mass: 10
   construction_time: 10
   construction_resources:
-    metal: 1
+    metal: 10
     electronics: 1
-    water: 1
+    water: 10
 
 - id: shpmod_light_armor
   name: Light armor
@@ -110,10 +108,10 @@ shipmodules:
   add: 
     kinetic_hp: 10
     energy_hp: 5
-  mass: 1
+  mass: 10
   construction_time: 5
   construction_resources:
-    metal: 1
+    metal: 10
 
 - id: shpmod_armor
   name: Extra armor
@@ -122,21 +120,21 @@ shipmodules:
     kinetic_hp: 20
     energy_hp: 10
     kinetic_defense: 1
-  mass: 2
+  mass: 20
   construction_time: 10
   construction_resources:
-    metal: 2
+    metal: 20
   
 - id: shpmod_pdc
   name: Point-defence cannons
   description: TODO
   add: 
     ordnance_defense: 1
-  mass: 0.5
+  mass: 5
   batch_size: 2
   construction_time: 10
   construction_resources:
-    metal: 1
+    metal: 5
     electronics: 1
 
 - id: shpmod_acs
@@ -144,9 +142,10 @@ shipmodules:
   description: TODO
   add: 
     initiative: 1
-  mass: 1
+  mass: 10
   construction_time: 10
   construction_resources:
+    mass: 5
     electronics: 2
 
 # Support
@@ -158,12 +157,13 @@ shipmodules:
     reactor.
   add:
     power: 4
-  mass: 2
+  mass: 20
   construction_time: 40
   construction_resources:
     electronics: 5
-    metal: 3
-    water: 1
+    metal: 30
+    water: 10
+    uranium: 1
 
 # Boarding
 - id: shpmod_exp_brigade
@@ -174,7 +174,7 @@ shipmodules:
     boarding_offense: 3
     boarding_defense: 2
     crew: 16
-  mass: 1
+  mass: 5
   hidden: y
   
 - id: shpmod_armory
@@ -183,7 +183,7 @@ shipmodules:
     TODO
   add:
     boarding_defense: 1
-  mass: 0
+  mass: 1
   hidden: y
 
 # Developer

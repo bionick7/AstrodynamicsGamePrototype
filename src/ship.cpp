@@ -95,23 +95,23 @@ void Ship::Serialize(DataNode *data) const
     data->Set("class_id", GetShipClassByIndex(ship_class)->id);
     data->SetI("resource_qtt", transporing.quantity);
     data->SetI("resource_id", transporing.resource_id);
-    data->SetArray("dammage_taken", ShipVariables::MAX);
+    data->CreateArray("dammage_taken", ShipVariables::MAX);
     for(int i=0; i < ShipVariables::MAX; i++) {
-        data->SetArrayElemI("dammage_taken", i, dammage_taken[i]);
+        data->InsertIntoArrayI("dammage_taken", i, dammage_taken[i]);
     }
 
-    data->SetArray("modules", SHIP_MAX_MODULES);
+    data->CreateArray("modules", SHIP_MAX_MODULES);
     for(int i=0; i < SHIP_MAX_MODULES; i++) {
         if (IsIdValid(modules[i])) {
-            data->SetArrayElem("modules", i, GetModule(modules[i])->id);
+            data->InsertIntoArray("modules", i, GetModule(modules[i])->id);
         } else {
-            data->SetArrayElem("modules", i, "---");
+            data->InsertIntoArray("modules", i, "---");
         }
     }
 
-    data->SetArrayChild("prepared_plans", prepared_plans_count);
+    data->CreatChildArray("prepared_plans", prepared_plans_count);
     for (int i=0; i < prepared_plans_count; i++) {
-        prepared_plans[i].Serialize(data->SetArrayElemChild("prepared_plans", i, DataNode()));
+        prepared_plans[i].Serialize(data->InsertIntoChildArray("prepared_plans", i));
     }
 }
 
@@ -130,22 +130,22 @@ void Ship::Deserialize(const DataNode* data) {
     if (modules_count > SHIP_MAX_MODULES) modules_count = SHIP_MAX_MODULES;
     const ShipModules* sms = &GlobalGetState()->ship_modules;
     for(int i=0; i < modules_count; i++) {
-        modules[i] = sms->GetModuleRIDFromStringId(data->GetArray("modules", i));
+        modules[i] = sms->GetModuleRIDFromStringId(data->GetArrayElem("modules", i));
     }
     for(int i=modules_count; i < SHIP_MAX_MODULES; i++) {
         modules[i] = GetInvalidId();
     }
 
-    prepared_plans_count = data->GetArrayChildLen("prepared_plans", true);
+    prepared_plans_count = data->GetChildArrayLen("prepared_plans", true);
     if (prepared_plans_count > SHIP_MAX_PREPARED_PLANS) prepared_plans_count = SHIP_MAX_PREPARED_PLANS;
     for (int i=0; i < prepared_plans_count; i++) {
         prepared_plans[i] = TransferPlan();
-        prepared_plans[i].Deserialize(data->GetArrayChild("prepared_plans", i, true));
+        prepared_plans[i].Deserialize(data->GetChildArrayElem("prepared_plans", i, true));
     }
 
-    dammage_taken[ShipVariables::KINETIC_ARMOR] = data->GetArrayI("dammage_taken", ShipVariables::KINETIC_ARMOR, stats[ShipStats::KINETIC_HP], true);
-    dammage_taken[ShipVariables::ENERGY_ARMOR] = data->GetArrayI("dammage_taken", ShipVariables::ENERGY_ARMOR, stats[ShipStats::ENERGY_HP], true);
-    dammage_taken[ShipVariables::CREW] = data->GetArrayI("dammage_taken", ShipVariables::CREW, stats[ShipStats::CREW], true);
+    dammage_taken[ShipVariables::KINETIC_ARMOR] = data->GetArrayElemI("dammage_taken", ShipVariables::KINETIC_ARMOR, stats[ShipStats::KINETIC_HP], true);
+    dammage_taken[ShipVariables::ENERGY_ARMOR] = data->GetArrayElemI("dammage_taken", ShipVariables::ENERGY_ARMOR, stats[ShipStats::ENERGY_HP], true);
+    dammage_taken[ShipVariables::CREW] = data->GetArrayElemI("dammage_taken", ShipVariables::CREW, stats[ShipStats::CREW], true);
 }
 
 double Ship::GetPayloadMass() const{
@@ -192,21 +192,21 @@ double Ship::GetCapableDV() const {
     // sc->v_e * log(max_capacity / oem + 1);
 }
 
-bool Ship::IsPlayerFriend() const {
-    return allegiance == 0;
+bool Ship::IsPlayerControlled() const {
+    return allegiance == GlobalGetState()->player_faction;
 }
 
 IntelLevel::Type Ship::GetIntelLevel() const {
     return IntelLevel::FULL;
 
-    if (IsPlayerFriend()) {
+    if (IsPlayerControlled()) {
         return IntelLevel::FULL;
     }
     return IntelLevel::STATS | (is_detected * IntelLevel::TRAJECTORY);
 }
 
 bool Ship::IsTrajectoryKnown(int index) const {
-    if (IsPlayerFriend()) {
+    if (IsPlayerControlled()) {
         return true;
     }
     if((GetIntelLevel() & IntelLevel::TRAJECTORY) == 0) {
@@ -252,7 +252,7 @@ bool Ship::CanDragModule(int index) const {
 }
 
 Color Ship::GetColor() const {
-    return IsPlayerFriend() ? Palette::green : Palette::red;
+    return IsPlayerControlled() ? Palette::green : Palette::red;
 }
 
 bool Ship::IsParked() const {
@@ -713,7 +713,7 @@ void Ship::DrawUI() {
 
     UIContextWrite(name);
     _UIDrawStats(this);
-    if (!IsPlayerFriend()) {
+    if (!IsPlayerControlled()) {
         UIContextPop();  // ScrollInset
         return;
     }
@@ -787,11 +787,11 @@ void Ship::_OnDeparture(const TransferPlan* tp) {
     PlanetaryEconomy* local_economy = &GetPlanet(tp->departure_planet)->economy;
 
     ResourceTransfer fuel_tf = local_economy->DrawResource(ResourceTransfer(RESOURCE_WATER, tp->fuel_mass));
-    if (fuel_tf.quantity < tp->fuel_mass && IsPlayerFriend()) {
+    if (fuel_tf.quantity < tp->fuel_mass && IsPlayerControlled()) {
         resource_count_t remaining_fuel = tp->fuel_mass - fuel_tf.quantity;
         if (
             local_economy->trading_accessible && 
-            local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) < GlobalGetState()->money
+            local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) < GlobalGetState()->GetMoney(allegiance)
         ) {
             USER_INFO("Automatically purchased %d of water for M§M %ld K", remaining_fuel, local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) / 1e3)
             local_economy->TryPlayerTransaction(ResourceTransfer(RESOURCE_WATER, remaining_fuel));
@@ -966,14 +966,14 @@ int Ships::LoadShipClasses(const DataNode* data) {
     if (ship_classes != NULL) {
         WARNING("Loading ship classes more than once (I'm not freeing this memory)");
     }
-    ship_classes_count = data->GetArrayChildLen("ship_classes", true);
+    ship_classes_count = data->GetChildArrayLen("ship_classes", true);
     if (ship_classes_count == 0){
         WARNING("No ship classes loaded")
         return 0;
     }
     ship_classes = new ShipClass[ship_classes_count];
     for (int index=0; index < ship_classes_count; index++) {
-        const DataNode* ship_data = data->GetArrayChild("ship_classes", index);
+        const DataNode* ship_data = data->GetChildArrayElem("ship_classes", index);
         ShipClass sc = {0};
 
         strncpy(sc.name, ship_data->Get("name", "[NAME MISSING]"), SHIPCLASS_NAME_MAX_SIZE);
@@ -986,8 +986,6 @@ int Ships::LoadShipClasses(const DataNode* data) {
         sc.oem = ResourceCountsToKG(sc.max_capacity) / (exp(sc.max_dv/sc.v_e) - 1);
         sc.construction_batch_size = ship_data->GetI("batch_size", 1, true);
         sc.is_hidden = strcmp(ship_data->Get("hidden", "n", true), "y") == 0;
-
-        sc.construction_time = 1;
 
         ship_data->FillBufferWithChild("construction_resources", sc.construction_resources, RESOURCE_MAX, resource_names);
         ship_data->FillBufferWithChild("stats", sc.stats, ShipStats::MAX, ship_stat_names);

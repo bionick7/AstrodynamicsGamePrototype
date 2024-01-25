@@ -9,14 +9,6 @@
 
 GlobalState global_state;
 
-GlobalState* GlobalGetState() {
-    return &global_state;
-}
-
-timemath::Time GlobalGetNow() {
-    return global_state.calendar.time;
-}
-
 void GlobalState::_InspectState() {
 
 }
@@ -69,7 +61,6 @@ void GlobalState::Make(timemath::Time p_time) {
     c_transf.Make();
     focused_planet = GetInvalidId();
     focused_ship = GetInvalidId();
-    money = 0;
 }
 
 void GlobalState::LoadData() {
@@ -277,7 +268,10 @@ void GlobalState::DrawState() {
     ui.UIStart();
     calendar.DrawUI();
     char capital_str[21];
-    sprintf(capital_str, "M§M %6" LONG_STRID ".%3" LONG_STRID " .mil", money / (int)1e6, money % 1000000 / 1000);
+    sprintf(capital_str, "M§M %6" LONG_STRID ".%3" LONG_STRID " .mil", 
+        GetMoney(player_faction) / (int)1e6, 
+        GetMoney(player_faction) % 1000000 / 1000
+    );
     DrawTextAligned(capital_str, {GetScreenWidth() / 2.0f, 10}, TextAlignment::HCENTER & TextAlignment::TOP, Palette::ui_main);
 
     // planets
@@ -304,43 +298,52 @@ void GlobalState::DrawState() {
     //DrawFPS(0, 0);
 }
 
+// delta is the ammount of capital transferred TO the player
+bool GlobalState::CompleteTransaction(int faction, int delta) {
+    factions[faction].money += delta;
+    return true;
+}
+
+cost_t GlobalState::GetMoney(int faction) {
+    return factions[faction].money;
+}
+
 void GlobalState::Serialize(DataNode* data) const {
     // TODO: refer to the ephemerides used
     
-    c_transf.Serialize(data->SetChild("coordinate_transform", DataNode()));
-    calendar.Serialize(data->SetChild("calendar", DataNode()));
-    quest_manager.Serialize(data->SetChild("quests", DataNode()));
+    c_transf.Serialize(data->SetChild("coordinate_transform"));
+    calendar.Serialize(data->SetChild("calendar"));
+    quest_manager.Serialize(data->SetChild("quests"));
 
-    data->SetF("capital", money);
+    data->CreatChildArray("factions", faction_count);
+    for(int i=0; i < faction_count; i++) {
+        factions[i].Serialize(data->InsertIntoChildArray("factions", i));
+    }
+    data->SetI("player_faction", player_faction);
+
     // ignore transferplanui for now
     data->SetI("focused_planet", focused_planet.AsInt());
     data->SetI("focused_ship", focused_ship.AsInt());
 
-    data->SetArrayChild("planets", (int) planets.GetPlanetCount());
+    data->CreatChildArray("planets", (int) planets.GetPlanetCount());
     int i=0;
     for (int planet_index = 0; planet_index < planets.GetPlanetCount(); planet_index++) {
-        DataNode dn2 = DataNode();
-        dn2.SetI("id", RID(planet_index, EntityType::PLANET).AsInt());
-        GetPlanetByIndex(planet_index)->Serialize(data->SetArrayElemChild("planets", i++, dn2));
+        DataNode* dn2 = data->InsertIntoChildArray("planets", i++);
+        GetPlanetByIndex(planet_index)->Serialize(dn2);
+        dn2->SetI("id", RID(planet_index, EntityType::PLANET).AsInt());
     }
 
-    data->SetArrayChild("ships", ships.alloc.Count());
+    data->CreatChildArray("ships", ships.alloc.Count());
     i=0;
     for (auto it = ships.alloc.GetIter(); it; it++) {
         Ship* ship = ships.alloc.Get(it);
-        DataNode dn2 = DataNode();
-        dn2.SetI("id", it.GetId().AsInt());
+        DataNode* dn2 = data->InsertIntoChildArray("ships", i++);
+        dn2->SetI("id", it.GetId().AsInt());
         if (ship->IsParked()) {
-            dn2.Set("planet", planets.GetPlanet(ship->GetParentPlanet())->name);
+            dn2->Set("planet", planets.GetPlanet(ship->GetParentPlanet())->name);
         }
-        ship->Serialize(data->SetArrayElemChild("ships", i++, dn2));
+        ship->Serialize(dn2);
     }
-}
-
-// delta is the ammount of capital transferred TO the player
-bool GlobalState::CompleteTransaction(int delta, const char *message) {
-    money += delta;
-    return true;
 }
 
 void GlobalState::Deserialize(const DataNode* data) {
@@ -356,27 +359,31 @@ void GlobalState::Deserialize(const DataNode* data) {
     }
     // ignore transferplanui for now
 
-
-    money = data->GetF("capital", money);
+    faction_count = data->GetChildArrayLen("factions");
+    for(int i=0; i < faction_count; i++) {
+        factions[i].Deserialize(data->GetChildArrayElem("factions", i));
+    }
+    player_faction = data->GetI("player_faction", 0);
 
     ships.alloc.Clear(); 
     planets = Planets();
 
     DataNode ephem_data;
-    if (DataNode::FromFile(&ephem_data, "resources/data/ephemerides.yaml", FileFormat::YAML, true) != 0) {
-        FAIL("Could not load save %s", "resources/data/ephemerides.yaml");
+    const char* ephemerides_path = "resources/data/ephemerides.yaml";
+    if (DataNode::FromFile(&ephem_data, ephemerides_path, FileFormat::YAML, true) != 0) {
+        FAIL("Could not load save %s", ephemerides_path);
     }
     planets.LoadEphemerides(&ephem_data);  // if necaissary
 
     focused_planet = RID(data->GetI("focused_planet", -1, true));
     focused_ship = RID(data->GetI("focused_ship", -1, true));
 
-    for (int i=0; i < data->GetArrayChildLen("planets"); i++) {
-        DataNode* planet_data = data->GetArrayChild("planets", i);
+    for (int i=0; i < data->GetChildArrayLen("planets"); i++) {
+        DataNode* planet_data = data->GetChildArrayElem("planets", i);
         planets.AddPlanet(planet_data);
     }
-    for (int i=0; i < data->GetArrayChildLen("ships"); i++) {
-        DataNode* ship_data = data->GetArrayChild("ships", i);
+    for (int i=0; i < data->GetChildArrayLen("ships"); i++) {
+        DataNode* ship_data = data->GetChildArrayElem("ships", i);
         ships.AddShip(ship_data);
     }
 
@@ -386,6 +393,14 @@ void GlobalState::Deserialize(const DataNode* data) {
     } else {
         quest_manager.Make();
     }
+}
+
+GlobalState* GlobalGetState() {
+    return &global_state;
+}
+
+timemath::Time GlobalGetNow() {
+    return global_state.calendar.time;
 }
 
 AudioServer* GetAudioServer() {

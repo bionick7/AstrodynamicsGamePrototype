@@ -11,6 +11,7 @@
 #include "audio_server.hpp"
 #include "wren_interface.hpp"
 #include "combat.hpp"
+#include "factions.hpp"
 
 struct GlobalState {
     enum FocusablesPanels {
@@ -42,7 +43,9 @@ struct GlobalState {
 
     BattleLog last_battle_log;
 
-    cost_t money;
+    int faction_count;
+    Faction factions[8];
+    int player_faction;
 
     // Lifecycle
     void Make(timemath::Time time);
@@ -54,7 +57,8 @@ struct GlobalState {
     void DrawState();
 
     // Interaction
-    bool CompleteTransaction(int delta, const char* message);
+    bool CompleteTransaction(int faction, int delta);
+    cost_t GetMoney(int faction);
 
     // Serialization
     void Serialize(DataNode* dn) const;

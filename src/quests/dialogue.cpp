@@ -51,9 +51,9 @@ void Dialogue::Setup(const char* speaker, const char* body, const char* replies[
 void Dialogue::Serialize(DataNode* dn) const {
     dn->Set("speaker", GetSpeaker());
     dn->Set("body", GetBody());
-    dn->SetArray("replies", reply_count);
+    dn->CreateArray("replies", reply_count);
     for(int i=0; i < reply_count; i++) {
-        dn->SetArrayElem("replies", i, GetReply(i));
+        dn->InsertIntoArray("replies", i, GetReply(i));
     }
     dn->SetI("selected", reply);
 }
@@ -62,7 +62,7 @@ void Dialogue::Deserialize(const DataNode* dn) {
     reply_count = dn->GetArrayLen("replies");
     const char** replies = new const char*[reply_count];
     for(int i=0; i < reply_count; i++) {
-        replies[i] = dn->GetArray("replies", i);
+        replies[i] = dn->GetArrayElem("replies", i);
     }
     Setup(
         dn->Get("speaker"),
