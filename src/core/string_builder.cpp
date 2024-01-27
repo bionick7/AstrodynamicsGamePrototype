@@ -97,7 +97,7 @@ StringBuilder& StringBuilder::AddFormat(const char* fmt, ...) {
 
 StringBuilder& StringBuilder::AddF(double num) {
     char buffer[12];  // How much is enough?
-    if (fabs(num) > 1e4 || fabs(num) < 1e-4) {
+    if (fabs(num) > 1e4 || fabs(num) < 1e-4 && num != 0) {
         sprintf(buffer, "%.4e", num);
     } else {
         sprintf(buffer, "%.7f", num);

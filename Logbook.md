@@ -169,3 +169,70 @@ TADCON:
 
 Also, maybe set construction time always to 1 to feel out the game and focus on logistics
 The player should not be bottlenecked by construction time and accumulate resources
+
+## Status 25 Jan 24
+Core game rather cool. Question now is, how to keep the player engaged over long timeperiods.
+Content, if you will. Oh yeah and provide a trade tax, definetly
+
+## Status 26 Jan 24
+AI system requirements:
+- work with every faction
+- work with every combination of planets
+- work as long as there is an opponent
+- not take more than 5 ms per frame
+- work with arbitrarily many opponents
+
+- shall not cheat (same limitations as the player) (critical)
+- shall prevent the player from being complacent (key)
+- shall cover all actions that the player can make (critical)
+
+AI is split into high-level and low-level functions
+High-level function converts ai state into a set of goals.
+Low-level function converts ai state + set of goals into AI output.
+AI Output:
+- What transfers make due?
+- What is the most urgent production for each shipyard? (module and shipclass)
+AI Goal set:
+- All have a importance (maybe)
+- Can be GOAP: Attack tethys -> Collect xxx combat power with xxx dv
+- Tree
+Node states: 
+  Attack planet xxx
+  +- Collect xxx combat power at xxx with xxx dv
+     +- Build module xxx at planet
+     |  +- Bring xxx to plant
+     +- Build ship xxx at planet
+        +- Bring xxx to plant
+  Defend planet xxx
+
+... 
+
+What is the simplest way to potentially do this:
+Maximize: 
+    the amount of total combat power
+    the right ratio between transport potential and combat potential
+    
+    equal distribution of resources
+    the amount of active military pressure on a specific planet
+
+```
+Foreach ship:
+    if is_transferring():
+        pass
+    if military:
+        if dv >= dv_to_rally_point:
+            transfer_to(blackboard.rally_point)
+        else:
+            try to gain dv, else do nothing <== critical part
+    else:
+        for planet in reachable_planets():
+            capable_mass = ...
+            tf = get_optimal_resource_transfer(current_planet, planet)
+            if tf_utility > 0:
+                make_transfer()
+                
+Foreach planet:
+    if production_queue_isempty():
+        queue_production(blackboard.production_request)
+```
+Civilian transport kinda works, although a more 'official' definition for planet allegiance is needed

@@ -183,6 +183,14 @@ resource_count_t Ship::GetRemainingPayloadCapacity(double dv) const {
     return KGToResourceCounts(capacity - GetPayloadMass());
 }
 
+resource_count_t Ship::GetFuelRequiredFull(double dv) const {
+    const ShipClass* sc = GetShipClassByIndex(ship_class);
+    int drop_tanks = CountModulesOfClass(GlobalGetState()->ship_modules.expected_modules.droptank);
+    const resource_count_t fuel_per_droptank = 10;
+    double extra_fuel = fuel_per_droptank * drop_tanks;
+    return sc->max_capacity + extra_fuel - KGToResourceCounts(sc->GetPayloadCapacityMass(dv, extra_fuel)); ;
+}
+
 resource_count_t Ship::GetFuelRequiredEmpty(double dv) const {
     const ShipClass* sc = GetShipClassByIndex(ship_class);
     return KGToResourceCounts((sc->oem + GetPayloadMass()) * (exp(dv/sc->v_e) - 1));
@@ -217,6 +225,7 @@ IntelLevel::T Ship::GetIntelLevel() const {
 }
 
 bool Ship::IsTrajectoryKnown(int index) const {
+    return true;
     if (IsPlayerControlled()) {
         return true;
     }
@@ -732,10 +741,10 @@ void Ship::DrawUI() {
 
     UIContextWrite(name);
     _UIDrawStats(this);
-    if (!IsPlayerControlled()) {
-        UIContextPop();  // ScrollInset
-        return;
-    }
+    //if (!IsPlayerControlled()) {
+    //    UIContextPop();  // ScrollInset
+    //    return;
+    //}
     _UIDrawInventory(this);
     _UIDrawTransferplans(this);
     _UIDrawFleet(this);
@@ -828,6 +837,7 @@ void Ship::_OnDeparture(const TransferPlan* tp) {
     }
 
     transporing = local_economy->DrawResource(tp->resource_transfer);
+    //INFO("%s: %d", resource_names[transporing.resource_id], transporing.quantity)
 
     for(auto it = GlobalGetState()->quest_manager.active_tasks.GetIter(); it; it++) {
         if (GlobalGetState()->quest_manager.active_tasks[it]->ship == id) {
@@ -903,7 +913,7 @@ void Ship::_OnArrival(const TransferPlan* tp) {
         }
     }
 
-    GetPlanet(tp->arrival_planet)->economy.GiveResource(tp->resource_transfer);
+    GetPlanet(tp->arrival_planet)->economy.GiveResource(transporing);
     position = GetPlanet(GetParentPlanet())->position;
 
     // Complete tasks

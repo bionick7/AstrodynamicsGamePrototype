@@ -19,6 +19,7 @@
 - Group ships and form fleets (Done)
 - Let player choose faction (Done)
 - counts should be 10 T to allow more flexibility (Done)
+- Planets track allegiance independendtly (updated in battle)
 - AI shits :(
 
 ## Known Bugs
@@ -44,6 +45,7 @@ Near-term, realizable only
 - ability to show hohmann transfer period in transfer window (eh ... hard to make it be useful)
 - quest-log window is kinda outdated (repurposed for dialogue)
 - Show battle-log after battle (done)
+- Select planet when clicking on orbit
 - list ships to select next to planet
 - ships icons
 - modules icons
@@ -74,7 +76,7 @@ Regardless of implementability
 - construct new stations (Done, it's just a ship duh)
 - combat (Done)
 - tanker fleets (share dv among fleet)
-- aerobreaking
+- aerobreaking (Done)
 - expand to 3D
 - gravity assists
 - crew & population morale

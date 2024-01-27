@@ -113,6 +113,7 @@ struct Ship {
     double GetPayloadMass() const;
     resource_count_t GetMaxCapacity() const;
     resource_count_t GetRemainingPayloadCapacity(double dv) const;
+    resource_count_t GetFuelRequiredFull(double dv) const;
     resource_count_t GetFuelRequiredEmpty(double dv) const;
     double GetCapableDV() const;
     bool IsPlayerControlled() const;
@@ -161,7 +162,6 @@ struct Ships {
     void GetOnPlanet(IDList* list, RID planet, uint32_t allegiance_bits) const;
     void GetFleet(IDList* list, RID ship) const;
     void KillShip(RID uuid, bool notify_callback);
-
 };
 
 Ship* GetShip(RID uuid);

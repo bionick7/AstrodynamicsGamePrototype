@@ -10,49 +10,60 @@ planets:
     resource_stock:
       water: 1000
     resource_delta:
-      water: 5
+      water: 50
       metal: 1
   - name: Encelladus
     trading_accessible: n
-    resource_stock: {}
+    resource_stock:
+      water: 1000
     resource_delta:
       metal: 2
   - name: Tethys
     trading_accessible: y
     resource_stock:
-      water: 10000
+      water: 1000
       electronics: 6
     resource_delta:
       electronics: 1
   - name: Rhea
     trading_accessible: n
+    resource_stock:
+      water: 1000
     resource_delta:
       metal: 4
-      water: 5
+      water: 50
     inventory:
     - shpmod_heatshield
   - name: Titan
     trading_accessible: y
     resource_stock:
-      water: 100
-      metal: 100
+      water: 1000
     resource_delta:
       metal: 2
-      water: 8
+      water: 80
     inventory:
     - shpmod_droptank
     - shpmod_droptank
   - name: Iaeptus
     trading_accessible: n
+    resource_stock:
+      water: 1000
     resource_delta: 
       electronics: 1
       metal: 1
-      water: 4
+      water: 40
   - name: Phoebe
     trading_accessible: n
-    resource_stock: {}
+    resource_stock:
+      water: 1000
 
 ships:
+- name: Mimas station
+  class_id: shp_spacestation
+  allegiance: 0
+  planet: Mimas
+  tf_plans: []
+  modules: []
 # THADCON
 - name: Light transport
   class_id: shp_light_transport

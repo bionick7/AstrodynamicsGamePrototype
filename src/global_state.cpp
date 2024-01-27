@@ -249,6 +249,16 @@ void GlobalState::UpdateState(double delta_t) {
     wren_interface.Update();
     quest_manager.Update(delta_t);
     _UpdateShipsPlanets(this);
+
+    // AI update
+    if (calendar.IsNewDay()) {
+        for (int i=0; i < faction_count; i++) {
+            factions[i].ai_information.HighLevelFactionAI();
+        }
+    }
+    for (int i=0; i < faction_count; i++) {
+        factions[i].ai_information.LowLevelFactionAI();
+    }
 }
 
 // Draw
@@ -361,6 +371,7 @@ void GlobalState::Deserialize(const DataNode* data) {
 
     faction_count = data->GetChildArrayLen("factions");
     for(int i=0; i < faction_count; i++) {
+        factions[i].AssignID(i);
         factions[i].Deserialize(data->GetChildArrayElem("factions", i));
     }
     player_faction = data->GetI("player_faction", 0);
@@ -392,6 +403,11 @@ void GlobalState::Deserialize(const DataNode* data) {
         quest_manager.Deserialize(data->GetChild("quests"));
     } else {
         quest_manager.Make();
+    }
+
+    for (int i=0; i < faction_count; i++) {
+        factions[i].ai_information.HighLevelFactionAI();
+        factions[i].ai_information.Initialize();
     }
 }
 

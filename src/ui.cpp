@@ -466,7 +466,7 @@ void UISetMouseHint(const char* text) {
 
 void UIGlobals::UIInit() {
     GlobalUI()->default_font = LoadFontEx("resources/fonts/OCRAEXT.TTF", 16, NULL, 256);
-    //default_font = LoadFontEx("resources/fonts/GOTHIC.TTF", 16, NULL, 256);
+    //GlobalUI()->default_font = LoadFontEx("resources/fonts/GOTHICB.TTF", 16, NULL, 256);
 }
 
 void UIGlobals::UIStart() {
