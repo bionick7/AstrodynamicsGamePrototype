@@ -5,7 +5,7 @@
 #include "constants.hpp"
 
 void DebugDrawLine(Vector2 from, Vector2 to) {
-    const CoordinateTransform* c_transf = GetScreenTransform();
+    const CoordinateTransform* c_transf = GetCoordinateTransform();
     DrawLineV(
         c_transf->TransformV(from),
         c_transf->TransformV(to),
@@ -16,7 +16,7 @@ void DebugDrawLine(Vector2 from, Vector2 to) {
 Vector2 point_buffer[64];
 
 void DebugDrawConic(Vector2 focus, Vector2 ecc_vector, double a) {
-    const CoordinateTransform* c_transf = GetScreenTransform();
+    const CoordinateTransform* c_transf = GetCoordinateTransform();
     Vector2 x = Vector2Normalize(ecc_vector);
     Vector2 y = Vector2Rotate(x, PI/2);
     double e = Vector2Length(ecc_vector);

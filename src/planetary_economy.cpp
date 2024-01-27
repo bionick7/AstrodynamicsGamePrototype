@@ -117,13 +117,13 @@ void PlanetaryEconomy::UIDrawResources(const ResourceTransfer& transfer, double 
         //sprintf(buffer, "%-10s %5d/%5d (%+3d)", GetResourceData(i)->name, qtt, cap, delta);
         sprintf(buffer, "%-10s %3d (%+2d /d)", GetResourceData(i)->name, resource_stock[i], resource_delta[i]);
         UIContextPushInset(0, 18);
-        if (GlobalGetState()->active_transfer_plan.IsActive()) {
+        if (GetTransferPlanUI()->IsActive()) {
             // Button
             if (UIContextDirectButton(transfer.resource_id == i ? "X" : " ", 2) & ButtonStateFlags::JUST_PRESSED) {
                 if (transfer.resource_id == i) 
-                    GlobalGetState()->active_transfer_plan.SetResourceType(ResourceType::RESOURCE_NONE);
+                    GetTransferPlanUI()->SetResourceType(ResourceType::RESOURCE_NONE);
                 else
-                    GlobalGetState()->active_transfer_plan.SetResourceType((ResourceType) i);
+                    GetTransferPlanUI()->SetResourceType((ResourceType) i);
             }
         }
         UIContextWrite(buffer, false);
@@ -167,15 +167,15 @@ void _UIDrawResourceGrpah(const cost_t price_history[], int resource_index) {
 }
 
 void PlanetaryEconomy::TryPlayerTransaction(ResourceTransfer rt) {
-    int faction = GlobalGetState()->player_faction;
+    int faction = GetFactions()->player_faction;
     if (rt.quantity < 0) {  // Sell
         ResourceTransfer actual = DrawResource(rt.Inverted());
-        GlobalGetState()->CompleteTransaction(faction, GetPrice(actual.resource_id, actual.quantity));
+        GetFactions()->CompleteTransaction(faction, GetPrice(actual.resource_id, actual.quantity));
     }
     else if (rt.quantity > 0) {  // Buy
-        rt.quantity = fmin(GetForPrice(rt.resource_id, GlobalGetState()->GetMoney(faction)), rt.quantity);
+        rt.quantity = fmin(GetForPrice(rt.resource_id, GetFactions()->GetMoney(faction)), rt.quantity);
         ResourceTransfer actual = GiveResource(rt);
-        GlobalGetState()->CompleteTransaction(faction, -GetPrice(actual.resource_id, actual.quantity));
+        GetFactions()->CompleteTransaction(faction, -GetPrice(actual.resource_id, actual.quantity));
     }
 }
 
@@ -186,10 +186,10 @@ void PlanetaryEconomy::UIDrawEconomy(const ResourceTransfer& transfer, double fu
         UIContextPushInset(0, 18);
         ResourceType resource = (ResourceType) i;
 
-        if (GlobalGetState()->active_transfer_plan.IsActive()) {
+        if (GetTransferPlanUI()->IsActive()) {
             // Button
             if (UIContextDirectButton(transfer.resource_id == i ? "X" : " ", 2) & ButtonStateFlags::JUST_PRESSED) {
-                GlobalGetState()->active_transfer_plan.SetResourceType(resource);
+                GetTransferPlanUI()->SetResourceType(resource);
             }
         }
 

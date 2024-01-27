@@ -13,6 +13,20 @@
 #include "combat.hpp"
 #include "factions.hpp"
 
+#define X_SINGLETONS \
+    X(CoordinateTransform, coordinate_transform) \
+    X(Calendar, calendar) \
+    X(TransferPlanUI, active_transfer_plan) \
+    X(QuestManager, quest_manager) \
+    X(Ships, ships) \
+    X(Planets, planets) \
+    X(ShipModules, ship_modules) \
+    X(AudioServer, audio_server) \
+    X(WrenInterface, wren_interface) \
+    X(UIGlobals, ui) \
+    X(BattleLog, last_battle_log) \
+    X(Factions, factions) \
+
 struct GlobalState {
     enum FocusablesPanels {
         COMBAT_LOG,
@@ -28,24 +42,18 @@ struct GlobalState {
     RID focused_planet;
     RID focused_ship;
 
-    CoordinateTransform c_transf;
-    Calendar calendar;
-    TransferPlanUI active_transfer_plan;
-
-    QuestManager quest_manager;
-    Ships ships;
-    Planets planets;
-    ShipModules ship_modules;
-    
-    AudioServer audio_server;
-    WrenInterface wren_interface;
-    UIGlobals ui;
-
-    BattleLog last_battle_log;
-
-    int faction_count;
-    Faction factions[8];
-    int player_faction;
+    CoordinateTransform coordinate_transform;
+	Calendar calendar;
+	TransferPlanUI active_transfer_plan;
+	QuestManager quest_manager;
+	Ships ships;
+	Planets planets;
+	ShipModules ship_modules;
+	AudioServer audio_server;
+	WrenInterface wren_interface;
+	UIGlobals ui;
+	BattleLog last_battle_log;
+	Factions factions;
 
     // Lifecycle
     void Make(timemath::Time time);
@@ -68,10 +76,19 @@ struct GlobalState {
     void _InspectState();
 };
 
-GlobalState* GlobalGetState();
+GlobalState* GetGlobalState();
 timemath::Time GlobalGetNow();
+CoordinateTransform* GetCoordinateTransform();
+Calendar* GetCalendar();
+TransferPlanUI* GetTransferPlanUI();
+QuestManager* GetQuestManager();
+Ships* GetShips();
+Planets* GetPlanets();
+ShipModules* GetShipModules();
 AudioServer* GetAudioServer();
 WrenInterface* GetWrenInterface();
-UIGlobals* GlobalUI();
+UIGlobals* GetUI();
+BattleLog* GetBattleLog();
+Factions* GetFactions();
 
 #endif // GLOBAL_STATE_H

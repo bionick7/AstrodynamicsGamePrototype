@@ -10,7 +10,7 @@ double _GetMinDVTo(const Ship* ship, const Planet* to) {
         GlobalGetNow(), NULL, NULL,
         &dv1, &dv2
     );
-    if (to->has_atmosphere && ship->CountModulesOfClass(GlobalGetState()->ship_modules.expected_modules.heatshield) > 0) {
+    if (to->has_atmosphere && ship->CountModulesOfClass(GetShipModules()->expected_modules.heatshield) > 0) {
         return from->GetDVFromExcessVelocity({0, (float) dv1});
     }
     return from->GetDVFromExcessVelocity({0, (float) dv1}) + to->GetDVFromExcessVelocity({0, (float) dv2});
@@ -33,12 +33,6 @@ TransferPlan _HohmannTransferPlan(const Ship* ship, const Planet* to) {
     return res;
 }
 
-void AIBlackboard::Initialize() {
-    // Requires planets to be loaded
-    int planets_count = GlobalGetState()->planets.GetPlanetCount();
-    resource_transfer_tensor = new double [planets_count*planets_count*RESOURCE_MAX];
-}
-
 AIBlackboard::~AIBlackboard() {
     delete[] resource_transfer_tensor;
 }
@@ -47,7 +41,7 @@ double AIBlackboard::CalcTransferUtility(AbstractTransfer atf) const {
     if (resource_transfer_tensor == NULL) {
         return -1;
     }
-    if (!GlobalGetState()->factions[faction].DoesControlPlanet(atf.arrival_planet)) {
+    if (!GetFactions()->DoesControlPlanet(faction, atf.arrival_planet)) {
         return -1;
     }
     //DebugPrintText("faction %d controls %s", faction, GetPlanet(atf.arrival_planet)->name);
@@ -57,7 +51,7 @@ double AIBlackboard::CalcTransferUtility(AbstractTransfer atf) const {
     //DebugPrintText("%d <= %d", atf.fuel, GetPlanet(atf.departure_planet)->economy.resource_stock[RESOURCE_WATER]);
     int departure_planet_tensor_lookup = IdGetIndex(atf.departure_planet);
     int arrival_planet_tensor_lookup = IdGetIndex(atf.arrival_planet);
-    int planets_count = GlobalGetState()->planets.GetPlanetCount();
+    int planets_count = GetPlanets()->GetPlanetCount();
     int tensor_index = departure_planet_tensor_lookup*planets_count*RESOURCE_MAX
       + arrival_planet_tensor_lookup*RESOURCE_MAX
       + atf.resource_transfer.resource_id;
@@ -78,7 +72,7 @@ RID AIBlackboard::ModuleProductionRequest() const {
 void AIBlackboard::HighLevelFactionAI() {
     INFO("High level AI")
     // fill resource transfer tensor
-    int planets_count = GlobalGetState()->planets.GetPlanetCount();
+    int planets_count = GetPlanets()->GetPlanetCount();
     if (resource_transfer_tensor == NULL) {
         // Assuming the ammount of planets is invariant
         resource_transfer_tensor = new double [planets_count*planets_count*RESOURCE_MAX];
@@ -88,7 +82,7 @@ void AIBlackboard::HighLevelFactionAI() {
     IDList owned_planets;
     for(int i=0; i < planets_count; i++){
         Planet* planet = GetPlanetByIndex(i);
-        if (GlobalGetState()->factions[faction].DoesControlPlanet(planet->id)) {
+        if (GetFactions()->DoesControlPlanet(faction, planet->id)) {
             owned_planets.Append(RID(i, EntityType::PLANET));
         }
     }
@@ -185,7 +179,7 @@ void AIBlackboard::_LowLevelHandleCivilianShip(Ship* ship) const {
         .fuel = 0
     };
     double best_utility = -INFINITY;
-    for(int i=0; i < GlobalGetState()->planets.GetPlanetCount(); i++){
+    for(int i=0; i < GetPlanets()->GetPlanetCount(); i++){
         const Planet* planet = GetPlanetByIndex(i);
         if (planet->id == ship->GetParentPlanet()) {
             continue;
@@ -226,7 +220,7 @@ void AIBlackboard::_LowLevelHandleCivilianShip(Ship* ship) const {
 }
 
 void AIBlackboard::_LowLevelHandlePlanet(Planet* planet) const {
-    if (!GlobalGetState()->factions[faction].DoesControlPlanet(planet->id)) {
+    if (!GetFactions()->DoesControlPlanet(faction, planet->id)) {
         return;
     }
     if (planet->ship_production_queue.size == 0) {
@@ -244,7 +238,7 @@ void AIBlackboard::_LowLevelHandlePlanet(Planet* planet) const {
 }
 
 void AIBlackboard::LowLevelFactionAI() const {
-    for(auto it = GlobalGetState()->ships.alloc.Begin(); it; it++) {
+    for(auto it = GetShips()->alloc.Begin(); it; it++) {
         Ship* ship = GetShip(it.GetId());
         if (ship->allegiance != faction) {
             continue;
@@ -258,7 +252,7 @@ void AIBlackboard::LowLevelFactionAI() const {
             _LowLevelHandleCivilianShip(ship);
         }
     }
-    for(int i=0; i < GlobalGetState()->planets.GetPlanetCount(); i++){
+    for(int i=0; i < GetPlanets()->GetPlanetCount(); i++){
         Planet* planet = GetPlanetByIndex(i);
         _LowLevelHandlePlanet(planet);
     }

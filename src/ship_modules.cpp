@@ -38,7 +38,7 @@ void ShipModuleClass::UpdateCustom(Ship* ship) const {
             return;
         }
     }
-    bool new_day = GlobalGetState()->calendar.IsNewDay();
+    bool new_day = GetCalendar()->IsNewDay();
     if (new_day && ship->IsParked()) {
         Planet* planet = GetPlanet(ship->GetParentPlanet());
         for (int i=0; i < RESOURCE_MAX; i++) {
@@ -203,10 +203,10 @@ void ShipModules::UpdateDragging() {
     ShipModuleSlot release_slot = _dragging_origin;
 
     // TODO
-    for (int planet_id = 0; planet_id < GlobalGetState()->planets.GetPlanetCount(); planet_id++) {
+    for (int planet_id = 0; planet_id < GetPlanets()->GetPlanetCount(); planet_id++) {
         release_slot.AssignIfValid(GetPlanetByIndex(planet_id)->current_slot);
     }
-    for (auto it = GlobalGetState()->ships.alloc.GetIter(); it; it++) {
+    for (auto it = GetShips()->alloc.GetIter(); it; it++) {
         release_slot.AssignIfValid(GetShip(it.GetId())->current_slot);
     }
 
@@ -222,9 +222,9 @@ void ShipModules::UpdateDragging() {
 }
 
 int LoadShipModules(const DataNode* data) {
-    return GlobalGetState()->ship_modules.Load(data);
+    return GetShipModules()->Load(data);
 }
 
 const ShipModuleClass* GetModule(RID id) {
-    return GlobalGetState()->ship_modules.GetModuleByRID(id);
+    return GetShipModules()->GetModuleByRID(id);
 }

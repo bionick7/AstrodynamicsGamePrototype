@@ -16,8 +16,8 @@ const char* GetSetting(int argc, const char** argv, const char* find) {
 }
 
 void TestingSetup(GlobalState* app) {
-    /*RID planet_1 = GlobalGetState()->planets.GetIndexByName("Tethys");
-    RID planet_2 = GlobalGetState()->planets.GetIndexByName("Titan");
+    /*RID planet_1 = GetPlanets()->GetIndexByName("Tethys");
+    RID planet_2 = GetPlanets()->GetIndexByName("Titan");
     double dv1, dv2;
     HohmannTransfer(&GetPlanet(planet_1)->orbit, &GetPlanet(planet_2)->orbit, 0, NULL, NULL, &dv1, &dv2);
     INFO("dv1: %f, dv2: %f", dv1, dv2)
@@ -39,7 +39,7 @@ void Load(int argc, const char** argv) {
         SetRandomSeed(0);  // For consistency
     }
 
-    GlobalState* app = GlobalGetState();
+    GlobalState* app = GetGlobalState();
     GetAudioServer()->LoadSFX();
     //GetAudioServer()->StartMusic();
 
@@ -70,7 +70,7 @@ int main(int argc, const char** argv) {
     AppMetaInit();
     Load(argc, argv);
 
-    GlobalState* app = GlobalGetState();
+    GlobalState* app = GetGlobalState();
 
     // Main loop
     while (!WindowShouldClose()) {

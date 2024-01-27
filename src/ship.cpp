@@ -51,16 +51,16 @@ bool Ship::HasMouseHover(double* min_distance) const {
 }
 
 void Ship::_OnClicked() {
-    if (GlobalGetState()->focused_ship == id) {
-        GetScreenTransform()->focus = position.cartesian;
+    if (GetGlobalState()->focused_ship == id) {
+        GetCoordinateTransform()->focus = position.cartesian;
     } else {
-        GlobalGetState()->focused_ship = id;
+        GetGlobalState()->focused_ship = id;
     }
     HandleButtonSound(ButtonStateFlags::JUST_PRESSED);
 }
 
 void Ship::_OnNewPlanClicked() {
-    TransferPlanUI& tp_ui = GlobalGetState()->active_transfer_plan;
+    TransferPlanUI& tp_ui = GetGlobalState()->active_transfer_plan;
     if (tp_ui.IsActive() || IsIdValid(tp_ui.ship)) {
         return;
     }
@@ -124,7 +124,7 @@ void Ship::Deserialize(const DataNode* data) {
     strcpy(name, data->Get("name", "UNNAMED"));
     allegiance = data->GetI("allegiance", allegiance);
     plan_edit_index = -1;
-    ship_class = GlobalGetState()->ships.GetShipClassIndexById(data->Get("class_id"));
+    ship_class = GetShips()->GetShipClassIndexById(data->Get("class_id"));
     if (!IsIdValid(ship_class)) {
         FAIL("Invalid ship class")  // TODO fail more gracefully
     }
@@ -133,7 +133,7 @@ void Ship::Deserialize(const DataNode* data) {
 
     int modules_count = data->GetArrayLen("modules", true);
     if (modules_count > SHIP_MAX_MODULES) modules_count = SHIP_MAX_MODULES;
-    const ShipModules* sms = &GlobalGetState()->ship_modules;
+    const ShipModules* sms = GetShipModules();
     for(int i=0; i < modules_count; i++) {
         modules[i] = sms->GetModuleRIDFromStringId(data->GetArrayElem("modules", i));
     }
@@ -156,7 +156,7 @@ void Ship::Deserialize(const DataNode* data) {
 double Ship::GetPayloadMass() const{
     double res = 0.0;
 
-    QuestManager* qm = &GlobalGetState()->quest_manager;
+    QuestManager* qm = GetQuestManager();
     for(auto i = qm->active_tasks.GetIter(); i; i++) {
         if (qm->active_tasks[i]->ship == id) {
             res += qm->active_tasks[i]->payload_mass;
@@ -164,7 +164,7 @@ double Ship::GetPayloadMass() const{
     }
 
     for(int i=0; i < SHIP_MAX_MODULES; i++) {
-        if (IsIdValid(modules[i]) && modules[i] != GlobalGetState()->ship_modules.expected_modules.droptank) {
+        if (IsIdValid(modules[i]) && modules[i] != GetShipModules()->expected_modules.droptank) {
             res += GetModule(modules[i])->mass;
         }
     }
@@ -178,14 +178,14 @@ resource_count_t Ship::GetMaxCapacity() const {
 
 resource_count_t Ship::GetRemainingPayloadCapacity(double dv) const {
     const ShipClass* sc = GetShipClassByIndex(ship_class);
-    int drop_tanks = CountModulesOfClass(GlobalGetState()->ship_modules.expected_modules.droptank);
+    int drop_tanks = CountModulesOfClass(GetShipModules()->expected_modules.droptank);
     double capacity = sc->GetPayloadCapacityMass(dv, drop_tanks);
     return KGToResourceCounts(capacity - GetPayloadMass());
 }
 
 resource_count_t Ship::GetFuelRequiredFull(double dv) const {
     const ShipClass* sc = GetShipClassByIndex(ship_class);
-    int drop_tanks = CountModulesOfClass(GlobalGetState()->ship_modules.expected_modules.droptank);
+    int drop_tanks = CountModulesOfClass(GetShipModules()->expected_modules.droptank);
     const resource_count_t fuel_per_droptank = 10;
     double extra_fuel = fuel_per_droptank * drop_tanks;
     return sc->max_capacity + extra_fuel - KGToResourceCounts(sc->GetPayloadCapacityMass(dv, extra_fuel)); ;
@@ -198,7 +198,7 @@ resource_count_t Ship::GetFuelRequiredEmpty(double dv) const {
 
 double Ship::GetCapableDV() const {
     const ShipClass* sc = GetShipClassByIndex(ship_class);
-    int drop_tanks = CountModulesOfClass(GlobalGetState()->ship_modules.expected_modules.droptank);
+    int drop_tanks = CountModulesOfClass(GetShipModules()->expected_modules.droptank);
 
     const resource_count_t fuel_per_droptank = 10;
     
@@ -212,7 +212,7 @@ double Ship::GetCapableDV() const {
 }
 
 bool Ship::IsPlayerControlled() const {
-    return allegiance == GlobalGetState()->player_faction;
+    return allegiance == GetFactions()->player_faction;
 }
 
 IntelLevel::T Ship::GetIntelLevel() const {
@@ -360,7 +360,7 @@ void Ship::RemoveTransferPlan(int index) {
 }
 
 void Ship::StartEditingPlan(int index) {
-    TransferPlanUI& tp_ui = GlobalGetState()->active_transfer_plan;
+    TransferPlanUI& tp_ui = GetGlobalState()->active_transfer_plan;
     timemath::Time min_time = 0;
     if (index == 0) {
         if (IsParked()) {
@@ -410,9 +410,9 @@ void Ship::Update() {
     }
 
     // Draw
-    draw_pos = GetScreenTransform()->TransformV(position.cartesian);
+    draw_pos = GetCoordinateTransform()->TransformV(position.cartesian);
     if (IsParked()) {
-        double rad = fmax(GetScreenTransform()->TransformS(GetPlanet(GetParentPlanet())->radius), 4) + 8.0;
+        double rad = fmax(GetCoordinateTransform()->TransformS(GetPlanet(GetParentPlanet())->radius), 4) + 8.0;
         double phase = fmin(20.0 / rad * index_on_planet, index_on_planet / (double)total_on_planet * 2 * PI);
         draw_pos = Vector2Add(FromPolar(rad, phase), draw_pos);
     }
@@ -424,10 +424,10 @@ void Ship::Update() {
 void Ship::_UpdateShipyard() {
     int collected_components[4] = {0};
     for (int i=0; i < SHIP_MAX_MODULES; i++) {
-        if(modules[i] == GlobalGetState()->ship_modules.expected_modules.small_yard_1) collected_components[0]++;
-        if(modules[i] == GlobalGetState()->ship_modules.expected_modules.small_yard_2) collected_components[1]++;
-        if(modules[i] == GlobalGetState()->ship_modules.expected_modules.small_yard_3) collected_components[2]++;
-        if(modules[i] == GlobalGetState()->ship_modules.expected_modules.small_yard_4) collected_components[3]++;
+        if(modules[i] == GetShipModules()->expected_modules.small_yard_1) collected_components[0]++;
+        if(modules[i] == GetShipModules()->expected_modules.small_yard_2) collected_components[1]++;
+        if(modules[i] == GetShipModules()->expected_modules.small_yard_3) collected_components[2]++;
+        if(modules[i] == GetShipModules()->expected_modules.small_yard_4) collected_components[3]++;
     }
     int module_factories = MinInt(collected_components[1], collected_components[2]);
     int repair_stations = MinInt(collected_components[2], collected_components[3]);
@@ -435,11 +435,11 @@ void Ship::_UpdateShipyard() {
         MinInt(collected_components[0], collected_components[1]),
         repair_stations
     );
-    if (GlobalGetState()->calendar.IsNewDay() && IsParked()) {
+    if (GetCalendar()->IsNewDay() && IsParked()) {
         for(int i=0; i < repair_stations; i++) {
             IDList available_ships;
             uint32_t filter = ((1 << allegiance) & 0xFFU) | 0xFFFFFF00U;
-            GlobalGetState()->ships.GetOnPlanet(&available_ships, parent_obj, filter);
+            GetShips()->GetOnPlanet(&available_ships, parent_obj, filter);
             available_ships.Sort([](RID ship1, RID ship2){
                 return GetShip(ship2)->GetMissingHealth() - GetShip(ship1)->GetMissingHealth();
             });
@@ -553,7 +553,7 @@ int ship_selecting_module_index = -1;
 void _UIDrawInventory(Ship* ship) {
     const int MARGIN = 3;
 
-    ShipModules* sms = &GlobalGetState()->ship_modules;
+    ShipModules* sms = GetShipModules();
     int columns = UIContextCurrent().width / (SHIP_MODULE_WIDTH + MARGIN);
     int rows = std::ceil(SHIP_MAX_MODULES / (double)columns);
 
@@ -663,7 +663,7 @@ void _UIDrawFleet(Ship* ship) {
     }
     IDList candidates;
     uint32_t selection_flags = ((1UL << ship->allegiance) & 0xFF) | 0xFFFFFF00;
-    GlobalGetState()->ships.GetOnPlanet(&candidates, ship->GetParentPlanet(), selection_flags);
+    GetShips()->GetOnPlanet(&candidates, ship->GetParentPlanet(), selection_flags);
     for (int i=0; i < candidates.size; i++) {
         if (candidates[i] == ship->id) continue;
         const Ship* candidate = GetShip(candidates[i]);
@@ -681,7 +681,7 @@ void _UIDrawFleet(Ship* ship) {
 }
 
 void _UIDrawQuests(Ship* ship) {
-    QuestManager* qm = &GlobalGetState()->quest_manager;
+    QuestManager* qm = GetQuestManager();
     double max_mass = ResourceCountsToKG(ship->GetMaxCapacity()) - ship->GetPayloadMass();
     
     for(auto it = qm->active_tasks.GetIter(); it; it++) {
@@ -715,7 +715,7 @@ void Ship::DrawUI() {
     current_slot = ShipModuleSlot();
     highlighted_plan_index = -1;
 
-    if (!mouse_hover && GlobalGetState()->active_transfer_plan.ship != id && GlobalGetState()->focused_ship != id) return;
+    if (!mouse_hover && GetTransferPlanUI()->ship != id && GetGlobalState()->focused_ship != id) return;
 
     const int INSET_MARGIN = 6;
     const int OUTSET_MARGIN = 6;
@@ -819,7 +819,7 @@ void Ship::_OnDeparture(const TransferPlan* tp) {
         resource_count_t remaining_fuel = tp->fuel_mass - fuel_tf.quantity;
         if (
             local_economy->trading_accessible && 
-            local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) < GlobalGetState()->GetMoney(allegiance)
+            local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) < GetFactions()->GetMoney(allegiance)
         ) {
             USER_INFO("Automatically purchased %d of water for M§M %d K", remaining_fuel, local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) / 1e3)
             local_economy->TryPlayerTransaction(ResourceTransfer(RESOURCE_WATER, remaining_fuel));
@@ -839,9 +839,9 @@ void Ship::_OnDeparture(const TransferPlan* tp) {
     transporing = local_economy->DrawResource(tp->resource_transfer);
     //INFO("%s: %d", resource_names[transporing.resource_id], transporing.quantity)
 
-    for(auto it = GlobalGetState()->quest_manager.active_tasks.GetIter(); it; it++) {
-        if (GlobalGetState()->quest_manager.active_tasks[it]->ship == id) {
-            GlobalGetState()->quest_manager.TaskDepartedFrom(it.GetId(), parent_obj);
+    for(auto it = GetQuestManager()->active_tasks.GetIter(); it; it++) {
+        if (GetQuestManager()->active_tasks[it]->ship == id) {
+            GetQuestManager()->TaskDepartedFrom(it.GetId(), parent_obj);
         }
     }
 
@@ -849,7 +849,7 @@ void Ship::_OnDeparture(const TransferPlan* tp) {
         parent_obj = GetInvalidId();
 
         IDList following;
-        GlobalGetState()->ships.GetFleet(&following, id);
+        GetShips()->GetFleet(&following, id);
         for (int i=0; i < following.size; i++) {
             GetShip(following[i])->_OnDeparture(tp);
         }
@@ -864,9 +864,9 @@ void _OnFleetArrival(Ship* leading_ship, const TransferPlan* tp) {
     // Collects ships for combat
     IDList hostile_ships;
     uint32_t selection_flags = (~(1UL << leading_ship->allegiance) & 0xFF) | Ships::MILITARY_SELECTION_FLAG;
-    GlobalGetState()->ships.GetOnPlanet(&hostile_ships, tp->arrival_planet, selection_flags);
+    GetShips()->GetOnPlanet(&hostile_ships, tp->arrival_planet, selection_flags);
     IDList allied_ships;
-    GlobalGetState()->ships.GetFleet(&allied_ships, leading_ship->id);
+    GetShips()->GetFleet(&allied_ships, leading_ship->id);
     allied_ships.Append(leading_ship->id);
     if (hostile_ships.size > 0) {
         // First, military ships vs. military ships
@@ -875,10 +875,11 @@ void _OnFleetArrival(Ship* leading_ship, const TransferPlan* tp) {
         if (victory) {
             uint32_t selection_flags = (~(1UL << leading_ship->allegiance) & 0xFF) | 0xFFFFFF00;
             IDList conquered;
-            GlobalGetState()->ships.GetOnPlanet(&conquered, tp->arrival_planet, selection_flags);
+            GetShips()->GetOnPlanet(&conquered, tp->arrival_planet, selection_flags);
             for(int i=0; i < conquered.size; i++) {
                 GetShip(conquered[i])->allegiance = leading_ship->allegiance;
             }
+            GetPlanet(tp->arrival_planet)->Conquer(leading_ship->allegiance);
         }
         for (int i=0; i < allied_ships.size; i++) {
             if (IsIdValid(allied_ships[i])) {
@@ -888,13 +889,14 @@ void _OnFleetArrival(Ship* leading_ship, const TransferPlan* tp) {
     } else {
         uint32_t selection_flags = (~(1UL << leading_ship->allegiance) & 0xFF) | 0xFFFFFF00;
         IDList conquered;
-        GlobalGetState()->ships.GetOnPlanet(&conquered, tp->arrival_planet, selection_flags);
+        GetShips()->GetOnPlanet(&conquered, tp->arrival_planet, selection_flags);
         for(int i=0; i < conquered.size; i++) {
             GetShip(conquered[i])->allegiance = leading_ship->allegiance;
         }
         for (int i=0; i < allied_ships.size; i++) {
             GetShip(allied_ships[i])->is_detected = false;
         }
+        GetPlanet(tp->arrival_planet)->Conquer(leading_ship->allegiance);
     }
 }
 
@@ -907,7 +909,7 @@ void Ship::_OnArrival(const TransferPlan* tp) {
         parent_obj = tp->arrival_planet;
 
         IDList following;
-        GlobalGetState()->ships.GetFleet(&following, id);
+        GetShips()->GetFleet(&following, id);
         for (int i=0; i < following.size; i++) {
             GetShip(following[i])->_OnArrival(tp);
         }
@@ -917,15 +919,15 @@ void Ship::_OnArrival(const TransferPlan* tp) {
     position = GetPlanet(GetParentPlanet())->position;
 
     // Complete tasks
-    for(auto it = GlobalGetState()->quest_manager.active_tasks.GetIter(); it; it++) {
-        const Task* quest = GlobalGetState()->quest_manager.active_tasks[it];
+    for(auto it = GetQuestManager()->active_tasks.GetIter(); it; it++) {
+        const Task* quest = GetQuestManager()->active_tasks[it];
         if (quest->ship == id && quest->arrival_planet == tp->arrival_planet) {
-            GlobalGetState()->quest_manager.TaskArrivedAt(it.GetId(), tp->arrival_planet);
+            GetQuestManager()->TaskArrivedAt(it.GetId(), tp->arrival_planet);
         }
     }
 
     for(int i=0; i < SHIP_MAX_MODULES; i++) {
-        if (modules[i] == GlobalGetState()->ship_modules.expected_modules.droptank) {
+        if (modules[i] == GetShipModules()->expected_modules.droptank) {
             RemoveShipModuleAt(i);
         }
     }
@@ -980,7 +982,7 @@ RID Ships::AddShip(const DataNode* data) {
     ship->Deserialize(data);
     if (data->Has("planet")) {  // not necaissary strictly, but far more human-readable
         const char* planet_name = data->Get("planet");
-        RID planet_id = GlobalGetState()->planets.GetIndexByName(planet_name);
+        RID planet_id = GetPlanets()->GetIndexByName(planet_name);
         if (!IsIdValid(planet_id)) {
             FAIL("Error while initializing ship '%s': no such planet '%s'", ship->name, planet_name)
         }
@@ -1104,13 +1106,13 @@ const ShipClass* Ships::GetShipClassByIndex(RID id) const {
 }
 
 Ship* GetShip(RID uuid) {
-    return GlobalGetState()->ships.GetShip(uuid);
+    return GetShips()->GetShip(uuid);
 }
 
 const ShipClass* GetShipClassByIndex(RID index) {
-    return GlobalGetState()->ships.GetShipClassByIndex(index);
+    return GetShips()->GetShipClassByIndex(index);
 }
 
 int LoadShipClasses(const DataNode *data) {
-    return GlobalGetState()->ships.LoadShipClasses(data);
+    return GetShips()->LoadShipClasses(data);
 }

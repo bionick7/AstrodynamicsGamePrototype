@@ -217,7 +217,7 @@ void ShipSpawn(WrenVM* vm) {
 	GetWrenInterface()->MoveSlot(1, 0);
 	DataNode dn;
 	GetWrenInterface()->MapAsDataNode(&dn);
-	RID id = GlobalGetState()->ships.AddShip(&dn);
+	RID id = GetShips()->AddShip(&dn);
 	wrenSetSlotDouble(vm, 0, id.AsInt());
 	_AllocateShip(vm);
 }
@@ -227,7 +227,7 @@ void ShipKill(WrenVM* vm) {
 	bool call_callback = wrenGetSlotBool(vm, 1);
 	RID ship = GetWrenInterface()->GetShipFormWrenObject();
 	if (!IsIdValid(ship)) return;
-	GlobalGetState()->ships.KillShip(ship, call_callback);
+	GetShips()->KillShip(ship, call_callback);
 }
 
 void ShipSetStat(WrenVM* vm) {
@@ -671,7 +671,7 @@ RID WrenInterface::GetShipFormWrenObject() const {
 }
 
 void WrenInterface::NotifyShipEvent(RID ship, const char *event) {
-	IDAllocatorList<Quest, EntityType::ACTIVE_QUEST>* active_quests = &GlobalGetState()->quest_manager.active_quests;
+	IDAllocatorList<Quest, EntityType::ACTIVE_QUEST>* active_quests = &GetQuestManager()->active_quests;
 	for (auto iter = active_quests->GetIter(); iter; iter++) {
 		wrenEnsureSlots(vm, 4);
 		wrenSetSlotDouble(vm, 0, ship.AsInt());
@@ -693,7 +693,7 @@ void WrenInterface::PushQuest(const char *quest_id) {
 
 void WrenInterface::Update() {
 	while (!quest_queue.empty()) {
-		GlobalGetState()->quest_manager.ForceQuest(quest_queue.front());
+		GetQuestManager()->ForceQuest(quest_queue.front());
 		quest_queue.pop();
 	}
 	

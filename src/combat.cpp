@@ -14,7 +14,7 @@ bool ShipBattle(const IDList* ships_aggressor, const IDList* ships_defender, dou
     //     remove if necaissary
     // Sort by initiative instead
 
-    BattleLog* output_log = &GlobalGetState()->last_battle_log;
+    BattleLog* output_log = GetBattleLog();
     output_log->Clear();
 
     int total_ships = ships_aggressor->size + ships_defender->size;
@@ -69,10 +69,10 @@ bool ShipBattle(const IDList* ships_aggressor, const IDList* ships_defender, dou
                     // Kill all encaissary ships
                     for(int i=0; i < killed.size; i++) {
                         RID kill_id = killed.Get(i);
-                        GlobalGetState()->ships.KillShip(kill_id, true);
+                        GetShips()->KillShip(kill_id, true);
                     }
                     // Force pause
-                    GlobalGetState()->calendar.paused = true;
+                    GetCalendar()->paused = true;
                     output_log->shown = true;
 
                     return is_agressor;

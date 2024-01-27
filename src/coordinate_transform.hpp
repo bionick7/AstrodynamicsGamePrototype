@@ -25,8 +25,6 @@ struct Calendar {
     timemath::Time GetFrameElapsedGameTime() const;
 };
 
-Calendar* GetCalendar();
-
 struct CoordinateTransform {
     float space_scale;
     Vector2 focus;
@@ -44,6 +42,5 @@ struct CoordinateTransform {
 };
 
 Vector2 GetMousePositionInWorld();
-CoordinateTransform* GetScreenTransform();
 
 #endif  // COORDINATE_TRANSFORM

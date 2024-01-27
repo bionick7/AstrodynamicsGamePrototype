@@ -27,6 +27,8 @@ struct Planet {
     bool has_atmosphere;
     Orbit orbit;
 
+    int allegiance;
+
     OrbitPos position;
     PlanetaryEconomy economy;
 
@@ -50,6 +52,7 @@ struct Planet {
     void _OnClicked();
     double ScreenRadius() const;
     double GetDVFromExcessVelocity(Vector2 vel) const;
+    void Conquer(int faction);
 
     void RecalcStats();
 

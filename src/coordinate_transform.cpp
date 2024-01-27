@@ -65,10 +65,6 @@ timemath::Time Calendar::GetFrameElapsedGameTime() const {
     return time - prev_time;
 }
 
-Calendar* GetCalendar() {
-    return &GlobalGetState()->calendar;
-}
-
 void CoordinateTransform::Make(){
     space_scale = 1e-6;
     focus = {0};
@@ -129,9 +125,9 @@ void CoordinateTransform::TransformBuffer(Vector2* buffer, int buffer_size) cons
 void CoordinateTransform::HandleInput(double delta_t) {
     float scroll_ratio = 1 + 0.1 * GetMouseWheelMove();
 
-    auto current_focus = GlobalGetState()->current_focus;
+    auto current_focus = GetGlobalState()->current_focus;
 
-    if (scroll_ratio != 1 && !GlobalUI()->scroll_lock) {
+    if (scroll_ratio != 1 && !GetUI()->scroll_lock) {
         // ((P - c) / s1)*v + f1 = ((P - c) / s2)*v + f2
         // ((P - c) / s1)*v - ((P - c) / s2) + f1 = f2
         focus = Vector2Subtract(
@@ -148,9 +144,5 @@ void CoordinateTransform::HandleInput(double delta_t) {
 }
 
 Vector2 GetMousePositionInWorld() {
-    return GlobalGetState()->c_transf.InvTransformV(GetMousePosition());
-}
-
-CoordinateTransform* GetScreenTransform() {
-    return &GlobalGetState()->c_transf;
+    return GetCoordinateTransform()->InvTransformV(GetMousePosition());
 }

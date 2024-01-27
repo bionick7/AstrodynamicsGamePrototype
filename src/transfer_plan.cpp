@@ -440,7 +440,7 @@ void TransferPlanUI::Update() {
         }
         TransferPlanSolve(plan);
         double required_dv = plan->tot_dv;
-        bool ship_can_aerobrake = ship_instance->CountModulesOfClass(GlobalGetState()->ship_modules.expected_modules.heatshield) > 0;
+        bool ship_can_aerobrake = ship_instance->CountModulesOfClass(GetShipModules()->expected_modules.heatshield) > 0;
         if (GetPlanet(plan->arrival_planet)->has_atmosphere && ship_can_aerobrake) {
             // Is overriding tot_dv a good idea?
             plan->tot_dv = plan->dv1[plan->primary_solution];
@@ -493,7 +493,7 @@ void _DrawSweep(const Orbit* orbit, timemath::Time from, timemath::Time to, Colo
     OrbitPos to_pos = orbit->GetPosition(to);
 
     int full_orbits = floor(timemath::Time::SecDiff(to, from) / orbit->GetPeriod().Seconds());
-    double offset_per_pixel = GetScreenTransform()->InvTransformS(1);
+    double offset_per_pixel = GetCoordinateTransform()->InvTransformS(1);
     for (int i=1; i <= full_orbits; i++) {
         orbit->DrawWithOffset(offset_per_pixel * -3 * i, color);
     }

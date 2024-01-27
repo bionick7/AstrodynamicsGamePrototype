@@ -295,7 +295,7 @@ void DrawTimeline() {
     if (!show_timeline) return;
 
     // Create UI Context
-    GlobalState* gs = GlobalGetState();
+    GlobalState* gs = GetGlobalState();
     UIContextCreateNew(20, 100, GetScreenWidth() - 40, GetScreenHeight() - 100, 16, Palette::ui_main);
     UIContextEnclose(Palette::bg, Palette::ui_main);
 
@@ -308,8 +308,8 @@ void DrawTimeline() {
     tcd.planet_coords = new int[gs->planets.planet_count];
 
     // Scrolling
-    GlobalUI()->scroll_lock = true;
-    if (GlobalGetState()->current_focus == GlobalState::TIMELINE) {
+    GetUI()->scroll_lock = true;
+    if (GetGlobalState()->current_focus == GlobalState::TIMELINE) {
         float scroll_ratio = 1 + 0.1 * GetMouseWheelMove();
         if (scroll_ratio > 1) {
             pixels_per_day_vscale = ClampInt(pixels_per_day_vscale * scroll_ratio, pixels_per_day_vscale + 1, tcd.h);

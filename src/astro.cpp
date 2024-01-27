@@ -3,6 +3,7 @@
 #include "utils.hpp"
 #include "coordinate_transform.hpp"
 #include "logging.hpp"
+#include "global_state.hpp"
 
 double _True2Ecc(double θ, double e) {
     return atan(sqrt((1 - e) / (1 + e)) * tan(θ/2)) * 2;
@@ -255,13 +256,13 @@ static Vector2 orbit_draw_buffer[ORBIT_BUFFER_SIZE];
 
 void Orbit::Draw(Color color) const {
     Sample(orbit_draw_buffer, ORBIT_BUFFER_SIZE);
-    GetScreenTransform()->TransformBuffer(orbit_draw_buffer, ORBIT_BUFFER_SIZE);
+    GetCoordinateTransform()->TransformBuffer(orbit_draw_buffer, ORBIT_BUFFER_SIZE);
     DrawLineStrip(&orbit_draw_buffer[0], ORBIT_BUFFER_SIZE, color);
 }
 
 void Orbit::DrawWithOffset(double offset, Color color) const {
     SampleWithOffset(orbit_draw_buffer, ORBIT_BUFFER_SIZE, offset);
-    GetScreenTransform()->TransformBuffer(orbit_draw_buffer, ORBIT_BUFFER_SIZE);
+    GetCoordinateTransform()->TransformBuffer(orbit_draw_buffer, ORBIT_BUFFER_SIZE);
     DrawLineStrip(&orbit_draw_buffer[0], ORBIT_BUFFER_SIZE, color);
 }
 
@@ -271,7 +272,7 @@ void Orbit::DrawBounded(OrbitPos bound1, OrbitPos bound2, double offset, Color c
         orbit_draw_buffer[0] = bound1.cartesian;
         orbit_draw_buffer[ORBIT_BUFFER_SIZE-1] = bound2.cartesian;
     }
-    GetScreenTransform()->TransformBuffer(orbit_draw_buffer, ORBIT_BUFFER_SIZE);
+    GetCoordinateTransform()->TransformBuffer(orbit_draw_buffer, ORBIT_BUFFER_SIZE);
     DrawLineStrip(&orbit_draw_buffer[0], ORBIT_BUFFER_SIZE, color);
 }
 

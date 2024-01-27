@@ -3,18 +3,24 @@
 
 #include "ai.hpp"
 
-struct Faction {
-    cost_t money;
-    int id;
-    AIBlackboard ai_information;
+struct Factions {
+    int faction_count;
+    int player_faction;
 
-    void AssignID(int p_id);
+    cost_t money[8];
+    AIBlackboard ai_information[8];
+
+    void InitializeAI();
+
+    bool CompleteTransaction(int faction, int delta);
+    cost_t GetMoney(int faction);
+    void Update();
 
     // Serialization
     void Serialize(DataNode* dn) const;
     void Deserialize(const DataNode* dn);
 
-    bool DoesControlPlanet(RID planet_id) const;
+    bool DoesControlPlanet(int faction, RID planet_id) const;
 };
 
 #endif  // FACTIONS_H

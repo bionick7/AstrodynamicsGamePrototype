@@ -7,6 +7,7 @@ factions:
 planets:
   - name: Mimas
     trading_accessible: n
+    allegiance: 0
     resource_stock:
       water: 1000
     resource_delta:
@@ -14,12 +15,14 @@ planets:
       metal: 1
   - name: Encelladus
     trading_accessible: n
+    allegiance: 0
     resource_stock:
       water: 1000
     resource_delta:
       metal: 2
   - name: Tethys
     trading_accessible: y
+    allegiance: 0
     resource_stock:
       water: 1000
       electronics: 6
@@ -27,6 +30,7 @@ planets:
       electronics: 1
   - name: Rhea
     trading_accessible: n
+    allegiance: 1
     resource_stock:
       water: 1000
     resource_delta:
@@ -36,6 +40,7 @@ planets:
     - shpmod_heatshield
   - name: Titan
     trading_accessible: y
+    allegiance: 1
     resource_stock:
       water: 1000
     resource_delta:
@@ -46,6 +51,7 @@ planets:
     - shpmod_droptank
   - name: Iaeptus
     trading_accessible: n
+    allegiance: 2
     resource_stock:
       water: 1000
     resource_delta: 
@@ -54,6 +60,7 @@ planets:
       water: 40
   - name: Phoebe
     trading_accessible: n
+    allegiance: 2
     resource_stock:
       water: 1000
 

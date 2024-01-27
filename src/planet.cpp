@@ -26,6 +26,7 @@ void Planet::Serialize(DataNode* data) const {
     data->Set("trading_accessible", economy.trading_accessible ? "y" : "n");
     data->SetI("ship_production_process", ship_production_process);
     data->SetI("module_production_process", module_production_process);
+    data->SetI("allegiance", allegiance);
     ship_production_queue.SerializeTo(data, "ship_production_queue");
     module_production_queue.SerializeTo(data, "module_production_queue");
     //data->SetF("mass", mu / G);
@@ -57,6 +58,7 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
     strcpy(name, data->Get("name", name, true));
     ship_production_process = data->GetI("ship_production_process", 0, true);
     module_production_process = data->GetI("module_production_process", 0, true);
+    allegiance = data->GetI("allegiance", 0);
     ship_production_queue.DeserializeFrom(data, "ship_production_queue", true);
     module_production_queue.DeserializeFrom(data, "module_production_queue", true);
     RID index = planets->GetIndexByName(name);
@@ -82,7 +84,7 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
         
         for (int i = 0; i < ship_module_inventory_count; i++) {
             const char* module_id = data->GetArrayElem("inventory", i);
-            ship_module_inventory[i] = GlobalGetState()->ship_modules.GetModuleRIDFromStringId(module_id);
+            ship_module_inventory[i] = GetShipModules()->GetModuleRIDFromStringId(module_id);
         }
     }
 
@@ -93,27 +95,32 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
 }
 
 void Planet::_OnClicked() {
-    TransferPlanUI& tp_ui = GlobalGetState()->active_transfer_plan;
+    TransferPlanUI* tp_ui = GetTransferPlanUI();
     if (
-        tp_ui.plan != NULL
-        && IsIdValid(tp_ui.ship)
-        && IsIdValid(tp_ui.plan->departure_planet)
-        && !IsIdValid(tp_ui.plan->arrival_planet)
+        tp_ui->plan != NULL
+        && IsIdValid(tp_ui->ship)
+        && IsIdValid(tp_ui->plan->departure_planet)
+        && !IsIdValid(tp_ui->plan->arrival_planet)
     ) {
-        tp_ui.SetDestination(id);
-    } else if (GlobalGetState()->focused_planet == id) {
-        GetScreenTransform()->focus = position.cartesian;
+        tp_ui->SetDestination(id);
+    } else if (GetGlobalState()->focused_planet == id) {
+        GetCoordinateTransform()->focus = position.cartesian;
     } else {
-        GlobalGetState()->focused_planet = id;
+        GetGlobalState()->focused_planet = id;
     }
 }
 
 double Planet::ScreenRadius() const {
-    return fmax(GetScreenTransform()->TransformS(radius), 4);
+    return fmax(GetCoordinateTransform()->TransformS(radius), 4);
 }
 
 double Planet::GetDVFromExcessVelocity(Vector2 vel) const {
     return sqrt(mu / (2*radius) + Vector2LengthSqr(vel));
+}
+
+void Planet::Conquer(int faction) {
+    if (allegiance == faction) return;
+    allegiance = faction;
 }
 
 void Planet::RecalcStats() {
@@ -138,7 +145,7 @@ void Planet::RemoveShipModuleInInventory(int index) {
 }
 
 bool Planet::HasMouseHover(double* min_distance) const {
-    Vector2 screen_pos = GetScreenTransform()->TransformV(position.cartesian);
+    Vector2 screen_pos = GetCoordinateTransform()->TransformV(position.cartesian);
     double dist = Vector2Distance(GetMousePosition(), screen_pos);
     if (dist <= ScreenRadius() * 1.2 && dist < *min_distance) {
         *min_distance = dist;
@@ -193,7 +200,7 @@ void Planet::AdvanceShipProductionQueue() {
     if (ship_production_process < sc->construction_time) return;
 
     IDList list;
-    GlobalGetState()->ships.GetOnPlanet(&list, id, UINT32_MAX);
+    GetShips()->GetOnPlanet(&list, id, UINT32_MAX);
     int allegiance = GetShip(list[0])->allegiance;// Assuming planets can't have split allegiance!
 
     DataNode ship_data;
@@ -203,7 +210,7 @@ void Planet::AdvanceShipProductionQueue() {
     ship_data.Set("planet", name);
     ship_data.CreateArray("tf_plans", 0);
     ship_data.CreateArray("modules", 0);
-    GlobalGetState()->ships.AddShip(&ship_data);
+    GetShips()->AddShip(&ship_data);
 
     for (int i=0; i < RESOURCE_MAX; i++) {
         if (sc->construction_resources != 0) {
@@ -267,7 +274,7 @@ void Planet::_UIDrawInventory() {
     int i_max = MinInt(rows * columns, MAX_PLANET_INVENTORY);
     UIContextPushInset(0, height);
     
-    ShipModules* sms = &GlobalGetState()->ship_modules;
+    ShipModules* sms = GetShipModules();
     for (int i = 0; i < i_max; i++) {
         //if (!IsIdValid(ship_module_inventory[i])) continue;
         UIContextPushGridCell(columns, rows, i % columns, i / columns);
@@ -429,7 +436,7 @@ void Planet::_UIDrawModuleProduction() {
         progress = Clamp(module_production_process / (float)module_class->construction_time, 0.0f, 1.0f);
     }
     _UIDrawProduction(
-        GlobalGetState()->ship_modules.shipmodule_count,
+        GetShipModules()->shipmodule_count,
         &module_production_queue,
         economy.resource_stock,
         progress,
@@ -446,7 +453,7 @@ void Planet::_UIDrawShipProduction() {
         progress = Clamp(ship_production_process / (float)ship_class->construction_time, 0.0f, 1.0f);
     }
     _UIDrawProduction(
-        GlobalGetState()->ships.ship_classes_count,
+        GetShips()->ship_classes_count,
         &ship_production_queue,
         economy.resource_stock,
         progress,
@@ -466,9 +473,9 @@ void Planet::DrawUI() {
     ResourceTransfer transfer = ResourceTransfer();
     resource_count_t fuel_draw = -1;  // why not 0?
 
-    const TransferPlan* tp = GlobalGetState()->active_transfer_plan.plan;
+    const TransferPlan* tp = GetTransferPlanUI()->plan;
 
-    if (GlobalGetState()->active_transfer_plan.IsActive()){
+    if (GetTransferPlanUI()->IsActive()){
         if (tp->departure_planet == id) {
             y_start = 10;
             height = GetScreenHeight() / 2 - 20;
@@ -481,7 +488,7 @@ void Planet::DrawUI() {
         } else {
             return;
         }
-    } else if (mouse_hover || GlobalGetState()->focused_planet == id) {
+    } else if (mouse_hover || GetGlobalState()->focused_planet == id) {
         y_start = 10;
         height = GetScreenHeight() - 20;
         transfer = ResourceTransfer();
@@ -641,8 +648,10 @@ int Planets::LoadEphemerides(const DataNode* data) {
     return planet_count;
 }
 
-Planet* GetPlanet(RID id) { return GlobalGetState()->planets.GetPlanet(id); }
+Planet* GetPlanet(RID id) { return GetPlanets()->GetPlanet(id); }
+
 Planet* GetPlanetByIndex(int index) { 
-    return GlobalGetState()->planets.GetPlanet(RID(index, EntityType::PLANET)); 
+    return GetPlanets()->GetPlanet(RID(index, EntityType::PLANET)); 
 }
-int LoadEphemerides(const DataNode* data) { return GlobalGetState()->planets.LoadEphemerides(data); }
+
+int LoadEphemerides(const DataNode* data) { return GetPlanets()->LoadEphemerides(data); }

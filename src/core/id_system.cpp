@@ -27,7 +27,7 @@ bool IsIdValid(RID id) {
     }
     uint32_t index = IdGetIndex(id);
 
-    GlobalState* gs = GlobalGetState();
+    GlobalState* gs = GetGlobalState();
     switch (type) {
     case EntityType::PLANET:
         return index < gs->planets.GetPlanetCount();

@@ -219,8 +219,8 @@ void Quest::_NextTask() {
         const char* type = GetWrenInterface()->GetStringFromMap("type", "invalid");
         if (strcmp(type, "task") == 0) {
             await_type = TASK;
-            current.task = GlobalGetState()->quest_manager.CreateTask(id);
-            Task* task = GlobalGetState()->quest_manager.active_tasks.Get(current.task);
+            current.task = GetQuestManager()->CreateTask(id);
+            Task* task = GetQuestManager()->active_tasks.Get(current.task);
 
             task->departure_planet = RID(GetWrenInterface()->GetNumFromMap("departure_planet", 0), EntityType::PLANET);
             task->current_planet = task->departure_planet;
@@ -253,7 +253,7 @@ void Quest::_NextTask() {
             const char* text = GetWrenInterface()->GetStringFromMap("text", "NO TEXT");
             //const char* replies[] = { "<continue>" };
 
-            dialogue_backlog.Append(GlobalGetState()->quest_manager.CreateDialogue(speaker, text, NULL, 0));
+            dialogue_backlog.Append(GetQuestManager()->CreateDialogue(speaker, text, NULL, 0));
         }
         else if (strcmp(type, "dialogue choice") == 0) {
             await_type = DAILOGUE;
@@ -279,7 +279,7 @@ void Quest::_NextTask() {
                 strcpy(next_options[i], option_route);
             }
 
-            current.dialogue = GlobalGetState()->quest_manager.CreateDialogue(speaker, text, replies, replies_num);
+            current.dialogue = GetQuestManager()->CreateDialogue(speaker, text, replies, replies_num);
             delete[] replies;
         }
         else if (strcmp(type, "goto") == 0) {
@@ -299,12 +299,12 @@ void Quest::_NextTask() {
         else if (strcmp(type, "gain money") == 0) {
             int faction = GetWrenInterface()->GetNumFromMap("faction", 0);
             cost_t delta = GetWrenInterface()->GetNumFromMap("ammount", 0);
-            GlobalGetState()->CompleteTransaction(faction, delta);
+            GetFactions()->CompleteTransaction(faction, delta);
         }
         else if (strcmp(type, "gain module") == 0) {
             const char* module_string_id = GetWrenInterface()->GetStringFromMap("module", "");
             int planet_index = GetWrenInterface()->GetNumFromMap("location", 0);
-            RID module_id = GlobalGetState()->ship_modules.GetModuleRIDFromStringId(module_string_id);
+            RID module_id = GetShipModules()->GetModuleRIDFromStringId(module_string_id);
             GetPlanetByIndex(planet_index)->AddShipModuleToInventory(module_id);
         }
         else if (strcmp(type, "gain reputation") == 0) {

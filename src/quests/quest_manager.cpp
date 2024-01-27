@@ -93,7 +93,7 @@ void QuestManager::Update(double dt) {
         }
     }*/
 
-    if (GlobalGetState()->calendar.IsNewDay()) {
+    if (GetCalendar()->IsNewDay()) {
         _RegenQuests();
     }
 }
@@ -161,7 +161,7 @@ void QuestManager::Draw() {
             return;
         }
 
-        if (GlobalGetState()->current_focus == GlobalState::QUEST_MANAGER) {
+        if (GetGlobalState()->current_focus == GlobalState::QUEST_MANAGER) {
             int max_scroll = MaxInt(TASK_PANEL_HEIGHT * GetAvailableQuests() - UIContextCurrent().height, 0);
             current_available_quests_scroll = ClampInt(current_available_quests_scroll - GetMouseWheelMove() * 20, 0, max_scroll);
         }

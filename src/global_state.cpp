@@ -40,14 +40,14 @@ void _PauseMenu() {
     if (_PauseMenuButton("Save")) {
         INFO("Save")
         DataNode dn;
-        GlobalGetState()->Serialize(&dn);
+        GetGlobalState()->Serialize(&dn);
         dn.WriteToFile("save.yaml", FileFormat::YAML);
     }
     if (_PauseMenuButton("Load")) {
         INFO("Load")
         DataNode dn;
         DataNode::FromFile(&dn, "save.yaml", FileFormat::YAML, true, false);
-        GlobalGetState()->Deserialize(&dn);
+        GetGlobalState()->Deserialize(&dn);
     }
     if (_PauseMenuButton("Exit")) {
         exit(0);
@@ -58,7 +58,7 @@ void GlobalState::Make(timemath::Time p_time) {
     ui.UIInit();
     calendar.Make(p_time);
     active_transfer_plan.Reset();
-    c_transf.Make();
+    coordinate_transform.Make();
     focused_planet = GetInvalidId();
     focused_ship = GetInvalidId();
 }
@@ -238,7 +238,7 @@ void _UpdateShipsPlanets(GlobalState* gs) {
 
 // Update
 void GlobalState::UpdateState(double delta_t) {
-    c_transf.HandleInput(delta_t);
+    coordinate_transform.HandleInput(delta_t);
     calendar.HandleInput(delta_t);
     audio_server.Update(delta_t);
     
@@ -251,36 +251,29 @@ void GlobalState::UpdateState(double delta_t) {
     _UpdateShipsPlanets(this);
 
     // AI update
-    if (calendar.IsNewDay()) {
-        for (int i=0; i < faction_count; i++) {
-            factions[i].ai_information.HighLevelFactionAI();
-        }
-    }
-    for (int i=0; i < faction_count; i++) {
-        factions[i].ai_information.LowLevelFactionAI();
-    }
+    factions.Update();
 }
 
 // Draw
 void GlobalState::DrawState() {
-    DrawCircleV(c_transf.TransformV({0}), c_transf.TransformS(planets.GetParentNature()->radius), Palette::ui_main);
+    DrawCircleV(coordinate_transform.TransformV({0}), coordinate_transform.TransformS(planets.GetParentNature()->radius), Palette::ui_main);
     for (int planet_id = 0; planet_id < planets.GetPlanetCount(); planet_id++) {
-        GetPlanetByIndex(planet_id)->Draw(&c_transf);
+        GetPlanetByIndex(planet_id)->Draw(&coordinate_transform);
     }
     for (auto it = ships.alloc.GetIter(); it; it++) {
         Ship* ship = ships.alloc[it];
-        ship->Draw(&c_transf);
+        ship->Draw(&coordinate_transform);
     }
 
-    active_transfer_plan.Draw(&c_transf);
+    active_transfer_plan.Draw(&coordinate_transform);
 
     // UI
     ui.UIStart();
     calendar.DrawUI();
     char capital_str[21];
     sprintf(capital_str, "M§M %6" LONG_STRID ".%3" LONG_STRID " .mil", 
-        GetMoney(player_faction) / (int)1e6, 
-        GetMoney(player_faction) % 1000000 / 1000
+        factions.GetMoney(factions.player_faction) / (int)1e6, 
+        factions.GetMoney(factions.player_faction) % 1000000 / 1000
     );
     DrawTextAligned(capital_str, {GetScreenWidth() / 2.0f, 10}, TextAlignment::HCENTER & TextAlignment::TOP, Palette::ui_main);
 
@@ -308,28 +301,14 @@ void GlobalState::DrawState() {
     //DrawFPS(0, 0);
 }
 
-// delta is the ammount of capital transferred TO the player
-bool GlobalState::CompleteTransaction(int faction, int delta) {
-    factions[faction].money += delta;
-    return true;
-}
-
-cost_t GlobalState::GetMoney(int faction) {
-    return factions[faction].money;
-}
-
 void GlobalState::Serialize(DataNode* data) const {
     // TODO: refer to the ephemerides used
     
-    c_transf.Serialize(data->SetChild("coordinate_transform"));
+    coordinate_transform.Serialize(data->SetChild("coordinate_transform"));
     calendar.Serialize(data->SetChild("calendar"));
     quest_manager.Serialize(data->SetChild("quests"));
 
-    data->CreatChildArray("factions", faction_count);
-    for(int i=0; i < faction_count; i++) {
-        factions[i].Serialize(data->InsertIntoChildArray("factions", i));
-    }
-    data->SetI("player_faction", player_faction);
+    factions.Serialize(data);
 
     // ignore transferplanui for now
     data->SetI("focused_planet", focused_planet.AsInt());
@@ -358,9 +337,9 @@ void GlobalState::Serialize(DataNode* data) const {
 
 void GlobalState::Deserialize(const DataNode* data) {
     if (data->HasChild("coordinate_transform")) {
-        c_transf.Deserialize(data->GetChild("coordinate_transform"));
+        coordinate_transform.Deserialize(data->GetChild("coordinate_transform"));
     } else {
-        c_transf.Make();
+        coordinate_transform.Make();
     }
     if (data->HasChild("calendar")) {
         calendar.Deserialize(data->GetChild("calendar"));
@@ -369,12 +348,7 @@ void GlobalState::Deserialize(const DataNode* data) {
     }
     // ignore transferplanui for now
 
-    faction_count = data->GetChildArrayLen("factions");
-    for(int i=0; i < faction_count; i++) {
-        factions[i].AssignID(i);
-        factions[i].Deserialize(data->GetChildArrayElem("factions", i));
-    }
-    player_faction = data->GetI("player_faction", 0);
+    factions.Deserialize(data);
 
     ships.alloc.Clear(); 
     planets = Planets();
@@ -405,28 +379,21 @@ void GlobalState::Deserialize(const DataNode* data) {
         quest_manager.Make();
     }
 
-    for (int i=0; i < faction_count; i++) {
-        factions[i].ai_information.HighLevelFactionAI();
-        factions[i].ai_information.Initialize();
-    }
+    factions.InitializeAI();
 }
 
-GlobalState* GlobalGetState() {
-    return &global_state;
-}
+GlobalState* GetGlobalState() { return &global_state; }
+timemath::Time GlobalGetNow() { return global_state.calendar.time; }
 
-timemath::Time GlobalGetNow() {
-    return global_state.calendar.time;
-}
-
-AudioServer* GetAudioServer() {
-    return &global_state.audio_server;
-}
-
-WrenInterface* GetWrenInterface() {
-    return &global_state.wren_interface;
-}
-
-UIGlobals* GlobalUI() {
-    return &global_state.ui;
-}
+CoordinateTransform* GetCoordinateTransform() { return &global_state.coordinate_transform; }
+Calendar* GetCalendar() { return &global_state.calendar; }
+TransferPlanUI* GetTransferPlanUI() { return &global_state.active_transfer_plan; }
+QuestManager* GetQuestManager() { return &global_state.quest_manager; }
+Ships* GetShips() { return &global_state.ships; }
+Planets* GetPlanets() { return &global_state.planets; }
+ShipModules* GetShipModules() { return &global_state.ship_modules; }
+AudioServer* GetAudioServer() { return &global_state.audio_server; }
+WrenInterface* GetWrenInterface() { return &global_state.wren_interface; }
+UIGlobals* GetUI() { return &global_state.ui; }
+BattleLog* GetBattleLog() { return &global_state.last_battle_log; }
+Factions* GetFactions() { return &global_state.factions; }
