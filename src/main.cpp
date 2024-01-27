@@ -25,6 +25,8 @@ void TestingSetup(GlobalState* app) {
     double dv2_true = GetPlanet(planet_2)->GetDVFromExcessVelocity({0, dv2});
     INFO("dv1': %f, dv2': %f", dv1_true, dv2_true)*/
 
+    printf("'%s'", "");
+
     return;
 
     const WrenQuestTemplate* template_ = GetWrenInterface()->GetWrenQuest("raiders");

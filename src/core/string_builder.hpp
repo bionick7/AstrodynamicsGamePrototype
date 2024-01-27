@@ -11,6 +11,8 @@ struct StringBuilder {
     StringBuilder(int p_length);
     ~StringBuilder();
     int CountLines() const;
+    void WriteToFile(const char* filename) const;
+
     StringBuilder& Clear();
     StringBuilder & AutoBreak(int max_width);
 

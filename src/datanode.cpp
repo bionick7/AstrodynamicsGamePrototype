@@ -1,6 +1,7 @@
 #include "datanode.hpp"
 #include "time.hpp"
 #include "logging.hpp"
+#include "string_builder.hpp"
 
 const DataNode DataNode::Empty = DataNode();
 
@@ -238,7 +239,7 @@ int DataNode::FromYaml(DataNode* node, const char* filename, yaml_parser_t* pars
                         parse_state = DN_PARESE_EXPECT_KEY;
                         break;
                     case DN_PARESE_EXPECT_ITEM:
-                        node->AppendToChildArray(key_name, child_node);
+                        DataNode::CopyTo(&child_node, node->AppendToChildArray(key_name));
                         break;
                     case DN_PARESE_EXPECT_KEY:
                         ERROR("Expected key, got map\n");
@@ -260,65 +261,65 @@ int DataNode::FromYaml(DataNode* node, const char* filename, yaml_parser_t* pars
 }
 
 // Helper function to write DataNode to JSON
-void DataNode::WriteJSON(std::ostream& os, int indentLevel) const {
+void DataNode::WriteJSON(StringBuilder* sb, int indentLevel) const {
     const char* indent = _GetSpaces(indentLevel*2);
 
-    os << "{\n";
+    sb->Add("{\n");
     for (auto it = Fields.begin(); it != Fields.end(); ++it) {
-        os << indent << "  \"" << it->first << "\": \"" << it->second << "\"";
+        sb->AddFormat("%s   \"%s\": \"%s\"", indent, it->first.c_str(), it->second.c_str());
         if (std::next(it) != Fields.end() || !Children.empty() || !FieldArrays.empty() || !ChildArrays.empty()) {
-            os << ",";
+            sb->Add(",");
         }
-        os << "\n";
+        sb->Add("\n");
     }
 
     for (auto it = Children.begin(); it != Children.end(); ++it) {
-        os << indent << "  \"" << it->first << "\": ";
-        it->second->WriteJSON(os, indentLevel + 1);
+        sb->AddFormat("%s   \"%s\":", indent, it->first.c_str());
+        it->second->WriteJSON(sb, indentLevel + 1);
         if (std::next(it) != Children.end() || !FieldArrays.empty() || !ChildArrays.empty()) {
-            os << ",";
+            sb->Add(",");
         }
-        os << "\n";
+        sb->Add("\n");
     }
 
     for (auto it = FieldArrays.begin(); it != FieldArrays.end(); ++it) {
-        os << indent << "  \"" << it->first << "\": [\n";
+        sb->AddFormat("%s   \"%s\": [\n", indent, it->first.c_str());
         for (const auto& item : it->second) {
-            os << indent << "    \"" << item << "\"";
+            sb->AddFormat("%s     \"%s\"", indent, item);
             if (&item != &it->second.back()) {
-                os << ",";
+                sb->Add(",");
             }
-            os << "\n";
+            sb->Add("\n");
         }
-        os << indent << "  ]";
+        sb->Add(indent).Add("  ]");
         if (std::next(it) != FieldArrays.end() || !ChildArrays.empty()) {
-            os << ",";
+            sb->Add(",");
         }
-        os << "\n";
+        sb->Add("\n");
     }
 
     for (auto it = ChildArrays.begin(); it != ChildArrays.end(); ++it) {
-        os << indent << "  \"" << it->first << "\": [\n";
+        sb->AddFormat("%s   \"%s\": [\n", indent, it->first.c_str());
         for (const auto& item : *it->second) {
-            os << indent << "    ";
-            item.WriteJSON(os, indentLevel + 1);
+            sb->Add(indent).Add("    ");
+            item.WriteJSON(sb, indentLevel + 1);
             if (&item != &it->second->back()) {
-                os << ",";
+                sb->Add(",");
             }
-            os << "\n";
+            sb->Add("\n");
         }
-        os << indent << "  ]";
+        sb->Add(indent).Add("  ]");
         if (std::next(it) != ChildArrays.end()) {
-            os << ",";
+            sb->Add(",");
         }
-        os << "\n";
+        sb->Add("\n");
     }
 
-    os << indent << "}";
+    sb->Add(indent).Add("}");
 }
 
 // Helper function to write DataNode to YAML
-void DataNode::WriteYAML(std::ostream& os, int indentLevel, bool ignore_first_indent) const {
+void DataNode::WriteYAML(StringBuilder* sb, int indentLevel, bool ignore_first_indent) const {
     const char* indent = _GetSpaces(indentLevel*2);
     int indent_nr = 0;
 #define INDENT ((indent_nr++==0 && ignore_first_indent) ? "" : indent)  // All this to make lists of children look nicer
@@ -326,37 +327,37 @@ void DataNode::WriteYAML(std::ostream& os, int indentLevel, bool ignore_first_in
     //os << "Fields: " << Fields.size() << " -- Children: " << Children.size() << " -- Field Arrays " << FieldArrays.size() << std::endl;
 
     for (auto it = Fields.begin(); it != Fields.end(); ++it) {
-        os << INDENT << it->first << ": " << it->second << "\n";
+        sb->AddFormat("%s%s: %s\n", INDENT, it->first.c_str(), it->second.c_str());
     }
 
     for (auto it = Children.begin(); it != Children.end(); ++it) {
-        os << INDENT << it->first << ":\n";
-        it->second->WriteYAML(os, indentLevel + 1, false);
+        sb->AddFormat("%s%s\n", INDENT, it->first.c_str());
+        it->second->WriteYAML(sb, indentLevel + 1, false);
     }
 
     for (auto it = FieldArrays.begin(); it != FieldArrays.end(); ++it) {
         if (it->second.empty()) {
-            os << INDENT << it->first << ": []\n";
+            sb->AddFormat("%s%s: []\n", INDENT, it->first.c_str());
         } else {
-            os << INDENT << it->first << ":\n";
+            sb->AddFormat("%s%s:\n", INDENT, it->first.c_str());
         }
         for (const auto& item : it->second) {
-            os << INDENT << "- " << item << "\n";
+            sb->AddFormat("%s- %s\n", INDENT, item.c_str());
         }
     }
 
     for (auto it = ChildArrays.begin(); it != ChildArrays.end(); ++it) {
         if (it->second->empty()) {
-            os << INDENT << it->first << ": []\n";
+            sb->AddFormat("%s%s: []\n", INDENT, it->first.c_str());
         } else {
-            os << INDENT << it->first << ":\n";
+            sb->AddFormat("%s%s:\n", INDENT, it->first.c_str());
         }
         for (const auto& item : *it->second) {
-            os << INDENT << "- ";
-            item.WriteYAML(os, indentLevel + 1, true);
+            sb->Add(INDENT).Add("- ");
+            item.WriteYAML(sb, indentLevel + 1, true);
         }
     }
-    os << std::endl;
+    sb->Add("\n");
 #undef INDENT
 }
 
@@ -365,20 +366,19 @@ void DataNode::WriteToFile(const char* filepath, FileFormat fmt) const {
         ERROR("Could not find file '%s'", filepath)
         return;
     }*/
-    std::ofstream file;
-    file.open(filepath);
+    StringBuilder sb;
     switch (fmt) {
     case FileFormat::JSON:
-        WriteJSON(file, 0);
+        WriteJSON(&sb, 0);
         break;
     case FileFormat::YAML:
-        WriteYAML(file, 0);
+        WriteYAML(&sb, 0);
         break;
     default:
         WARNING("Unsupported safe format %d", fmt)
         break;
     }
-    file.close();
+    sb.WriteToFile(filepath);
 }
 
 /*******************************
@@ -555,6 +555,11 @@ const char* DataNode::GetChildArrayKey(int index) const {
     return it->first.c_str();
 }
 
+void DataNode::Inspect() const {
+    StringBuilder sb;
+    WriteYAML(&sb);
+    INFO(sb.c_str);
+}
 
 /***********************************
  * SETTERS
@@ -689,7 +694,7 @@ void DataNode::AppendToArray(const char* key, const char* value) {
     }
 }
 
-DataNode* DataNode::AppendToChildArray(const char* key, const DataNode& value) {
+DataNode* DataNode::AppendToChildArray(const char* key) {
     if (IsReadOnly) {
         WARNING("Trying to set array element on a readonly datanode at '%s'\n", key);
         return NULL;
@@ -697,11 +702,11 @@ DataNode* DataNode::AppendToChildArray(const char* key, const DataNode& value) {
     auto find = ChildArrays.find(key);  // This crashes quietly without error smh
     if (find == ChildArrays.end()) {
         std::vector<DataNode>* arr = new std::vector<DataNode>();
-        arr->push_back(value);
+        arr->push_back(DataNode());
         ChildArrays.insert({key, arr});
         return &arr->back();
     } else {
-        find->second->push_back(value);
+        find->second->push_back(DataNode());
         return &find->second->back();
     }
 }

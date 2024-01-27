@@ -20,6 +20,8 @@ enum class FileFormat {
     Auto
 };
 
+struct StringBuilder;
+
 struct DataNode {
     static const DataNode Empty;
     bool IsReadOnly;
@@ -34,8 +36,8 @@ struct DataNode {
     //static std::vector<DataNode> ManyFromFile(const char* filepath, FileFormat fmt = FileFormat::Auto);
     //void ToFile(const char* filepath, FileFormat format);
     static int FromYaml(DataNode* dn, const char* filepath, yaml_parser_t* yaml, bool isReadonly=false, int recursion_depth=0);
-    void WriteJSON(std::ostream& os, int indentLevel=0) const;
-    void WriteYAML(std::ostream& os, int indentLevel=0, bool ignore_first_indent=false) const;
+    void WriteJSON(StringBuilder* os, int indentLevel=0) const;
+    void WriteYAML(StringBuilder* os, int indentLevel=0, bool ignore_first_indent=false) const;
     void WriteToFile(const char* file, FileFormat fmt) const;
 
     bool Has(const char* key) const;
@@ -60,7 +62,7 @@ struct DataNode {
     DataNode* InsertIntoChildArray(const char* key, int index);
 
     void AppendToArray(const char* key, const char* value);
-    DataNode* AppendToChildArray(const char* key, const DataNode& value);
+    DataNode* AppendToChildArray(const char* key);
 
     const char* Get(const char* key, const char* def="", bool quiet=false) const;
     long GetI(const char* key, long def=0, bool quiet=false) const;
@@ -89,9 +91,7 @@ struct DataNode {
 
     //static bool FieldEquals(std::string lhs, std::string rhs);
 
-    void Inspect() const {
-        WriteYAML(std::cout);
-    }
+    void Inspect() const;
 
 private:
     std::map<std::string, std::string> Fields;

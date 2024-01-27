@@ -29,6 +29,10 @@ int StringBuilder::CountLines() const {
     return res;
 }
 
+void StringBuilder::WriteToFile(const char * filename) const {
+    SaveFileText(filename, c_str);
+}
+
 StringBuilder& StringBuilder::Clear() {
     c_str = (char*)malloc(1);
     c_str[0] = '\0';

@@ -385,15 +385,15 @@ void GlobalState::Deserialize(const DataNode* data) {
 GlobalState* GetGlobalState() { return &global_state; }
 timemath::Time GlobalGetNow() { return global_state.calendar.time; }
 
-CoordinateTransform* GetCoordinateTransform() { return &global_state.coordinate_transform; }
-Calendar* GetCalendar() { return &global_state.calendar; }
-TransferPlanUI* GetTransferPlanUI() { return &global_state.active_transfer_plan; }
-QuestManager* GetQuestManager() { return &global_state.quest_manager; }
-Ships* GetShips() { return &global_state.ships; }
-Planets* GetPlanets() { return &global_state.planets; }
-ShipModules* GetShipModules() { return &global_state.ship_modules; }
-AudioServer* GetAudioServer() { return &global_state.audio_server; }
-WrenInterface* GetWrenInterface() { return &global_state.wren_interface; }
-UIGlobals* GetUI() { return &global_state.ui; }
-BattleLog* GetBattleLog() { return &global_state.last_battle_log; }
-Factions* GetFactions() { return &global_state.factions; }
+CoordinateTransform* GetCoordinateTransform() { return &global_state.coordinate_transform;  }
+Calendar*            GetCalendar()            { return &global_state.calendar;              }
+TransferPlanUI*      GetTransferPlanUI()      { return &global_state.active_transfer_plan;  }
+QuestManager*        GetQuestManager()        { return &global_state.quest_manager;         }
+Ships*               GetShips()               { return &global_state.ships;                 }
+Planets*             GetPlanets()             { return &global_state.planets;               }
+ShipModules*         GetShipModules()         { return &global_state.ship_modules;          }
+AudioServer*         GetAudioServer()         { return &global_state.audio_server;          }
+WrenInterface*       GetWrenInterface()       { return &global_state.wren_interface;        }
+UIGlobals*           GetUI()                  { return &global_state.ui;                    }
+BattleLog*           GetBattleLog()           { return &global_state.last_battle_log;       }
+Factions*            GetFactions()            { return &global_state.factions;              }

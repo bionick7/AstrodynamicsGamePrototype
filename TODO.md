@@ -19,7 +19,7 @@
 - Group ships and form fleets (Done)
 - Let player choose faction (Done)
 - counts should be 10 T to allow more flexibility (Done)
-- Planets track allegiance independendtly (updated in battle)
+- Planets track allegiance independendtly (Done) (updated in battle)
 - AI shits :(
 
 ## Known Bugs

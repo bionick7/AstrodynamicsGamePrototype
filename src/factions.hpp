@@ -3,12 +3,28 @@
 
 #include "ai.hpp"
 
+#define MAX_FACTIONS 8
+
+namespace DiplomaticStatus {
+    typedef uint32_t T;
+    const static int AT_WAR = 1UL;
+    const static int CAN_TRADE = 2UL;
+    const static int HAS_TRUCE = 4UL;
+    // etc.
+}
+
+
 struct Factions {
     int faction_count;
     int player_faction;
 
-    cost_t money[8];
-    AIBlackboard ai_information[8];
+    double reputation_matrix[MAX_FACTIONS*MAX_FACTIONS];
+    DiplomaticStatus::T diplomacy_matrix[MAX_FACTIONS*MAX_FACTIONS];
+
+    cost_t money[MAX_FACTIONS];
+    AIBlackboard ai_information[MAX_FACTIONS];
+
+    constexpr static uint32_t GetAllegianceFlags(int faction) { return 1U << faction; }
 
     void InitializeAI();
 
@@ -20,6 +36,7 @@ struct Factions {
     void Serialize(DataNode* dn) const;
     void Deserialize(const DataNode* dn);
 
+    bool CanTradeWithPlanet(int faction, RID planet_id) const;
     bool DoesControlPlanet(int faction, RID planet_id) const;
 };
 
