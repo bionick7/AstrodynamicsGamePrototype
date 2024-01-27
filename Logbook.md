@@ -236,3 +236,10 @@ Foreach planet:
         queue_production(blackboard.production_request)
 ```
 Civilian transport kinda works, although a more 'official' definition for planet allegiance is needed
+
+## Status 27 Jan 24
+Now that building is a thing, focus can shift away from combat. Else the game is to quickly decided.
+Also combat AI is kinda hard.
+I honestly think that this is the MVP done, it just really lacks in content and balance
+And approachability/explenation before playtesting.
+Honesty time to work on looks/UX

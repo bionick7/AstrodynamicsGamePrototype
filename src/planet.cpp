@@ -115,7 +115,20 @@ double Planet::ScreenRadius() const {
 }
 
 double Planet::GetDVFromExcessVelocity(Vector2 vel) const {
-    return sqrt(mu / (2*radius) + Vector2LengthSqr(vel));
+    return sqrt(2*mu / radius + Vector2LengthSqr(vel)) - sqrt(mu / radius);
+}
+
+double Planet::GetDVFromExcessVelocityPro(double vel, double parking_orbit, bool aerobreaking) const {
+    double a_intermediate = (parking_orbit + radius) / 2;
+    double burn_1 = aerobreaking ? 0 : sqrt(mu / (2*radius) + vel*vel) - sqrt(mu * (2 / radius - 1 / a_intermediate));
+    double burn_2 = sqrt(mu / parking_orbit) - sqrt(mu * (2 / parking_orbit - 1 / a_intermediate));
+    // dv^2 = v_escape^2 + v_excess^2
+    return burn_1 + burn_2;
+}
+
+Color Planet::GetColor() const {
+    return Palette::ui_main;
+    //return allegiance == GetFactions()->player_faction ? Palette::green : Palette::red;
 }
 
 void Planet::Conquer(int faction) {
@@ -246,9 +259,9 @@ void Planet::AdvanceModuleProductionQueue() {
 void Planet::Draw(const CoordinateTransform* c_transf) {
     //printf("%f : %f\n", position.x, position.y);
     Vector2 screen_pos = c_transf->TransformV(position.cartesian);
-    DrawCircleV(screen_pos, ScreenRadius(), Palette::ui_main);
+    DrawCircleV(screen_pos, ScreenRadius(), GetColor());
     
-    orbit.Draw(Palette::ui_main);
+    orbit.Draw(GetColor());
 
     int screen_x = (int)screen_pos.x, screen_y = (int)screen_pos.y;
     int text_h = 16;

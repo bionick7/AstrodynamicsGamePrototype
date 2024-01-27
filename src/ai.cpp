@@ -70,7 +70,7 @@ RID AIBlackboard::ModuleProductionRequest() const {
 }
 
 void AIBlackboard::HighLevelFactionAI() {
-    INFO("High level AI")
+    //INFO("High level AI")
     // fill resource transfer tensor
     int planets_count = GetPlanets()->GetPlanetCount();
     if (resource_transfer_tensor == NULL) {

@@ -52,6 +52,8 @@ struct Planet {
     void _OnClicked();
     double ScreenRadius() const;
     double GetDVFromExcessVelocity(Vector2 vel) const;
+    double GetDVFromExcessVelocityPro(double vel, double parking_orbit, bool aerobreaking) const;
+    Color GetColor() const;
     void Conquer(int faction);
 
     void RecalcStats();

@@ -293,3 +293,31 @@ void HohmannTransfer(const Orbit* from, const Orbit* to, timemath::Time t0, time
     if (dv1       != NULL) *dv1 = fabs(sqrt(mu * (2 / from->sma - 1 / hohmann_a)) - sqrt(mu / from->sma));
     if (dv2       != NULL) *dv2 = fabs(sqrt(mu / to->sma) - sqrt(mu * (2 / to->sma - 1 / hohmann_a)));
 }
+
+void GetDVTable(StringBuilder* sb, bool include_arobreaks) {
+    sb->Add("|          ");
+    for(int j=0; j < GetPlanets()->GetPlanetCount(); j++) {
+        sb->AddFormat("|%10s", GetPlanetByIndex(j)->name);
+    }
+    sb->Add("|\n");
+    for(int i=0; i < GetPlanets()->GetPlanetCount(); i++) {
+        sb->AddFormat("|%10s", GetPlanetByIndex(i)->name);
+        for(int j=0; j < GetPlanets()->GetPlanetCount(); j++) {
+            if (i == j) {
+                sb->Add("|          ");
+                continue;
+            }
+            double dv1, dv2;
+            HohmannTransfer(
+                &GetPlanetByIndex(i)->orbit, &GetPlanetByIndex(j)->orbit,
+                GlobalGetNow(), NULL, NULL, &dv1, &dv2
+            );
+            double tot_dv = GetPlanetByIndex(i)->GetDVFromExcessVelocity({(float) dv1, 0});
+            if (!include_arobreaks || !GetPlanetByIndex(j)->has_atmosphere) {
+                tot_dv += GetPlanetByIndex(j)->GetDVFromExcessVelocity({(float) dv2, 0});
+            }
+            sb->AddFormat("| %8.3f ", tot_dv * 1e-3);
+        }
+        sb->Add("|\n");
+    }
+}

@@ -3,6 +3,7 @@
 
 #include "basic.hpp"
 #include "time.hpp"
+#include "string_builder.hpp"
 
 struct OrbitPos {
     timemath::Time time;
@@ -42,11 +43,11 @@ struct Orbit {
     void DrawBounded(OrbitPos bound1, OrbitPos bound2, double offet, Color color) const;
 };
 
-
 void HohmannTransfer(
     const Orbit* from, const Orbit* to, timemath::Time t0, 
     timemath::Time* departure, timemath::Time* arrival, 
     double* dv1, double* dv2
 );
+void GetDVTable(StringBuilder* sb, bool include_arobreaks);
 
 #endif // ASTRO_H

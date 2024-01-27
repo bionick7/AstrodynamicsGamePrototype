@@ -45,16 +45,20 @@ Near-term, realizable only
 - ability to show hohmann transfer period in transfer window (eh ... hard to make it be useful)
 - quest-log window is kinda outdated (repurposed for dialogue)
 - Show battle-log after battle (done)
+
 - Select planet when clicking on orbit
 - list ships to select next to planet
+- jump from ship to parent ship and plane
+- shift-click in inventory to switch inventory
 - ships icons
 - modules icons
+- warn before committing to an empty transform ("empty" in red or required to choose it explicitly)
+
 - Show tasks and wait times also in dialogue
 - front-end info and error log
 - good ui showing quests
 - good ui showing tasks
 //- make clear which buildings are buildable
-- warn before committing to an empty transform ("empty" in red or required to choose it explicitly)
 - highlight more important statistics
 
 ## Graphics improvements wishlist
