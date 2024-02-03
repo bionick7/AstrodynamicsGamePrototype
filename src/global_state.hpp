@@ -13,20 +13,6 @@
 #include "combat.hpp"
 #include "factions.hpp"
 
-#define X_SINGLETONS \
-    X(CoordinateTransform, coordinate_transform) \
-    X(Calendar, calendar) \
-    X(TransferPlanUI, active_transfer_plan) \
-    X(QuestManager, quest_manager) \
-    X(Ships, ships) \
-    X(Planets, planets) \
-    X(ShipModules, ship_modules) \
-    X(AudioServer, audio_server) \
-    X(WrenInterface, wren_interface) \
-    X(UIGlobals, ui) \
-    X(BattleLog, last_battle_log) \
-    X(Factions, factions) \
-
 struct GlobalState {
     enum FocusablesPanels {
         COMBAT_LOG,
@@ -42,7 +28,7 @@ struct GlobalState {
     RID focused_planet;
     RID focused_ship;
 
-    CoordinateTransform coordinate_transform;
+    GameCamera camera;
 	Calendar calendar;
 	TransferPlanUI active_transfer_plan;
 	QuestManager quest_manager;
@@ -78,7 +64,7 @@ struct GlobalState {
 
 GlobalState* GetGlobalState();
 timemath::Time GlobalGetNow();
-CoordinateTransform* GetCoordinateTransform();
+GameCamera* GetCamera();
 Calendar* GetCalendar();
 TransferPlanUI* GetTransferPlanUI();
 QuestManager* GetQuestManager();

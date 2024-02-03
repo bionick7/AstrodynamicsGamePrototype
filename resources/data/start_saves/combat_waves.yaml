@@ -1,4 +1,4 @@
-player_faction: 1
+player_faction: 0
 factions:
 - money: 2e6
 - money: 1e6

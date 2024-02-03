@@ -101,7 +101,7 @@ struct Ship {
     void Update();
     void _UpdateShipyard();
     void _UpdateModules();
-    void Draw(const CoordinateTransform* c_transf) const;
+    void Draw3D() const;
     void DrawUI();
     void Inspect();
 

@@ -11,9 +11,9 @@ double _GetMinDVTo(const Ship* ship, const Planet* to) {
         &dv1, &dv2
     );
     if (to->has_atmosphere && ship->CountModulesOfClass(GetShipModules()->expected_modules.heatshield) > 0) {
-        return from->GetDVFromExcessVelocity({0, (float) dv1});
+        return from->GetDVFromExcessVelocity(dv1);
     }
-    return from->GetDVFromExcessVelocity({0, (float) dv1}) + to->GetDVFromExcessVelocity({0, (float) dv2});
+    return from->GetDVFromExcessVelocity(dv1) + to->GetDVFromExcessVelocity(dv2);
 }
 
 TransferPlan _HohmannTransferPlan(const Ship* ship, const Planet* to) {

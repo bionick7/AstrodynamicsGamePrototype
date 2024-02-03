@@ -2,6 +2,7 @@
 #define UI_H
 
 #include "basic.hpp"
+#include "id_allocator.hpp"
 #include <stack>
 
 static inline Vector2 GetScreenCenter() { return {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f}; }
@@ -71,16 +72,26 @@ private:
     void _Advance(Vector2 size);
 };
 
+struct ImageAtlas {
+    int rows;
+    int columns;
+
+    Texture2D texture;
+};
+
 struct UIGlobals {
     std::stack<TextBox> text_box_stack = std::stack<TextBox>();
     char mouseover_text[1024] = "";
     bool scroll_lock;
     Font default_font;
+    IDAllocatorList<ImageAtlas, EntityType::IMAGE_ATLAS> atlases = IDAllocatorList<ImageAtlas, EntityType::IMAGE_ATLAS>();
 
     void UIInit();
     void UIStart();
     void UIEnd();
 };
+
+void IconDraw(RID Atlas, int index, Rectangle rect);
 
 void UIContextPushGlobal(int x, int y, int w, int h, int text_size, Color color);
 void UIContextCreateNew(int x, int y, int w, int h, int text_size, Color color);
@@ -106,6 +117,7 @@ void HandleButtonSound(ButtonStateFlags::T button_state_flags);
 
 Font GetCustomDefaultFont();
 void UISetMouseHint(const char* text);
+
 
 ButtonStateFlags::T DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color);
 ButtonStateFlags::T DrawCircleButton(Vector2 midpoint, double radius, Color color);

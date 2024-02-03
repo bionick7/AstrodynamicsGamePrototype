@@ -58,6 +58,14 @@ Vector2 Apply2DTransformInv(Vector2 origin, Vector2 x, Vector2 y, Vector2 inp) {
 double Determinant(Vector2 column1, Vector2 column2) {
     return column1.x * column2.y - column1.y * column2.x;
 }
+
+Vector2 Vector2Project(Vector2 v, Vector2 onto) {
+    if (onto.x*onto.y == 0) {
+        return Vector2Zero();
+    }
+    return Vector2Scale(onto, Vector2DotProduct(v, onto) / Vector2LengthSqr(onto));
+}
+
 /*
 void Swap(void* lhs, void* rhs) {
     void* tmp = rhs;
@@ -69,6 +77,21 @@ double PosMod(double x, double period) {
     double res = fmod(x, period);
     if (res < 0) res += period;
     return res;
+}
+
+Matrix MatrixFromColumns(Vector3 col_x, Vector3 col_y, Vector3 col_z) {
+    Matrix m = {0};
+    m.m0  = col_x.x;
+    m.m1  = col_x.y;
+    m.m2  = col_x.z;
+    m.m4  = col_y.x;
+    m.m5  = col_y.y;
+    m.m6  = col_y.z;
+    m.m8  = col_z.x;
+    m.m9  = col_z.y;
+    m.m10 = col_z.z;
+    m.m15 = 1.0f;
+    return m;
 }
 
 static std::mt19937_64 r_generator = std::mt19937_64(std::random_device{}());

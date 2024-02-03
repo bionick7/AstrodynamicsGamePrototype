@@ -4,41 +4,55 @@
 #include "ui.hpp"
 #include "constants.hpp"
 
-void DebugDrawLine(Vector2 from, Vector2 to) {
-    const CoordinateTransform* c_transf = GetCoordinateTransform();
-    DrawLineV(
-        c_transf->TransformV(from),
-        c_transf->TransformV(to),
-        Palette::green
+#include "rlgl.h"
+
+#define MAX_LINE_BUFFER 1024*128
+static Vector3 line_buffer[MAX_LINE_BUFFER];
+int line_buffer_index;
+
+void DebugDrawLineRenderSpace(Vector3 from, Vector3 to) {
+    if (line_buffer_index >= line_buffer_index + 1)
+        return;
+    line_buffer[line_buffer_index++] = from;
+    line_buffer[line_buffer_index++] = to;
+}
+
+void DebugDrawLine(DVector3 from, DVector3 to) {
+    DebugDrawLineRenderSpace(
+        GameCamera::WorldToRender(from),
+        GameCamera::WorldToRender(to)
     );
 }
 
-Vector2 point_buffer[64];
+void DebugDrawTransform(Matrix mat) {
+    Vector3 origin = {mat.m12, mat.m13, mat.m14};
+    DebugDrawLineRenderSpace(origin, Vector3Add(origin, {mat.m0, mat.m1, mat.m2}));
+    DebugDrawLineRenderSpace(origin, Vector3Add(origin, {mat.m4, mat.m5, mat.m6}));
+    DebugDrawLineRenderSpace(origin, Vector3Add(origin, {mat.m8, mat.m9, mat.m10}));
+}
 
-void DebugDrawConic(Vector2 focus, Vector2 ecc_vector, double a) {
-    const CoordinateTransform* c_transf = GetCoordinateTransform();
-    Vector2 x = Vector2Normalize(ecc_vector);
-    Vector2 y = Vector2Rotate(x, PI/2);
-    double e = Vector2Length(ecc_vector);
-    //SHOW_F(a) SHOW_F(e)
+Vector3 point_buffer[64];
+
+void DebugDrawConic(DVector3 focus, DVector3 ecc_vector, DVector3 normal, double sma) {
+    normal = normal.Normalized();
+    DVector3 x = ecc_vector.Normalized();
+    DVector3 y = x.Rotated(normal, PI/2);
+    double e = ecc_vector.Length();
+    //SHOW_F(sma) SHOW_F(e)
     //double b = e > 1 ? a * sqrt(e - 1) : a * sqrt(1 - e);
-    double p = a*(1 - e*e);
+    double p = sma*(1 - e*e);
+    DVector3 prev = DVector3::Zero();
     for (int i=0; i < 64; i++) {
         double theta = 2*PI * i / 64.0;
         double r = p / (1 + e*cos(theta));
         //if (r < 0) r = 0;
-        point_buffer[i] = Vector2Add(focus, Vector2Add(
-            Vector2Scale(x, r*cos(theta)),
-            Vector2Scale(y, r*sin(theta))
-        ));
+        DVector3 pt = (focus + r * cos(theta) * x + r * sin(theta) * y);
+        if (i != 0) {
+            DebugDrawLine(prev, pt);
+            prev = pt;
+        }
     }
-    c_transf->TransformBuffer(&point_buffer[0], 64);
-    DrawLineV(
-        c_transf->TransformV(focus),
-        c_transf->TransformV(Vector2Add(focus, Vector2Scale(x, -2*a*e))),
-        Palette::green
-    );
-    DrawLineStrip(&point_buffer[0], 64, Palette::green);
+    DebugDrawLine(focus, focus - x * 2*sma*e);
 }
 
 char lines[64][256];
@@ -51,6 +65,16 @@ void DebugFlushText() {
         debug_textbox.WriteLine(lines[i]);
     }
     lines_index = 0;
+}
+
+void DebugFlush3D() {
+    rlBegin(RL_LINES);
+    rlColor4ub(0, 255, 0, 255);
+    for(int i=0; i < line_buffer_index; i++) {
+        rlVertex3f(line_buffer[i].x, line_buffer[i].y, line_buffer[i].z);
+    }
+    rlEnd();
+    line_buffer_index = 0;
 }
 
 void DebugPrintText(const char* format, ...) {

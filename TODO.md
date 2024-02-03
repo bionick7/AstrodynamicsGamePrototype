@@ -46,7 +46,7 @@ Near-term, realizable only
 - quest-log window is kinda outdated (repurposed for dialogue)
 - Show battle-log after battle (done)
 
-- Select planet when clicking on orbit
+- Select planet when clicking on orbit (Done)
 - list ships to select next to planet
 - jump from ship to parent ship and plane
 - shift-click in inventory to switch inventory
@@ -64,13 +64,15 @@ Near-term, realizable only
 ## Graphics improvements wishlist
 - Post-processing shader
 - preview small 3D models for flavor
-- UI labels as underlined by thin lines pointing to the thing
 - Render to different buffers/layers
+- UI labels as underlined by thin lines pointing to the thing
 
 ## Tech wishlist
+- Implement way to show icons within text/at arbitrary positions
 - global settings (with push_override etc.)
 - debug console
 - Animation tracker system
+
 - Hot reloading
 
 ## Gameplay wishlist
@@ -92,3 +94,35 @@ Regardless of implementability
 - expand to planets + moons
 - need for first colony ships
 - lagrange points & 3-body mechanics
+
+
+## Collective todo for next milestone
+
+- Animation tracker system
+- Implement way to show icons within text/at arbitrary positions  >> ???
+- Mesh loading  >> ???
+    preview small 3D models for flavor >> partially implemented by raylib
+- global settings (with push_override etc.) / debug console >> known code
+- Renderlayers?  >> ???
+    Post-processing shader  >> known code + custom bloom
+
+3D Conversion
+- V 3D camera  >> partially implemented by raylib
+- V 3D orbits  >> existing code
+- V 3D planets >> existing code
+-   3D billboards >> existing code
+- V 3D click handling >> known code
+
+Art:
+-   ships icons
+- V modules icons
+
+UX tweaking:
+- V Select planet when clicking on orbit
+-   list ships to select next to planet
+-   jump from ship to parent ship and plane
+-   shift-click in inventory to switch inventory
+-   warn before committing to an empty transform ("empty" in red or required to choose it explicitly)
+
+Tutorial:
+- Physical looking booklet that can appear

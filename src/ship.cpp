@@ -8,6 +8,8 @@
 #include "debug_drawing.hpp"
 #include "combat.hpp"
 
+#include "render_utils.hpp"
+
 double ShipClass::GetPayloadCapacityMass(double dv, int drop_tanks) const {
     //          dv_n = v_e * ln((max_cap + oem + extra_fuel * n) / (max_cap + oem + extra_fuel * (n - 1)))
     //          dv_0 = v_e * ln((max_cap + oem) / (x + eom))
@@ -52,7 +54,7 @@ bool Ship::HasMouseHover(double* min_distance) const {
 
 void Ship::_OnClicked() {
     if (GetGlobalState()->focused_ship == id) {
-        GetCoordinateTransform()->focus = position.cartesian;
+        GetCamera()->focus_object = id;
     } else {
         GetGlobalState()->focused_ship = id;
     }
@@ -409,14 +411,6 @@ void Ship::Update() {
         }
     }
 
-    // Draw
-    draw_pos = GetCoordinateTransform()->TransformV(position.cartesian);
-    if (IsParked()) {
-        double rad = fmax(GetCoordinateTransform()->TransformS(GetPlanet(GetParentPlanet())->radius), 4) + 8.0;
-        double phase = fmin(20.0 / rad * index_on_planet, index_on_planet / (double)total_on_planet * 2 * PI);
-        draw_pos = Vector2Add(FromPolar(rad, phase), draw_pos);
-    }
-
     _UpdateModules();
     _UpdateShipyard();
 }
@@ -492,12 +486,11 @@ void _DrawShipAt(Vector2 pos, Color color) {
     DrawRectangleV(Vector2SubtractValue(pos, 4.0f), {8, 8}, color);
 }
 
-void Ship::Draw(const CoordinateTransform* c_transf) const {
+void Ship::Draw3D() const {
     if ((GetIntelLevel() & IntelLevel::TRAJECTORY) == 0) {
         return;
     }
     Color color = GetColor();
-    _DrawShipAt(draw_pos, color);
 
     for (int i=0; i < prepared_plans_count; i++) {
         if (!IsTrajectoryKnown(i)) {
@@ -513,20 +506,11 @@ void Ship::Draw(const CoordinateTransform* c_transf) const {
         OrbitPos to_arrival = plan->transfer_orbit[plan->primary_solution].GetPosition( 
             plan->arrival_time
         );
-        plan->transfer_orbit[plan->primary_solution].DrawBounded(to_departure, to_arrival, 0, 
-            ColorAlpha(color, i == highlighted_plan_index ? 1 : 0.5)
-        );
-        if (i == plan_edit_index){
-            plan->transfer_orbit[plan->primary_solution].DrawBounded(to_departure, to_arrival, 0, Palette::ui_main);
-        }
-    }
-    if (plan_edit_index >= 0 && IsIdValid(prepared_plans[plan_edit_index].arrival_planet) && IsTrajectoryKnown(plan_edit_index)) {
-        const TransferPlan* last_tp = &prepared_plans[plan_edit_index];
-        OrbitPos last_pos = GetPlanet(last_tp->arrival_planet)->orbit.GetPosition(
-            last_tp->arrival_time
-        );
-        Vector2 last_draw_pos = c_transf->TransformV(last_pos.cartesian);
-        _DrawShipAt(last_draw_pos, ColorAlpha(color, 0.5));
+
+        OrbitSegment tf_orbit = OrbitSegment(&plan->transfer_orbit[plan->primary_solution], to_departure, to_arrival);
+        //RenderOrbit(&tf_orbit, 256, i == plan_edit_index ? Palette::ui_main : GetColor());
+        //OrbitSegment tf_orbit = OrbitSegment(&plan->transfer_orbit[plan->primary_solution]);
+        RenderOrbit(&tf_orbit, 256, GetColor());
     }
 }
 
@@ -701,6 +685,29 @@ void _UIDrawQuests(Ship* ship) {
 }
 
 void Ship::DrawUI() {
+    Color color = GetColor();
+
+    // Draw
+    draw_pos = GetCamera()->GetScreenPos(position.cartesian);
+    if (IsParked()) {
+        double rad = GetPlanet(GetParentPlanet())->ScreenRadius() + 8.0;
+        double phase = fmin(20.0 / rad * index_on_planet, index_on_planet / (double)total_on_planet * 2 * PI);
+        draw_pos = Vector2Add(FromPolar(rad, phase), draw_pos);
+    }
+    
+    _DrawShipAt(draw_pos, color);
+    if (plan_edit_index >= 0 && IsIdValid(prepared_plans[plan_edit_index].arrival_planet) && IsTrajectoryKnown(plan_edit_index)) {
+        const TransferPlan* last_tp = &prepared_plans[plan_edit_index];
+        OrbitPos last_pos = GetPlanet(last_tp->arrival_planet)->orbit.GetPosition(
+            last_tp->arrival_time
+        );
+        Vector2 last_draw_pos = GetCamera()->GetScreenPos(last_pos.cartesian);
+        _DrawShipAt(last_draw_pos, ColorAlpha(color, 0.5));
+    }
+
+    //          PANEL UI
+    // =============================
+
     if (mouse_hover) {
         // Hover
         DrawCircleLines(draw_pos.x, draw_pos.y, 10, Palette::red);
@@ -870,7 +877,7 @@ void _OnFleetArrival(Ship* leading_ship, const TransferPlan* tp) {
     allied_ships.Append(leading_ship->id);
     if (hostile_ships.size > 0) {
         // First, military ships vs. military ships
-        bool victory = ShipBattle(&allied_ships, &hostile_ships, Vector2Length(tp->arrival_dvs[tp->primary_solution]));
+        bool victory = ShipBattle(&allied_ships, &hostile_ships, tp->arrival_dvs[tp->primary_solution].Length());
         // allied ship and hostile ship might contain dead ships
         if (victory) {
             uint32_t selection_flags = (~(1UL << leading_ship->allegiance) & 0xFF) | 0xFFFFFF00;

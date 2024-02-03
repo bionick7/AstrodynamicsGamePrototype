@@ -154,10 +154,15 @@ void IDList::DeserializeFrom(const DataNode *data, const char *key, bool quiet) 
 IDList& IDList::operator=(const IDList& other) {
     capacity = other.size;
     size = other.size;
-    buffer = (RID*) malloc(sizeof(RID) * capacity);
-    for(int i=0; i < size; i++) {
-        buffer[i] = other[i];
+    if (capacity == 0) {
+        buffer = NULL;    
+    } else {
+        buffer = (RID*) malloc(sizeof(RID) * capacity);
+        for(int i=0; i < size; i++) {
+            buffer[i] = other[i];
+        }
     }
+    return *this;
 }
 
 RID IDList::operator[](int index) const {

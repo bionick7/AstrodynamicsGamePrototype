@@ -64,7 +64,7 @@ bool Calendar::IsNewDay() const {
 timemath::Time Calendar::GetFrameElapsedGameTime() const {
     return time - prev_time;
 }
-
+/*
 void CoordinateTransform::Make(){
     space_scale = 1e-6;
     focus = {0};
@@ -145,4 +145,87 @@ void CoordinateTransform::HandleInput(double delta_t) {
 
 Vector2 GetMousePositionInWorld() {
     return GetCoordinateTransform()->InvTransformV(GetMousePosition());
+}*/
+
+void GameCamera::Make() {
+    rl_camera.fovy = 90;
+    rl_camera.projection = CAMERA_PERSPECTIVE;
+    rl_camera.position = { 1.0f, 0.0f, 0.0f };
+    rl_camera.target = Vector3Zero();
+    rl_camera.up = { 0.0f, 1.0f, 0.0f };
+    focus_object = GetInvalidId();
+}
+
+void GameCamera::HandleInput() {
+
+    float dist = Vector3Distance(rl_camera.position, rl_camera.target);
+    Vector3 view_dir = Vector3Scale(Vector3Subtract(rl_camera.target, rl_camera.position), 1/dist);
+
+    if (IsIdValidTyped(focus_object, EntityType::PLANET)) {
+        rl_camera.target = (Vector3) (GetPlanet(focus_object)->position.cartesian / space_scale);
+    }
+    if (IsIdValidTyped(focus_object, EntityType::SHIP)) {
+        rl_camera.target = (Vector3) (GetShip(focus_object)->position.cartesian / space_scale);
+    }
+    
+    float scroll_ratio = 1 - 0.1 * GetMouseWheelMove();
+    if (scroll_ratio != 1 && !GetUI()->scroll_lock) {
+        dist *= scroll_ratio;
+    }
+
+    // TODO: manipulate view_dir
+    if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
+        double elevation = asin(view_dir.y);
+        double azimuth = atan2(view_dir.z / cos(elevation), view_dir.x / cos(elevation));
+
+        elevation -= GetMouseDelta().y * GetFrameTime();
+        azimuth += GetMouseDelta().x * GetFrameTime();
+        elevation = Clamp(elevation, -PI/2 + 1e-2, PI/2 - 1e-2);
+
+        view_dir.x = cos(elevation) * cos(azimuth);
+        view_dir.y = sin(elevation);
+        view_dir.z = cos(elevation) * sin(azimuth);
+    }
+
+    rl_camera.position = Vector3Subtract(rl_camera.target, Vector3Scale(view_dir, dist));
+}
+
+Vector2 GameCamera::GetScreenPos(DVector3 world_pos) const {
+    Vector3 screen_space = (Vector3) (world_pos / space_scale);
+    Vector3 camera_dir = Vector3Subtract(rl_camera.target, rl_camera.position);
+    if (Vector3DotProduct(
+        Vector3Subtract(screen_space, rl_camera.position),
+        Vector3Subtract(rl_camera.target, rl_camera.position)
+    ) < 0.0) {
+        return { .x = -1000.0f, .y = -1000.0f };
+    }
+    return GetWorldToScreen(WorldToRender(world_pos), rl_camera);
+}
+
+void GameCamera::Serialize(DataNode* data) const {
+    data->SetF("fovy", rl_camera.fovy);
+    data->SetI("focus", focus_object.AsInt());
+    data->SetF("position_x", rl_camera.position.x);
+    data->SetF("position_y", rl_camera.position.y);
+    data->SetF("position_z", rl_camera.position.z);
+    //data->SetF("target_x", rl_camera.target.x);
+    //data->SetF("target_y", rl_camera.target.y);
+    //data->SetF("target_z", rl_camera.target.z);
+    //data->SetF("up_x", rl_camera.up.x);
+    //data->SetF("up_y", rl_camera.up.y);
+    //data->SetF("up_z", rl_camera.up.z);
+}
+
+void GameCamera::Deserialize(const DataNode* data) {
+    rl_camera.fovy = data->GetF("fovy");
+    focus_object = RID(data->GetI("focus"));
+    rl_camera.position.x = data->GetF("position_x");
+    rl_camera.position.y = data->GetF("position_y");
+    rl_camera.position.z = data->GetF("position_z");
+    //rl_camera.target.x = data->GetF("target_x");
+    //rl_camera.target.y = data->GetF("target_y");
+    //rl_camera.target.z = data->GetF("target_z");
+    //rl_camera.up.x = data->GetF("up_x");
+    //rl_camera.up.y = data->GetF("up_y");
+    //rl_camera.up.z = data->GetF("up_z");
 }

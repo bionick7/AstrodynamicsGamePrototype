@@ -51,7 +51,8 @@ struct Planet {
 
     void _OnClicked();
     double ScreenRadius() const;
-    double GetDVFromExcessVelocity(Vector2 vel) const;
+    double GetDVFromExcessVelocity(DVector3 vel) const;
+    double GetDVFromExcessVelocity(double vel) const;
     double GetDVFromExcessVelocityPro(double vel, double parking_orbit, bool aerobreaking) const;
     Color GetColor() const;
     void Conquer(int faction);
@@ -65,7 +66,6 @@ struct Planet {
     void Update();
     void AdvanceShipProductionQueue();
     void AdvanceModuleProductionQueue();
-    void Draw(const CoordinateTransform* c_transf);
     void DrawUI();
     void _UIDrawModuleProduction();
     void _UIDrawShipProduction();
@@ -89,6 +89,9 @@ struct Planets {
 
     const PlanetNature* GetParentNature() const;
     int LoadEphemerides(const DataNode* data);
+
+    // Can batch drawcalls here
+    void Draw3D();
 };
 
 

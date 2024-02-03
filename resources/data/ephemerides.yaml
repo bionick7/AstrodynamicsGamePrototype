@@ -8,7 +8,7 @@ AoP: -21.06
 Ann: -42.64463408
 radius: 58.232e+6
 mass: 568.336e+24
-has_atmosphere: y
+has_atmosphere: yes
 
 rings:
 - from: 74.0e+6
@@ -76,7 +76,7 @@ satellites:
   AoP: 78.3
   radius: 2574.0e+3
   mass: 1345.2e+21
-  has_atmosphere: y
+  has_atmosphere: yes
 
 - name: Iaeptus
   body_size: Minor
@@ -99,4 +99,3 @@ satellites:
   AoP: 240.3
   radius: 106.0e+3
   mass: 8.3129e+18
-  retrograde: y

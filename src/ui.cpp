@@ -465,7 +465,17 @@ void UISetMouseHint(const char* text) {
 }
 
 void UIGlobals::UIInit() {
-    GetUI()->default_font = LoadFontEx("resources/fonts/OCRAEXT.TTF", 16, NULL, 256);
+    Font text_font = LoadFontEx("resources/fonts/OCRAEXT.TTF", 128, NULL, 256);
+    Image font_image = LoadImageFromTexture(text_font.texture);
+    ExportImage(font_image, "resources/fonts/OCRAEXT_font_atlas.png");
+    Image img = LoadImageFromTexture(LoadTexture("resources/fonts/icons.png"));
+    Font icon_font = LoadFontFromImage(img, BLACK, 128);
+    INFO("baseSize: %d, glyphCount: %d, glyphPadding: %d",
+        text_font.baseSize,
+        text_font.glyphCount,
+        text_font.glyphPadding
+    )
+    GetUI()->default_font = text_font;
     //GetUI()->default_font = LoadFontEx("resources/fonts/GOTHICB.TTF", 16, NULL, 256);
 }
 

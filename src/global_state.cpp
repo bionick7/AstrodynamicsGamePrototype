@@ -58,7 +58,7 @@ void GlobalState::Make(timemath::Time p_time) {
     ui.UIInit();
     calendar.Make(p_time);
     active_transfer_plan.Reset();
-    coordinate_transform.Make();
+    camera.Make();
     focused_planet = GetInvalidId();
     focused_ship = GetInvalidId();
 }
@@ -107,6 +107,8 @@ void GlobalState::LoadData() {
 
     // INFO(GetModuleByRID(GetModuleRIDFromStringId("shpmod_water_extractor"))->id)
     // INFO("%f", GetModuleByRID(GetModuleRIDFromStringId("shpmod_heatshield"))->mass)
+
+    // Load static shaders
 
     #undef NUM
 }
@@ -238,7 +240,6 @@ void _UpdateShipsPlanets(GlobalState* gs) {
 
 // Update
 void GlobalState::UpdateState(double delta_t) {
-    coordinate_transform.HandleInput(delta_t);
     calendar.HandleInput(delta_t);
     audio_server.Update(delta_t);
     
@@ -250,22 +251,24 @@ void GlobalState::UpdateState(double delta_t) {
     quest_manager.Update(delta_t);
     _UpdateShipsPlanets(this);
 
+    camera.HandleInput();
+
     // AI update
     factions.Update();
 }
 
 // Draw
 void GlobalState::DrawState() {
-    DrawCircleV(coordinate_transform.TransformV({0}), coordinate_transform.TransformS(planets.GetParentNature()->radius), Palette::ui_main);
-    for (int planet_id = 0; planet_id < planets.GetPlanetCount(); planet_id++) {
-        GetPlanetByIndex(planet_id)->Draw(&coordinate_transform);
-    }
+    BeginMode3D(camera.rl_camera);
+    //DrawCircleV(coordinate_transform.TransformV({0}), coordinate_transform.TransformS(planets.GetParentNature()->radius), Palette::ui_main);
+    planets.Draw3D();
     for (auto it = ships.alloc.GetIter(); it; it++) {
         Ship* ship = ships.alloc[it];
-        ship->Draw(&coordinate_transform);
+        ship->Draw3D();
     }
-
-    active_transfer_plan.Draw(&coordinate_transform);
+    active_transfer_plan.Draw3D();
+    DebugFlush3D();
+    EndMode3D();
 
     // UI
     ui.UIStart();
@@ -304,7 +307,10 @@ void GlobalState::DrawState() {
 void GlobalState::Serialize(DataNode* data) const {
     // TODO: refer to the ephemerides used
     
-    coordinate_transform.Serialize(data->SetChild("coordinate_transform"));
+    // Serialize Camera
+    camera.Serialize(data->SetChild("camera"));
+
+
     calendar.Serialize(data->SetChild("calendar"));
     quest_manager.Serialize(data->SetChild("quests"));
 
@@ -337,9 +343,9 @@ void GlobalState::Serialize(DataNode* data) const {
 
 void GlobalState::Deserialize(const DataNode* data) {
     if (data->HasChild("coordinate_transform")) {
-        coordinate_transform.Deserialize(data->GetChild("coordinate_transform"));
+        camera.Deserialize(data->GetChild("camera"));
     } else {
-        coordinate_transform.Make();
+        camera.Make();
     }
     if (data->HasChild("calendar")) {
         calendar.Deserialize(data->GetChild("calendar"));
@@ -385,7 +391,7 @@ void GlobalState::Deserialize(const DataNode* data) {
 GlobalState* GetGlobalState() { return &global_state; }
 timemath::Time GlobalGetNow() { return global_state.calendar.time; }
 
-CoordinateTransform* GetCoordinateTransform() { return &global_state.coordinate_transform;  }
+GameCamera*       GetCamera()              { return &global_state.camera; }
 Calendar*            GetCalendar()            { return &global_state.calendar;              }
 TransferPlanUI*      GetTransferPlanUI()      { return &global_state.active_transfer_plan;  }
 QuestManager*        GetQuestManager()        { return &global_state.quest_manager;         }

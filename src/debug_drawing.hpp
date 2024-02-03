@@ -2,13 +2,17 @@
 #define DEBUG_DRAWING_H
 
 #include "basic.hpp"
+#include "dvector3.hpp"
 
 // Draws construction directly in astronomical coordinate system
 
-void DebugDrawLine(Vector2 from, Vector2 to);
-void DebugDrawConic(Vector2 focus, Vector2 ecc_vector, double a);
+void DebugDrawLineRenderSpace(Vector3 from, Vector3 to);
+void DebugDrawLine(DVector3 from, DVector3 to);
+void DebugDrawTransform(Matrix mat);
+void DebugDrawConic(DVector3 focus, DVector3 ecc_vector, double a);
 
 void DebugFlushText();
+void DebugFlush3D();
 void DebugPrintText(const char* format, ...);
 
 #define DEBUG_SHOW_F(var) DebugPrintText("%s = %f", #var, var);

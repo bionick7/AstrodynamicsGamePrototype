@@ -29,7 +29,7 @@ struct Quest {
     
     // current, await_type and next_options can be regained by re-running the next
 
-    IDList dialogue_backlog = IDList();
+    IDList dialogue_backlog;
 
     union QuestUnion {
         RID task;

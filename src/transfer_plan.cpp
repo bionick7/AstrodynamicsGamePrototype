@@ -7,7 +7,7 @@
 #include "logging.hpp"
 #include "constants.hpp"
 #include "string_builder.hpp"
-
+#include "render_utils.hpp"
 
 double _Lambert(double x, double K, int solution) {
     // x² = a_min/a
@@ -123,8 +123,11 @@ void TransferPlanSolveInputImpl(TransferPlan* tp, const Orbit* from_orbit, const
     timemath::Time t2 = tp->arrival_time;
     OrbitPos pos1 = from_orbit->GetPosition(t1);
     OrbitPos pos2 = to_orbit->GetPosition(t2);
+
+    DebugDrawLine(DVector3::Zero(), pos1.cartesian);
+    DebugDrawLine(DVector3::Zero(), pos2.cartesian);
     
-    double c = Vector2Distance(pos1.cartesian, pos2.cartesian);
+    double c = (pos1.cartesian - pos2.cartesian).Length();
     double r_sum = pos1.r + pos2.r;
     double a_min = 0.25 * (r_sum + c);
     double K = sqrt(fmax(r_sum - c, 0) / (r_sum + c));
@@ -165,7 +168,7 @@ void TransferPlanSolveInputImpl(TransferPlan* tp, const Orbit* from_orbit, const
         } else {
             is_prograde = i == 1;
         }
-        tp->transfer_orbit[i] = Orbit(pos1, pos2, t1, aa[i], mu, is_prograde, i == 1);
+        tp->transfer_orbit[i] = Orbit(pos1, pos2, t1, aa[i], mu, i == 1);
         //OrbitPrint(&tp->transfer_orbit[i]); printf("\n");
 
         OrbitPos pos1_tf = tp->transfer_orbit[i].GetPosition(t1);
@@ -173,8 +176,8 @@ void TransferPlanSolveInputImpl(TransferPlan* tp, const Orbit* from_orbit, const
 
         //SHOW_V2(OrbitGetVelocity(&tp->transfer_orbit[i], pos1_tf))
         //SHOW_V2(OrbitGetVelocity(&tp->from->orbit, pos1))
-        tp->departure_dvs[i] = Vector2Subtract(tp->transfer_orbit[i].GetVelocity(pos1_tf), from_orbit->GetVelocity(pos1));
-        tp->arrival_dvs[i] = Vector2Subtract(to_orbit->GetVelocity(pos2), tp->transfer_orbit[i].GetVelocity(pos2_tf));
+        tp->departure_dvs[i] = (tp->transfer_orbit[i].GetVelocity(pos1_tf) - from_orbit->GetVelocity(pos1));
+        tp->arrival_dvs[i] = (to_orbit->GetVelocity(pos2) - tp->transfer_orbit[i].GetVelocity(pos2_tf));
 
         //ASSERT_ALOMST_EQUAL_FLOAT(pos1_.r, pos1.r)
         //ASSERT_ALOMST_EQUAL_FLOAT(pos2_.r, pos2.r)
@@ -414,8 +417,8 @@ void TransferPlanUI::Reset() {
     ship = GetInvalidId();
     is_dragging_departure    = false;
     is_dragging_arrival      = false;
-    departure_handle_pos     = {0};
-    arrival_handle_pos       = {0};
+    departure_handle_pos     = Vector2Zero();
+    arrival_handle_pos       = Vector2Zero();
     redraw_queued            = false;
     time_bounds[0]           = 0;
 }
@@ -493,11 +496,12 @@ void _DrawSweep(const Orbit* orbit, timemath::Time from, timemath::Time to, Colo
     OrbitPos to_pos = orbit->GetPosition(to);
 
     int full_orbits = floor(timemath::Time::SecDiff(to, from) / orbit->GetPeriod().Seconds());
-    double offset_per_pixel = GetCoordinateTransform()->InvTransformS(1);
+    double offset_per_pixel = 0;//GetCoordinateTransform()->InvTransformS(1);
     for (int i=1; i <= full_orbits; i++) {
         orbit->DrawWithOffset(offset_per_pixel * -3 * i, color);
     }
-    orbit->DrawBounded(from_pos, to_pos, offset_per_pixel*3, color);
+    OrbitSegment segment = OrbitSegment(orbit, from_pos, to_pos);
+    RenderOrbit(&segment, 256, color);  // TODO: re-introduce offset
 }
 
 void _DrawTransferOrbit(const TransferPlan* plan, int solution, bool is_secondary, timemath::Time t0) {
@@ -513,19 +517,18 @@ void _DrawTransferOrbit(const TransferPlan* plan, int solution, bool is_secondar
     OrbitPos pos2 = plan->transfer_orbit[solution].GetPosition(plan->arrival_time);
     _DrawSweep(&from->orbit, t0, plan->departure_time, orbit_color);
     _DrawSweep(&to->orbit,   t0, plan->arrival_time,   orbit_color);
-    plan->transfer_orbit[solution].DrawBounded(pos1, pos2, 0, orbit_color);
+    //OrbitSegment segment = OrbitSegment(&plan->transfer_orbit[solution], pos1, pos2);
+    OrbitSegment segment = OrbitSegment(&plan->transfer_orbit[solution]);
+    RenderOrbit(&segment, 256, orbit_color);
 }
 
 timemath::Time _DrawHandle(
-    const CoordinateTransform* c_transf, Vector2 pos, const Orbit* orbit, 
+    Vector2 pos, Vector2 radial_dir, const Orbit* orbit, 
     timemath::Time current, timemath::Time t0, bool* is_dragging
 ) {
     Color c = Palette::blue;
 
-    Vector2 radial_dir = Vector2Normalize(c_transf->InvTransformV(pos));
-    radial_dir.y = -radial_dir.y;
     Vector2 tangent_dir = Vector2Rotate(radial_dir, PI/2);
-
     Vector2 node_pos = Vector2Add(pos, Vector2Scale(radial_dir, 20));
     Vector2 text_pos = Vector2Add(pos, Vector2Scale(radial_dir, 30));
     Vector2 plus_pos = Vector2Add(node_pos, Vector2Scale(tangent_dir, -23));
@@ -568,39 +571,19 @@ timemath::Time _DrawHandle(
     }
     if (*is_dragging) {
         timemath::Time t0_2 = t0 + full_orbits * period.Seconds();
-
-        Vector2 mouse_pos_world = GetMousePositionInWorld();
-        double longuitude = atan2(mouse_pos_world.y, mouse_pos_world.x);
-        double θ = longuitude - orbit->lop;
-        current = t0_2 + orbit->GetTimeUntilFocalAnomaly(θ, t0_2);
+        Vector2 local_mouse_pos = orbit->GetMousPosOnPlane();
+        float focal_anomaly = -atan2f(local_mouse_pos.y, local_mouse_pos.x);
+        current = t0_2 + orbit->GetTimeUntilFocalAnomaly(focal_anomaly, t0_2);
         ASSERT(t0 < current);
     }
     return current;
 }
 
-void TransferPlanUI::Draw(const CoordinateTransform* c_transf) {
+void TransferPlanUI::Draw3D() {
     if (!IsActive()) {
         return;
     }
-    const Planet* from = GetPlanet(plan->departure_planet);
-    const Planet* to = GetPlanet(plan->arrival_planet);
-
-
-    departure_handle_pos = c_transf->TransformV(from->orbit.GetPosition(plan->departure_time).cartesian);
-    arrival_handle_pos = c_transf->TransformV(to->orbit.GetPosition(plan->arrival_time).cartesian);
     
-    timemath::Time new_departure_time = _DrawHandle(c_transf, departure_handle_pos, &from->orbit, plan->departure_time, time_bounds[0], &is_dragging_departure);
-    timemath::Time new_arrival_time = _DrawHandle(c_transf, arrival_handle_pos, &to->orbit, plan->arrival_time, time_bounds[0], &is_dragging_arrival);
-
-    if (time_bounds[0] < new_departure_time && new_departure_time < plan->arrival_time) {
-        plan->departure_time = new_departure_time;
-        redraw_queued = true;
-    }
-    if (plan->departure_time < new_arrival_time) {
-        plan->arrival_time = new_arrival_time;
-        redraw_queued = true;
-    }
-
     if (plan->num_solutions == 1) {
         _DrawTransferOrbit(plan, plan->primary_solution, false, time_bounds[0]);
     } else if (plan->num_solutions == 2) {
@@ -613,6 +596,35 @@ void TransferPlanUI::DrawUI() {
     if (!IsActive()) {
         return;
     }
+
+    // Gizmos
+    
+    const Planet* from = GetPlanet(plan->departure_planet);
+    const Planet* to = GetPlanet(plan->arrival_planet);
+
+    departure_handle_pos = GetCamera()->GetScreenPos(from->orbit.GetPosition(plan->departure_time).cartesian);
+    arrival_handle_pos = GetCamera()->GetScreenPos(to->orbit.GetPosition(plan->arrival_time).cartesian);
+    
+    Vector2 handle_radial_dir = {0.0f, -1.0f};
+    timemath::Time new_departure_time = _DrawHandle(
+        departure_handle_pos, handle_radial_dir, &from->orbit, plan->departure_time, 
+        time_bounds[0], &is_dragging_departure
+    );
+    timemath::Time new_arrival_time = _DrawHandle(
+        arrival_handle_pos, handle_radial_dir, &to->orbit, plan->arrival_time, 
+        time_bounds[0], &is_dragging_arrival
+    );
+
+    if (time_bounds[0] < new_departure_time && new_departure_time < plan->arrival_time) {
+        plan->departure_time = new_departure_time;
+        redraw_queued = true;
+    }
+    if (plan->departure_time < new_arrival_time) {
+        plan->arrival_time = new_arrival_time;
+        redraw_queued = true;
+    }
+
+    // Panel
     
     Ship* ship_instance = GetShip(ship);
     

@@ -18,8 +18,8 @@ struct TransferPlan {
     // Outputs
     int num_solutions;
     Orbit transfer_orbit[2];
-    Vector2 departure_dvs[2];
-    Vector2 arrival_dvs[2];
+    DVector3 departure_dvs[2];
+    DVector3 arrival_dvs[2];
     double dv1[2];
     double dv2[2];
     double tot_dv;
@@ -62,7 +62,7 @@ struct TransferPlanUI {
     void Reset();
     void Abort();
     void Update();
-    void Draw(const CoordinateTransform* c_transf);
+    void Draw3D();
     void DrawUI();
     void SetPlan(TransferPlan* plan, RID ship, timemath::Time min_time, timemath::Time pos_time);
     void SetResourceType(ResourceType resource_type);

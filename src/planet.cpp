@@ -6,6 +6,8 @@
 #include "ship_modules.hpp"
 #include "logging.hpp"
 #include "string_builder.hpp"
+#include "render_utils.hpp"
+#include "debug_drawing.hpp"
 
 Planet::Planet(const char* p_name, double p_mu, double p_radius) {
     strcpy(name, p_name);
@@ -103,19 +105,24 @@ void Planet::_OnClicked() {
         && !IsIdValid(tp_ui->plan->arrival_planet)
     ) {
         tp_ui->SetDestination(id);
-    } else if (GetGlobalState()->focused_planet == id) {
-        GetCoordinateTransform()->focus = position.cartesian;
+    } else if (GetGlobalState()->focused_planet == id && !IsIdValidTyped(GetGlobalState()->focused_ship, EntityType::SHIP)) {
+        GetCamera()->focus_object = id;
     } else {
         GetGlobalState()->focused_planet = id;
     }
 }
 
 double Planet::ScreenRadius() const {
-    return fmax(GetCoordinateTransform()->TransformS(radius), 4);
+    return radius / GetCamera()->space_scale;
+    //return fmax(radius / GetCamera()->space_scale, 4);
 }
 
-double Planet::GetDVFromExcessVelocity(Vector2 vel) const {
-    return sqrt(2*mu / radius + Vector2LengthSqr(vel)) - sqrt(mu / radius);
+double Planet::GetDVFromExcessVelocity(DVector3 vel) const {
+    return sqrt(2*mu / radius + vel.LengthSquared()) - sqrt(mu / radius);
+}
+
+double Planet::GetDVFromExcessVelocity(double vel) const {
+    return sqrt(2*mu / radius + vel*vel) - sqrt(mu / radius);
 }
 
 double Planet::GetDVFromExcessVelocityPro(double vel, double parking_orbit, bool aerobreaking) const {
@@ -158,10 +165,26 @@ void Planet::RemoveShipModuleInInventory(int index) {
 }
 
 bool Planet::HasMouseHover(double* min_distance) const {
-    Vector2 screen_pos = GetCoordinateTransform()->TransformV(position.cartesian);
-    double dist = Vector2Distance(GetMousePosition(), screen_pos);
-    if (dist <= ScreenRadius() * 1.2 && dist < *min_distance) {
-        *min_distance = dist;
+    OrbitSegment segment = OrbitSegment(&orbit);
+    Ray mouse_ray = GetMouseRay(GetMousePosition(), GetCamera()->rl_camera);
+    Matrix orbit_transform = MatrixFromColumns((Vector3) orbit.periapsis_dir, (Vector3) orbit.normal, (Vector3) orbit.periapsis_dir.Cross(orbit.normal));
+    Matrix inv_orbit_transform = MatrixInvert(orbit_transform);
+    mouse_ray.position = Vector3Transform(mouse_ray.position, inv_orbit_transform);
+    mouse_ray.direction = Vector3Transform(mouse_ray.direction, inv_orbit_transform);
+    
+    float distance;
+    timemath::Time mouseover_time;
+    Vector3 local_pos;
+    segment.TraceRay(mouse_ray.position, mouse_ray.direction, &distance, &mouseover_time, &local_pos);
+
+    //Vector3 crossing = Vector3Subtract(mouse_ray.position, Vector3Scale(mouse_ray.direction, mouse_ray.position.y / mouse_ray.direction.y));
+    //DebugDrawLineRenderSpace(Vector3Transform(local_pos, orbit_transform), Vector3Transform(crossing, orbit_transform));
+    //float scale = GameCamera::WorldToRender(orbit.sma);
+    //DebugDrawTransform(MatrixMultiply(MatrixScale(scale, scale, scale), orbit_transform));
+    Vector2 closest_on_screen = GetWorldToScreen(Vector3Transform(local_pos, orbit_transform), GetCamera()->rl_camera);
+
+    if (Vector2Distance(closest_on_screen, GetMousePosition()) <= 2.0f && distance < *min_distance) {
+        *min_distance = distance;
         return true;
     } else {
         return false;
@@ -254,27 +277,6 @@ void Planet::AdvanceModuleProductionQueue() {
 
     module_production_queue.EraseAt(0);
     module_production_process = 0;
-}
-
-void Planet::Draw(const CoordinateTransform* c_transf) {
-    //printf("%f : %f\n", position.x, position.y);
-    Vector2 screen_pos = c_transf->TransformV(position.cartesian);
-    DrawCircleV(screen_pos, ScreenRadius(), GetColor());
-    
-    orbit.Draw(GetColor());
-
-    int screen_x = (int)screen_pos.x, screen_y = (int)screen_pos.y;
-    int text_h = 16;
-    Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), name, text_h, 1);
-    DrawTextEx(GetCustomDefaultFont(), name, {screen_x - text_size.x / 2,  screen_y - text_size.y - 5}, text_h, 1, Palette::ui_main);
-
-    if (mouse_hover) {
-        // Hover
-        DrawCircleLines(screen_x, screen_y, 20, Palette::ship);
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            _OnClicked();
-        }
-    }
 }
 
 void Planet::_UIDrawInventory() {
@@ -478,6 +480,23 @@ void Planet::_UIDrawShipProduction() {
 
 int current_tab = 0;  // Global variable, I suppose
 void Planet::DrawUI() {
+    Vector2 screen_pos = GetCamera()->GetScreenPos(position.cartesian);
+    int screen_x = (int)screen_pos.x, screen_y = (int)screen_pos.y;
+    int text_h = 16;
+    Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), name, text_h, 1);
+    DrawTextEx(GetCustomDefaultFont(), name, {screen_x - text_size.x / 2,  screen_y - text_size.y - 5}, text_h, 1, Palette::ui_main);
+
+    if (mouse_hover) {
+        // Hover
+        DrawCircleLines(screen_x, screen_y, 20, Palette::ship);
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            _OnClicked();
+        }
+    }
+
+    //          True UI
+    // ============================
+
     // Reset
     current_slot = ShipModuleSlot();
 
@@ -651,14 +670,36 @@ int Planets::LoadEphemerides(const DataNode* data) {
         nature->orbit = Orbit(
             sma,
             planet_data->GetF("Ecc"),
-            (planet_data->GetF("LoA") + planet_data->GetF("AoP")) * DEG2RAD,
+            0,//planet_data->GetF("Inc") * DEG2RAD,
+            planet_data->GetF("LoA") * DEG2RAD,
+            planet_data->GetF("AoP") * DEG2RAD,
             parent.mu,
-            epoch, 
-            strcmp(planet_data->Get("retrograde", "y", true), "y") != 0
+            epoch
         );
         nature->has_atmosphere = strcmp(planet_data->Get("has_atmosphere", "n", true), "y") == 0;
     }
     return planet_count;
+}
+
+void Planets::Draw3D() {
+    // Draw Saturn
+    RenderPerfectSphere(DVector3::Zero(), GetParentNature()->radius, Palette::ui_main);
+
+    //printf("%f : %f\n", position.x, position.y);
+    for(int i=0; i < planet_count; i++) {
+        /*DrawSphere(
+            (Vector3)(planet_array[i].position.cartesian / GameCamera::space_scale), 
+            planet_array[i].ScreenRadius(), 
+            planet_array[i].GetColor()
+        );  // TODO: replace with custom method
+        */
+        RenderPerfectSphere(planet_array[i].position.cartesian, planet_array[i].radius, planet_array[i].GetColor());
+    }
+    
+    for(int i=0; i < planet_count; i++) {
+        OrbitSegment segment = OrbitSegment(&planet_array[i].orbit);
+        RenderOrbit(&segment, 256, planet_array[i].GetColor());
+    }
 }
 
 Planet* GetPlanet(RID id) { return GetPlanets()->GetPlanet(id); }
