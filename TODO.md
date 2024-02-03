@@ -110,8 +110,10 @@ Regardless of implementability
 - V 3D camera  >> partially implemented by raylib
 - V 3D orbits  >> existing code
 - V 3D planets >> existing code
--   3D billboards >> existing code
+- // 3D billboards >> existing code
 - V 3D click handling >> known code
+- V Rings >> Get creative
+- V Sky >> Get creative
 
 Art:
 -   ships icons

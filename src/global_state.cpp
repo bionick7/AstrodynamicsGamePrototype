@@ -6,6 +6,7 @@
 #include "audio_server.hpp"
 #include "quest.hpp"
 #include "timeline.hpp"
+#include "render_utils.hpp"
 
 GlobalState global_state;
 
@@ -253,12 +254,18 @@ void GlobalState::UpdateState(double delta_t) {
 
     camera.HandleInput();
 
+    if (IsKeyPressed(KEY_F5)) {
+        INFO("Reload shaders")
+        ReloadShaders();
+    }
+
     // AI update
     factions.Update();
 }
 
 // Draw
 void GlobalState::DrawState() {
+
     BeginMode3D(camera.rl_camera);
     //DrawCircleV(coordinate_transform.TransformV({0}), coordinate_transform.TransformS(planets.GetParentNature()->radius), Palette::ui_main);
     planets.Draw3D();
@@ -269,7 +276,7 @@ void GlobalState::DrawState() {
     active_transfer_plan.Draw3D();
     DebugFlush3D();
     EndMode3D();
-
+    
     // UI
     ui.UIStart();
     calendar.DrawUI();
@@ -391,7 +398,7 @@ void GlobalState::Deserialize(const DataNode* data) {
 GlobalState* GetGlobalState() { return &global_state; }
 timemath::Time GlobalGetNow() { return global_state.calendar.time; }
 
-GameCamera*       GetCamera()              { return &global_state.camera; }
+GameCamera*          GetCamera()              { return &global_state.camera; }
 Calendar*            GetCalendar()            { return &global_state.calendar;              }
 TransferPlanUI*      GetTransferPlanUI()      { return &global_state.active_transfer_plan;  }
 QuestManager*        GetQuestManager()        { return &global_state.quest_manager;         }

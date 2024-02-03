@@ -14,7 +14,7 @@ include_dirs = ['include']
 platform_libs = []
 
 GLOBAL_FLAGS = []
-GLOBAL_DEFINES = ["WREN_OPT_RANDOM"]
+GLOBAL_DEFINES = []
 
 
 def get_all_files(dirs, ending):
@@ -55,14 +55,37 @@ def build_wren():
     flags = GLOBAL_FLAGS[:]
     defines = GLOBAL_DEFINES[:]
 
-    if wren_debug:
+    if wren_debug and build == "debug":
         flags.append("-ggdb")
-        defines.append("DEBUG")
+        defines += ["DEBUG", "WREN_OPT_RANDOM"]
 
     env.Append(CPPFLAGS=flags)
     env.Append(CPPDEFINES=defines)
     env.StaticLibrary(os.path.join(lib_dir, 'wren'), wren_src)
 
+
+def build_raylib():
+    raylib_debug = True
+
+    env, lib_dir = get_base_env()
+
+    raylib_src_dirs = ['dependencies/raylib/src']  #, 'dependencies/raylib/src/platforms']
+    raylib_include_dirs = ['dependencies/raylib/src/external', 'dependencies/glfw/include']
+
+    raylib_src = get_all_files(raylib_src_dirs, "c")
+    env.Append(CPPPATH = raylib_src_dirs + raylib_include_dirs)
+
+    flags = GLOBAL_FLAGS[:]
+    defines = GLOBAL_DEFINES[:]
+
+    defines.append("PLATFORM_DESKTOP")
+    if raylib_debug and build == "debug":
+        flags.append("-ggdb")
+
+    env.Append(LIBPATH = ['dependencies/glfw/lib-static-ucrt'])
+    env.Append(CPPFLAGS=flags)
+    env.Append(CPPDEFINES=defines)
+    env.StaticLibrary(os.path.join(lib_dir, 'raylib'), raylib_src)
 
 def build_app():
     env, lib_dir = get_base_env()
@@ -77,7 +100,7 @@ def build_app():
         ]
 
     flags = GLOBAL_FLAGS[:]
-    defines = GLOBAL_DEFINES[:]
+    defines = GLOBAL_DEFINES[:] + ["WREN_OPT_RANDOM"]
     flags += ['-Wall', '-Wno-narrowing', '-Wno-sign-compare']  # Warnings we care about
     if build == 'debug':
         flags.append('-ggdb')
@@ -110,6 +133,7 @@ def build_app():
 
 def main():
     build_wren()
+    build_raylib()
     build_app()
 
 main()

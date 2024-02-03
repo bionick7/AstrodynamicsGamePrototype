@@ -32,7 +32,10 @@ double DVector3::LengthSquared() const {
 }
 
 DVector3 DVector3::Normalized() const {
-    return LengthSquared() == 0 ? Zero() : *this / Length();
+    double l_sqr = LengthSquared();
+    if (abs(l_sqr - 1) < 1e-12) return *this;
+    if (abs(l_sqr) < 1e-12) return Zero();
+    return *this / sqrt(l_sqr);
 }
 
 double DVector3::Dot(DVector3 v) const {
@@ -52,7 +55,7 @@ double DVector3::AngleTo(DVector3 v) const {
 }
 
 double DVector3::SignedAngleTo(DVector3 v, DVector3 n) const {
-    return AngleTo(v) * (Cross(v).Dot(n) > 0 ? 1 : 0);
+    return AngleTo(v) * (Cross(v).Dot(n) > 0 ? 1 : -1);
 }
 
 DVector3 DVector3::Reflect(DVector3 n) const {
@@ -72,50 +75,12 @@ DVector3 DVector3::Rotated(DVector3 axis, double angle) const {
     // Using Euler-Rodrigues Formula
     // Ref.: https://en.wikipedia.org/w/index.php?title=Euler%E2%80%93Rodrigues_formula
 
-    DVector3 result = *this;
+    axis = axis.Normalized();
+    DVector3 w = axis * sin(angle / 2.0);
+    double a = cos(angle / 2.0);
 
-    // Vector3Normalize(axis);
-    float length = sqrtf(axis.x * axis.x + axis.y * axis.y + axis.z * axis.z);
-    if (length == 0.0f) length = 1.0f;
-    float ilength = 1.0f / length;
-    axis.x *= ilength;
-    axis.y *= ilength;
-    axis.z *= ilength;
-
-    angle /= 2.0f;
-    float a = sinf(angle);
-    float b = axis.x * a;
-    float c = axis.y * a;
-    float d = axis.z * a;
-    a = cosf(angle);
-    DVector3 w = { b, c, d };
-
-    // Vector3CrossProduct(w, v)
-    DVector3 wv = { w.y * z - w.z * y, w.z * x - w.x * z, w.x * y - w.y * x };
-
-    // Vector3CrossProduct(w, wv)
-    DVector3 wwv = { w.y * wv.z - w.z * wv.y, w.z * wv.x - w.x * wv.z, w.x * wv.y - w.y * wv.x };
-
-    // Vector3Scale(wv, 2 * a)
-    a *= 2;
-    wv.x *= a;
-    wv.y *= a;
-    wv.z *= a;
-
-    // Vector3Scale(wwv, 2)
-    wwv.x *= 2;
-    wwv.y *= 2;
-    wwv.z *= 2;
-
-    result.x += wv.x;
-    result.y += wv.y;
-    result.z += wv.z;
-
-    result.x += wwv.x;
-    result.y += wwv.y;
-    result.z += wwv.z;
-
-    return result;
+    DVector3 wv = -Cross(w);
+    return *this + 2*a * wv + 2*w.Cross(wv);
 }
 
 bool DVector3::IsEqualApprox(DVector3 v) const {

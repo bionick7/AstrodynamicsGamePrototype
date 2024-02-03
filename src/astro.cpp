@@ -121,23 +121,6 @@ Orbit::Orbit(double semi_major_axis, double eccenetricity, double inclination,
     this->epoch = epoch;
 }
 
-/*Orbit::Orbit(DVector3 pos, DVector3 vel, timemath::Time t, double mu) {
-    double r = pos.Length();
-
-    double energy = vel.LengthSquared() / 2 - mu / r;
-    DVector3 ang_mom = pos.Cross(vel);
-    
-    sma = -mu / (2 * energy);
-    ecc_vector = pos * (vel.LengthSquared() / mu - 1.0 / r) - vel * pos.Dot(vel) / mu;
-    normal = ang_mom.Normalized();
-
-    double focal_annomaly = pos.SignedAngleTo(ecc_vector, normal);
-
-    double mean_motion = sqrt(mu / (sma*sma*sma));
-    epoch = t + focal_annomaly / mean_motion;  // THIS IS VERY WRONG FOR NON-CIRCULAR ORBITS
-    this->mu = mu;
-}*/
-
 Orbit::Orbit(OrbitPos pos1, OrbitPos pos2, timemath::Time time_at_pos1, 
              double sma, double mu, bool cut_focus) {
     // https://en.wikipedia.org/wiki/Lambert%27s_problem
@@ -275,28 +258,6 @@ void Orbit::Update(timemath::Time time, DVector3* position, DVector3* velocity) 
     *velocity = GetVelocity(orbit_position);
 }
 
-/*
-void Orbit::Sample(DVector3* buffer, int buffer_size) const {
-    double p = sma * (1 - ecc*ecc);
-    for (int i=0; i < buffer_size; i++) {
-        double θ = (double) i / (double) buffer_size * PI * 2.0;
-        double r = p / (1 + ecc*cos(θ));
-        buffer[i] = r * periapsis_dir.RotatedByAxisAngle(normal, θ);
-    }
-
-    buffer[buffer_size - 1] = buffer[0];
-}
-
-void Orbit::SampleWithOffset(DVector3* buffer, int buffer_size, double offset) const {
-    if (sma < 0) {
-        SampleBounded(-acos(-1/ecc), acos(-1/ecc), buffer, buffer_size, offset);
-    } else {
-        SampleBounded(0, 2*PI, buffer, buffer_size, offset);
-        buffer[buffer_size - 1] = buffer[0];
-    }
-}
-
-*/
 void Orbit::SampleBounded(double θ_1, double θ_2, DVector3* buffer, int buffer_size, double offset) const {
     if (θ_2 < θ_1) θ_2 += PI * 2.0;
     double p = sma * (1 - ecc*ecc);
@@ -309,42 +270,16 @@ void Orbit::SampleBounded(double θ_1, double θ_2, DVector3* buffer, int buffer
         buffer[i] = r * dir + normal * offset;
     }
 }
-/*
-#ifndef ORBIT_BUFFER_SIZE
-#define ORBIT_BUFFER_SIZE 64
-#endif
-static DVector3 orbit_draw_buffer[ORBIT_BUFFER_SIZE];
-*/
 
 void Orbit::Draw(Color color) const {
     DrawWithOffset(0.0, color);
-    //Sample(orbit_draw_buffer, ORBIT_BUFFER_SIZE);
-    //GetCamera()->TransformBuffer(orbit_draw_buffer, ORBIT_BUFFER_SIZE);  // <-- Should be done on the GPU
-    //DrawLineStrip(&orbit_draw_buffer[0], ORBIT_BUFFER_SIZE, color);
 }
 
 void Orbit::DrawWithOffset(double offset, Color color) const {
     OrbitPos begin = GetPosition(GlobalGetNow());
     OrbitPos end = begin;
     end.θ += 2 * PI;
-    //DrawBounded(begin, end, offset, color);
-    //SampleWithOffset(orbit_draw_buffer, ORBIT_BUFFER_SIZE, offset);
-    //GetCamera()->TransformBuffer(orbit_draw_buffer, ORBIT_BUFFER_SIZE);
-    //DrawLineStrip(&orbit_draw_buffer[0], ORBIT_BUFFER_SIZE, color);
 }
-
-//void Orbit::DrawBounded(OrbitPos bound1, OrbitPos bound2, double offset, Color color) const {
-    // TODO: integrate with  render pipeline
-
-//    SampleBounded(bound1.θ, bound2.θ, orbit_draw_buffer, ORBIT_BUFFER_SIZE, offset);
-//    if (ORBIT_BUFFER_SIZE >= 2) {
-//        orbit_draw_buffer[0] = bound1.cartesian;
-//        orbit_draw_buffer[ORBIT_BUFFER_SIZE-1] = bound2.cartesian;
-//    }
-//    GetCamera()->TransformBuffer(orbit_draw_buffer, ORBIT_BUFFER_SIZE);
-//    DrawLineStrip(&orbit_draw_buffer[0], ORBIT_BUFFER_SIZE, color);
-//}
-
 
 OrbitSegment::OrbitSegment(const Orbit* orbit){
     this->orbit = orbit;
@@ -419,26 +354,16 @@ OrbitPos OrbitSegment::TraceRay(Vector3 origin, Vector3 ray, float* distance,
     if (orbit->ecc > 1) {
         res = orbit->FromFocal(focal + PI);
     }
-    //MouseOverSpacePosition = new Vector3(Mathf.Sin(focal), 0, Mathf.Cos(focal)) * res.Radius * Constants.SPACE_MULTIPLIER;
     *local_mouseover_pos = Vector3Subtract(crossing, (Vector3) { delta.x, 0, delta.y });
-    //*local_mouseover_pos = {local_mouseover_pos->z, 0, local_mouseover_pos->x};
     
     if (orbit->ecc < 1) {
         timemath::Time minTime = GlobalGetNow();
         *mouseover_time = res.time + orbit->GetPeriod() * floor((minTime / orbit->GetPeriod()).Seconds());
         while (*mouseover_time < minTime)  // Should only happen once this time
             *mouseover_time = *mouseover_time + orbit->GetPeriod();
-        //DebugDrawer.FramePrint($"{Name} : f{focal} full? {IsFullCircle} --- {MouseOverTime} {minTime}");
     } else {
         *mouseover_time = res.time;
     }
-    /*if (DrawMouseDFEval) {
-        DebugDrawer.DrawLine(
-            GlobalTransform * crossing, 
-            GlobalTransform * LocalMouseOverPos,
-            ConstantUtils.BLUE.Lerp(ConstantUtils.RED, Mathf.Clamp(distance, 0, 1)) , 1f/60f
-        );
-    }*/
     return res;
 }
 
@@ -454,11 +379,12 @@ void HohmannTransfer(const Orbit* from, const Orbit* to,
     double mu = from->mu;
     double hohmann_a = (from->sma + to->sma) * 0.5;
     double hohmann_flight_time = sqrt(hohmann_a*hohmann_a*hohmann_a / mu) * PI;
-    double p1_mean_motion = from->GetMeanMotion();
-    double p2_mean_motion = to->GetMeanMotion();
-    double relative_mean_motion = p2_mean_motion - p1_mean_motion;
     //DVector3 normal = (from->normal + to->normal).Normalized();
-    double current_relative_annomaly = from->GetPosition(t0).cartesian.SignedAngleTo(to->GetPosition(t0).cartesian, DVector3::Up());
+    DVector3 normal = DVector3::Up();
+    double p1_mean_motion = from->GetMeanMotion() * Sign(normal.Dot(from->normal));
+    double p2_mean_motion = to->GetMeanMotion() * Sign(normal.Dot(to->normal));
+    double relative_mean_motion = p2_mean_motion - p1_mean_motion;
+    double current_relative_annomaly = from->GetPosition(t0).cartesian.SignedAngleTo(to->GetPosition(t0).cartesian, normal);
     double target_relative_anomaly = PosMod(PI - p2_mean_motion * hohmann_flight_time, 2*PI);
     double departure_wait_time = (target_relative_anomaly - current_relative_annomaly) / relative_mean_motion;
     double relative_period = fabs(2 * PI / relative_mean_motion);

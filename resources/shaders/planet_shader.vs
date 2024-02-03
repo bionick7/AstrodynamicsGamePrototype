@@ -1,4 +1,4 @@
-#version 330 core
+#version 330
 
 in vec3 vertexPosition;
 out vec2 uv;

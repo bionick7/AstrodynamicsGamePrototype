@@ -9,20 +9,56 @@
 
 #include "rlgl.h"
 
-
-void EsureShaderReady(Shader* shader, const char* name) {
-    if (IsShaderReady(*shader)) {
-        return;
-    }
-    StringBuilder sb;
-    const char* vertex_shader_path = sb.Add("resources/shaders/").Add(name).Add(".vs").c_str;
-    char* fragment_shader_path = new char[strlen(vertex_shader_path) + 1];
-    strcpy(fragment_shader_path, vertex_shader_path);
-    fragment_shader_path[strlen(vertex_shader_path)-2] = 'f';  // swap out 'v' with 'f'
-    *shader = LoadShader(vertex_shader_path, fragment_shader_path);
+void _RenderQuad(Color color) {
+    rlBegin(RL_TRIANGLES);
+        rlColor4ub(color.r, color.g, color.b, color.a);
+        rlTexCoord2f(0.0f, 0.0f);
+        rlVertex3f(-1.0f, -1.0f, 0.0f);
+        rlTexCoord2f(1.0f, 0.0f);
+        rlVertex3f( 1.0f, -1.0f, 0.0f);
+        rlTexCoord2f(0.0f, 1.0f);
+        rlVertex3f(-1.0f,  1.0f, 0.0f);
+        rlTexCoord2f(0.0f, 1.0f);
+        rlVertex3f(-1.0f,  1.0f, 0.0f);
+        rlTexCoord2f(1.0f, 0.0f);
+        rlVertex3f( 1.0f, -1.0f, 0.0f);
+        rlTexCoord2f(1.0f, 1.0f);
+        rlVertex3f( 1.0f,  1.0f, 0.0f);
+    rlEnd();
 }
 
-void ColorToFloat4Buffer(float buffer[], Color color) {
+void _RenderDoubleQuad(Color color) {
+    rlBegin(RL_TRIANGLES);
+        rlColor4ub(color.r, color.g, color.b, color.a);
+        rlTexCoord2f(0.0f, 0.0f);
+        rlVertex3f(-1.0f, -1.0f, 0.0f);
+        rlTexCoord2f(1.0f, 0.0f);
+        rlVertex3f( 1.0f, -1.0f, 0.0f);
+        rlTexCoord2f(0.0f, 1.0f);
+        rlVertex3f(-1.0f,  1.0f, 0.0f);
+        rlTexCoord2f(0.0f, 1.0f);
+        rlVertex3f(-1.0f,  1.0f, 0.0f);
+        rlTexCoord2f(1.0f, 0.0f);
+        rlVertex3f( 1.0f, -1.0f, 0.0f);
+        rlTexCoord2f(1.0f, 1.0f);
+        rlVertex3f( 1.0f,  1.0f, 0.0f);
+
+        rlTexCoord2f(0.0f, 0.0f);
+        rlVertex3f(-1.0f, -1.0f, 0.0f);
+        rlTexCoord2f(0.0f, 1.0f);
+        rlVertex3f(-1.0f,  1.0f, 0.0f);
+        rlTexCoord2f(1.0f, 0.0f);
+        rlVertex3f( 1.0f, -1.0f, 0.0f);
+        rlTexCoord2f(0.0f, 1.0f);
+        rlVertex3f(-1.0f,  1.0f, 0.0f);
+        rlTexCoord2f(1.0f, 1.0f);
+        rlVertex3f( 1.0f,  1.0f, 0.0f);
+        rlTexCoord2f(1.0f, 0.0f);
+        rlVertex3f( 1.0f, -1.0f, 0.0f);
+    rlEnd();
+}
+
+void _ColorToFloat4Buffer(float buffer[], Color color) {
     buffer[0] = (float)color.r / 255.0f;
     buffer[1] = (float)color.g / 255.0f;
     buffer[2] = (float)color.b / 255.0f;
@@ -40,42 +76,28 @@ namespace orbit_shader {
     int current_anomaly = -1;
 
     int color = -1;
-}
+    int render_mode = -1;
 
-void RenderOrbit(const OrbitSegment* segment, int point_count, Color color) {
-    if (!IsShaderReady(orbit_shader::shader)) {
+    void Load() {
         LOAD_SHADER(orbit_shader)
         LOAD_SHADER_UNIFORM(orbit_shader, semi_latus_rectum)
         LOAD_SHADER_UNIFORM(orbit_shader, eccentricity)
         LOAD_SHADER_UNIFORM(orbit_shader, orbit_transform)
         LOAD_SHADER_UNIFORM(orbit_shader, current_anomaly)
+        LOAD_SHADER_UNIFORM(orbit_shader, render_mode)
         LOAD_SHADER_UNIFORM(orbit_shader, color)
     }
+
+    void UnLoad() {
+        UnloadShader(shader);
+    }
+}
+
+void RenderOrbit(const OrbitSegment *segment, int point_count, OrbitRenderMode::E render_mode, Color color)
+{
+    if (!IsShaderReady(orbit_shader::shader)) orbit_shader::Load();
+
     const Orbit* orbit = segment->orbit;
-
-    //double p = planet_array[i].orbit.sma * (1 - planet_array[i].orbit.ecc*planet_array[i].orbit.ecc);
-    //for (int j=0; j < point_count; j++) {
-    //    double θ1 = j / (double) point_count * 2*PI;
-    //    double θ2 = (j + 1) / (double) point_count * 2*PI;
-    //    double r1 = p / (1 + planet_array[i].orbit.ecc*cos(θ1));
-    //    double r2 = p / (1 + planet_array[i].orbit.ecc*cos(θ2));
-    //    DVector3 dir1 = planet_array[i].orbit.periapsis_dir.RotatedByAxisAngle(planet_array[i].orbit.normal, θ1);
-    //    DVector3 dir2 = planet_array[i].orbit.periapsis_dir.RotatedByAxisAngle(planet_array[i].orbit.normal, θ2);
-    //    DVector3 pos1 = r1 / GameCamera::space_scale * dir1;
-    //    DVector3 pos2 = r2 / GameCamera::space_scale * dir2;
-    //    rlColor4f(1,1,1,1);
-    //    rlVertex3f(pos1.x, pos1.y, pos1.z);
-    //    rlVertex3f(pos2.x, pos2.y, pos2.z);
-    //}
-
-    //double p = planet_array[i].orbit.sma * (1 - planet_array[i].orbit.ecc*planet_array[i].orbit.ecc);
-    //Vector3 v_ecc =  (Vector3) (planet_array[i].orbit.periapsis_dir * planet_array[i].orbit.ecc);
-    //Vector3 v_norm = (Vector3) (planet_array[i].orbit.normal * p / GameCamera::space_scale);
-    //for (int j=0; j < point_count; j++) {
-    //    rlColor4f(v_norm.x, v_norm.y, v_norm.z, v_ecc.z);  // akwardly need to swap v_ecc.z and anomaly
-    //    rlVertex3f(v_ecc.x, v_ecc.y, ((j + 1) % point_count) / (float)point_count * 2*PI);
-    //    rlVertex3f(v_ecc.x, v_ecc.y,                       j / (float)point_count * 2*PI);
-    //}
 
     float p = (float) (orbit->sma * (1 - orbit->ecc*orbit->ecc) / GameCamera::space_scale);
     float ecc = (float) orbit->ecc;
@@ -88,10 +110,12 @@ void RenderOrbit(const OrbitSegment* segment, int point_count, Color color) {
     SetShaderValue(orbit_shader::shader, orbit_shader::semi_latus_rectum, &p, SHADER_UNIFORM_FLOAT);
     SetShaderValue(orbit_shader::shader, orbit_shader::eccentricity, &ecc, SHADER_UNIFORM_FLOAT);
     SetShaderValue(orbit_shader::shader, orbit_shader::current_anomaly, &current_focal_anomaly, SHADER_UNIFORM_FLOAT);
+    int render_mode_int = render_mode;
+    SetShaderValue(orbit_shader::shader, orbit_shader::render_mode, &render_mode_int, SHADER_UNIFORM_INT);
     SetShaderValueMatrix(orbit_shader::shader, orbit_shader::orbit_transform, MatrixFromColumns(mat_x, mat_y, mat_z));
 
     float color4[4];
-    ColorToFloat4Buffer(color4, color);
+    _ColorToFloat4Buffer(color4, color);
     SetShaderValue(orbit_shader::shader, orbit_shader::color, color4, SHADER_UNIFORM_VEC4);
 
     BeginShaderMode(orbit_shader::shader);
@@ -114,7 +138,6 @@ void RenderOrbit(const OrbitSegment* segment, int point_count, Color color) {
     EndShaderMode();
 }
 
-
 namespace planet_shader {
     Shader shader;
     int transform;
@@ -126,13 +149,10 @@ namespace planet_shader {
 
     int cameraPos;
     int normal;
-    int rim_color;
-    int fill_color;
-}
-
-void RenderPerfectSphere(DVector3 world_position, double radius, Color color) {
-
-    if (!IsShaderReady(planet_shader::shader)) {
+    int rimColor;
+    int fillColor;
+    
+    void Load() {
         LOAD_SHADER(planet_shader)
         LOAD_SHADER_UNIFORM(planet_shader, transform)
         LOAD_SHADER_UNIFORM(planet_shader, edge)
@@ -141,21 +161,29 @@ void RenderPerfectSphere(DVector3 world_position, double radius, Color color) {
         LOAD_SHADER_UNIFORM(planet_shader, screenWidth)
         LOAD_SHADER_UNIFORM(planet_shader, cameraPos)
         LOAD_SHADER_UNIFORM(planet_shader, normal)
-        LOAD_SHADER_UNIFORM(planet_shader, rim_color)
-        LOAD_SHADER_UNIFORM(planet_shader, fill_color)
+        LOAD_SHADER_UNIFORM(planet_shader, rimColor)
+        LOAD_SHADER_UNIFORM(planet_shader, fillColor)
     }
+
+    void UnLoad() {
+        UnloadShader(shader);
+    }
+}
+
+void RenderPerfectSphere(DVector3 world_position, double radius, Color color) {
+    if (!IsShaderReady(planet_shader::shader)) planet_shader::Load();
 
     Vector3 render_position = (Vector3) (world_position / GameCamera::space_scale);
     float render_radius = radius / GameCamera::space_scale;
     Vector3 world_camera_pos = GetCamera()->rl_camera.position;
-    Vector3 world_camera_dir = Vector3Subtract(GetCamera()->rl_camera.target, GetCamera()->rl_camera.position);
+    //Vector3 world_camera_dir = Vector3Subtract(GetCamera()->rl_camera.target, GetCamera()->rl_camera.position);
 
     float rim_color4[4];
-    ColorToFloat4Buffer(rim_color4, color);
-    SetShaderValue(planet_shader::shader, planet_shader::rim_color, rim_color4, SHADER_UNIFORM_VEC4);
+    _ColorToFloat4Buffer(rim_color4, color);
+    SetShaderValue(planet_shader::shader, planet_shader::rimColor, rim_color4, SHADER_UNIFORM_VEC4);
     float fill_color4[4];
-    ColorToFloat4Buffer(fill_color4, Palette::bg);
-    SetShaderValue(planet_shader::shader, planet_shader::fill_color, fill_color4, SHADER_UNIFORM_VEC4);
+    _ColorToFloat4Buffer(fill_color4, Palette::bg);
+    SetShaderValue(planet_shader::shader, planet_shader::fillColor, fill_color4, SHADER_UNIFORM_VEC4);
 
 	Vector3 mat_z = Vector3Subtract(GetCamera()->rl_camera.position, render_position);  // In world space
     float camera_distance = Vector3Length(mat_z);
@@ -196,15 +224,125 @@ void RenderPerfectSphere(DVector3 world_position, double radius, Color color) {
     SetShaderValueMatrix(planet_shader::shader, planet_shader::transform, new_model_matrix);
 
     BeginShaderMode(planet_shader::shader);
-    DrawTriangle3D(
-        {-1.0f, -1.0f, 0.0f},
-        { 1.0f, -1.0f, 0.0f},
-        {-1.0f,  1.0f, 0.0f},
-    color);
-    DrawTriangle3D(
-        {-1.0f,  1.0f, 0.0f},
-        { 1.0f, -1.0f, 0.0f},
-        { 1.0f,  1.0f, 0.0f},
-    color);
+    _RenderQuad(color);
     EndShaderMode();
+}
+
+namespace rings_shader {
+    Shader shader;
+
+    int innerRad;
+    int bgColor;
+    
+    void Load() {
+        LOAD_SHADER(rings_shader)
+        LOAD_SHADER_UNIFORM(rings_shader, innerRad)
+        LOAD_SHADER_UNIFORM(rings_shader, bgColor)
+    }
+
+    void UnLoad() {
+        UnloadShader(shader);
+    }
+}
+
+void RenderRings(DVector3 normal, double min_rad, double max_rad, Color color) {
+    if (!IsShaderReady(rings_shader::shader)) rings_shader::Load();
+    
+    float inner_rad_float = min_rad / max_rad;
+	SetShaderValue(rings_shader::shader, rings_shader::innerRad, &inner_rad_float, SHADER_ATTRIB_FLOAT);
+    
+    float bg_color4[4];
+    _ColorToFloat4Buffer(bg_color4, Palette::bg);
+	SetShaderValue(rings_shader::shader, rings_shader::bgColor, &bg_color4, SHADER_ATTRIB_VEC4);
+
+    rlPushMatrix();
+    // scale -> rotate -> translate
+    float render_scale = GameCamera::WorldToRender(max_rad);
+    rlScalef(render_scale, render_scale, render_scale);
+    rlRotatef(90, 1, 0, 0);
+
+    BeginShaderMode(rings_shader::shader);
+    _RenderDoubleQuad(color);
+    EndShaderMode();
+
+    rlPopMatrix();
+}
+
+namespace skybox_shader {
+    Shader shader;
+    int resolution;
+    int fov;
+    int palette;
+    int matCamera;
+    int starMap;
+
+    Texture2D starmap;
+    float palette_vec[4*4];
+    
+    void Load() {
+        LOAD_SHADER(skybox_shader)
+        LOAD_SHADER_UNIFORM(skybox_shader, resolution)
+        LOAD_SHADER_UNIFORM(skybox_shader, fov)
+        LOAD_SHADER_UNIFORM(skybox_shader, palette)
+        LOAD_SHADER_UNIFORM(skybox_shader, matCamera)
+        LOAD_SHADER_UNIFORM(skybox_shader, starMap)
+
+        skybox_shader::starmap = LoadTexture("resources/textures/starmap_4k.jpg");
+        //skybox_shader::starmap = LoadTexture("resources/textures/vsauce.png");
+        
+        _ColorToFloat4Buffer(&palette_vec[4*0], Palette::bg);
+        _ColorToFloat4Buffer(&palette_vec[4*1], Palette::ui_dark);
+        _ColorToFloat4Buffer(&palette_vec[4*3], Palette::ui_alt);
+        _ColorToFloat4Buffer(&palette_vec[4*2], Palette::ui_alt);
+    }
+
+    void UnLoad() {
+        UnloadTexture(skybox_shader::starmap);
+        UnloadShader(shader);
+    }
+}
+
+void RenderSkyBox() {
+    if (!IsShaderReady(skybox_shader::shader)) skybox_shader::Load();
+
+    Vector2 resolution = { GetScreenWidth(), GetScreenHeight() };
+    
+    float fov = GetCamera()->rl_camera.fovy * DEG2RAD;
+    //Matrix camera_matrix = MatrixInvert(rlGetMatrixModelview());
+
+    Vector3 mat_z = Vector3Subtract(GetCamera()->rl_camera.position, GetCamera()->rl_camera.target);  // In world space
+	Vector3 mat_y = { 0.0f, 1.0f, 0.0f };  // Chosen arbitrarily
+    Vector3OrthoNormalize(&mat_z, &mat_y);
+    Vector3 mat_x = Vector3CrossProduct(mat_y, mat_z);
+    Matrix camera_matrix = MatrixFromColumns(mat_x, mat_y, mat_z);
+
+	SetShaderValue(skybox_shader::shader, skybox_shader::resolution, &resolution, SHADER_ATTRIB_VEC2);
+	SetShaderValue(skybox_shader::shader, skybox_shader::fov, &fov, SHADER_ATTRIB_FLOAT);
+	SetShaderValueV(skybox_shader::shader, skybox_shader::palette, &skybox_shader::palette_vec, SHADER_ATTRIB_VEC4, 4);
+	SetShaderValueMatrix(skybox_shader::shader, skybox_shader::matCamera, camera_matrix);
+    SetShaderValueTexture(skybox_shader::shader, skybox_shader::starMap, skybox_shader::starmap);
+
+    //skybox_shader::starmap = LoadTexture("resources/textures/vsauce.png");
+    DrawTexture(skybox_shader::starmap, 0, 0, WHITE);
+    rlDisableDepthTest();
+    rlDisableDepthMask();
+    BeginShaderMode(skybox_shader::shader);
+
+    _RenderQuad(Palette::ui_alt);
+
+    EndShaderMode();
+    rlEnableDepthMask();
+    rlEnableDepthTest();
+}
+
+void ReloadShaders() {
+    orbit_shader::UnLoad();
+    planet_shader::UnLoad();
+    rings_shader::UnLoad();
+    skybox_shader::UnLoad();
+    
+    orbit_shader::Load();
+    planet_shader::Load();
+    rings_shader::Load();
+    skybox_shader::Load();
 }

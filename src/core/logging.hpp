@@ -36,7 +36,7 @@
 #define SHOW_V2(var) LogImpl(__FILE__, __LINE__, LOGTYPE_INFO, "%s = (%f, %f)", #var, (var).x, (var).y);
 
 //#define CRASH exit(1);
-#define CRASH *((int*)(0)) += 1; exit(1);
+#define CRASH *((int*)(0)) += 1;
 #define NOT_IMPLEMENTED {ERROR("Not Implemented") CRASH }
 #define NOT_REACHABLE {ERROR("Should not be reachable") CRASH }
 #define FAIL(...) {ERROR(__VA_ARGS__) CRASH }

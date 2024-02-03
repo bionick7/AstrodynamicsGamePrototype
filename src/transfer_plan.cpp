@@ -123,9 +123,6 @@ void TransferPlanSolveInputImpl(TransferPlan* tp, const Orbit* from_orbit, const
     timemath::Time t2 = tp->arrival_time;
     OrbitPos pos1 = from_orbit->GetPosition(t1);
     OrbitPos pos2 = to_orbit->GetPosition(t2);
-
-    DebugDrawLine(DVector3::Zero(), pos1.cartesian);
-    DebugDrawLine(DVector3::Zero(), pos2.cartesian);
     
     double c = (pos1.cartesian - pos2.cartesian).Length();
     double r_sum = pos1.r + pos2.r;
@@ -501,7 +498,7 @@ void _DrawSweep(const Orbit* orbit, timemath::Time from, timemath::Time to, Colo
         orbit->DrawWithOffset(offset_per_pixel * -3 * i, color);
     }
     OrbitSegment segment = OrbitSegment(orbit, from_pos, to_pos);
-    RenderOrbit(&segment, 256, color);  // TODO: re-introduce offset
+    //RenderOrbit(&segment, 256, OrbitRenderMode::Solid, color);  // TODO: re-introduce offset
 }
 
 void _DrawTransferOrbit(const TransferPlan* plan, int solution, bool is_secondary, timemath::Time t0) {
@@ -517,9 +514,8 @@ void _DrawTransferOrbit(const TransferPlan* plan, int solution, bool is_secondar
     OrbitPos pos2 = plan->transfer_orbit[solution].GetPosition(plan->arrival_time);
     _DrawSweep(&from->orbit, t0, plan->departure_time, orbit_color);
     _DrawSweep(&to->orbit,   t0, plan->arrival_time,   orbit_color);
-    //OrbitSegment segment = OrbitSegment(&plan->transfer_orbit[solution], pos1, pos2);
-    OrbitSegment segment = OrbitSegment(&plan->transfer_orbit[solution]);
-    RenderOrbit(&segment, 256, orbit_color);
+    OrbitSegment segment = OrbitSegment(&plan->transfer_orbit[solution], pos1, pos2);
+    RenderOrbit(&segment, 256, OrbitRenderMode::Solid, orbit_color);
 }
 
 timemath::Time _DrawHandle(

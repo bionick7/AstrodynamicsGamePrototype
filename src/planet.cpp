@@ -665,12 +665,15 @@ int Planets::LoadEphemerides(const DataNode* data) {
         double ann = planet_data->GetF("Ann") * DEG2RAD;
         timemath::Time epoch = timemath::Time(PosMod(ann, 2*PI) / sqrt(parent.mu / (sma*sma*sma)));
 
+        double inc = planet_data->GetF("Inc") * DEG2RAD;
+        inc = inc > PI/2 ? PI : 0;
+
         nature->mu = planet_data->GetF("mass") * G;
         nature->radius = planet_data->GetF("radius");
         nature->orbit = Orbit(
             sma,
             planet_data->GetF("Ecc"),
-            0,//planet_data->GetF("Inc") * DEG2RAD,
+            inc,
             planet_data->GetF("LoA") * DEG2RAD,
             planet_data->GetF("AoP") * DEG2RAD,
             parent.mu,
@@ -683,22 +686,21 @@ int Planets::LoadEphemerides(const DataNode* data) {
 
 void Planets::Draw3D() {
     // Draw Saturn
+    RenderSkyBox();
+ 
     RenderPerfectSphere(DVector3::Zero(), GetParentNature()->radius, Palette::ui_main);
+    RenderRings(DVector3::Up(), 74.0e+6, 92.0e+6, Palette::ui_main);
+    RenderRings(DVector3::Up(), 94.0e+6, 117.58e+6, Palette::ui_main);
+    RenderRings(DVector3::Up(), 122.17e+6, 136.775e+6, Palette::ui_main);
 
     //printf("%f : %f\n", position.x, position.y);
     for(int i=0; i < planet_count; i++) {
-        /*DrawSphere(
-            (Vector3)(planet_array[i].position.cartesian / GameCamera::space_scale), 
-            planet_array[i].ScreenRadius(), 
-            planet_array[i].GetColor()
-        );  // TODO: replace with custom method
-        */
         RenderPerfectSphere(planet_array[i].position.cartesian, planet_array[i].radius, planet_array[i].GetColor());
     }
     
     for(int i=0; i < planet_count; i++) {
         OrbitSegment segment = OrbitSegment(&planet_array[i].orbit);
-        RenderOrbit(&segment, 256, planet_array[i].GetColor());
+        RenderOrbit(&segment, 256, OrbitRenderMode::Gradient, planet_array[i].GetColor());
     }
 }
 

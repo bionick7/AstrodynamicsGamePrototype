@@ -37,6 +37,7 @@ cost_t Factions::GetMoney(int faction) {
 }
 
 void Factions::Update() {
+    return;
     if (GetCalendar()->IsNewDay()) {
         for (int i=0; i < faction_count; i++) {
             ai_information[i].HighLevelFactionAI();

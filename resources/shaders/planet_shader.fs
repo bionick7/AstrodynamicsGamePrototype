@@ -1,4 +1,4 @@
-#version 330 core
+#version 330
 
 in vec2 uv;
 in vec3 world_pos;
@@ -11,8 +11,8 @@ uniform float screenWidth;
 uniform vec3 cameraPos;  // in world_pos
 uniform vec3 cameraDir;
 uniform vec3 normal;
-uniform vec4 rim_color;
-uniform vec4 fill_color;
+uniform vec4 rimColor;
+uniform vec4 fillColor;
 
 out vec4 finalColor;
 
@@ -41,6 +41,6 @@ void main() {
     float gradient = pow(r / (draw_max*draw_max), 10.0) * 0.3;
     float mask = 1.0 - (1.0 - mask_outer*mask_inner) * (1.0 - gradient);
 
-	finalColor.rgb = mix(fill_color.rgb, rim_color.rgb, mask);
+	finalColor.rgb = mix(fillColor.rgb, rimColor.rgb, mask);
 	finalColor.a = 1.0;
 }
