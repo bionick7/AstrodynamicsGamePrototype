@@ -495,16 +495,14 @@ void Ship::_UpdateModules() {
     }
 }
 
-Texture2D placeholder_texture;
-
-void _DrawShipAt(DVector3 pos, Color color, Vector2 offset) {
-    if (!IsTextureReady(placeholder_texture)) 
-        placeholder_texture = LoadTexture("E:/Games/astrodyn_concept_3/standalone/resources/textures/vsauce.png");
-        
+void Ship::DrawIcon(Vector2 offset, float pixel_scale) {        
+    DVector3 pos = position.cartesian;
+    Color color = GetColor();
     Vector3 render_pos = GameCamera::WorldToRender(pos);
-    Vector2 screen_pos = GetCamera()->GetScreenPos(pos);
+    draw_pos = GetCamera()->GetScreenPos(pos);
+    draw_pos = Vector2Add(draw_pos, offset);
     
-    if (screen_pos.y < -20 || screen_pos.x < -20) {
+    if (draw_pos.y < -20 || draw_pos.x < -20) {
         return;
     }
 
@@ -528,38 +526,44 @@ void _DrawShipAt(DVector3 pos, Color color, Vector2 offset) {
     DebugDrawTransform(MatrixFromColumns(cam_x, cam_y, cam_z, render_pos));
     float scale = dy_dpixel * 12.0f;*/
 
-    Ray ray = GetMouseRay(Vector2Add(screen_pos, offset), GetCamera()->rl_camera);
-    float dist = Vector3Distance(ray.position, render_pos);
-    Vector3 offset_render_pos = Vector3Add(ray.position, Vector3Scale(ray.direction, dist));
+    Vector3 offset_render_pos;
+    float scale;
+    if (Vector2LengthSqr(offset) == 0) {
+        offset_render_pos = render_pos;
+        
+        Ray ray = GetMouseRay(Vector2Add(draw_pos, {0.707, 0.707}), GetCamera()->rl_camera);
+        float dist = Vector3Distance(ray.position, render_pos);
+        Vector3 offset_pos = Vector3Add(ray.position, Vector3Scale(ray.direction, dist));
+        scale = Vector3Distance(offset_pos, render_pos) * pixel_scale;  // finite difference
 
-    Vector3 projected_diff = Vector3Subtract(offset_render_pos, render_pos);
-    projected_diff = Vector3Subtract(projected_diff, Vector3Project(projected_diff, ray.direction));
-    float scale = Vector3Length(projected_diff) / Vector2Length(offset) *2.0f * 12.0f;  // finite difference
+    } else {
+        Ray ray = GetMouseRay(draw_pos, GetCamera()->rl_camera);
+        float dist = Vector3Distance(ray.position, render_pos);
+        offset_render_pos = Vector3Add(ray.position, Vector3Scale(ray.direction, dist));
 
-    Rectangle source = { 0.0f, 0.0f, (float)placeholder_texture.width, (float)placeholder_texture.height };
+        Vector3 projected_diff = Vector3Subtract(offset_render_pos, render_pos);
+        projected_diff = Vector3Subtract(projected_diff, Vector3Project(projected_diff, ray.direction));
+        scale = Vector3Length(projected_diff) / Vector2Length(offset) * pixel_scale;  // finite difference
+    }
+
+    Rectangle source = GetAtlasPosition(GetShipType(), 12, 128);
 
     DrawBillboardPro(
-        GetCamera()->rl_camera, placeholder_texture, source, 
+        GetCamera()->rl_camera, rendering::GetIconAtlas(0), source, 
         offset_render_pos, cam_y, 
         { scale, scale }, Vector2Zero(), 0.0f, 
         color
     );
-    DrawLine3D(offset_render_pos, render_pos, color);
+    //DrawLine3D(offset_render_pos, render_pos, color);  // This doesn't really work anymore
     
     //Vector2 draw_pos = GetCamera()->GetScreenPos(pos);
     //DrawRectangleV(Vector2SubtractValue(draw_pos, 4.0f), {8, 8}, color);
 }
 
-void Ship::Draw3D(Vector2 draw_pos_offset) {
+void Ship::DrawTrajectories() const {
     Color color = GetColor();
-
-    // Draw
-    draw_pos = GetCamera()->GetScreenPos(position.cartesian);
-    draw_pos = Vector2Add(draw_pos_offset, draw_pos);
-
-    _DrawShipAt(position.cartesian, color, draw_pos_offset);
     
-    if (plan_edit_index >= 0 
+    /*if (plan_edit_index >= 0 
         && IsIdValid(prepared_plans[plan_edit_index].arrival_planet)
         && IsTrajectoryKnown(plan_edit_index)
     ) {
@@ -568,8 +572,8 @@ void Ship::Draw3D(Vector2 draw_pos_offset) {
             last_tp->arrival_time
         );
         //Vector2 last_draw_pos = GetCamera()->GetScreenPos(last_pos.cartesian);
-        _DrawShipAt(last_pos.cartesian, ColorAlpha(color, 0.5), Vector2Zero());
-    }
+        DrawIcon(last_pos.cartesian, GetShipType(), ColorAlpha(color, 0.5), Vector2Zero());
+    }*/
     
 
     if ((GetIntelLevel() & IntelLevel::TRAJECTORY) == 0) {

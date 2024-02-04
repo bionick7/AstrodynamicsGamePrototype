@@ -122,7 +122,7 @@ Orbit::Orbit(double semi_major_axis, double eccenetricity, double inclination,
 }
 
 Orbit::Orbit(OrbitPos pos1, OrbitPos pos2, timemath::Time time_at_pos1, 
-             double sma, double mu, bool cut_focus) {
+             double sma, double mu, bool cut_focus, bool is_prograde) {
     // https://en.wikipedia.org/wiki/Lambert%27s_problem
     // goes from pos1 to pos2
     //if (!is_prograde) Swap(&pos1, &pos2);
@@ -140,21 +140,37 @@ Orbit::Orbit(OrbitPos pos1, OrbitPos pos2, timemath::Time time_at_pos1,
     double x_f = x_0 + 2*sma / E;
     double y_f = sqrt(B_sqr * fmax(x_f*x_f / (A*A) - 1, 0));
 
-    if (cut_focus) y_f = -y_f;  // For a hyperbola this means, it's the more direct way
+    //if (r1_r2_cross.y < 0.0) y_f = -y_f;
+    if (cut_focus) {  // For a hyperbola this means, it's the more direct way
+        y_0 = -y_0;
+    }
+    if (r1_r2_cross.y < 0) {
+        y_0 = -y_0;
+        y_f = -y_f;
+    }
     double ecc = hypot(x_0 - x_f, y_0 - y_f) / (2 * fabs(sma));
     ASSERT(!isnan(ecc))
 
     DVector3 canon_z = r1_r2_cross.Normalized();
-    DVector3 canon_x = ((pos2.cartesian - pos1.cartesian) / 2.0).Normalized();
+    //canon_z = DVector3::Up();
+    DVector3 canon_x = (pos2.cartesian - pos1.cartesian).Normalized();
+    if (!is_prograde) {
+        canon_z = -canon_z;
+        //canon_x = -canon_x;
+    }
     DVector3 canon_y = canon_z.Cross(canon_x);
     DVector3 periapsis_dir = (canon_x * (x_0 - x_f) + canon_y * (y_0 - y_f)).Normalized();
     periapsis_dir = periapsis_dir * Sign(sma);
 
-    // DEBUG DRAWING
+    //DebugDrawLine(DVector3::Zero(), canon_x * 1e8);
+    //DebugDrawLine(DVector3::Zero(), canon_y * 1e8);
+    DVector3 center = (pos1.cartesian + pos2.cartesian) * .5;
+    DebugDrawLine(center + canon_x * x_0 + canon_y * y_0, center + canon_x * x_f + canon_y * y_f);
+    DebugDrawConic(pos1.cartesian, (pos1.cartesian - pos2.cartesian).Normalized() * E, DVector3::Up(), A);
 
-    double θ_1 = periapsis_dir.SignedAngleTo(pos1.cartesian, normal);
+    double θ_1 = periapsis_dir.SignedAngleTo(pos1.cartesian, canon_z);
     double M_1 = sma < 0 ? _True2MeanHyp(θ_1, ecc) : _True2Mean(θ_1, ecc);
-    // TODO: what happens if the orbit is retrograde
+    DEBUG_SHOW_F(sma)
 
     this->epoch = time_at_pos1 - timemath::Time(M_1 * sqrt(fabs(sma)*sma*sma / mu));
     //period = fmod(period, sqrt(sma*sma*sma / mu) * 2*PI);
@@ -345,7 +361,7 @@ Vector2 OrbitSegment::AdjustmentToClosest(Vector2 p) const {
 OrbitPos OrbitSegment::TraceRay(Vector3 origin, Vector3 ray, float* distance, 
                                 timemath::Time* mouseover_time, Vector3* local_mouseover_pos) const {
     Vector3 crossing = Vector3Subtract(origin, Vector3Scale(ray, origin.y / ray.y));
-    Vector2 crossing2D = (Vector2) { crossing.x, crossing.z };
+    Vector2 crossing2D = { crossing.x, crossing.z };
     Vector2 delta = AdjustmentToClosest(crossing2D);
     //delta = { delta.y, delta.x };
     *distance = Vector2Length(delta);
@@ -354,7 +370,7 @@ OrbitPos OrbitSegment::TraceRay(Vector3 origin, Vector3 ray, float* distance,
     if (orbit->ecc > 1) {
         res = orbit->FromFocal(focal + PI);
     }
-    *local_mouseover_pos = Vector3Subtract(crossing, (Vector3) { delta.x, 0, delta.y });
+    *local_mouseover_pos = Vector3Subtract(crossing, { delta.x, 0, delta.y });
     
     if (orbit->ecc < 1) {
         timemath::Time minTime = GlobalGetNow();

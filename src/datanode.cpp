@@ -331,7 +331,7 @@ void DataNode::WriteYAML(StringBuilder* sb, int indentLevel, bool ignore_first_i
     }
 
     for (auto it = Children.begin(); it != Children.end(); ++it) {
-        sb->AddFormat("%s%s\n", INDENT, it->first.c_str());
+        sb->AddFormat("%s%s:\n", INDENT, it->first.c_str());
         it->second->WriteYAML(sb, indentLevel + 1, false);
     }
 

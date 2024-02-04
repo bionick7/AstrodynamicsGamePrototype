@@ -103,7 +103,7 @@ void RenderOrbit(const OrbitSegment *segment, int point_count, OrbitRenderMode::
     float ecc = (float) orbit->ecc;
     Vector3 mat_x = (Vector3) orbit->periapsis_dir;
     Vector3 mat_y = (Vector3) orbit->normal;
-    Vector3 mat_z = Vector3CrossProduct(mat_x, mat_y);
+    Vector3 mat_z = Vector3CrossProduct(mat_y, mat_x);
 
     float current_focal_anomaly = orbit->GetPosition(GlobalGetNow()).θ;
 
@@ -127,10 +127,13 @@ void RenderOrbit(const OrbitSegment *segment, int point_count, OrbitRenderMode::
             rlVertex3f((j + 1) * delta, 0, 0);
         }
     } else {
-        float delta = (segment->bound2.θ - segment->bound1.θ) / (float) point_count;
+        float focal_bound1 = segment->bound1.θ;
+        float focal_bound2 = segment->bound2.θ;
+        if (focal_bound2 < focal_bound1) focal_bound2 += PI*2;
+        float delta = (focal_bound2 - focal_bound1) / (float) point_count;
         for (int j=0; j < point_count; j++) {
-            rlVertex3f(segment->bound1.θ + j * delta, 0, 0);
-            rlVertex3f(segment->bound1.θ + (j + 1) * delta, 0, 0);
+            rlVertex3f(focal_bound1 + j * delta, 0, 0);
+            rlVertex3f(focal_bound1 + (j + 1) * delta, 0, 0);
         }
     }
 
@@ -335,26 +338,54 @@ void RenderSkyBox() {
     rlEnableDepthTest();
 }
 
+Rectangle GetAtlasPosition(int x, int y, int size) {
+    Rectangle res;
+    res.x = x * size;
+    res.y = y * size;
+    res.width = size;
+    res.height = size;
+    return res;
+}
+
+namespace icon_shader {
+    Shader shader;
+
+    void Load() {
+        shader = LoadShader(NULL, "resources/shaders/icon_shader.fs");
+    }
+
+    void UnLoad() {
+        UnloadShader(shader);
+    }
+}
+
 void ReloadShaders() {
     orbit_shader::UnLoad();
     planet_shader::UnLoad();
     rings_shader::UnLoad();
     skybox_shader::UnLoad();
+    icon_shader::UnLoad();
     
     orbit_shader::Load();
     planet_shader::Load();
     rings_shader::Load();
     skybox_shader::Load();
+    icon_shader::Load();
 }
-
 
 namespace textures {
     static Texture2D icon_atlas_128;
 };
 
-Texture2D GetIconAtlas(int size) {
+Shader rendering::GetIconShader() {
+    if (!IsShaderReady(icon_shader::shader)) icon_shader::Load();
+    return icon_shader::shader;
+}
+
+Texture2D rendering::GetIconAtlas(int size) {
     if (!IsTextureReady(textures::icon_atlas_128)) {
         textures::icon_atlas_128 = LoadTexture("resources/icons/font_icons.png");
     }
     return textures::icon_atlas_128;
 }
+

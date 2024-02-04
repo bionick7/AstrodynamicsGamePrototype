@@ -159,13 +159,24 @@ void TransferPlanSolveInputImpl(TransferPlan* tp, const Orbit* from_orbit, const
         //double r1_r2_outer_prod = Determinant(pos1.cartesian, pos2.cartesian);
         // Direct orbit is retrograde
         bool is_prograde;
+        bool cut_focus;
         if (is_ellipse[i]) {
             bool direct_solution = timemath::Time::SecDiff(t2, t1) < PI * sqrt(fabs(aa[i])*aa[i]*aa[i] / mu);
-            is_prograde = direct_solution ^ (i == 1);
+            cut_focus = i == 1;
+            is_prograde = i == 1;
+            if (direct_solution) {
+                is_prograde = !is_prograde;
+            }
+
+            if (!direct_solution) {
+                cut_focus = !cut_focus;
+                is_prograde = !is_prograde;
+            }
         } else {
+            cut_focus = i == 1;
             is_prograde = i == 1;
         }
-        tp->transfer_orbit[i] = Orbit(pos1, pos2, t1, aa[i], mu, i == 1);
+        tp->transfer_orbit[i] = Orbit(pos1, pos2, t1, aa[i], mu, cut_focus, is_prograde);
         //OrbitPrint(&tp->transfer_orbit[i]); printf("\n");
 
         OrbitPos pos1_tf = tp->transfer_orbit[i].GetPosition(t1);
@@ -176,8 +187,10 @@ void TransferPlanSolveInputImpl(TransferPlan* tp, const Orbit* from_orbit, const
         tp->departure_dvs[i] = (tp->transfer_orbit[i].GetVelocity(pos1_tf) - from_orbit->GetVelocity(pos1));
         tp->arrival_dvs[i] = (to_orbit->GetVelocity(pos2) - tp->transfer_orbit[i].GetVelocity(pos2_tf));
 
-        //ASSERT_ALOMST_EQUAL_FLOAT(pos1_.r, pos1.r)
-        //ASSERT_ALOMST_EQUAL_FLOAT(pos2_.r, pos2.r)
+        DEBUG_SHOW_F(pos2_tf.r / pos2.r)
+
+        //ASSERT_ALOMST_EQUAL_FLOAT(pos1_tf.r, pos1.r)
+        //ASSERT_ALOMST_EQUAL_FLOAT(pos2_tf.r, pos2.r)
     }
 }
 
@@ -584,7 +597,7 @@ void TransferPlanUI::Draw3D() {
         _DrawTransferOrbit(plan, plan->primary_solution, false, time_bounds[0]);
     } else if (plan->num_solutions == 2) {
         _DrawTransferOrbit(plan, plan->primary_solution, false, time_bounds[0]);
-        //_DrawTransferOrbit(plan, 1 - plan->primary_solution, true, time_bounds[0]);
+        _DrawTransferOrbit(plan, 1 - plan->primary_solution, false, time_bounds[0]);
     }
 }
 

@@ -9,7 +9,7 @@
 void DebugDrawLineRenderSpace(Vector3 from, Vector3 to);
 void DebugDrawLine(DVector3 from, DVector3 to);
 void DebugDrawTransform(Matrix mat);
-void DebugDrawConic(DVector3 focus, DVector3 ecc_vector, double a);
+void DebugDrawConic(DVector3 focus, DVector3 ecc_vector, DVector3 normal, double a);
 
 void DebugFlushText();
 void DebugFlush3D();

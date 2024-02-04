@@ -34,8 +34,8 @@ double LerpFromArray(double t, double array[], int array_len) {
 
 Vector2 FromPolar(double radius, double phase) {
     return {
-        radius * cos(phase),
-        radius * sin(phase)
+        (float) (radius * cos(phase)),
+        (float) (radius * sin(phase))
     };
 }
 
@@ -77,6 +77,22 @@ double PosMod(double x, double period) {
     double res = fmod(x, period);
     if (res < 0) res += period;
     return res;
+}
+
+double Smoothstep(double a, double b, double t) {
+    if (b < a) return 1 - Smoothstep(b, a, t);
+    if (t <= a) return 0;
+    if (t >= b) return 1;
+    double x = (t - a) / (b - a);
+    return x*x*(3 - 2*x);
+}
+
+float Smoothstep(float a, float b, float t) {
+    if (b < a) return 1 - Smoothstep(b, a, t);
+    if (t <= a) return 0;
+    if (t >= b) return 1;
+    float x = (t - a) / (b - a);
+    return x*x*(3 - 2*x);
 }
 
 Matrix MatrixFromColumns(Vector3 col_x, Vector3 col_y, Vector3 col_z) {

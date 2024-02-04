@@ -30,7 +30,7 @@ struct Orbit {
           double mu, timemath::Time epoch);  // 3D
     //Orbit(DVector3 pos, DVector3 vel, timemath::Time t, double mu);
     Orbit(OrbitPos pos1, OrbitPos pos2, timemath::Time time_at_pos1, 
-          double sma, double mu, bool cut_focus);
+          double sma, double mu, bool cut_focus, bool is_prograde);
     
     void Inspect() const;
 

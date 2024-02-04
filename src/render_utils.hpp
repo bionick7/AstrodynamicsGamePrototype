@@ -20,6 +20,11 @@ void RenderPerfectSphere(DVector3 pos, double radius, Color color);
 void RenderRings(DVector3 normal, double min_rad, double max_rad, Color color);
 void RenderSkyBox();
 
-Texture2D GetIconAtlas(int size);
+Rectangle GetAtlasPosition(int x, int y, int size);
+
+namespace rendering {
+    Shader GetIconShader();
+    Texture2D GetIconAtlas(int size);
+}
 
 #endif  // RENDER_UTILS_H

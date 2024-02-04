@@ -197,7 +197,7 @@ Vector2 GameCamera::GetScreenPos(DVector3 world_pos) const {
         Vector3Subtract(screen_space, rl_camera.position),
         Vector3Subtract(rl_camera.target, rl_camera.position)
     ) < 0.0) {
-        return { .x = -1000.0f, .y = -1000.0f };
+        return { -1000.0f, -1000.0f };
     }
     return GetWorldToScreen(WorldToRender(world_pos), rl_camera);
 }

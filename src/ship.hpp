@@ -110,7 +110,8 @@ struct Ship {
     void Update();
     void _UpdateShipyard();
     void _UpdateModules();
-    void Draw3D(Vector2 draw_position_offset);
+    void DrawIcon(Vector2 offset, float pixel_scale);
+    void DrawTrajectories() const;
     void DrawUI();
     void Inspect();
 

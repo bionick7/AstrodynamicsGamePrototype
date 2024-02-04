@@ -20,7 +20,7 @@ const int RENDER_MODE_DASHED = 2;
 const float PIx2 = 6.283185307;
 
 void main() {
-	float path_offset = 1.0 - fract((anomaly + current_anomaly + PIx2) / PIx2);
+	float path_offset = fract((anomaly - current_anomaly + PIx2) / PIx2);
     finalColor.rgb = color.rgb;
     if (render_mode == RENDER_MODE_SOLID) {
         finalColor.a = 1.0;
