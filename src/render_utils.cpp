@@ -346,3 +346,15 @@ void ReloadShaders() {
     rings_shader::Load();
     skybox_shader::Load();
 }
+
+
+namespace textures {
+    static Texture2D icon_atlas_128;
+};
+
+Texture2D GetIconAtlas(int size) {
+    if (!IsTextureReady(textures::icon_atlas_128)) {
+        textures::icon_atlas_128 = LoadTexture("resources/icons/font_icons.png");
+    }
+    return textures::icon_atlas_128;
+}

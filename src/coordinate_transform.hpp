@@ -59,6 +59,7 @@ struct GameCamera {
 
     void HandleInput();
     Vector2 GetScreenPos(DVector3 world_pos) const;
+    float MeasurePixelSize(Vector3 render_pos) const;
 };
 
 #endif  // COORDINATE_TRANSFORM

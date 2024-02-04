@@ -202,6 +202,10 @@ Vector2 GameCamera::GetScreenPos(DVector3 world_pos) const {
     return GetWorldToScreen(WorldToRender(world_pos), rl_camera);
 }
 
+float GameCamera::MeasurePixelSize(Vector3 render_pos) const {
+    return Vector3Distance(rl_camera.position, render_pos) * tan(rl_camera.fovy/2.0) / GetScreenHeight();
+}
+
 void GameCamera::Serialize(DataNode* data) const {
     data->SetF("fovy", rl_camera.fovy);
     data->SetI("focus", focus_object.AsInt());

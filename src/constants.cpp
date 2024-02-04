@@ -15,6 +15,10 @@ Color Palette::interactable_main = Palette::blue;
 Color Palette::interactable_dark = ColorAlphaBlend(Palette::bg, Palette::interactable_main, GetColor(0x50505050u));
 Color Palette::interactable_alt = ColorAlphaBlend(Palette::bg, Palette::interactable_main, GetColor(0x80808080u));
 
-Color Palette::ship = Palette::green;
-Color Palette::ship_dark = ColorAlphaBlend(Palette::bg, Palette::ship, GetColor(0x50505050u));
-Color Palette::ship_alt = ColorAlphaBlend(Palette::bg, Palette::ship, GetColor(0x80808080u));
+Color Palette::ally = Palette::blue;
+Color Palette::ally_dark = ColorAlphaBlend(Palette::bg, Palette::ally, GetColor(0x50505050u));
+Color Palette::ally_alt = ColorAlphaBlend(Palette::bg, Palette::ally, GetColor(0x80808080u));
+
+Color Palette::enemy = Palette::red;
+Color Palette::enemy_dark = ColorAlphaBlend(Palette::bg, Palette::enemy, GetColor(0x50505050u));
+Color Palette::enemy_alt = ColorAlphaBlend(Palette::bg, Palette::enemy, GetColor(0x80808080u));

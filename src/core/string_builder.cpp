@@ -60,6 +60,7 @@ StringBuilder & StringBuilder::AutoBreak(int max_width) {
             character_toll = 0;
         }
     }
+    return *this;
 }
 
 StringBuilder& StringBuilder::Add(const char* add_str) {

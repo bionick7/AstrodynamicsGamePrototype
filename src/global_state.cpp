@@ -265,14 +265,9 @@ void GlobalState::UpdateState(double delta_t) {
 
 // Draw
 void GlobalState::DrawState() {
-
     BeginMode3D(camera.rl_camera);
     //DrawCircleV(coordinate_transform.TransformV({0}), coordinate_transform.TransformS(planets.GetParentNature()->radius), Palette::ui_main);
-    planets.Draw3D();
-    for (auto it = ships.alloc.GetIter(); it; it++) {
-        Ship* ship = ships.alloc[it];
-        ship->Draw3D();
-    }
+    planets.Draw3D();  // planets also draw their ships
     active_transfer_plan.Draw3D();
     DebugFlush3D();
     EndMode3D();

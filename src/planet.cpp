@@ -488,7 +488,7 @@ void Planet::DrawUI() {
 
     if (mouse_hover) {
         // Hover
-        DrawCircleLines(screen_x, screen_y, 20, Palette::ship);
+        DrawCircleLines(screen_x, screen_y, 20, Palette::ui_main);
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             _OnClicked();
         }
@@ -693,9 +693,44 @@ void Planets::Draw3D() {
     RenderRings(DVector3::Up(), 94.0e+6, 117.58e+6, Palette::ui_main);
     RenderRings(DVector3::Up(), 122.17e+6, 136.775e+6, Palette::ui_main);
 
-    //printf("%f : %f\n", position.x, position.y);
+    static float x_offsets[4];
+    static int type_count[4];
+    IDList ships_in_orbit;
+
     for(int i=0; i < planet_count; i++) {
+        // Draw planet
         RenderPerfectSphere(planet_array[i].position.cartesian, planet_array[i].radius, planet_array[i].GetColor());
+
+        // Collect ships
+        ships_in_orbit.Clear();
+        GetShips()->GetOnPlanet(&ships_in_orbit, RID(i, EntityType::PLANET), 0xFFFFFFFFU);
+
+        const float STRIDE = 18.0f;
+
+        // clean buffers
+        float pixel_size = GetCamera()->MeasurePixelSize(GameCamera::WorldToRender(planet_array[i].position.cartesian));
+        float planet_pixel_size = GameCamera::WorldToRender(planet_array[i].radius) / pixel_size;
+        for(int j=0; j < 4; j++) type_count[j] = 0;
+        x_offsets[0] = -planet_pixel_size - STRIDE*2;
+        x_offsets[1] = -planet_pixel_size - STRIDE;
+        x_offsets[2] =  planet_pixel_size + STRIDE;
+        x_offsets[3] =  planet_pixel_size + STRIDE*2;
+        
+        for (int j=0; j < ships_in_orbit.size; j++) {
+            Ship* ship = GetShip(ships_in_orbit[j]);
+
+            int type = ship->GetShipType();
+            Vector2 draw_offset = { x_offsets[type], type_count[type]++ * STRIDE };
+            ship->Draw3D(draw_offset);
+        }
+    }
+
+    // Handle orphan ships
+    ships_in_orbit.Clear();
+    GetShips()->GetOnPlanet(&ships_in_orbit, GetInvalidId(), 0xFFFFFFFFU);
+    for (int j=0; j < ships_in_orbit.size; j++) {
+        Ship* ship = GetShip(ships_in_orbit[j]);
+        ship->Draw3D(Vector2Zero());
     }
     
     for(int i=0; i < planet_count; i++) {

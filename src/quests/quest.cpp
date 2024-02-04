@@ -111,7 +111,7 @@ ButtonStateFlags::T Quest::DrawUI(bool show_as_button, bool highlight) const {
         return ButtonStateFlags::NONE;
     }
     if (highlight) {
-        UIContextEnclose(Palette::bg, Palette::ship);
+        UIContextEnclose(Palette::bg, Palette::ally);
     } else {
         UIContextEnclose(Palette::bg, Palette::ui_main);
     }

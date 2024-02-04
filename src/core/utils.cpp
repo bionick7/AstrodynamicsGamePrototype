@@ -94,6 +94,24 @@ Matrix MatrixFromColumns(Vector3 col_x, Vector3 col_y, Vector3 col_z) {
     return m;
 }
 
+Matrix MatrixFromColumns(Vector3 col_x, Vector3 col_y, Vector3 col_z, Vector3 origin) {
+    Matrix m = {0};
+    m.m0  = col_x.x;
+    m.m1  = col_x.y;
+    m.m2  = col_x.z;
+    m.m4  = col_y.x;
+    m.m5  = col_y.y;
+    m.m6  = col_y.z;
+    m.m8  = col_z.x;
+    m.m9  = col_z.y;
+    m.m10 = col_z.z;
+    m.m12 = origin.x;
+    m.m13 = origin.y;
+    m.m14 = origin.z;
+    m.m15 = 1.0f;
+    return m;
+}
+
 static std::mt19937_64 r_generator = std::mt19937_64(std::random_device{}());
 
 void SetRandomSeed(uint_fast64_t seed) {

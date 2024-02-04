@@ -505,7 +505,7 @@ void _DrawTransferOrbit(const TransferPlan* plan, int solution, bool is_secondar
     const Planet* from = GetPlanet(plan->departure_planet);
     const Planet* to = GetPlanet(plan->arrival_planet);
     Color velocity_color = YELLOW;
-    Color orbit_color = Palette::ship;
+    Color orbit_color = Palette::ally;
     if (is_secondary) {
         velocity_color = ColorTint(velocity_color, GRAY);
         orbit_color = ColorTint(orbit_color, GRAY);
@@ -628,10 +628,10 @@ void TransferPlanUI::DrawUI() {
     UIContextCreateNew(
         GetScreenWidth() - 20*16 - 5, y_margin,
         20*16, MinInt(200, GetScreenHeight()) - 2*5 - y_margin, 
-        16, Palette::ship
+        16, Palette::ally
     );
 
-    UIContextCurrent().Enclose(2, 2, Palette::bg, is_valid ? Palette::ship : Palette::red);
+    UIContextCurrent().Enclose(2, 2, Palette::bg, is_valid ? Palette::ally : Palette::red);
     
     StringBuilder sb = StringBuilder();
     sb.Add("Departs in ").AddTime(plan->departure_time - time_bounds[0]);
@@ -641,7 +641,7 @@ void TransferPlanUI::DrawUI() {
     UIContextWrite(sb.c_str);
     UIContextFillline(
         fmin(timemath::Time::SecDiff(plan->arrival_time, time_bounds[0]) / timemath::Time::SecDiff(plan->hohmann_arrival_time, time_bounds[0]), 1.0), 
-        Palette::ship, Palette::bg
+        Palette::ally, Palette::bg
     );
     UIContextPop();  // Inset
     sb.Clear();
@@ -664,7 +664,7 @@ void TransferPlanUI::DrawUI() {
 
     UIContextPushInset(0, 18 * sb.CountLines() + 5);
     UIContextWrite(sb.c_str);
-    UIContextFillline(fmax(0, capacity_ratio), capacity >= 0 ? Palette::ship : Palette::red, Palette::bg);
+    UIContextFillline(fmax(0, capacity_ratio), capacity >= 0 ? Palette::ally : Palette::red, Palette::bg);
     UIContextPop();  // Inset
 
     int w = UIContextCurrent().width;

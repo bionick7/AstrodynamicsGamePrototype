@@ -45,7 +45,7 @@ void _DrawHohmanTFs(const TimeLineCoordinateData* tcd, RID from, RID to) {
         DrawLine(
             GetPlanetCoord(tcd, from), GetTimeCoord(tcd, departure_t),
             GetPlanetCoord(tcd, to), GetTimeCoord(tcd, arrival_t),
-            Palette::ship_alt
+            Palette::ally_alt
         );
         t0 = departure_t + 1;
     }

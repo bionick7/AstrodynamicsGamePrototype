@@ -274,7 +274,7 @@ bool Ship::CanDragModule(int index) const {
 }
 
 Color Ship::GetColor() const {
-    return IsPlayerControlled() ? Palette::green : Palette::red;
+    return IsPlayerControlled() ? Palette::ally : Palette::enemy;
 }
 
 bool Ship::IsParked() const {
@@ -305,6 +305,19 @@ int Ship::CountModulesOfClass(RID module_class) const {
         if (modules[i] == module_class) res++;
     }
     return res;
+}
+
+ShipType::E Ship::GetShipType() const {
+    for(int i=0; i < SHIP_MAX_MODULES; i++) {
+        if (modules[i] == GetShipModules()->expected_modules.small_yard_1) return ShipType::SHIPYARD;
+        if (modules[i] == GetShipModules()->expected_modules.small_yard_2) return ShipType::SHIPYARD;
+        if (modules[i] == GetShipModules()->expected_modules.small_yard_3) return ShipType::SHIPYARD;
+        if (modules[i] == GetShipModules()->expected_modules.small_yard_4) return ShipType::SHIPYARD;
+        //if (GetShipModules()->GetModuleByRID(modules[i])->production) return ShipType::UTILITY;
+        // TODO: when is it 'UTILITY'?
+    }
+    if (GetCombatStrength() > 0) return ShipType::MILITARY;
+    return ShipType::TRANSPORT;
 }
 
 TransferPlan* Ship::GetEditedTransferPlan() {
@@ -482,15 +495,86 @@ void Ship::_UpdateModules() {
     }
 }
 
-void _DrawShipAt(Vector2 pos, Color color) {
-    DrawRectangleV(Vector2SubtractValue(pos, 4.0f), {8, 8}, color);
+Texture2D placeholder_texture;
+
+void _DrawShipAt(DVector3 pos, Color color, Vector2 offset) {
+    if (!IsTextureReady(placeholder_texture)) 
+        placeholder_texture = LoadTexture("E:/Games/astrodyn_concept_3/standalone/resources/textures/vsauce.png");
+        
+    Vector3 render_pos = GameCamera::WorldToRender(pos);
+    Vector2 screen_pos = GetCamera()->GetScreenPos(pos);
+    
+    if (screen_pos.y < -20 || screen_pos.x < -20) {
+        return;
+    }
+
+    //Vector3 cam_z = Vector3Subtract(render_pos, GetCamera()->rl_camera.position);
+    Vector3 cam_z = Vector3Subtract(GetCamera()->rl_camera.target, GetCamera()->rl_camera.position);
+    Vector3 cam_y = { 0.0f, 1.0f, 0.0f };
+    Vector3OrthoNormalize(&cam_z, &cam_y);
+    Vector3 cam_x = Vector3CrossProduct(cam_z, cam_y);
+
+    /*Vector2 norm_pos = Vector2Divide(screen_pos, { GetScreenWidth()*.5f, GetScreenHeight()*.5f });
+    norm_pos = Vector2Subtract(norm_pos, Vector2One());
+    norm_pos.x *= GetCamera()->rl_camera.fovy * DEG2RAD *.5f * GetScreenWidth() / (float)GetScreenHeight();
+    norm_pos.y *= GetCamera()->rl_camera.fovy * DEG2RAD *.5f;
+    DEBUG_SHOW_F(norm_pos.x)
+    DEBUG_SHOW_F(norm_pos.y)
+    
+    float dy_dpixel = GetCamera()->MeasurePixelSize(render_pos);
+    render_pos = Vector3Add(render_pos, Vector3Scale(cam_x, offset.x * dy_dpixel * cosf(norm_pos.x)*cosf(norm_pos.x)));
+    render_pos = Vector3Add(render_pos, Vector3Scale(cam_y,-offset.y * dy_dpixel * cosf(norm_pos.y)*cosf(norm_pos.y)));
+
+    DebugDrawTransform(MatrixFromColumns(cam_x, cam_y, cam_z, render_pos));
+    float scale = dy_dpixel * 12.0f;*/
+
+    Ray ray = GetMouseRay(Vector2Add(screen_pos, offset), GetCamera()->rl_camera);
+    float dist = Vector3Distance(ray.position, render_pos);
+    Vector3 offset_render_pos = Vector3Add(ray.position, Vector3Scale(ray.direction, dist));
+
+    Vector3 projected_diff = Vector3Subtract(offset_render_pos, render_pos);
+    projected_diff = Vector3Subtract(projected_diff, Vector3Project(projected_diff, ray.direction));
+    float scale = Vector3Length(projected_diff) / Vector2Length(offset) *2.0f * 12.0f;  // finite difference
+
+    Rectangle source = { 0.0f, 0.0f, (float)placeholder_texture.width, (float)placeholder_texture.height };
+
+    DrawBillboardPro(
+        GetCamera()->rl_camera, placeholder_texture, source, 
+        offset_render_pos, cam_y, 
+        { scale, scale }, Vector2Zero(), 0.0f, 
+        color
+    );
+    DrawLine3D(offset_render_pos, render_pos, color);
+    
+    //Vector2 draw_pos = GetCamera()->GetScreenPos(pos);
+    //DrawRectangleV(Vector2SubtractValue(draw_pos, 4.0f), {8, 8}, color);
 }
 
-void Ship::Draw3D() const {
+void Ship::Draw3D(Vector2 draw_pos_offset) {
+    Color color = GetColor();
+
+    // Draw
+    draw_pos = GetCamera()->GetScreenPos(position.cartesian);
+    draw_pos = Vector2Add(draw_pos_offset, draw_pos);
+
+    _DrawShipAt(position.cartesian, color, draw_pos_offset);
+    
+    if (plan_edit_index >= 0 
+        && IsIdValid(prepared_plans[plan_edit_index].arrival_planet)
+        && IsTrajectoryKnown(plan_edit_index)
+    ) {
+        const TransferPlan* last_tp = &prepared_plans[plan_edit_index];
+        OrbitPos last_pos = GetPlanet(last_tp->arrival_planet)->orbit.GetPosition(
+            last_tp->arrival_time
+        );
+        //Vector2 last_draw_pos = GetCamera()->GetScreenPos(last_pos.cartesian);
+        _DrawShipAt(last_pos.cartesian, ColorAlpha(color, 0.5), Vector2Zero());
+    }
+    
+
     if ((GetIntelLevel() & IntelLevel::TRAJECTORY) == 0) {
         return;
     }
-    Color color = GetColor();
 
     for (int i=0; i < prepared_plans_count; i++) {
         if (!IsTrajectoryKnown(i)) {
@@ -686,24 +770,6 @@ void _UIDrawQuests(Ship* ship) {
 
 void Ship::DrawUI() {
     Color color = GetColor();
-
-    // Draw
-    draw_pos = GetCamera()->GetScreenPos(position.cartesian);
-    if (IsParked()) {
-        double rad = GetPlanet(GetParentPlanet())->ScreenRadius() + 8.0;
-        double phase = fmin(20.0 / rad * index_on_planet, index_on_planet / (double)total_on_planet * 2 * PI);
-        draw_pos = Vector2Add(FromPolar(rad, phase), draw_pos);
-    }
-    
-    _DrawShipAt(draw_pos, color);
-    if (plan_edit_index >= 0 && IsIdValid(prepared_plans[plan_edit_index].arrival_planet) && IsTrajectoryKnown(plan_edit_index)) {
-        const TransferPlan* last_tp = &prepared_plans[plan_edit_index];
-        OrbitPos last_pos = GetPlanet(last_tp->arrival_planet)->orbit.GetPosition(
-            last_tp->arrival_time
-        );
-        Vector2 last_draw_pos = GetCamera()->GetScreenPos(last_pos.cartesian);
-        _DrawShipAt(last_draw_pos, ColorAlpha(color, 0.5));
-    }
 
     //          PANEL UI
     // =============================

@@ -25,6 +25,15 @@ namespace IntelLevel {
     static const T FULL = UINT32_MAX;
 };
 
+namespace ShipType {
+    enum E {
+        UTILITY = 0,
+        SHIPYARD,
+        TRANSPORT,
+        MILITARY,
+    };
+};
+
 struct ShipClass {
     char name[SHIPCLASS_NAME_MAX_SIZE];
     char description[SHIPCLASS_DESCRIPTION_MAX_SIZE];
@@ -101,7 +110,7 @@ struct Ship {
     void Update();
     void _UpdateShipyard();
     void _UpdateModules();
-    void Draw3D() const;
+    void Draw3D(Vector2 draw_position_offset);
     void DrawUI();
     void Inspect();
 
@@ -126,6 +135,7 @@ struct Ship {
     bool IsLeading() const;
     RID GetParentPlanet() const;
     int CountModulesOfClass(RID module_class) const;
+    ShipType::E GetShipType() const;
 
     Color GetColor() const;
 
