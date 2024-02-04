@@ -13,55 +13,8 @@ struct IDAllocatorList {
     uint64_t* verifier_array;
     uint32_t alloc_count;
     uint32_t capacity;
-
-    class Iterator : public std::iterator<
-        std::input_iterator_tag,
-        RID, int, RID*, RID> {
-
-        const IDAllocatorList<T, E>* _list_ptr;
-    public:
-        uint32_t index;
-        uint32_t counter;
-
-        explicit Iterator(int p_index, int p_counter, const IDAllocatorList<T, E>* p_list_ptr) { 
-            index = p_index; 
-            counter = p_counter; 
-            _list_ptr = p_list_ptr;
-        }
-
-        Iterator& operator++() {
-            counter++;
-            do {
-                index++;
-                if (index >= _list_ptr->capacity) {
-                    index = _list_ptr->capacity;
-                    return *this;
-                }
-            } while( !(_list_ptr->verifier_array[index/64] & (UNIT64 << (index % 64))) ); 
-            return *this;
-        }
-
-        Iterator operator++(int) { 
-            Iterator retval = *this;
-            ++(*this); 
-            return retval; 
-        }
-
-        bool operator==(Iterator other) const { 
-            return counter == other.counter && _list_ptr == other._list_ptr;
-        }
-
-        bool operator!=(Iterator other) const { return !(*this == other); }
-        RID operator*() const { return RID(index, E); }
-
-        operator bool () const {
-            return counter < _list_ptr->alloc_count && index < _list_ptr->capacity;
-        }
-
-        RID GetId() const { return RID(index, E); }
-    };
-
-    /*struct Iterator { 
+    
+    struct Iterator { 
         const IDAllocatorList<T, E>* list_ptr;
         uint32_t index;
         uint32_t counter;
@@ -83,7 +36,7 @@ struct IDAllocatorList {
                 !(list_ptr->verifier_array[index/64] & (UNIT64 << (index % 64)))
             ); 
         }
-    };*/
+    };
 
     ~IDAllocatorList() {
         _Destroy();
@@ -170,9 +123,9 @@ struct IDAllocatorList {
         }
         return &array[IdGetIndex(id)]; 
     }
-    inline T* operator[] (RID id) { return Get(id); }
+    inline T* operator[] (RID id) const { return Get(id); }
     inline T* Get(Iterator iter) const { return Get(iter.GetId()); }
-    inline T* operator[] (Iterator iter) { return Get(iter.GetId()); }
+    inline T* operator[] (Iterator iter) const { return Get(iter.GetId()); }
 
     uint32_t Count() const { return alloc_count; }
 
@@ -199,7 +152,7 @@ struct IDAllocatorList {
                 && !(verifier_array[start_index/64] & (UNIT64 << (start_index % 64)))
             ) start_index++;
         }
-        return Iterator(start_index, 0, this);
+        return (Iterator) { this, start_index, 0, Count() };
     }
 
     Iterator GetIter() const { return Begin(); }

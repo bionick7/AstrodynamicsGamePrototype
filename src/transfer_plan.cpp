@@ -158,23 +158,14 @@ void TransferPlanSolveInputImpl(TransferPlan* tp, const Orbit* from_orbit, const
     for (int i=0; i < tp->num_solutions; i++) {
         //double r1_r2_outer_prod = Determinant(pos1.cartesian, pos2.cartesian);
         // Direct orbit is retrograde
-        bool is_prograde;
-        bool cut_focus;
+        bool is_prograde = i == 0;
+        bool cut_focus = i == 1;
         if (is_ellipse[i]) {
-            bool direct_solution = timemath::Time::SecDiff(t2, t1) < PI * sqrt(fabs(aa[i])*aa[i]*aa[i] / mu);
-            cut_focus = i == 1;
-            is_prograde = i == 1;
-            if (direct_solution) {
-                is_prograde = !is_prograde;
-            }
-
-            if (!direct_solution) {
-                cut_focus = !cut_focus;
-                is_prograde = !is_prograde;
-            }
+            bool indirect_solution = timemath::Time::SecDiff(t2, t1) > PI * sqrt(fabs(aa[i])*aa[i]*aa[i] / mu);
+            if (indirect_solution) cut_focus = !cut_focus;
         } else {
-            cut_focus = i == 1;
-            is_prograde = i == 1;
+            cut_focus = !cut_focus;
+            is_prograde = !is_prograde;
         }
         tp->transfer_orbit[i] = Orbit(pos1, pos2, t1, aa[i], mu, cut_focus, is_prograde);
         //OrbitPrint(&tp->transfer_orbit[i]); printf("\n");

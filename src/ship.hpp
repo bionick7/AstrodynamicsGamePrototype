@@ -57,10 +57,10 @@ struct ShipClass {
 };
 
 struct Ship {
-    // Inherent properties
+    // Inherent properties from ship_class
     char name[SHIP_NAME_MAX_SIZE];
     RID ship_class;
-    int allegiance;  // currently 0 (player) or 1, can swap with RID
+    int allegiance;  // 0-7
 
     // Current state
     RID parent_obj;
@@ -78,7 +78,7 @@ struct Ship {
 
     // Allows to refer to all the stats as variables.
     // Still needs to be declared
-    #define X(upper, lower) /*Auto-generated*/ int lower() const { return stats[ShipStats::upper]; };
+    #define X(upper, lower) int lower() const { return stats[ShipStats::upper]; };
     X_SHIP_STATS
     #undef X
     
@@ -91,12 +91,13 @@ struct Ship {
     int index_on_planet;
     int total_on_planet;
     int ui_scroll = 0;
-    //Color color;
+    // 3D references
+    RID icon3d;
 
     // Identifier
     RID id;
 
-    // transporting
+    // Payload
     ResourceTransfer transporing;
     ShipModuleSlot current_slot;
 
@@ -110,7 +111,7 @@ struct Ship {
     void Update();
     void _UpdateShipyard();
     void _UpdateModules();
-    void DrawIcon(Vector2 offset, float pixel_scale);
+    void DrawIcon(float icon_size, Vector2 draw_offset);
     void DrawTrajectories() const;
     void DrawUI();
     void Inspect();

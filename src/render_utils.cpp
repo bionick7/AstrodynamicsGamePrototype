@@ -338,15 +338,6 @@ void RenderSkyBox() {
     rlEnableDepthTest();
 }
 
-Rectangle GetAtlasPosition(int x, int y, int size) {
-    Rectangle res;
-    res.x = x * size;
-    res.y = y * size;
-    res.width = size;
-    res.height = size;
-    return res;
-}
-
 namespace icon_shader {
     Shader shader;
 
@@ -389,3 +380,17 @@ Texture2D rendering::GetIconAtlas(int size) {
     return textures::icon_atlas_128;
 }
 
+AtlasPos::AtlasPos(int x, int y, int size) {
+    this->x = x;
+    this->y = y;
+    this->size = size;
+}
+
+Rectangle AtlasPos::GetRect() const {
+    Rectangle res;
+    res.x = x * size;
+    res.y = y * size;
+    res.width = size;
+    res.height = size;
+    return res;
+}

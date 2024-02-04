@@ -45,6 +45,8 @@ bool IsIdValid(RID id) {
         return gs->quest_manager.active_tasks.ContainsID(id);
     case EntityType::DIALOGUE:
         return gs->quest_manager.dialogues.ContainsID(id);
+    case EntityType::ICON3D:
+        return gs->render_server.icons.ContainsID(id);
     default:
     case EntityType::INVALID:
         return false;

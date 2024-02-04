@@ -84,7 +84,6 @@ struct UIGlobals {
     char mouseover_text[1024] = "";
     bool scroll_lock;
     Font default_font;
-    IDAllocatorList<ImageAtlas, EntityType::IMAGE_ATLAS> atlases = IDAllocatorList<ImageAtlas, EntityType::IMAGE_ATLAS>();
 
     void UIInit();
     void UIStart();

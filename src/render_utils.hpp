@@ -20,7 +20,15 @@ void RenderPerfectSphere(DVector3 pos, double radius, Color color);
 void RenderRings(DVector3 normal, double min_rad, double max_rad, Color color);
 void RenderSkyBox();
 
-Rectangle GetAtlasPosition(int x, int y, int size);
+struct AtlasPos {
+    int x, y;
+    int size;
+
+    AtlasPos(int x, int y, int size);
+    AtlasPos() = default;
+    Rectangle GetRect() const;
+};
+
 
 namespace rendering {
     Shader GetIconShader();

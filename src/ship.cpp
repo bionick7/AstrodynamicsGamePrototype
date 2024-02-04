@@ -153,6 +153,8 @@ void Ship::Deserialize(const DataNode* data) {
     dammage_taken[ShipVariables::KINETIC_ARMOR] = data->GetArrayElemI("dammage_taken", ShipVariables::KINETIC_ARMOR, stats[ShipStats::KINETIC_HP], true);
     dammage_taken[ShipVariables::ENERGY_ARMOR] = data->GetArrayElemI("dammage_taken", ShipVariables::ENERGY_ARMOR, stats[ShipStats::ENERGY_HP], true);
     dammage_taken[ShipVariables::CREW] = data->GetArrayElemI("dammage_taken", ShipVariables::CREW, stats[ShipStats::CREW], true);
+    
+    icon3d = GetRenderServer()->AllocateIcon3D(1, Vector2Zero(), AtlasPos(GetShipType(), 12, 128), GetColor(), position.cartesian);
 }
 
 double Ship::GetPayloadMass() const{
@@ -495,68 +497,21 @@ void Ship::_UpdateModules() {
     }
 }
 
-void Ship::DrawIcon(Vector2 offset, float pixel_scale) {        
-    DVector3 pos = position.cartesian;
-    Color color = GetColor();
-    Vector3 render_pos = GameCamera::WorldToRender(pos);
-    draw_pos = GetCamera()->GetScreenPos(pos);
-    draw_pos = Vector2Add(draw_pos, offset);
-    
-    if (draw_pos.y < -20 || draw_pos.x < -20) {
-        return;
+void Ship::DrawIcon(float icon_size, Vector2 draw_offset) {
+    // Called in normal 3D render mode
+    draw_pos = Vector2Add(GetCamera()->GetScreenPos(position.cartesian), draw_offset);
+    if(IsIdValid(icon3d)) {
+        GetRenderServer()->UpdateIcon3D(
+            icon3d, icon_size, draw_offset, 
+            AtlasPos(GetShipType(), 12, 128), GetColor(), position.cartesian
+        );
     }
 
-    //Vector3 cam_z = Vector3Subtract(render_pos, GetCamera()->rl_camera.position);
-    Vector3 cam_z = Vector3Subtract(GetCamera()->rl_camera.target, GetCamera()->rl_camera.position);
-    Vector3 cam_y = { 0.0f, 1.0f, 0.0f };
-    Vector3OrthoNormalize(&cam_z, &cam_y);
-    Vector3 cam_x = Vector3CrossProduct(cam_z, cam_y);
+    const Icon3D* icon_inst = GetRenderServer()->icons.Get(icon3d);
 
-    /*Vector2 norm_pos = Vector2Divide(screen_pos, { GetScreenWidth()*.5f, GetScreenHeight()*.5f });
-    norm_pos = Vector2Subtract(norm_pos, Vector2One());
-    norm_pos.x *= GetCamera()->rl_camera.fovy * DEG2RAD *.5f * GetScreenWidth() / (float)GetScreenHeight();
-    norm_pos.y *= GetCamera()->rl_camera.fovy * DEG2RAD *.5f;
-    DEBUG_SHOW_F(norm_pos.x)
-    DEBUG_SHOW_F(norm_pos.y)
+    DrawLine3D(GameCamera::WorldToRender(position.cartesian), icon_inst->GetFinalRenderPos(), GetColor());
+    //DrawLineV(draw_pos, Vector2Add(draw_pos, draw_offset), GetColor());
     
-    float dy_dpixel = GetCamera()->MeasurePixelSize(render_pos);
-    render_pos = Vector3Add(render_pos, Vector3Scale(cam_x, offset.x * dy_dpixel * cosf(norm_pos.x)*cosf(norm_pos.x)));
-    render_pos = Vector3Add(render_pos, Vector3Scale(cam_y,-offset.y * dy_dpixel * cosf(norm_pos.y)*cosf(norm_pos.y)));
-
-    DebugDrawTransform(MatrixFromColumns(cam_x, cam_y, cam_z, render_pos));
-    float scale = dy_dpixel * 12.0f;*/
-
-    Vector3 offset_render_pos;
-    float scale;
-    if (Vector2LengthSqr(offset) == 0) {
-        offset_render_pos = render_pos;
-        
-        Ray ray = GetMouseRay(Vector2Add(draw_pos, {0.707, 0.707}), GetCamera()->rl_camera);
-        float dist = Vector3Distance(ray.position, render_pos);
-        Vector3 offset_pos = Vector3Add(ray.position, Vector3Scale(ray.direction, dist));
-        scale = Vector3Distance(offset_pos, render_pos) * pixel_scale;  // finite difference
-
-    } else {
-        Ray ray = GetMouseRay(draw_pos, GetCamera()->rl_camera);
-        float dist = Vector3Distance(ray.position, render_pos);
-        offset_render_pos = Vector3Add(ray.position, Vector3Scale(ray.direction, dist));
-
-        Vector3 projected_diff = Vector3Subtract(offset_render_pos, render_pos);
-        projected_diff = Vector3Subtract(projected_diff, Vector3Project(projected_diff, ray.direction));
-        scale = Vector3Length(projected_diff) / Vector2Length(offset) * pixel_scale;  // finite difference
-    }
-
-    Rectangle source = GetAtlasPosition(GetShipType(), 12, 128);
-
-    DrawBillboardPro(
-        GetCamera()->rl_camera, rendering::GetIconAtlas(0), source, 
-        offset_render_pos, cam_y, 
-        { scale, scale }, Vector2Zero(), 0.0f, 
-        color
-    );
-    //DrawLine3D(offset_render_pos, render_pos, color);  // This doesn't really work anymore
-    
-    //Vector2 draw_pos = GetCamera()->GetScreenPos(pos);
     //DrawRectangleV(Vector2SubtractValue(draw_pos, 4.0f), {8, 8}, color);
 }
 
@@ -780,7 +735,7 @@ void Ship::DrawUI() {
 
     if (mouse_hover) {
         // Hover
-        DrawCircleLines(draw_pos.x, draw_pos.y, 10, Palette::red);
+        DrawCircleLines(draw_pos.x, draw_pos.y, 10, Palette::ui_main);
         DrawTextEx(GetCustomDefaultFont(), name, Vector2Add(draw_pos, {5, 5}), 16, 1, GetColor());
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {

@@ -1,6 +1,7 @@
 #include "constants.hpp"
 
-Color Palette::blue = GetColor(0x006D80FFu);
+Color Palette::blue = GetColor(0x2395A9FFu);
+//Color Palette::blue = GetColor(0x6495EDFFu);
 Color Palette::green = GetColor(0x4Fc76CFFu);
 Color Palette::red = GetColor(0xFF5155FFu);
 Color Palette::white = GetColor(0xFFFFA0FFu);

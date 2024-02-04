@@ -140,11 +140,10 @@ Orbit::Orbit(OrbitPos pos1, OrbitPos pos2, timemath::Time time_at_pos1,
     double x_f = x_0 + 2*sma / E;
     double y_f = sqrt(B_sqr * fmax(x_f*x_f / (A*A) - 1, 0));
 
-    //if (r1_r2_cross.y < 0.0) y_f = -y_f;
     if (cut_focus) {  // For a hyperbola this means, it's the more direct way
         y_0 = -y_0;
     }
-    if (r1_r2_cross.y < 0) {
+    if (r1_r2_cross.y < 0) {  // Indirect solution
         y_0 = -y_0;
         y_f = -y_f;
     }
@@ -152,25 +151,29 @@ Orbit::Orbit(OrbitPos pos1, OrbitPos pos2, timemath::Time time_at_pos1,
     ASSERT(!isnan(ecc))
 
     DVector3 canon_z = r1_r2_cross.Normalized();
-    //canon_z = DVector3::Up();
     DVector3 canon_x = (pos2.cartesian - pos1.cartesian).Normalized();
     if (!is_prograde) {
         canon_z = -canon_z;
-        //canon_x = -canon_x;
     }
     DVector3 canon_y = canon_z.Cross(canon_x);
+    if (sma < 0) {
+        canon_z = -canon_z;
+    }
     DVector3 periapsis_dir = (canon_x * (x_0 - x_f) + canon_y * (y_0 - y_f)).Normalized();
     periapsis_dir = periapsis_dir * Sign(sma);
 
-    //DebugDrawLine(DVector3::Zero(), canon_x * 1e8);
-    //DebugDrawLine(DVector3::Zero(), canon_y * 1e8);
-    DVector3 center = (pos1.cartesian + pos2.cartesian) * .5;
-    DebugDrawLine(center + canon_x * x_0 + canon_y * y_0, center + canon_x * x_f + canon_y * y_f);
-    DebugDrawConic(pos1.cartesian, (pos1.cartesian - pos2.cartesian).Normalized() * E, DVector3::Up(), A);
+    //DVector3 center = (pos1.cartesian + pos2.cartesian) * .5;
+    //DebugDrawLine(center + canon_x * x_0 + canon_y * y_0, center + canon_x * x_f + canon_y * y_f);
+    //DebugDrawConic(pos1.cartesian, (pos1.cartesian - pos2.cartesian).Normalized() * E, DVector3::Up(), A);
+    DebugDrawLine(DVector3::Zero(), pos1.cartesian);
+    DebugDrawLine(DVector3::Zero(), canon_z * 2e8);
+    DebugDrawLine(DVector3::Zero(), periapsis_dir * 2e8);
 
     double θ_1 = periapsis_dir.SignedAngleTo(pos1.cartesian, canon_z);
     double M_1 = sma < 0 ? _True2MeanHyp(θ_1, ecc) : _True2Mean(θ_1, ecc);
-    DEBUG_SHOW_F(sma)
+
+    DEBUG_SHOW_F(θ_1)
+    DEBUG_SHOW_F(M_1)
 
     this->epoch = time_at_pos1 - timemath::Time(M_1 * sqrt(fabs(sma)*sma*sma / mu));
     //period = fmod(period, sqrt(sma*sma*sma / mu) * 2*PI);

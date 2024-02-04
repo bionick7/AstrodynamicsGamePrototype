@@ -6,7 +6,6 @@
 #include "audio_server.hpp"
 #include "quest.hpp"
 #include "timeline.hpp"
-#include "render_utils.hpp"
 
 GlobalState global_state;
 
@@ -265,13 +264,8 @@ void GlobalState::UpdateState(double delta_t) {
 
 // Draw
 void GlobalState::DrawState() {
-    BeginMode3D(camera.rl_camera);
-    //DrawCircleV(coordinate_transform.TransformV({0}), coordinate_transform.TransformS(planets.GetParentNature()->radius), Palette::ui_main);
-    planets.Draw3D();  // planets also draw their ships
-    active_transfer_plan.Draw3D();
-    DebugFlush3D();
-    EndMode3D();
-    
+    render_server.Draw();
+        
     // UI
     ui.UIStart();
     calendar.DrawUI();
@@ -393,15 +387,23 @@ void GlobalState::Deserialize(const DataNode* data) {
 GlobalState* GetGlobalState() { return &global_state; }
 timemath::Time GlobalGetNow() { return global_state.calendar.time; }
 
+// global simple items
 GameCamera*          GetCamera()              { return &global_state.camera; }
 Calendar*            GetCalendar()            { return &global_state.calendar;              }
-TransferPlanUI*      GetTransferPlanUI()      { return &global_state.active_transfer_plan;  }
-QuestManager*        GetQuestManager()        { return &global_state.quest_manager;         }
+
+// collections
 Ships*               GetShips()               { return &global_state.ships;                 }
 Planets*             GetPlanets()             { return &global_state.planets;               }
 ShipModules*         GetShipModules()         { return &global_state.ship_modules;          }
+QuestManager*        GetQuestManager()        { return &global_state.quest_manager;         }
+Factions*            GetFactions()            { return &global_state.factions;              }
+
+// UI elements
+TransferPlanUI*      GetTransferPlanUI()      { return &global_state.active_transfer_plan;  }
+BattleLog*           GetBattleLog()           { return &global_state.last_battle_log;       }
+
+// servers
 AudioServer*         GetAudioServer()         { return &global_state.audio_server;          }
 WrenInterface*       GetWrenInterface()       { return &global_state.wren_interface;        }
+RenderServer*        GetRenderServer()        { return &global_state.render_server;         }
 UIGlobals*           GetUI()                  { return &global_state.ui;                    }
-BattleLog*           GetBattleLog()           { return &global_state.last_battle_log;       }
-Factions*            GetFactions()            { return &global_state.factions;              }

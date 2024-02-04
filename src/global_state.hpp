@@ -12,6 +12,7 @@
 #include "wren_interface.hpp"
 #include "combat.hpp"
 #include "factions.hpp"
+#include "render_server.hpp"
 
 struct GlobalState {
     enum FocusablesPanels {
@@ -30,16 +31,20 @@ struct GlobalState {
 
     GameCamera camera;
 	Calendar calendar;
-	TransferPlanUI active_transfer_plan;
-	QuestManager quest_manager;
+
 	Ships ships;
 	Planets planets;
 	ShipModules ship_modules;
-	AudioServer audio_server;
-	WrenInterface wren_interface;
-	UIGlobals ui;
-	BattleLog last_battle_log;
+	QuestManager quest_manager;
 	Factions factions;
+
+	TransferPlanUI active_transfer_plan;
+	BattleLog last_battle_log;
+
+	AudioServer audio_server;
+	RenderServer render_server;
+	UIGlobals ui;
+	WrenInterface wren_interface;
 
     // Lifecycle
     void Make(timemath::Time time);
@@ -64,17 +69,22 @@ struct GlobalState {
 
 GlobalState* GetGlobalState();
 timemath::Time GlobalGetNow();
+
 GameCamera* GetCamera();
 Calendar* GetCalendar();
-TransferPlanUI* GetTransferPlanUI();
-QuestManager* GetQuestManager();
+
 Ships* GetShips();
 Planets* GetPlanets();
 ShipModules* GetShipModules();
+QuestManager* GetQuestManager();
+Factions* GetFactions();
+
+TransferPlanUI* GetTransferPlanUI();
+BattleLog* GetBattleLog();
+
 AudioServer* GetAudioServer();
+RenderServer* GetRenderServer();
 WrenInterface* GetWrenInterface();
 UIGlobals* GetUI();
-BattleLog* GetBattleLog();
-Factions* GetFactions();
 
 #endif // GLOBAL_STATE_H

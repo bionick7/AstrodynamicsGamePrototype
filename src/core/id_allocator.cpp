@@ -57,13 +57,13 @@ int IDAllocatorListTests() {
     int tot_size = list.Count();
     for(auto i = list.GetIter(); i.counter < tot_size; i++) {
         if (i.counter % 2 == 0) {
-            list.Erase(*i);
+            list.Erase(i.GetId());
         }
     }
     tot_size = list.Count();
     for(auto i = list.GetIter(); i.counter < tot_size; i++) {
         if (i.counter % 2 == 0) {
-            list.Erase(*i);
+            list.Erase(i.GetId());
         }
     }
     
