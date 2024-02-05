@@ -53,7 +53,7 @@ struct GlobalState {
     // Update
     void UpdateState(double delta_t);
     // Draw
-    void DrawState();
+    void DrawUI();
 
     // Interaction
     bool CompleteTransaction(int faction, int delta);

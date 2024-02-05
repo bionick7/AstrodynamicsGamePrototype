@@ -62,6 +62,9 @@ struct GameCamera {
     bool IsInView(DVector3 render_pos) const;
     Vector2 GetScreenPos(DVector3 world_pos) const;
     float MeasurePixelSize(Vector3 render_pos) const;
+
+    Matrix ViewMatrix() const;
+    Matrix ProjectionMatrix() const;
 };
 
 #endif  // COORDINATE_TRANSFORM

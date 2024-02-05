@@ -13,6 +13,7 @@ enum class EntityType: uint8_t {
     TASK,
     DIALOGUE,
     ICON3D,
+    TEXT3D,
     TEST = 0xFE,
     INVALID = 0xFF,
 };

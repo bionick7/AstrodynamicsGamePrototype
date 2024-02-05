@@ -156,6 +156,34 @@ void GameCamera::Make() {
     focus_object = GetInvalidId();
 }
 
+void GameCamera::Serialize(DataNode* data) const {
+    data->SetF("fovy", rl_camera.fovy);
+    data->SetI("focus", focus_object.AsInt());
+    data->SetF("position_x", rl_camera.position.x);
+    data->SetF("position_y", rl_camera.position.y);
+    data->SetF("position_z", rl_camera.position.z);
+    //data->SetF("target_x", rl_camera.target.x);
+    //data->SetF("target_y", rl_camera.target.y);
+    //data->SetF("target_z", rl_camera.target.z);
+    //data->SetF("up_x", rl_camera.up.x);
+    //data->SetF("up_y", rl_camera.up.y);
+    //data->SetF("up_z", rl_camera.up.z);
+}
+
+void GameCamera::Deserialize(const DataNode* data) {
+    rl_camera.fovy = data->GetF("fovy");
+    focus_object = RID(data->GetI("focus"));
+    rl_camera.position.x = data->GetF("position_x");
+    rl_camera.position.y = data->GetF("position_y");
+    rl_camera.position.z = data->GetF("position_z");
+    //rl_camera.target.x = data->GetF("target_x");
+    //rl_camera.target.y = data->GetF("target_y");
+    //rl_camera.target.z = data->GetF("target_z");
+    //rl_camera.up.x = data->GetF("up_x");
+    //rl_camera.up.y = data->GetF("up_y");
+    //rl_camera.up.z = data->GetF("up_z");
+}
+
 void GameCamera::HandleInput() {
     
     if (IsKeyPressed(KEY_HOME)) {
@@ -219,30 +247,11 @@ float GameCamera::MeasurePixelSize(Vector3 render_pos) const {
     return Vector3Distance(rl_camera.position, render_pos) * tan(rl_camera.fovy/2.0) / GetScreenHeight();
 }
 
-void GameCamera::Serialize(DataNode* data) const {
-    data->SetF("fovy", rl_camera.fovy);
-    data->SetI("focus", focus_object.AsInt());
-    data->SetF("position_x", rl_camera.position.x);
-    data->SetF("position_y", rl_camera.position.y);
-    data->SetF("position_z", rl_camera.position.z);
-    //data->SetF("target_x", rl_camera.target.x);
-    //data->SetF("target_y", rl_camera.target.y);
-    //data->SetF("target_z", rl_camera.target.z);
-    //data->SetF("up_x", rl_camera.up.x);
-    //data->SetF("up_y", rl_camera.up.y);
-    //data->SetF("up_z", rl_camera.up.z);
+Matrix GameCamera::ViewMatrix() const {
+    return GetCameraMatrix(rl_camera);
 }
 
-void GameCamera::Deserialize(const DataNode* data) {
-    rl_camera.fovy = data->GetF("fovy");
-    focus_object = RID(data->GetI("focus"));
-    rl_camera.position.x = data->GetF("position_x");
-    rl_camera.position.y = data->GetF("position_y");
-    rl_camera.position.z = data->GetF("position_z");
-    //rl_camera.target.x = data->GetF("target_x");
-    //rl_camera.target.y = data->GetF("target_y");
-    //rl_camera.target.z = data->GetF("target_z");
-    //rl_camera.up.x = data->GetF("up_x");
-    //rl_camera.up.y = data->GetF("up_y");
-    //rl_camera.up.z = data->GetF("up_z");
+Matrix GameCamera::ProjectionMatrix() const {
+    double ar = GetScreenWidth() / (double) GetScreenHeight();
+    return MatrixPerspective(rl_camera.fovy*DEG2RAD, ar, 0.01, 1000.0);
 }

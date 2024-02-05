@@ -65,9 +65,6 @@ void _ColorToFloat4Buffer(float buffer[], Color color) {
     buffer[3] = (float)color.a / 255.0f;
 }
 
-#define LOAD_SHADER(shader_name) shader_name::shader = LoadShader("resources/shaders/"#shader_name".vs", "resources/shaders/"#shader_name".fs");
-#define LOAD_SHADER_UNIFORM(shader_name, uniform_name) shader_name::uniform_name = GetShaderLocation(shader_name::shader, #uniform_name);
-
 namespace orbit_shader {
     Shader shader;
     int semi_latus_rectum = -1;
@@ -93,9 +90,8 @@ namespace orbit_shader {
     }
 }
 
-void RenderOrbit(const OrbitSegment *segment, int point_count, OrbitRenderMode::E render_mode, Color color)
-{
-    if (!IsShaderReady(orbit_shader::shader)) orbit_shader::Load();
+void RenderOrbit(const OrbitSegment *segment, int point_count, OrbitRenderMode::E render_mode, Color color) {
+    RELOAD_IF_NECAISSARY(orbit_shader)
 
     const Orbit* orbit = segment->orbit;
 
@@ -143,18 +139,19 @@ void RenderOrbit(const OrbitSegment *segment, int point_count, OrbitRenderMode::
 
 namespace planet_shader {
     Shader shader;
-    int transform;
 
-    int edge;
-    int space;
-    int radius;
-    int screenWidth;
+    int transform = -1;
 
-    int centerPos;
-    int cameraPos;
-    int normal;
-    int rimColor;
-    int fillColor;
+    int edge = -1;
+    int space = -1;
+    int radius = -1;
+    int screenWidth = -1;
+
+    int centerPos = -1;
+    int cameraPos = -1;
+    int normal = -1;
+    int rimColor = -1;
+    int fillColor = -1;
     
     void Load() {
         LOAD_SHADER(planet_shader)
@@ -176,7 +173,7 @@ namespace planet_shader {
 }
 
 void RenderPerfectSphere(DVector3 world_position, double radius, Color color) {
-    if (!IsShaderReady(planet_shader::shader)) planet_shader::Load();
+    RELOAD_IF_NECAISSARY(planet_shader)
 
     Vector3 render_position = GameCamera::WorldToRender(world_position);
     float render_radius = GameCamera::WorldToRender(radius);
@@ -240,8 +237,8 @@ void RenderPerfectSphere(DVector3 world_position, double radius, Color color) {
 namespace rings_shader {
     Shader shader;
 
-    int innerRad;
-    int bgColor;
+    int innerRad = -1;
+    int bgColor = -1;
     
     void Load() {
         LOAD_SHADER(rings_shader)
@@ -255,7 +252,7 @@ namespace rings_shader {
 }
 
 void RenderRings(DVector3 normal, double min_rad, double max_rad, Color color) {
-    if (!IsShaderReady(rings_shader::shader)) rings_shader::Load();
+    RELOAD_IF_NECAISSARY(rings_shader)
     
     float inner_rad_float = min_rad / max_rad;
 	SetShaderValue(rings_shader::shader, rings_shader::innerRad, &inner_rad_float, SHADER_ATTRIB_FLOAT);
@@ -312,7 +309,7 @@ namespace skybox_shader {
 }
 
 void RenderSkyBox() {
-    if (!IsShaderReady(skybox_shader::shader)) skybox_shader::Load();
+    RELOAD_IF_NECAISSARY(skybox_shader)
 
     Vector2 resolution = { GetScreenWidth(), GetScreenHeight() };
     
@@ -344,11 +341,13 @@ void RenderSkyBox() {
     //rlEnableDepthTest();
 }
 
-namespace icon_shader {
+namespace postprocessing_shader {
     Shader shader;
-
+    int depthMap = -1;
+    
     void Load() {
-        shader = LoadShader(NULL, "resources/shaders/icon_shader.fs");
+        shader = LoadShader(NULL, "resources/shaders/postprocessing_shader.fs");
+        LOAD_SHADER_UNIFORM(postprocessing_shader, depthMap);
     }
 
     void UnLoad() {
@@ -356,34 +355,35 @@ namespace icon_shader {
     }
 }
 
+void RenderDeferred(RenderTexture render_target) {
+    RELOAD_IF_NECAISSARY(postprocessing_shader)
+
+    Rectangle screen_rect = {
+        0, 0, GetScreenWidth(), -GetScreenHeight()
+    };
+    
+    BeginShaderMode(postprocessing_shader::shader);
+    SetShaderValueTexture(postprocessing_shader::shader, postprocessing_shader::depthMap, render_target.depth);
+    DrawTextureRec(render_target.texture, screen_rect, Vector2Zero(), WHITE);
+    EndShaderMode();
+}
+
+bool ShaderNeedReload(Shader shader) {
+    return !IsShaderReady(shader);
+}
+
 void ReloadShaders() {
     orbit_shader::UnLoad();
     planet_shader::UnLoad();
     rings_shader::UnLoad();
     skybox_shader::UnLoad();
-    icon_shader::UnLoad();
+    postprocessing_shader::UnLoad();
     
     orbit_shader::Load();
     planet_shader::Load();
     rings_shader::Load();
     skybox_shader::Load();
-    icon_shader::Load();
-}
-
-namespace textures {
-    static Texture2D icon_atlas_128;
-};
-
-Shader rendering::GetIconShader() {
-    if (!IsShaderReady(icon_shader::shader)) icon_shader::Load();
-    return icon_shader::shader;
-}
-
-Texture2D rendering::GetIconAtlas(int size) {
-    if (!IsTextureReady(textures::icon_atlas_128)) {
-        textures::icon_atlas_128 = LoadTexture("resources/icons/font_icons.png");
-    }
-    return textures::icon_atlas_128;
+    postprocessing_shader::Load();
 }
 
 AtlasPos::AtlasPos(int x, int y, int size) {

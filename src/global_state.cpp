@@ -256,19 +256,20 @@ void GlobalState::UpdateState(double delta_t) {
     if (IsKeyPressed(KEY_F5)) {
         INFO("Reload shaders")
         ReloadShaders();
+        RenderServer::ReloadShaders();
     }
 
     // AI update
     factions.Update();
 }
 
-// Draw
-void GlobalState::DrawState() {
-    render_server.Draw();
-        
+// Draw - Called FROM render_server
+void GlobalState::DrawUI() {        
     // UI
     ui.UIStart();
     calendar.DrawUI();
+    
+    // Money counter
     char capital_str[21];
     sprintf(capital_str, "M§M %6" LONG_STRID ".%3" LONG_STRID " .mil", 
         factions.GetMoney(factions.player_faction) / (int)1e6, 
@@ -281,10 +282,12 @@ void GlobalState::DrawState() {
         Planet* planet = GetPlanetByIndex(planet_id);
         planet->DrawUI();
     }
+    // ships
     for (auto it = ships.alloc.GetIter(); it; it++) {
         Ship* ship = ships.alloc[it];
         ship->DrawUI();
     }
+    // Standalone UI Panels
     active_transfer_plan.DrawUI();
     ship_modules.UpdateDragging();
     DrawTimeline();

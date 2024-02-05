@@ -479,13 +479,9 @@ void Planet::_UIDrawShipProduction() {
 }
 
 int current_tab = 0;  // Global variable, I suppose
-void Planet::DrawUI() {
+void Planet::DrawUI() {    
     Vector2 screen_pos = GetCamera()->GetScreenPos(position.cartesian);
     int screen_x = (int)screen_pos.x, screen_y = (int)screen_pos.y;
-    int text_h = 16;
-    Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), name, text_h, 1);
-    DrawTextEx(GetCustomDefaultFont(), name, {screen_x - text_size.x / 2,  screen_y - text_size.y - 5}, text_h, 1, Palette::ui_main);
-
     if (mouse_hover) {
         // Hover
         DrawCircleLines(screen_x, screen_y, 20, Palette::ui_main);
@@ -666,7 +662,7 @@ int Planets::LoadEphemerides(const DataNode* data) {
         timemath::Time epoch = timemath::Time(PosMod(ann, 2*PI) / sqrt(parent.mu / (sma*sma*sma)));
 
         double inc = planet_data->GetF("Inc") * DEG2RAD;
-        //inc = inc > PI/2 ? PI : 0;
+        inc = inc > PI/2 ? PI : 0;
 
         nature->mu = planet_data->GetF("mass") * G;
         nature->radius = planet_data->GetF("radius");

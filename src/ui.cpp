@@ -53,8 +53,7 @@ void DrawTextConstrained(Font font, const char *text, Vector2 position, float fo
     }
 }
 
-Rectangle DrawTextAligned(const char* text, Vector2 pos, TextAlignment::T alignment, Color c) {
-    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, 16, 1);
+Vector2 ApplyAlignment(Vector2 pos, Vector2 size, TextAlignment::T alignment) {
     if (alignment & TextAlignment::HCENTER) {
         pos.x -= size.x / 2;
     } else if (alignment & TextAlignment::RIGHT) {
@@ -69,6 +68,12 @@ Rectangle DrawTextAligned(const char* text, Vector2 pos, TextAlignment::T alignm
     } else {  // top - aligned
         // Do nothing
     }
+    return pos;
+}
+
+Rectangle DrawTextAligned(const char* text, Vector2 pos, TextAlignment::T alignment, Color c) {
+    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, 16, 1);
+    pos = ApplyAlignment(pos, size, alignment);
     //Vector2 bottom_left = Vector2Subtract(pos, Vector2Scale(size, 0.5));
     DrawTextEx(GetCustomDefaultFont(), text, pos, 16, 1, c);
     return { pos.x, pos.y, size.x, size.y };

@@ -93,6 +93,7 @@ struct Ship {
     int ui_scroll = 0;
     // 3D references
     RID icon3d;
+    RID text3d;
 
     // Identifier
     RID id;
@@ -111,7 +112,7 @@ struct Ship {
     void Update();
     void _UpdateShipyard();
     void _UpdateModules();
-    void DrawIcon(float icon_size, Vector2 draw_offset);
+    void DrawIcon(int x_offsets[], int y_offsets[], float grow_factor);
     void DrawTrajectories() const;
     void DrawUI();
     void Inspect();

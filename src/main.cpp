@@ -53,7 +53,7 @@ void MainLoopStep(GlobalState* app) {
     app->UpdateState(1./60.);
 
     BeginDrawing();
-    app->DrawState();
+    app->render_server.Draw();
     EndDrawing();
 }
 

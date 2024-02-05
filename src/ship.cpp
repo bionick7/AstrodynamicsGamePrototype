@@ -153,8 +153,6 @@ void Ship::Deserialize(const DataNode* data) {
     dammage_taken[ShipVariables::KINETIC_ARMOR] = data->GetArrayElemI("dammage_taken", ShipVariables::KINETIC_ARMOR, stats[ShipStats::KINETIC_HP], true);
     dammage_taken[ShipVariables::ENERGY_ARMOR] = data->GetArrayElemI("dammage_taken", ShipVariables::ENERGY_ARMOR, stats[ShipStats::ENERGY_HP], true);
     dammage_taken[ShipVariables::CREW] = data->GetArrayElemI("dammage_taken", ShipVariables::CREW, stats[ShipStats::CREW], true);
-    
-    icon3d = GetRenderServer()->AllocateIcon3D(1, Vector2Zero(), AtlasPos(GetShipType(), 12, 128), GetColor(), position.cartesian);
 }
 
 double Ship::GetPayloadMass() const{
@@ -497,24 +495,52 @@ void Ship::_UpdateModules() {
     }
 }
 
-void Ship::DrawIcon(float icon_size, Vector2 draw_offset) {
+void Ship::DrawIcon(int x_offsets[], int y_offsets[], float grow_factor) {
     // Called in normal 3D render mode
+    
+    float stride = Lerp(8.0f, 20.0f, grow_factor);
+    float icon_size = Lerp(8.0f, 18.0f, grow_factor);
+    int type = GetShipType();
+    Vector2 draw_offset = { x_offsets[type], y_offsets[type] };
+    y_offsets[type] += stride;
+    if (type == 0 || type == 3) draw_offset.y = -draw_offset.y;
+
     draw_pos = Vector2Add(GetCamera()->GetScreenPos(position.cartesian), draw_offset);
-    if(IsIdValid(icon3d)) {
-        GetRenderServer()->UpdateIcon3D(
-            icon3d, icon_size, draw_offset, 
-            AtlasPos(GetShipType(), 12, 128), GetColor(), position.cartesian
-        );
+    
+    if (!IsIdValidTyped(icon3d, EntityType::ICON3D)) {
+        icon3d = GetRenderServer()->icons.Allocate();
+    }
+    if (!IsIdValidTyped(text3d, EntityType::TEXT3D)) {
+        text3d = GetRenderServer()->text_labels_3d.Allocate();
     }
 
-    const Icon3D* icon_inst = GetRenderServer()->icons.Get(icon3d);
-
+    Icon3D* icon_inst = GetRenderServer()->icons.Get(icon3d);
+    icon_inst->scale = icon_size;
+    icon_inst->offset = draw_offset;
+    icon_inst->atlas_pos = AtlasPos(type, 12, 128);
+    icon_inst->color = GetColor();
+    icon_inst->world_pos = position.cartesian;
     Vector3 from = GameCamera::WorldToRender(position.cartesian);
     Vector3 to = icon_inst->GetFinalRenderPos();
 
     if (GetCamera()->IsInView(from) && GetCamera()->IsInView(to)) {
         DrawLine3D(from, to, GetColor());
     }
+    
+    Text3D* text_inst = GetRenderServer()->text_labels_3d.Get(text3d);
+    text_inst->scale = 16;
+    text_inst->offset = draw_offset;
+    if (type < 2) {
+        text_inst->offset.x -= icon_size - 3;
+    } else {
+        text_inst->offset.x += icon_size + 3;
+    }
+    text_inst->text = name;
+    text_inst->color = GetColor();
+    text_inst->color.a = grow_factor * 255;
+    text_inst->world_pos = position.cartesian;
+    text_inst->alignment = (type < 2 ? TextAlignment::RIGHT : TextAlignment::LEFT) | TextAlignment::VCENTER;
+
     //DrawLineV(draw_pos, Vector2Add(draw_pos, draw_offset), GetColor());
     
     //DrawRectangleV(Vector2SubtractValue(draw_pos, 4.0f), {8, 8}, color);
@@ -741,7 +767,7 @@ void Ship::DrawUI() {
     if (mouse_hover) {
         // Hover
         DrawCircleLines(draw_pos.x, draw_pos.y, 10, Palette::ui_main);
-        DrawTextEx(GetCustomDefaultFont(), name, Vector2Add(draw_pos, {5, 5}), 16, 1, GetColor());
+        //DrawTextEx(GetCustomDefaultFont(), name, Vector2Add(draw_pos, {5, 5}), 16, 1, GetColor());
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             _OnClicked();

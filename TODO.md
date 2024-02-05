@@ -99,24 +99,27 @@ Regardless of implementability
 ## Collective todo for next milestone
 - Animation tracker system
 - Implement way to show icons within text/at arbitrary positions  >> ???
+    V 3D
+      2D
 - Mesh loading  >> ???
     preview small 3D models for flavor >> partially implemented by raylib
 - global settings (with push_override etc.) / debug console >> known code
-- Renderlayers?  >> ???
-    Post-processing shader  >> known code + custom bloom
+- V Renderlayers?  >> ???
+  V Post-processing shader  >> known code + custom bloom
 
 3D Conversion
 - V 3D camera  >> partially implemented by raylib
 - V 3D orbits  >> existing code
 - V 3D planets >> existing code
-- // 3D billboards >> existing code
+- V 3D billboards >> existing code
 - V 3D click handling >> known code
 - V Rings >> Get creative
 - V Sky >> Get creative
 
 Art:
--   ships icons
+- V ships icons
 - V modules icons
+-   ships meshes
 
 UX tweaking:
 - V Select planet when clicking on orbit

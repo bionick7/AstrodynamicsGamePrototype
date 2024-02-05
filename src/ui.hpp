@@ -17,6 +17,7 @@ namespace TextAlignment {
     const static T BOTTOM    = 0x08;
 };
 
+Vector2 ApplyAlignment(Vector2 pos, Vector2 size, TextAlignment::T alignment);
 Rectangle DrawTextAligned(const char* text, Vector2 pos, TextAlignment::T alignment, Color c);
 
 namespace ButtonStateFlags {

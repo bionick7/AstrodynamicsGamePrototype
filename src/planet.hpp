@@ -42,6 +42,8 @@ struct Planet {
     bool mouse_hover;
     RID id;
 
+    RID text3d;  // updated externally
+
     ShipModuleSlot current_slot;
 
     Planet() : Planet("UNNAMED", 0, 0) {};
