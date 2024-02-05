@@ -38,6 +38,8 @@ void main() {
 		if (texture_luma*palette_size <= i+1) {
 			finalColor = palette[i];
 			break;
+			
 		}
 	}
+	gl_FragDepth = 1.0;
 }

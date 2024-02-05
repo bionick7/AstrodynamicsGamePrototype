@@ -150,6 +150,7 @@ namespace planet_shader {
     int radius;
     int screenWidth;
 
+    int centerPos;
     int cameraPos;
     int normal;
     int rimColor;
@@ -162,6 +163,7 @@ namespace planet_shader {
         LOAD_SHADER_UNIFORM(planet_shader, space)
         LOAD_SHADER_UNIFORM(planet_shader, radius)
         LOAD_SHADER_UNIFORM(planet_shader, screenWidth)
+        LOAD_SHADER_UNIFORM(planet_shader, centerPos)
         LOAD_SHADER_UNIFORM(planet_shader, cameraPos)
         LOAD_SHADER_UNIFORM(planet_shader, normal)
         LOAD_SHADER_UNIFORM(planet_shader, rimColor)
@@ -176,9 +178,9 @@ namespace planet_shader {
 void RenderPerfectSphere(DVector3 world_position, double radius, Color color) {
     if (!IsShaderReady(planet_shader::shader)) planet_shader::Load();
 
-    Vector3 render_position = (Vector3) (world_position / GameCamera::space_scale);
-    float render_radius = radius / GameCamera::space_scale;
-    Vector3 world_camera_pos = GetCamera()->rl_camera.position;
+    Vector3 render_position = GameCamera::WorldToRender(world_position);
+    float render_radius = GameCamera::WorldToRender(radius);
+    Vector3 render_camera_pos = GetCamera()->rl_camera.position;
     //Vector3 world_camera_dir = Vector3Subtract(GetCamera()->rl_camera.target, GetCamera()->rl_camera.position);
 
     float rim_color4[4];
@@ -199,7 +201,6 @@ void RenderPerfectSphere(DVector3 world_position, double radius, Color color) {
 	float h = sqrt(render_radius * render_radius - offset * offset);  // plane scale in render-world coordinate system
 	//float h = render_radius * sqrt(1 - 1/camera_distance);  // plane scale in render-world coordinate system
 
-
 	Matrix new_model_matrix = MatrixFromColumns(
         Vector3Scale(mat_x, h),
         Vector3Scale(mat_y, h),
@@ -209,6 +210,8 @@ void RenderPerfectSphere(DVector3 world_position, double radius, Color color) {
 	new_model_matrix.m12 = render_position.x + mat_z.x * offset;
 	new_model_matrix.m13 = render_position.y + mat_z.y * offset;
 	new_model_matrix.m14 = render_position.z + mat_z.z * offset;
+
+    //DebugDrawTransform(new_model_matrix);
 
     //DebugDrawLineRenderSpace(render_position, Vector3Add(render_position, mat_x));
     //DebugDrawLineRenderSpace(render_position, Vector3Add(render_position, mat_y));
@@ -222,13 +225,16 @@ void RenderPerfectSphere(DVector3 world_position, double radius, Color color) {
 	SetShaderValue(planet_shader::shader, planet_shader::edge, &line_thickness, SHADER_UNIFORM_FLOAT);
 	SetShaderValue(planet_shader::shader, planet_shader::screenWidth, &screen_width, SHADER_UNIFORM_FLOAT);
 	SetShaderValue(planet_shader::shader, planet_shader::radius, &render_radius, SHADER_UNIFORM_FLOAT);
-	SetShaderValue(planet_shader::shader, planet_shader::cameraPos, &world_camera_pos, SHADER_UNIFORM_VEC3);
+	SetShaderValue(planet_shader::shader, planet_shader::cameraPos, &render_camera_pos, SHADER_UNIFORM_VEC3);
+	SetShaderValue(planet_shader::shader, planet_shader::centerPos, &render_position, SHADER_UNIFORM_VEC3);
 	SetShaderValue(planet_shader::shader, planet_shader::normal, &mat_z, SHADER_UNIFORM_VEC3);
     SetShaderValueMatrix(planet_shader::shader, planet_shader::transform, new_model_matrix);
 
     BeginShaderMode(planet_shader::shader);
     _RenderQuad(color);
     EndShaderMode();
+
+    //DrawSphereWires(render_position, render_radius, 16, 16, WHITE);
 }
 
 namespace rings_shader {
@@ -326,16 +332,16 @@ void RenderSkyBox() {
     SetShaderValueTexture(skybox_shader::shader, skybox_shader::starMap, skybox_shader::starmap);
 
     //skybox_shader::starmap = LoadTexture("resources/textures/vsauce.png");
-    DrawTexture(skybox_shader::starmap, 0, 0, WHITE);
-    rlDisableDepthTest();
-    rlDisableDepthMask();
+    DrawTexture(skybox_shader::starmap, 1e10, 1e10, WHITE);
+    //rlDisableDepthTest();
+    //rlDisableDepthMask();
     BeginShaderMode(skybox_shader::shader);
 
     _RenderQuad(Palette::ui_alt);
 
     EndShaderMode();
-    rlEnableDepthMask();
-    rlEnableDepthTest();
+    //rlEnableDepthMask();
+    //rlEnableDepthTest();
 }
 
 namespace icon_shader {

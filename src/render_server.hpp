@@ -21,6 +21,13 @@ struct Icon3D {
 
 struct RenderServer {
     IDAllocatorList<Icon3D, EntityType::ICON3D> icons;
+    RenderTexture2D render_target;
+    
+
+    int current_screenwidth = 0;
+    int current_screenheight = 0;
+
+    void OnScreenResize();
 
     void Draw();
     RID AllocateIcon3D(float scale, Vector2 offset, AtlasPos atlas_pos, 

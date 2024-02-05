@@ -150,13 +150,19 @@ Vector2 GetMousePositionInWorld() {
 void GameCamera::Make() {
     rl_camera.fovy = 90;
     rl_camera.projection = CAMERA_PERSPECTIVE;
-    rl_camera.position = { 1.0f, 0.0f, 0.0f };
+    rl_camera.position = { 1.0f, 1.0f, 0.0f };
     rl_camera.target = Vector3Zero();
     rl_camera.up = { 0.0f, 1.0f, 0.0f };
     focus_object = GetInvalidId();
 }
 
 void GameCamera::HandleInput() {
+    
+    if (IsKeyPressed(KEY_HOME)) {
+        rl_camera.target = Vector3Zero();
+        rl_camera.position = { 1.0f, 1.0f, 0.0f };
+        focus_object = GetInvalidId();
+    }
 
     float dist = Vector3Distance(rl_camera.position, rl_camera.target);
     Vector3 view_dir = Vector3Scale(Vector3Subtract(rl_camera.target, rl_camera.position), 1/dist);
@@ -190,13 +196,20 @@ void GameCamera::HandleInput() {
     rl_camera.position = Vector3Subtract(rl_camera.target, Vector3Scale(view_dir, dist));
 }
 
-Vector2 GameCamera::GetScreenPos(DVector3 world_pos) const {
-    Vector3 screen_space = (Vector3) (world_pos / space_scale);
+bool GameCamera::IsInView(Vector3 render_pos) const {
     Vector3 camera_dir = Vector3Subtract(rl_camera.target, rl_camera.position);
-    if (Vector3DotProduct(
-        Vector3Subtract(screen_space, rl_camera.position),
+    return Vector3DotProduct(
+        Vector3Subtract(render_pos, rl_camera.position),
         Vector3Subtract(rl_camera.target, rl_camera.position)
-    ) < 0.0) {
+    ) > 0;
+}
+
+bool GameCamera::IsInView(DVector3 render_pos) const {
+    return IsInView(WorldToRender(render_pos));
+}
+
+Vector2 GameCamera::GetScreenPos(DVector3 world_pos) const {
+    if (!IsInView(world_pos)) {
         return { -1000.0f, -1000.0f };
     }
     return GetWorldToScreen(WorldToRender(world_pos), rl_camera);

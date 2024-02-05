@@ -666,7 +666,7 @@ int Planets::LoadEphemerides(const DataNode* data) {
         timemath::Time epoch = timemath::Time(PosMod(ann, 2*PI) / sqrt(parent.mu / (sma*sma*sma)));
 
         double inc = planet_data->GetF("Inc") * DEG2RAD;
-        inc = inc > PI/2 ? PI : 0;
+        //inc = inc > PI/2 ? PI : 0;
 
         nature->mu = planet_data->GetF("mass") * G;
         nature->radius = planet_data->GetF("radius");

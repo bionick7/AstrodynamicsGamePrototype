@@ -509,7 +509,12 @@ void Ship::DrawIcon(float icon_size, Vector2 draw_offset) {
 
     const Icon3D* icon_inst = GetRenderServer()->icons.Get(icon3d);
 
-    DrawLine3D(GameCamera::WorldToRender(position.cartesian), icon_inst->GetFinalRenderPos(), GetColor());
+    Vector3 from = GameCamera::WorldToRender(position.cartesian);
+    Vector3 to = icon_inst->GetFinalRenderPos();
+
+    if (GetCamera()->IsInView(from) && GetCamera()->IsInView(to)) {
+        DrawLine3D(from, to, GetColor());
+    }
     //DrawLineV(draw_pos, Vector2Add(draw_pos, draw_offset), GetColor());
     
     //DrawRectangleV(Vector2SubtractValue(draw_pos, 4.0f), {8, 8}, color);

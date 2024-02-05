@@ -178,7 +178,7 @@ void TransferPlanSolveInputImpl(TransferPlan* tp, const Orbit* from_orbit, const
         tp->departure_dvs[i] = (tp->transfer_orbit[i].GetVelocity(pos1_tf) - from_orbit->GetVelocity(pos1));
         tp->arrival_dvs[i] = (to_orbit->GetVelocity(pos2) - tp->transfer_orbit[i].GetVelocity(pos2_tf));
 
-        DEBUG_SHOW_F(pos2_tf.r / pos2.r)
+        //DEBUG_SHOW_F(pos2_tf.r / pos2.r)
 
         //ASSERT_ALOMST_EQUAL_FLOAT(pos1_tf.r, pos1.r)
         //ASSERT_ALOMST_EQUAL_FLOAT(pos2_tf.r, pos2.r)
@@ -588,7 +588,7 @@ void TransferPlanUI::Draw3D() {
         _DrawTransferOrbit(plan, plan->primary_solution, false, time_bounds[0]);
     } else if (plan->num_solutions == 2) {
         _DrawTransferOrbit(plan, plan->primary_solution, false, time_bounds[0]);
-        _DrawTransferOrbit(plan, 1 - plan->primary_solution, false, time_bounds[0]);
+        _DrawTransferOrbit(plan, 1 - plan->primary_solution, true, time_bounds[0]);
     }
 }
 

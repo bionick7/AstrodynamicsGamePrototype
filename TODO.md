@@ -97,7 +97,6 @@ Regardless of implementability
 
 
 ## Collective todo for next milestone
-
 - Animation tracker system
 - Implement way to show icons within text/at arbitrary positions  >> ???
 - Mesh loading  >> ???

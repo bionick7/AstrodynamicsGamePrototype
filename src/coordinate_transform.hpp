@@ -58,6 +58,8 @@ struct GameCamera {
     void Deserialize(const DataNode* data);
 
     void HandleInput();
+    bool IsInView(Vector3 render_pos) const;
+    bool IsInView(DVector3 render_pos) const;
     Vector2 GetScreenPos(DVector3 world_pos) const;
     float MeasurePixelSize(Vector3 render_pos) const;
 };
