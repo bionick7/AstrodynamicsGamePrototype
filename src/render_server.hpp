@@ -37,9 +37,6 @@ struct RenderServer {
     IDAllocatorList<Text3D, EntityType::TEXT3D> text_labels_3d;
     RenderTexture2D render_target;
     
-    int current_screenwidth = 0;
-    int current_screenheight = 0;
-
     void OnScreenResize();
 
     void Draw();

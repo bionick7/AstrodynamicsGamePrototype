@@ -55,6 +55,8 @@ struct GlobalState {
     // Draw
     void DrawUI();
 
+    bool IsKeyBoardFocused() const;
+
     // Interaction
     bool CompleteTransaction(int faction, int delta);
     cost_t GetMoney(int faction);

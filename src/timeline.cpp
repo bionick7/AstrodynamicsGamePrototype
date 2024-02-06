@@ -207,7 +207,7 @@ void _DrawQuests(TimeLineCoordinateData* tcd, QuestManager* qm) {
         } else {
             qm->available_quests.Get(closest_mouse_dist_quest)->DrawUI(false, false);
             UIContextWrite("Press enter to accept quest", true);
-            if (IsKeyPressed(KEY_ENTER)) {
+            if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_ENTER)) {
                 HandleButtonSound(ButtonStateFlags::JUST_PRESSED);
                 qm->AcceptQuest(closest_mouse_dist_quest);
             }
@@ -289,7 +289,7 @@ void TimelineClose() {
 void DrawTimeline() {
 
     // Manage viewing
-    if (IsKeyPressed(KEY_W)) {
+    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_W)) {
         show_timeline = !show_timeline;
     }
     if (!show_timeline) return;

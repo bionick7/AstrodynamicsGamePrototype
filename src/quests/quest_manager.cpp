@@ -36,7 +36,7 @@ void QuestManager::Make() {
 void QuestManager::Update(double dt) {
     timemath::Time now = GlobalGetNow();
 
-    if (IsKeyPressed(KEY_Q)) show_ui = !show_ui;
+    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_Q)) show_ui = !show_ui;
     
     // Remove all expired and completed quests
     for(auto it = active_quests.GetIter(); it; it++) {

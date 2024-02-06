@@ -33,13 +33,13 @@ timemath::Time Calendar::AdvanceTime(double delta_t) {
 }
 
 void Calendar::HandleInput(double delta_t) {
-    if (IsKeyPressed(KEY_PERIOD)) {
+    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_PERIOD)) {
         time_scale *= 2;
     }
-    if (IsKeyPressed(KEY_COMMA)) {
+    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_COMMA)) {
         time_scale /= 2;
     }
-    if (IsKeyPressed(KEY_SPACE)) {
+    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_SPACE)) {
         paused = !paused;
     }
 }
@@ -186,7 +186,7 @@ void GameCamera::Deserialize(const DataNode* data) {
 
 void GameCamera::HandleInput() {
     
-    if (IsKeyPressed(KEY_HOME)) {
+    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_HOME)) {
         rl_camera.target = Vector3Zero();
         rl_camera.position = { 1.0f, 1.0f, 0.0f };
         focus_object = GetInvalidId();

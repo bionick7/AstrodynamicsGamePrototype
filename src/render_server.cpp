@@ -272,8 +272,6 @@ void _UnloadRenderTextureDepthTex(RenderTexture2D target) {
 }
 
 void RenderServer::OnScreenResize() {
-    current_screenwidth = GetScreenWidth();
-    current_screenheight = GetScreenHeight();
     if (IsRenderTextureReady(render_target)) {
         _UnloadRenderTextureDepthTex(render_target);
     }
@@ -283,7 +281,7 @@ void RenderServer::OnScreenResize() {
 //#define IGNORE_RENDER_TARGET
 
 void RenderServer::Draw() {
-    if (current_screenwidth != GetScreenWidth() || current_screenheight != GetScreenHeight()) {
+    if (render_target.texture.width != GetScreenWidth() || render_target.texture.height != GetScreenHeight()) {
         OnScreenResize();
     }
 

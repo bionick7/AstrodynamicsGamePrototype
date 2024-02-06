@@ -6,6 +6,7 @@
 #include "audio_server.hpp"
 #include "quest.hpp"
 #include "timeline.hpp"
+#include "debug_console.hpp"
 
 GlobalState global_state;
 
@@ -253,7 +254,7 @@ void GlobalState::UpdateState(double delta_t) {
 
     camera.HandleInput();
 
-    if (IsKeyPressed(KEY_F5)) {
+    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_F5)) {
         INFO("Reload shaders")
         ReloadShaders();
         RenderServer::ReloadShaders();
@@ -293,6 +294,7 @@ void GlobalState::DrawUI() {
     DrawTimeline();
     quest_manager.Draw();
     last_battle_log.DrawUI();
+    DrawDebugConsole();
     
     if (is_in_pause_menu){
         _PauseMenu();
@@ -301,6 +303,10 @@ void GlobalState::DrawUI() {
 
     DebugFlushText();
     //DrawFPS(0, 0);
+}
+
+bool GlobalState::IsKeyBoardFocused() const {
+    return IsInDebugConsole();
 }
 
 void GlobalState::Serialize(DataNode* data) const {

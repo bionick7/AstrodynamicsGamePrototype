@@ -466,7 +466,7 @@ void TransferPlanUI::Update() {
         SetLogistics(0, 0);
     }
 
-    if (IsKeyPressed(KEY_ENTER) && is_valid) {
+    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_ENTER) && is_valid) {
         ship_instance->ConfirmEditedTransferPlan();
         Reset();
     }

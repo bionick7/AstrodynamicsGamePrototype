@@ -138,7 +138,7 @@ void BattleLog::Clear() {
 
 void BattleLog::DrawUI() {
     // Draws it's own box. Clears the ui stack
-    if (IsKeyPressed(KEY_E)) {
+    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_E)) {
         shown = !shown;
     }
     if (!shown) return;
