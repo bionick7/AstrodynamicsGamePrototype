@@ -93,7 +93,8 @@ double _Mean2TrueHyp(double M, double e) {
 
 Orbit::Orbit() : Orbit(1, 0, 0, 1, 0, false) { }
 
-Orbit::Orbit(double semi_major_axis, double eccenetricity, double longuitude_of_periapsis, double mu, timemath::Time epoch, bool is_prograde) {
+Orbit::Orbit(double semi_major_axis, double eccenetricity, double longuitude_of_periapsis, 
+             double mu, timemath::Time epoch, bool is_prograde) {
     this->mu = mu;
     sma = semi_major_axis;
     ecc = eccenetricity;
@@ -121,12 +122,45 @@ Orbit::Orbit(double semi_major_axis, double eccenetricity, double inclination,
     this->epoch = epoch;
 }
 
+    /*bool is_prograde = lcase < 2;
+    bool cut_focus = lcase >= 2;
+    bool indirect_soution = lcase % 2 == 1;
+    if (lcase < 4) {
+        if (indirect_soution) cut_focus = !cut_focus;
+    } else {
+        cut_focus = !cut_focus;
+        is_prograde = !is_prograde;
+    }
+    DEBUG_SHOW_I(lcase)
+    DEBUG_SHOW_I(is_prograde)
+    DEBUG_SHOW_I(indirect_soution)
+
+    DVector3 r1_r2_cross = pos1.cartesian.Cross(pos2.cartesian);
+
+    bool swap_y0 = cut_focus ^ (r1_r2_cross.y < 0) ^ (!is_prograde) ^ (r1_r2_cross.y < 0 ^ indirect_soution);
+    bool swap_yf = (r1_r2_cross.y < 0) ^ (!is_prograde) ^ (r1_r2_cross.y < 0 ^ indirect_soution);
+    bool swap_normal = !is_prograde || lcase >= 4;*/
+
 Orbit::Orbit(OrbitPos pos1, OrbitPos pos2, timemath::Time time_at_pos1, 
-             double sma, double mu, bool cut_focus, bool is_prograde) {
+             double sma, double mu, int lcase) {
     // https://en.wikipedia.org/wiki/Lambert%27s_problem
     // goes from pos1 to pos2
     //if (!is_prograde) Swap(&pos1, &pos2);
+
     DVector3 r1_r2_cross = pos1.cartesian.Cross(pos2.cartesian);
+    bool neg_cross = r1_r2_cross.y < 0;
+    bool selction = lcase >= 2;
+    if (lcase >= 4) selction = lcase == 5;  // different definition for hyperbola
+    bool indirect_soution = lcase % 2 == 1;
+
+    //DEBUG_SHOW_I(lcase)
+    //DEBUG_SHOW_I(selction)
+    //DEBUG_SHOW_I(indirect_soution)
+    //DEBUG_SHOW_I(neg_cross)
+
+    bool swap_yf = selction ^ indirect_soution ^ (lcase == 4);
+    bool swap_normal = selction;
+
     double d = (pos1.cartesian - pos2.cartesian).Length() / 2.0;
     double A = (pos2.r - pos1.r) / 2;
     double E = d / A;
@@ -140,27 +174,19 @@ Orbit::Orbit(OrbitPos pos1, OrbitPos pos2, timemath::Time time_at_pos1,
     double x_f = x_0 + 2*sma / E;
     double y_f = sqrt(B_sqr * fmax(x_f*x_f / (A*A) - 1, 0));
 
-    if (cut_focus) {  // For a hyperbola this means, it's the more direct way
-        y_0 = -y_0;
-    }
-    if (r1_r2_cross.y < 0) {  // Indirect solution
-        y_0 = -y_0;
+    if (swap_yf) {  // Indirect solution
         y_f = -y_f;
     }
-    double ecc = hypot(x_0 - x_f, y_0 - y_f) / (2 * fabs(sma));
+    ecc = hypot(x_0 - x_f, y_0 - y_f) / (2 * fabs(sma));
     ASSERT(!isnan(ecc))
 
     DVector3 canon_z = r1_r2_cross.Normalized();
     DVector3 canon_x = (pos2.cartesian - pos1.cartesian).Normalized();
-    if (!is_prograde) {
-        canon_z = -canon_z;
-    }
     DVector3 canon_y = canon_z.Cross(canon_x);
-    if (sma < 0) {
+    if (swap_normal) {
         canon_z = -canon_z;
     }
-    DVector3 periapsis_dir = (canon_x * (x_0 - x_f) + canon_y * (y_0 - y_f)).Normalized();
-    periapsis_dir = periapsis_dir * Sign(sma);
+    periapsis_dir = (canon_x * (x_0 - x_f) + canon_y * (y_0 - y_f)).Normalized() * Sign(sma);
 
     //DVector3 center = (pos1.cartesian + pos2.cartesian) * .5;
     //DebugDrawLine(center + canon_x * x_0 + canon_y * y_0, center + canon_x * x_f + canon_y * y_f);
@@ -176,8 +202,6 @@ Orbit::Orbit(OrbitPos pos1, OrbitPos pos2, timemath::Time time_at_pos1,
     //period = fmod(period, sqrt(sma*sma*sma / mu) * 2*PI);
     this->sma = sma;
     this->mu = mu;
-    this->ecc = ecc;
-    this->periapsis_dir = periapsis_dir;
     this->normal = canon_z;
 }
 

@@ -134,20 +134,21 @@ void TransferPlanSolveInputImpl(TransferPlan* tp, const Orbit* from_orbit, const
     bool first_solution[2] = { y < _Lambert(1, K, 0), y < _Lambert(1, K, 2) };
 
     double aa[2];
+    int lambert_cases[2];
 
     tp->num_solutions = 2;
     for (int i=0; i < 2; i++) {
         if (is_ellipse[i]) {
-            int lambert_case = (first_solution[i] ? 0 : 1) + i*2;
-            double x = _SolveLambertBetweenBounds(y, K, 1e-5, 1.0, lambert_case);
+            lambert_cases[i] = (first_solution[i] ? 0 : 1) + i*2;
+            double x = _SolveLambertBetweenBounds(y, K, 1e-5, 1.0, lambert_cases[i]);
             aa[i] = a_min / (x*x);
         } else {
-            int lambert_case = i + 4;
+            lambert_cases[i] = i + 4;
             double x;
             if (y > _Lambert(-2, K, i + 4)) {
-                x = _SolveLambertBetweenBounds(y, K, -2, 1e-5, lambert_case);
+                x = _SolveLambertBetweenBounds(y, K, -2, 1e-5, lambert_cases[i]);
             } else {
-                x = _SolveLambertWithNewton(y, K, lambert_case);
+                x = _SolveLambertWithNewton(y, K, lambert_cases[i]);
             }
             aa[i] = -a_min / (x*x);
         }
@@ -158,16 +159,8 @@ void TransferPlanSolveInputImpl(TransferPlan* tp, const Orbit* from_orbit, const
     for (int i=0; i < tp->num_solutions; i++) {
         //double r1_r2_outer_prod = Determinant(pos1.cartesian, pos2.cartesian);
         // Direct orbit is retrograde
-        bool is_prograde = i == 0;
-        bool cut_focus = i == 1;
-        if (is_ellipse[i]) {
-            bool indirect_solution = timemath::Time::SecDiff(t2, t1) > PI * sqrt(fabs(aa[i])*aa[i]*aa[i] / mu);
-            if (indirect_solution) cut_focus = !cut_focus;
-        } else {
-            cut_focus = !cut_focus;
-            is_prograde = !is_prograde;
-        }
-        tp->transfer_orbit[i] = Orbit(pos1, pos2, t1, aa[i], mu, cut_focus, is_prograde);
+        //is_prograde = lambert_cases[i] == 0 || lambert_cases[i] == 2;
+        tp->transfer_orbit[i] = Orbit(pos1, pos2, t1, aa[i], mu, lambert_cases[i]);
         //OrbitPrint(&tp->transfer_orbit[i]); printf("\n");
 
         OrbitPos pos1_tf = tp->transfer_orbit[i].GetPosition(t1);
@@ -416,12 +409,12 @@ TransferPlanUI::TransferPlanUI() {
 void TransferPlanUI::Reset() {
     plan = NULL;
     ship = GetInvalidId();
-    is_dragging_departure    = false;
-    is_dragging_arrival      = false;
-    departure_handle_pos     = Vector2Zero();
-    arrival_handle_pos       = Vector2Zero();
-    redraw_queued            = false;
-    time_bounds[0]           = 0;
+    is_dragging_departure = false;
+    is_dragging_arrival   = false;
+    departure_handle_pos  = Vector2Zero();
+    arrival_handle_pos    = Vector2Zero();
+    redraw_queued         = false;
+    time_bounds[0]        = 0;
 }
 
 void TransferPlanUI::Abort() {
@@ -593,7 +586,9 @@ void TransferPlanUI::Draw3D() {
 }
 
 void TransferPlanUI::Draw3DGizmos() {
-    // Gizmos
+    if (!IsActive()) {
+        return;
+    }
     
     const Planet* from = GetPlanet(plan->departure_planet);
     const Planet* to = GetPlanet(plan->arrival_planet);
