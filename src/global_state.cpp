@@ -255,7 +255,6 @@ void GlobalState::UpdateState(double delta_t) {
     camera.HandleInput();
 
     if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_F5)) {
-        INFO("Reload shaders")
         ReloadShaders();
         RenderServer::ReloadShaders();
     }

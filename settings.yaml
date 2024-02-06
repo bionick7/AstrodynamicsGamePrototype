@@ -1,0 +1,4 @@
+enable_ai: y
+enable_player_ai: y
+skip_postprocessing: n
+show_fps: y

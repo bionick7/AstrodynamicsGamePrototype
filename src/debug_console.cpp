@@ -7,17 +7,18 @@
 
 namespace settings {
     Setting* list = NULL;
-    int capacity = 0;
     int size = 0;
 
     void Init() {
         // TODO: Load file
-        list = new Setting[3];
-        list[0] = Setting("a", "1");
-        list[1] = Setting("b", "2");
-        list[2] = Setting("c", "3");
-        size = 3;
-        capacity = 3;
+        DataNode dn;
+        DataNode::FromFile(&dn, "settings.yaml", FileFormat::Auto, true);
+        size = dn.GetFieldCount();
+        list = new Setting[size];
+        for(int i=0; i < size; i++) {
+            const char* key = dn.GetKey(i);
+            list[i] = Setting(key, dn.Get(key));
+        }
     }
 }
 
@@ -134,6 +135,11 @@ void ListSettings(const char* prompt) {
         sb.Add(settings::list[i].name).Add(" : ").Add(settings::list[i].Get());
         PushLine(sb.c_str);
     }
+}
+
+void ReloadShaders(const char* prompt) {
+    ReloadShaders();
+    RenderServer::ReloadShaders();
 }
 
 struct { const char* name; void(*func)(const char*); } commands[] = {
