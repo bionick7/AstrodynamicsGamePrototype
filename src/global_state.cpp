@@ -15,12 +15,12 @@ void GlobalState::_InspectState() {
 }
 
 bool _PauseMenuButton(const char* label) {
-    UIContextPushInset(0, 20);
-    UIContextEnclose(Palette::bg, Palette::ui_main);
-    UIContextWrite(label);
-    ButtonStateFlags::T button_state = UIContextAsButton();
+    ui::PushInset(0, 20);
+    ui::Enclose(Palette::bg, Palette::ui_main);
+    ui::Write(label);
+    ButtonStateFlags::T button_state = ui::AsButton();
     HandleButtonSound(button_state & ButtonStateFlags::JUST_PRESSED);
-    UIContextPop();
+    ui::Pop();
     return button_state & ButtonStateFlags::JUST_PRESSED;
 }
 
@@ -29,7 +29,7 @@ void _PauseMenu() {
     const int menu_width = 200;
     const int button_height = 20;
     const int menu_height = button_height * 3;
-    UIContextCreateNew(
+    ui::CreateNew(
         (GetScreenWidth() - menu_width)/2, 
         (GetScreenHeight() - menu_height)/2, 
         menu_width,
@@ -37,7 +37,7 @@ void _PauseMenu() {
         16,
         Palette::ui_main
     );
-    UIContextEnclose(Palette::bg, Palette::ui_main);
+    ui::Enclose(Palette::bg, Palette::ui_main);
     if (_PauseMenuButton("Save")) {
         INFO("Save")
         DataNode dn;

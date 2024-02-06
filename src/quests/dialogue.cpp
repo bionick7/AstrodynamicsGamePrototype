@@ -87,22 +87,22 @@ const char* Dialogue::GetReply(int i) const {
 }
 
 void Dialogue::DrawToUIContext() {
-    UIContextWrite(GetSpeaker());
-    UIContextWrite(GetBody());
-    int w = UIContextCurrent().width;
-    UIContextPushInset(0, 32);
+    ui::Write(GetSpeaker());
+    ui::Write(GetBody());
+    int w = ui::Current()->width;
+    ui::PushInset(0, 32);
     for(int i=0; i < reply_count; i++) {
-        UIContextPushHSplit(i * w / reply_count, (i + 1) * w / reply_count);
-        UIContextEnclose(Palette::bg, Palette::ui_main);
-        ButtonStateFlags::T state_flags = UIContextAsButton();
+        ui::PushHSplit(i * w / reply_count, (i + 1) * w / reply_count);
+        ui::Enclose(Palette::bg, Palette::ui_main);
+        ButtonStateFlags::T state_flags = ui::AsButton();
         if (state_flags & ButtonStateFlags::JUST_PRESSED) {
             reply = i;
         }
 
-        UIContextWrite(GetReply(i));
-        UIContextPop();  // HSplit
+        ui::Write(GetReply(i));
+        ui::Pop();  // HSplit
     }
-    UIContextPop();  // HSplit
+    ui::Pop();  // HSplit
 }
 
 int DialogueTests() {   

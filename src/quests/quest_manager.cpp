@@ -107,12 +107,12 @@ void QuestManager::Draw() {
     int y_margin = MinInt(50, GetScreenWidth()*.1);
     int w = GetScreenWidth() - x_margin*2;
     int h = GetScreenHeight() - y_margin*2;
-    UIContextCreateNew(x_margin, y_margin, w, h, 16, Palette::ui_main);
-    UIContextEnclose(Palette::bg, Palette::ui_main);
+    ui::CreateNew(x_margin, y_margin, w, h, 16, Palette::ui_main);
+    ui::Enclose(Palette::bg, Palette::ui_main);
 
     // TABS
 
-    UIContextPushInset(4, 20);  // Tab container
+    ui::PushInset(4, 20);  // Tab container
     const int n_tabs = active_quests.Count() + 1;
     if (current_tab_qst >= n_tabs) {
         current_tab_qst = 0;
@@ -121,52 +121,52 @@ void QuestManager::Draw() {
     int tab_width = w / n_tabs;
     if (tab_width > 150) tab_width = 150;
     for (int i_tab = 0; i_tab < n_tabs; i_tab++) {
-        UIContextPushHSplit(i_tab * tab_width, (i_tab + 1) * tab_width);
-        ButtonStateFlags::T button_state = UIContextAsButton();
+        ui::PushHSplit(i_tab * tab_width, (i_tab + 1) * tab_width);
+        ButtonStateFlags::T button_state = ui::AsButton();
         HandleButtonSound(button_state & ButtonStateFlags::JUST_PRESSED);
         if (button_state & ButtonStateFlags::JUST_PRESSED) {
             current_tab_qst = i_tab;
         }
         if (button_state & ButtonStateFlags::HOVER || i_tab == current_tab_qst) {
-            UIContextEnclose(Palette::bg, Palette::ui_main);
+            ui::Enclose(Palette::bg, Palette::ui_main);
         }
         if (i_tab == 0) {
-            UIContextWrite("tasks");
+            ui::Write("tasks");
         } else {
-            UIContextWrite(active_quests[it]->wren_interface->id);
+            ui::Write(active_quests[it]->wren_interface->id);
             it++;
         }
-        UIContextPop();  // HSplit
+        ui::Pop();  // HSplit
     }
-    UIContextPop();  // Tab container
+    ui::Pop();  // Tab container
 
-    UIContextPushInset(0, h - 20);
+    ui::PushInset(0, h - 20);
     if (current_tab_qst == 0) {
-        UIContextPushHSplit(0, w/2);
-        UIContextShrink(5, 5);
+        ui::PushHSplit(0, w/2);
+        ui::Shrink(5, 5);
         // Active quests
         if (active_tasks.Count() == 0) {
-            UIContextEnclose(Palette::bg, Palette::ui_main);
+            ui::Enclose(Palette::bg, Palette::ui_main);
         }
         for(auto i = active_tasks.GetIter(); i; i++) {
             active_tasks[i]->DrawUI(false, IsIdValid(active_tasks[i]->ship));
         }
-        UIContextPop();  // HSplit
+        ui::Pop();  // HSplit
 
-        UIContextPushHSplit(w/2, w);
-        UIContextShrink(5, 5);
+        ui::PushHSplit(w/2, w);
+        ui::Shrink(5, 5);
 
         if (GetAvailableQuests() == 0) {
-            UIContextPop();  // HSplit
+            ui::Pop();  // HSplit
             return;
         }
 
         if (GetGlobalState()->current_focus == GlobalState::QUEST_MANAGER) {
-            int max_scroll = MaxInt(TASK_PANEL_HEIGHT * GetAvailableQuests() - UIContextCurrent().height, 0);
+            int max_scroll = MaxInt(TASK_PANEL_HEIGHT * GetAvailableQuests() - ui::Current()->height, 0);
             current_available_quests_scroll = ClampInt(current_available_quests_scroll - GetMouseWheelMove() * 20, 0, max_scroll);
         }
 
-        UIContextPushScrollInset(0, UIContextCurrent().height, TASK_PANEL_HEIGHT * GetAvailableQuests(), &current_available_quests_scroll);
+        ui::PushScrollInset(0, ui::Current()->height, TASK_PANEL_HEIGHT * GetAvailableQuests(), &current_available_quests_scroll);
         // Available Quests
         for(auto it = available_quests.GetIter(); it; it++) {
             if (!available_quests[it]->IsValid()) continue;
@@ -174,25 +174,25 @@ void QuestManager::Draw() {
                 AcceptQuest(it.GetId());
             }
         }
-        UIContextPop();  // ScrollInseet
-        UIContextPop();  // HSplit
+        ui::Pop();  // ScrollInseet
+        ui::Pop();  // HSplit
     } else {
         auto it = active_quests.GetIter();
         for(int i=1; i < current_tab_qst; i++) it++;
         Quest* q = active_quests[it];
         for(int i=0; i < q->dialogue_backlog.size; i++) {
-            UIContextPushInset(0, 100);
+            ui::PushInset(0, 100);
             dialogues[q->dialogue_backlog.Get(i)]->DrawToUIContext();
-            UIContextPop();  // Inset
+            ui::Pop();  // Inset
         }
         if (active_quests[it]->await_type == Quest::DAILOGUE) {
-            UIContextPushInset(0, 100);
+            ui::PushInset(0, 100);
             dialogues[active_quests[it]->current.dialogue]->DrawToUIContext();
-            UIContextPop();  // Inset
+            ui::Pop();  // Inset
         }
         active_quests[it];
     }
-    UIContextPop();  // Inset
+    ui::Pop();  // Inset
 }
 
 void QuestManager::AcceptQuest(RID quest_index) {

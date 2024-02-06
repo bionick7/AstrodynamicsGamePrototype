@@ -80,7 +80,7 @@ namespace debug_console {
     int prompt_backlog_offset = 0;
     int prompt_backlog_index = 0;
 
-    bool is_console_shown = true;
+    bool is_console_shown = false;
 }
 
 using namespace debug_console;
@@ -175,19 +175,19 @@ void DrawDebugConsole() {
     
     int height = 500;
     if (height > GetScreenHeight()) height = GetScreenHeight();
-    UIContextCreateNew(0, 0, GetScreenWidth(), height, 16, WHITE);
-    UIContextEnclose(BLACK, WHITE);
-    int line_height = UIContextCurrent().text_size + UIContextCurrent().text_margin_y;
+    ui::CreateNew(0, 0, GetScreenWidth(), height, 16, WHITE);
+    ui::Enclose(BLACK, WHITE);
+    int line_height = ui::Current()->text_size + ui::Current()->text_margin_y;
     const int input_height = 30;
     const int shown_lines = (height - input_height) / line_height;
     for(int i = shown_lines-1; i >= 0; i--) {
         int show_line = (line_index - i) % DEBUG_CONSOLE_MAX_LINES;
         if (show_line < 0) show_line += DEBUG_CONSOLE_MAX_LINES;
         if (lines[show_line] == NULL) {
-            UIContextWrite("");
+            ui::Write("");
         }
         else {
-            UIContextWrite(lines[show_line]);
+            ui::Write(lines[show_line]);
         }
     }
 
@@ -253,7 +253,7 @@ void DrawDebugConsole() {
     
     StringBuilder sb;
     sb.Add(" $ ").Add(current_prompt);
-    UIContextWrite(sb.c_str);
+    ui::Write(sb.c_str);
     int x_offset = MeasureTextEx(GetCustomDefaultFont(), TextSubtext(sb.c_str, 0, cursor + 3), 16, 1).x;
-    DrawLine(x_offset, UIContextCurrent().y_cursor, x_offset, UIContextCurrent().y_cursor - line_height, WHITE);
+    DrawLine(x_offset, ui::Current()->y_cursor, x_offset, ui::Current()->y_cursor - line_height, WHITE);
 }

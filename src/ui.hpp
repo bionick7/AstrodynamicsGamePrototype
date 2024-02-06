@@ -61,7 +61,7 @@ struct TextBox {
     TextBox(int x, int y, int w, int h, int text_size, Color color);
     void LineBreak();
     void EnsureLineBreak();
-    void Enclose(int inset_x, int inset_y, Color background_color, Color line_color);
+    void Enclose(int inset_x, int inset_y, int corner_radius, Color background_color, Color line_color);
     void Write(const char* text);
     void WriteLine(const char* text);
     void DebugDrawRenderRec() const;
@@ -91,28 +91,34 @@ struct UIGlobals {
     void UIEnd();
 };
 
-void IconDraw(RID Atlas, int index, Rectangle rect);
+namespace ui {
+    void PushGlobal(int x, int y, int w, int h, int text_size, Color color);
+    void CreateNew(int x, int y, int w, int h, int text_size, Color color);
+    void PushMouseHint(int width, int height);
 
-void UIContextPushGlobal(int x, int y, int w, int h, int text_size, Color color);
-void UIContextCreateNew(int x, int y, int w, int h, int text_size, Color color);
-void UIContextPushMouseHint(int width, int height);
+    int PushInset(int margin, int h);
+    int PushScrollInset(int margin, int h, int allocated_height, int* scroll);
+    void PushInline(int x_margin);
+    void PushAligned(int width, int height, TextAlignment::T align);
+    void PushHSplit(int x_start, int x_end);
+    void PushGridCell(int columns, int rows, int column, int row);
+    void Pop();
 
-int UIContextPushInset(int margin, int h);
-int UIContextPushScrollInset(int margin, int h, int allocated_height, int* scroll);
-void UIContextPushInline(int x_margin);
-void UIContextPushAligned(int width, int height, TextAlignment::T align);
-void UIContextPushHSplit(int x_start, int x_end);
-void UIContextPushGridCell(int columns, int rows, int column, int row);
-void UIContextPop();
-Vector2 UIContextGetRelMousePos();
+    ButtonStateFlags::T AsButton();
+    void Enclose(Color background_color, Color line_color);
+    void EncloseEx(Color background_color, Color line_color, int corner_radius);
+    void Shrink(int dx, int dy);
 
-ButtonStateFlags::T UIContextAsButton();
-void UIContextEnclose(Color background_color, Color line_color);
-void UIContextShrink(int dx, int dy);
-void UIContextWrite(const char* text, bool linebreak=true);
-void UIContextFillline(double value, Color fill_color, Color background_color);
-ButtonStateFlags::T UIContextDirectButton(const char* text, int inset);
-TextBox& UIContextCurrent();
+    void Write(const char* text, bool linebreak=true);
+    void DrawIcon(AtlasPos pos, int size);
+    void DrawIconInline(AtlasPos pos);
+    void Fillline(double value, Color fill_color, Color background_color);
+    ButtonStateFlags::T DirectButton(const char* text, int inset);
+
+    Vector2 GetRelMousePos();
+    TextBox* Current();
+}
+    
 void HandleButtonSound(ButtonStateFlags::T button_state_flags);
 
 Font GetCustomDefaultFont();

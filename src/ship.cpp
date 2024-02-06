@@ -591,8 +591,8 @@ void Ship::DrawTrajectories() const {
 void _UIDrawStats(const Ship* ship) {
     StringBuilder sb;
     sb.AddFormat("Payload %d / %d ", KGToResourceCounts(ship->GetPayloadMass()), ship->GetMaxCapacity());
-    UIContextWrite(sb.c_str);
-    UIContextFillline(ship->GetPayloadMass() / ResourceCountsToKG(ship->GetMaxCapacity()), Palette::ui_main, Palette::bg);
+    ui::Write(sb.c_str);
+    ui::Fillline(ship->GetPayloadMass() / ResourceCountsToKG(ship->GetMaxCapacity()), Palette::ui_main, Palette::bg);
     sb.Clear();
     sb.AddFormat("dv %2.2f (I_sp: %2.2f)\n", ship->GetCapableDV(), GetShipClassByIndex(ship->ship_class)->v_e / 1000);
     sb.AddFormat("Pw. %2d Init. %2d\n", ship->power(), ship->initiative());
@@ -604,7 +604,7 @@ void _UIDrawStats(const Ship* ship) {
     sb.AddFormat("Offense: %2d K - %2d O - %2d B\n", ship->kinetic_offense(), ship->ordnance_offense(), ship->boarding_offense());
     sb.AddFormat("Defense: %2d K - %2d O - %2d B\n", ship->kinetic_defense(), ship->ordnance_defense(), ship->boarding_defense());
     sb.AddFormat("++++++++++++++++++\n");
-    UIContextWrite(sb.c_str);
+    ui::Write(sb.c_str);
 }
 
 int ship_selecting_module_index = -1;
@@ -612,25 +612,25 @@ void _UIDrawInventory(Ship* ship) {
     const int MARGIN = 3;
 
     ShipModules* sms = GetShipModules();
-    int columns = UIContextCurrent().width / (SHIP_MODULE_WIDTH + MARGIN);
+    int columns = ui::Current()->width / (SHIP_MODULE_WIDTH + MARGIN);
     int rows = std::ceil(SHIP_MAX_MODULES / (double)columns);
 
-    UIContextPushInset(0, rows * (SHIP_MODULE_HEIGHT + MARGIN));
-    UIContextCurrent().width = columns * (SHIP_MODULE_WIDTH + MARGIN);
+    ui::PushInset(0, rows * (SHIP_MODULE_HEIGHT + MARGIN));
+    ui::Current()->width = columns * (SHIP_MODULE_WIDTH + MARGIN);
     for (int i=0; i < SHIP_MAX_MODULES; i++) {
-        UIContextPushGridCell(columns, rows, i % columns, i / columns);
-        UIContextShrink(MARGIN, MARGIN);
-        ButtonStateFlags::T button_state = UIContextAsButton();
+        ui::PushGridCell(columns, rows, i % columns, i / columns);
+        ui::Shrink(MARGIN, MARGIN);
+        ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
             ship->current_slot = ShipModuleSlot(ship->id, i, ShipModuleSlot::DRAGGING_FROM_SHIP);
         }
         if (button_state & ButtonStateFlags::JUST_PRESSED) {
-            sms->InitDragging(ship->current_slot, UIContextCurrent().render_rec);
+            sms->InitDragging(ship->current_slot, ui::Current()->render_rec);
         }
         sms->DrawShipModule(ship->modules[i]);
-        UIContextPop(); // GridCell
+        ui::Pop(); // GridCell
     }
-    UIContextPop(); // Inset
+    ui::Pop(); // Inset
 }
 
 void _UIDrawTransferplans(Ship* ship) {
@@ -666,12 +666,12 @@ void _UIDrawTransferplans(Ship* ship) {
         snprintf(tp_str[1], 40, "  %s >> %s", departure_planet_name, arrival_planet_name);
 
         // Double Button
-        UIContextPushInset(2, UIContextCurrent().GetLineHeight() * 2);
-        UIContextPushHSplit(0, -32);
-        UIContextEnclose(Palette::bg, Palette::blue);
-        UIContextWrite(tp_str[0]);
-        UIContextWrite(tp_str[1]);
-        ButtonStateFlags::T button_state = UIContextAsButton();
+        ui::PushInset(2, ui::Current()->GetLineHeight() * 2);
+        ui::PushHSplit(0, -32);
+        ui::Enclose(Palette::bg, Palette::blue);
+        ui::Write(tp_str[0]);
+        ui::Write(tp_str[1]);
+        ButtonStateFlags::T button_state = ui::AsButton();
         HandleButtonSound(button_state & ButtonStateFlags::JUST_PRESSED);
         if (button_state & ButtonStateFlags::HOVER) {
             ship->highlighted_plan_index = i;
@@ -679,23 +679,23 @@ void _UIDrawTransferplans(Ship* ship) {
         if (button_state & ButtonStateFlags::JUST_PRESSED) {
             ship->StartEditingPlan(i);
         }
-        UIContextPop();  // HSplit
+        ui::Pop();  // HSplit
 
         if (i != ship->plan_edit_index) {
-            UIContextPushHSplit(-32, -1);
-            UIContextWrite("X");
-            UIContextEnclose(Palette::bg, Palette::blue);
-            ButtonStateFlags::T button_state = UIContextAsButton();
+            ui::PushHSplit(-32, -1);
+            ui::Write("X");
+            ui::Enclose(Palette::bg, Palette::blue);
+            ButtonStateFlags::T button_state = ui::AsButton();
             HandleButtonSound(button_state & ButtonStateFlags::JUST_PRESSED);
             if (button_state & ButtonStateFlags::JUST_PRESSED) {
                 ship->RemoveTransferPlan(i);
             }
-            UIContextPop();  // HSplit
+            ui::Pop();  // HSplit
         }
 
-        UIContextPop();  // Insert
+        ui::Pop();  // Insert
     }
-    if (UIContextDirectButton("+", 10) & ButtonStateFlags::JUST_PRESSED) {
+    if (ui::DirectButton("+", 10) & ButtonStateFlags::JUST_PRESSED) {
         ship->_OnNewPlanClicked();
     }
 }
@@ -703,20 +703,20 @@ void _UIDrawTransferplans(Ship* ship) {
 void _UIDrawFleet(Ship* ship) {
     // Following
     if (!ship->IsLeading()) {
-        UIContextPushInset(0, 20);
+        ui::PushInset(0, 20);
         StringBuilder sb;
         if (ship->IsParked()) {
             sb.Add("Detach from").Add(GetShip(ship->parent_obj)->name);
-            ButtonStateFlags::T button_state = UIContextDirectButton(sb.c_str, 0);
+            ButtonStateFlags::T button_state = ui::DirectButton(sb.c_str, 0);
             HandleButtonSound(button_state);
             if (button_state & ButtonStateFlags::JUST_PRESSED) {
                 ship->Detach();
             }
         } else {
             sb.Add("Following").Add(GetShip(ship->parent_obj)->name);
-            UIContextWrite(sb.c_str);
+            ui::Write(sb.c_str);
         }
-        UIContextPop();  // Inset
+        ui::Pop();  // Inset
         return;
     }
     IDList candidates;
@@ -726,15 +726,15 @@ void _UIDrawFleet(Ship* ship) {
         if (candidates[i] == ship->id) continue;
         const Ship* candidate = GetShip(candidates[i]);
         if (!candidate->IsLeading()) continue;
-        UIContextPushInset(0, 20);
-        UIContextWrite("Attach to ", false);
-        UIContextWrite(candidate->name);
-        ButtonStateFlags::T button_state = UIContextAsButton();
+        ui::PushInset(0, 20);
+        ui::Write("Attach to ", false);
+        ui::Write(candidate->name);
+        ButtonStateFlags::T button_state = ui::AsButton();
         HandleButtonSound(button_state);
         if (button_state & ButtonStateFlags::JUST_PRESSED) {
             ship->AttachTo(candidate->id);
         }
-        UIContextPop();  // Inset
+        ui::Pop();  // Inset
     }
 }
 
@@ -783,16 +783,16 @@ void Ship::DrawUI() {
     const int INSET_MARGIN = 6;
     const int OUTSET_MARGIN = 6;
     const int TEXT_SIZE = 16;
-    UIContextCreateNew(
+    ui::CreateNew(
         GetScreenWidth() - 430 - 2*INSET_MARGIN - OUTSET_MARGIN, 
         OUTSET_MARGIN + 200,
         430 + 2*INSET_MARGIN, 
         GetScreenHeight() - 200 - OUTSET_MARGIN - 2*INSET_MARGIN,
         TEXT_SIZE, Palette::ui_main
     );
-    UIContextEnclose(Palette::bg, GetColor());
+    ui::Enclose(Palette::bg, GetColor());
 
-    UIContextShrink(INSET_MARGIN, INSET_MARGIN);
+    ui::Shrink(INSET_MARGIN, INSET_MARGIN);
 
     if ((GetIntelLevel() & IntelLevel::STATS) == 0) {
         return;
@@ -800,12 +800,12 @@ void Ship::DrawUI() {
 
     const int allocated = 1000;
 
-    UIContextPushScrollInset(0, UIContextCurrent().height, allocated, &ui_scroll);
+    ui::PushScrollInset(0, ui::Current()->height, allocated, &ui_scroll);
 
-    UIContextWrite(name);
+    ui::Write(name);
     _UIDrawStats(this);
     //if (!IsPlayerControlled()) {
-    //    UIContextPop();  // ScrollInset
+    //    ui::Pop();  // ScrollInset
     //    return;
     //}
     _UIDrawInventory(this);
@@ -813,7 +813,7 @@ void Ship::DrawUI() {
     _UIDrawFleet(this);
     _UIDrawQuests(this);
 
-    UIContextPop();  // ScrollInset
+    ui::Pop();  // ScrollInset
 }
 
 void Ship::Inspect() {

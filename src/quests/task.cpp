@@ -70,24 +70,24 @@ ButtonStateFlags::T Task::DrawUI(bool show_as_button, bool highlight) const {
         return ButtonStateFlags::NONE;
     }
 
-    int height = UIContextPushInset(3, TASK_PANEL_HEIGHT);
+    int height = ui::PushInset(3, TASK_PANEL_HEIGHT);
 
     if (height == 0) {
-        UIContextPop();
+        ui::Pop();
         return ButtonStateFlags::NONE;
     }
     if (highlight) {
-        UIContextEnclose(Palette::bg, Palette::ally);
+        ui::Enclose(Palette::bg, Palette::ally);
     } else {
-        UIContextEnclose(Palette::bg, Palette::ui_main);
+        ui::Enclose(Palette::bg, Palette::ui_main);
     }
-    UIContextShrink(6, 6);
-    ButtonStateFlags::T button_state = UIContextAsButton();
+    ui::Shrink(6, 6);
+    ButtonStateFlags::T button_state = ui::AsButton();
     if (show_as_button) {
         HandleButtonSound(button_state & (ButtonStateFlags::JUST_HOVER_IN | ButtonStateFlags::JUST_PRESSED));
     }
     if (height != TASK_PANEL_HEIGHT) {
-        UIContextPop();
+        ui::Pop();
         return button_state & ButtonStateFlags::JUST_PRESSED;
     }
 
@@ -113,8 +113,8 @@ ButtonStateFlags::T Task::DrawUI(bool show_as_button, bool highlight) const {
         sb.Add("Expires in ").AddTime(pickup_expiration_time - GlobalGetNow());
     }
     sb.AddFormat("  => ").AddCost(payout);
-    UIContextWrite(sb.c_str);
+    ui::Write(sb.c_str);
 
-    UIContextPop();
+    ui::Pop();
     return button_state;
 }

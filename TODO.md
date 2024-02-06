@@ -103,7 +103,7 @@ Regardless of implementability
       2D
 - Mesh loading  >> ???
     preview small 3D models for flavor >> partially implemented by raylib
-- global settings (with push_override etc.) / debug console >> known code
+- V global settings (with push_override etc.) / debug console >> known code
 - V Renderlayers?  >> ???
   V Post-processing shader  >> known code + custom bloom
 

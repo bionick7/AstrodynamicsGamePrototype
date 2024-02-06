@@ -629,25 +629,25 @@ void TransferPlanUI::DrawUI() {
     Ship* ship_instance = GetShip(ship);
     
     const int y_margin = 5+50;
-    UIContextCreateNew(
+    ui::CreateNew(
         GetScreenWidth() - 20*16 - 5, y_margin,
         20*16, MinInt(200, GetScreenHeight()) - 2*5 - y_margin, 
         16, Palette::ally
     );
 
-    UIContextCurrent().Enclose(2, 2, Palette::bg, is_valid ? Palette::ally : Palette::red);
+    ui::Current()->Enclose(2, 2, Palette::bg, is_valid ? Palette::ally : Palette::red);
     
     StringBuilder sb = StringBuilder();
     sb.Add("Departs in ").AddTime(plan->departure_time - time_bounds[0]);
     sb.Add("\nArrives in ").AddTime(plan->arrival_time - time_bounds[0]);
     //DebugPrintText("%i", sb.CountLines());
-    UIContextPushInset(0, 18 * sb.CountLines() + 5);
-    UIContextWrite(sb.c_str);
-    UIContextFillline(
+    ui::PushInset(0, 18 * sb.CountLines() + 5);
+    ui::Write(sb.c_str);
+    ui::Fillline(
         fmin(timemath::Time::SecDiff(plan->arrival_time, time_bounds[0]) / timemath::Time::SecDiff(plan->hohmann_arrival_time, time_bounds[0]), 1.0), 
         Palette::ally, Palette::bg
     );
-    UIContextPop();  // Inset
+    ui::Pop();  // Inset
     sb.Clear();
 
     double total_dv = plan->tot_dv;
@@ -666,30 +666,30 @@ void TransferPlanUI::DrawUI() {
         sb.Add("Cannot make transfer");
     }
 
-    UIContextPushInset(0, 18 * sb.CountLines() + 5);
-    UIContextWrite(sb.c_str);
-    UIContextFillline(fmax(0, capacity_ratio), capacity >= 0 ? Palette::ally : Palette::red, Palette::bg);
-    UIContextPop();  // Inset
+    ui::PushInset(0, 18 * sb.CountLines() + 5);
+    ui::Write(sb.c_str);
+    ui::Fillline(fmax(0, capacity_ratio), capacity >= 0 ? Palette::ally : Palette::red, Palette::bg);
+    ui::Pop();  // Inset
 
-    int w = UIContextCurrent().width;
-    UIContextPushInset(0, 20);
+    int w = ui::Current()->width;
+    ui::PushInset(0, 20);
     {
-        UIContextPushHSplit(0, w/3);
-        ButtonStateFlags::T button_state = UIContextAsButton();
+        ui::PushHSplit(0, w/3);
+        ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
-            UIContextEnclose(Palette::bg, Palette::ui_main);
+            ui::Enclose(Palette::bg, Palette::ui_main);
         }
         if(button_state & ButtonStateFlags::JUST_PRESSED) {
             TransferPlanSoonest(plan, ship_instance->GetCapableDV() - 1);
         }
-        UIContextWrite("ASAP");
-        UIContextPop();  // HSplit
+        ui::Write("ASAP");
+        ui::Pop();  // HSplit
     }
     {
-        UIContextPushHSplit(w/3, 2*w/3);
-        ButtonStateFlags::T button_state = UIContextAsButton();
+        ui::PushHSplit(w/3, 2*w/3);
+        ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
-            UIContextEnclose(Palette::bg, Palette::ui_main);
+            ui::Enclose(Palette::bg, Palette::ui_main);
         }
         if(button_state & ButtonStateFlags::JUST_PRESSED) {
             if (is_valid) {
@@ -697,22 +697,22 @@ void TransferPlanUI::DrawUI() {
                 Reset();
             }
         }
-        UIContextWrite("Confirm");
-        UIContextPop();  // HSplit
+        ui::Write("Confirm");
+        ui::Pop();  // HSplit
     }
     {
-        UIContextPushHSplit(2*w/3, w);
-        ButtonStateFlags::T button_state = UIContextAsButton();
+        ui::PushHSplit(2*w/3, w);
+        ButtonStateFlags::T button_state = ui::AsButton();
         if(button_state & ButtonStateFlags::JUST_PRESSED) {
             departure_time_automatic = !departure_time_automatic;
         }
         if (departure_time_automatic || (button_state & ButtonStateFlags::HOVER)) {
-            UIContextEnclose(Palette::bg, Palette::ui_main);
+            ui::Enclose(Palette::bg, Palette::ui_main);
         }
-        UIContextWrite("Lock");
-        UIContextPop();  // HSplit
+        ui::Write("Lock");
+        ui::Pop();  // HSplit
     }
-    UIContextPop();  // Inset
+    ui::Pop();  // Inset
 }
 
 void TransferPlanUI::SetPlan(TransferPlan* pplan, RID pship, timemath::Time pmin_time, timemath::Time pmax_time) {

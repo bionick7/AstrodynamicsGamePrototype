@@ -116,17 +116,17 @@ void PlanetaryEconomy::UIDrawResources(const ResourceTransfer& transfer, double 
         char buffer[50];
         //sprintf(buffer, "%-10s %5d/%5d (%+3d)", GetResourceData(i)->name, qtt, cap, delta);
         sprintf(buffer, "%-10s %3d (%+2d /d)", GetResourceData(i)->name, resource_stock[i], resource_delta[i]);
-        UIContextPushInset(0, 18);
+        ui::PushInset(0, 18);
         if (GetTransferPlanUI()->IsActive()) {
             // Button
-            if (UIContextDirectButton(transfer.resource_id == i ? "X" : " ", 2) & ButtonStateFlags::JUST_PRESSED) {
+            if (ui::DirectButton(transfer.resource_id == i ? "X" : " ", 2) & ButtonStateFlags::JUST_PRESSED) {
                 if (transfer.resource_id == i) 
                     GetTransferPlanUI()->SetResourceType(ResourceType::RESOURCE_NONE);
                 else
                     GetTransferPlanUI()->SetResourceType((ResourceType) i);
             }
         }
-        UIContextWrite(buffer, false);
+        ui::Write(buffer, false);
 
         resource_count_t qtt = 0;
         if (transfer.resource_id == i) {
@@ -137,33 +137,33 @@ void PlanetaryEconomy::UIDrawResources(const ResourceTransfer& transfer, double 
         }
         if (qtt != 0) {
             sprintf(buffer, "   %+3d", qtt);
-            UIContextWrite(buffer, false);
+            ui::Write(buffer, false);
         }
-        UIContextFillline(resource_stock[i] / resource_capacity[i], Palette::ui_main, Palette::bg);
-        UIContextPop();  // Inset
+        ui::Fillline(resource_stock[i] / resource_capacity[i], Palette::ui_main, Palette::bg);
+        ui::Pop();  // Inset
         //TextBoxLineBreak(&tb);
     }
 }
 
 void _UIDrawResourceGrpah(const cost_t price_history[], int resource_index) {
-    TextBox& box = UIContextCurrent();
+    TextBox* box = ui::Current();
     ResourceData& r_data = global_resource_data[resource_index];
     int graph_height =  r_data.max_cost - r_data.min_cost;
 
     int current_graph_x = 0;
     int current_graph_y = price_history[resource_index] - r_data.min_cost;
-    int current_draw_x = box.text_start_x + current_graph_x * box.width / PRICE_TREND_SIZE;
-    int current_draw_y = box.text_start_y + box.height - current_graph_y * box.height / graph_height;
+    int current_draw_x = box->text_start_x + current_graph_x * box->width / PRICE_TREND_SIZE;
+    int current_draw_y = box->text_start_y + box->height - current_graph_y * box->height / graph_height;
     for (int i=1; i < PRICE_TREND_SIZE; i++){
         current_graph_x = i;
         current_graph_y = price_history[i * RESOURCE_MAX + resource_index] - r_data.min_cost;
-        int next_draw_x = box.text_start_x + current_graph_x * box.width / PRICE_TREND_SIZE;
-        int next_draw_y = box.text_start_y + box.height - current_graph_y * box.height / graph_height;
+        int next_draw_x = box->text_start_x + current_graph_x * box->width / PRICE_TREND_SIZE;
+        int next_draw_y = box->text_start_y + box->height - current_graph_y * box->height / graph_height;
         DrawLine(current_draw_x, current_draw_y, next_draw_x, next_draw_y, Palette::ui_main);
         current_draw_x = next_draw_x;
         current_draw_y = next_draw_y;
     }
-    DrawLine(current_draw_x, current_draw_y, box.text_start_x, current_draw_y, Palette::blue);
+    DrawLine(current_draw_x, current_draw_y, box->text_start_x, current_draw_y, Palette::blue);
 }
 
 void PlanetaryEconomy::TryPlayerTransaction(ResourceTransfer rt) {
@@ -183,12 +183,12 @@ void PlanetaryEconomy::UIDrawEconomy(const ResourceTransfer& transfer, double fu
     for (int i=0; i < RESOURCE_MAX; i++) {
         //char buffer[50];
         //sprintf(buffer, "%-10s %5d/%5d (%+3d)", GetResourceData(i)->name, qtt, cap, delta);
-        UIContextPushInset(0, 18);
+        ui::PushInset(0, 18);
         ResourceType resource = (ResourceType) i;
 
         if (GetTransferPlanUI()->IsActive()) {
             // Button
-            if (UIContextDirectButton(transfer.resource_id == i ? "X" : " ", 2) & ButtonStateFlags::JUST_PRESSED) {
+            if (ui::DirectButton(transfer.resource_id == i ? "X" : " ", 2) & ButtonStateFlags::JUST_PRESSED) {
                 GetTransferPlanUI()->SetResourceType(resource);
             }
         }
@@ -196,7 +196,7 @@ void PlanetaryEconomy::UIDrawEconomy(const ResourceTransfer& transfer, double fu
         StringBuilder sb = StringBuilder();
         sb.AddFormat("%-10s", GetResourceData(i)->name).AddCost(resource_price[i]);
         //sprintf(buffer, "%-10sM§M  %+3fK /cnt", GetResourceData(i)->name, resource_price[i]/1e3);
-        UIContextWrite(sb.c_str, false);
+        ui::Write(sb.c_str, false);
 
         resource_count_t qtt = 0;
         if (transfer.resource_id == i) {
@@ -208,23 +208,23 @@ void PlanetaryEconomy::UIDrawEconomy(const ResourceTransfer& transfer, double fu
         if (qtt != 0) {
             sb.Clear().AddI(qtt).Add("(").AddCost(GetPrice(resource, qtt)).Add(")");
             //sprintf(buffer, "   %+3d (M§M %3ld K)", qtt, GetPrice(resource, qtt) / 1000);
-            UIContextWrite(sb.c_str, false);
+            ui::Write(sb.c_str, false);
         }
 
         resource_count_t trade_ammount = 0;
-        if (UIContextDirectButton("+ 10", 0) & ButtonStateFlags::JUST_PRESSED) trade_ammount = 10;
-        if (UIContextDirectButton("+ 1", 0) & ButtonStateFlags::JUST_PRESSED) trade_ammount = 1;
-        if (UIContextDirectButton("- 1", 0) & ButtonStateFlags::JUST_PRESSED) trade_ammount = -1;
-        if (UIContextDirectButton("- 10", 0) & ButtonStateFlags::JUST_PRESSED) trade_ammount = -10;
+        if (ui::DirectButton("+ 10", 0) & ButtonStateFlags::JUST_PRESSED) trade_ammount = 10;
+        if (ui::DirectButton("+ 1", 0) & ButtonStateFlags::JUST_PRESSED) trade_ammount = 1;
+        if (ui::DirectButton("- 1", 0) & ButtonStateFlags::JUST_PRESSED) trade_ammount = -1;
+        if (ui::DirectButton("- 10", 0) & ButtonStateFlags::JUST_PRESSED) trade_ammount = -10;
 
         if (trade_ammount != 0) {
             TryPlayerTransaction({resource, trade_ammount});
         }
             
-        UIContextPop();  // Inset
-        UIContextPushInset(0, 32);
+        ui::Pop();  // Inset
+        ui::PushInset(0, 32);
             _UIDrawResourceGrpah(price_history, i);
-        UIContextPop();  // Inset
+        ui::Pop();  // Inset
         //TextBoxLineBreak(&tb);
     }
 }

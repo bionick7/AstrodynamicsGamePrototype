@@ -166,18 +166,18 @@ const ShipModuleClass* ShipModules::GetModuleByRID(RID index) const {
 
 void ShipModules::DrawShipModule(RID index) const {
     if(!IsIdValid(index)) {  // empty
-        UIContextEnclose(Palette::bg, Palette::ui_dark);
+        ui::Enclose(Palette::bg, Palette::ui_dark);
     } else {  // filled
         const ShipModuleClass* smc = GetModuleByRID(index);
-        UIContextEnclose(Palette::bg, Palette::ui_main);
-        ButtonStateFlags::T button_state = UIContextAsButton();
+        ui::Enclose(Palette::bg, Palette::ui_main);
+        ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
             UISetMouseHint(smc->name);
         }
         if (button_state & ButtonStateFlags::PRESSED) {
             return;
         }
-        UIContextWrite(smc->name);
+        ui::Write(smc->name);
     }
 }
 
@@ -196,9 +196,9 @@ void ShipModules::UpdateDragging() {
         return;
     }
     Vector2 pos = Vector2Add(GetMousePosition(), _dragging_mouse_offset);
-    UIContextPushGlobal(pos.x, pos.y, SHIP_MODULE_WIDTH, SHIP_MODULE_HEIGHT, 16, Palette::ui_main);
+    ui::PushGlobal(pos.x, pos.y, SHIP_MODULE_WIDTH, SHIP_MODULE_HEIGHT, 16, Palette::ui_main);
     DrawShipModule(_dragging);
-    UIContextPop();  // Global
+    ui::Pop();  // Global
 
     ShipModuleSlot release_slot = _dragging_origin;
 

@@ -281,30 +281,30 @@ void Planet::AdvanceModuleProductionQueue() {
 
 void Planet::_UIDrawInventory() {
     const int MARGIN = 3;
-    int columns = UIContextCurrent().width / (SHIP_MODULE_WIDTH + MARGIN);
+    int columns = ui::Current()->width / (SHIP_MODULE_WIDTH + MARGIN);
     int max_rows = (int) std::ceil(MAX_PLANET_INVENTORY / columns);
-    int available_height = UIContextCurrent().height - UIContextCurrent().y_cursor;
+    int available_height = ui::Current()->height - ui::Current()->y_cursor;
     int height = MinInt(available_height, max_rows * (SHIP_MODULE_HEIGHT + MARGIN));
     int rows = height / (SHIP_MODULE_HEIGHT + MARGIN);
     int i_max = MinInt(rows * columns, MAX_PLANET_INVENTORY);
-    UIContextPushInset(0, height);
+    ui::PushInset(0, height);
     
     ShipModules* sms = GetShipModules();
     for (int i = 0; i < i_max; i++) {
         //if (!IsIdValid(ship_module_inventory[i])) continue;
-        UIContextPushGridCell(columns, rows, i % columns, i / columns);
-        UIContextShrink(MARGIN, MARGIN);
-        ButtonStateFlags::T button_state = UIContextAsButton();
+        ui::PushGridCell(columns, rows, i % columns, i / columns);
+        ui::Shrink(MARGIN, MARGIN);
+        ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
             current_slot = ShipModuleSlot(id, i, ShipModuleSlot::DRAGGING_FROM_PLANET);
         }
         if (button_state & ButtonStateFlags::JUST_PRESSED) {
-            sms->InitDragging(current_slot, UIContextCurrent().render_rec);
+            sms->InitDragging(current_slot, ui::Current()->render_rec);
         }
         sms->DrawShipModule(ship_module_inventory[i]);
-        UIContextPop();  // GridCell
+        ui::Pop();  // GridCell
     }
-    UIContextPop();  // Inset
+    ui::Pop();  // Inset
 }
 
 void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_array) {
@@ -341,12 +341,12 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
 
     if (construction_resources == NULL) return;
 
-    sb.AutoBreak(UIContextCurrent().width / char_width);
-    UIContextWrite(sb.c_str);
+    sb.AutoBreak(ui::Current()->width / char_width);
+    ui::Write(sb.c_str);
     if (planet_resource_array == NULL) {
         return;
     }
-    UIContextWrite("++++++++");
+    ui::Write("++++++++");
     for (int i=0; i < RESOURCE_MAX; i++) {
         if (construction_resources[i] == 0) {
             continue;
@@ -354,11 +354,11 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
         sb.Clear();
         sb.AddFormat("%s: %d", resource_names[i], construction_resources[i]);
         if (construction_resources[i] <= planet_resource_array[i]) {
-            UIContextWrite(sb.c_str);
+            ui::Write(sb.c_str);
         } else {
-            UIContextCurrent().text_color = Palette::red;
-            UIContextWrite(sb.c_str);
-            UIContextCurrent().text_color = Palette::ui_main;
+            ui::Current()->text_color = Palette::red;
+            ui::Write(sb.c_str);
+            ui::Current()->text_color = Palette::ui_main;
         }
     }
     sb.Clear();
@@ -366,7 +366,7 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
     if(batch_size > 1) {
         sb.AddFormat(" (x%d)", batch_size);
     }
-    UIContextWrite(sb.c_str);
+    ui::Write(sb.c_str);
 }
 
 void _UIDrawProduction(int option_size, IDList* queue, resource_count_t resources[], double progress,
@@ -375,8 +375,8 @@ void _UIDrawProduction(int option_size, IDList* queue, resource_count_t resource
     // Draw options
     const int COLUMNS = 4;
     int rows = std::ceil(option_size / (double)COLUMNS);
-    UIContextPushInset(0, 50*rows);
-    UIContextShrink(5, 5);
+    ui::PushInset(0, 50*rows);
+    ui::Shrink(5, 5);
 
     RID hovered_id = GetInvalidId();
     for(int i=0; i < option_size; i++) {
@@ -384,63 +384,63 @@ void _UIDrawProduction(int option_size, IDList* queue, resource_count_t resource
         if (!include_getter(id)) {
             continue;
         }
-        UIContextPushGridCell(COLUMNS, rows, i % COLUMNS, i / COLUMNS);
-        UIContextShrink(3, 3);
+        ui::PushGridCell(COLUMNS, rows, i % COLUMNS, i / COLUMNS);
+        ui::Shrink(3, 3);
         
         // Possible since Shipclasses get loaded once in continuous mempry
-        ButtonStateFlags::T button_state = UIContextAsButton();
+        ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
-            UIContextEnclose(Palette::bg, Palette::ui_main);
+            ui::Enclose(Palette::bg, Palette::ui_main);
             hovered_id = id;
         } else {
-            UIContextEnclose(Palette::bg, Palette::blue);
+            ui::Enclose(Palette::bg, Palette::blue);
         }
         HandleButtonSound(button_state);
         if ((button_state & ButtonStateFlags::JUST_PRESSED) && _CanProduce(id, &resources[0])) {
             queue->Append(id);
         }
 
-        UIContextWrite(name_getter(id));
-        //UIContextFillline(1.0, Palette::ui_main, Palette::bg);
-        //UIContextWrite(ship_class->description);
-        UIContextPop();  // GridCell
+        ui::Write(name_getter(id));
+        //ui::Fillline(1.0, Palette::ui_main, Palette::bg);
+        //ui::Write(ship_class->description);
+        ui::Pop();  // GridCell
     }
-    UIContextPop();  // Inset
+    ui::Pop();  // Inset
 
     // Draw queue
     bool hover_over_queue = false;
     for(int i=0; i < queue->size; i++) {
         RID id = queue->Get(i);
-        UIContextPushInset(0, 50);
-        UIContextShrink(3, 3);
-        ButtonStateFlags::T button_state = UIContextAsButton();
+        ui::PushInset(0, 50);
+        ui::Shrink(3, 3);
+        ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
-            UIContextEnclose(Palette::bg, Palette::ui_main);
+            ui::Enclose(Palette::bg, Palette::ui_main);
             hovered_id = id;
             hover_over_queue = true;
         } else {
-            UIContextEnclose(Palette::bg, Palette::blue);
+            ui::Enclose(Palette::bg, Palette::blue);
         }
         if (button_state & ButtonStateFlags::JUST_PRESSED) {
             queue->EraseAt(i);
             i--;
         }
-        UIContextWrite(name_getter(id));
+        ui::Write(name_getter(id));
         if (i == 0) {
-            UIContextFillline(progress, Palette::ui_main, Palette::bg);
+            ui::Fillline(progress, Palette::ui_main, Palette::bg);
         }
         _ProductionQueueMouseHint(id, NULL);
-        UIContextPop();  // Inset
+        ui::Pop();  // Inset
     }
     if (IsIdValid(hovered_id)) {
-        UIContextPushMouseHint(400, 400);
-        UIContextEnclose(Palette::bg, Palette::ui_main);
+        ui::PushMouseHint(400, 400);
+        ui::Enclose(Palette::bg, Palette::ui_main);
         if (hover_over_queue) {
             _ProductionQueueMouseHint(hovered_id, NULL);
         } else {
             _ProductionQueueMouseHint(hovered_id, resources);
         }
-        UIContextPop();
+        ui::Pop();
     }
 }
 
@@ -525,11 +525,11 @@ void Planet::DrawUI() {
         return;
     }
 
-    UIContextCreateNew(10, y_start, 16*30, height, 16, Palette::ui_main);
-    UIContextCurrent().Enclose(2, 2, Palette::bg, Palette::ui_main);
+    ui::CreateNew(10, y_start, 16*30, height, 16, Palette::ui_main);
+    ui::Current()->Enclose(2, 2, Palette::bg, Palette::ui_main);
 
-    UIContextPushInset(4, 20*2);  // Tab container
-    int w = UIContextCurrent().width;
+    ui::PushInset(4, 20*2);  // Tab container
+    int w = ui::Current()->width;
     const int n_tabs = 6;
     const char* tab_descriptions[] = {
         "Resources",
@@ -542,28 +542,28 @@ void Planet::DrawUI() {
     static_assert(sizeof(tab_descriptions) / sizeof(tab_descriptions[0]) == n_tabs);
 
     for (int i=0; i < n_tabs; i++) {
-        UIContextPushGridCell(4, 2, i%4, i/4);
-        //UIContextPushHSplit(i * w / n_tabs, (i + 1) * w / n_tabs);
-        ButtonStateFlags::T button_state = UIContextAsButton();
+        ui::PushGridCell(4, 2, i%4, i/4);
+        //ui::PushHSplit(i * w / n_tabs, (i + 1) * w / n_tabs);
+        ButtonStateFlags::T button_state = ui::AsButton();
         HandleButtonSound(button_state & ButtonStateFlags::JUST_PRESSED);
         if (i == 1 && !economy.trading_accessible) {
-            UIContextWrite("~Economy~");
-            UIContextPop();
+            ui::Write("~Economy~");
+            ui::Pop();
             continue;
         }
         if (button_state & ButtonStateFlags::JUST_PRESSED) {
             current_tab = i;
         }
         if (button_state & ButtonStateFlags::HOVER || i == current_tab) {
-            UIContextEnclose(Palette::bg, Palette::ui_main);
+            ui::Enclose(Palette::bg, Palette::ui_main);
         }
-        UIContextWrite(tab_descriptions[i]);
-        UIContextPop();  // GridCell
+        ui::Write(tab_descriptions[i]);
+        ui::Pop();  // GridCell
     }
-    UIContextPop();  // Tab container
+    ui::Pop();  // Tab container
 
-    UIContextWrite(name);
-    UIContextFillline(1, Palette::ui_main, Palette::ui_main);
+    ui::Write(name);
+    ui::Fillline(1, Palette::ui_main, Palette::ui_main);
     switch (current_tab) {
     case 0:
         economy.UIDrawResources(transfer, fuel_draw);
@@ -585,7 +585,7 @@ void Planet::DrawUI() {
         break;
     }
 
-    UIContextPop();  // Outside
+    ui::Pop();  // Outside
 }
 
 Planets::Planets() {

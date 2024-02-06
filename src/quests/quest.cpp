@@ -104,28 +104,28 @@ void Quest::Deserialize(const DataNode* data) {
 }
 
 ButtonStateFlags::T Quest::DrawUI(bool show_as_button, bool highlight) const {
-    int height = UIContextPushInset(3, QUEST_PANEL_HEIGHT);
+    int height = ui::PushInset(3, QUEST_PANEL_HEIGHT);
 
     if (height == 0) {
-        UIContextPop();
+        ui::Pop();
         return ButtonStateFlags::NONE;
     }
     if (highlight) {
-        UIContextEnclose(Palette::bg, Palette::ally);
+        ui::Enclose(Palette::bg, Palette::ally);
     } else {
-        UIContextEnclose(Palette::bg, Palette::ui_main);
+        ui::Enclose(Palette::bg, Palette::ui_main);
     }
-    UIContextShrink(6, 6);
-    ButtonStateFlags::T button_state = UIContextAsButton();
+    ui::Shrink(6, 6);
+    ButtonStateFlags::T button_state = ui::AsButton();
     if (show_as_button) {
         HandleButtonSound(button_state & (ButtonStateFlags::JUST_HOVER_IN | ButtonStateFlags::JUST_PRESSED));
     }
     if (height != QUEST_PANEL_HEIGHT) {
-        UIContextPop();
+        ui::Pop();
         return button_state & ButtonStateFlags::JUST_PRESSED;
     }
 
-    UIContextPop();
+    ui::Pop();
     return button_state;
 }
 

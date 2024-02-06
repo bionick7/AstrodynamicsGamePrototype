@@ -149,13 +149,12 @@ void TextBox::EnsureLineBreak() {
     line_size_y = 0;
 }
 
-void TextBox::Enclose(int inset_x, int inset_y, Color background_color, Color line_color) {
+void TextBox::Enclose(int inset_x, int inset_y, int corner_radius, Color background_color, Color line_color) {
     Rectangle rect;
     rect.x = text_start_x - inset_x;
     rect.y = text_start_y - inset_y;
     rect.width = width + inset_x*2;
     rect.height = height + inset_y*2;
-    int corner_radius = 0;//inset_x < inset_y ? inset_x : inset_y;
     rect = GetCollisionRec(rect, render_rec);
     DrawRectangleRounded(rect, corner_radius, 16, background_color);
     DrawRectangleRoundedLines(rect, corner_radius, 16, 1, line_color);
@@ -239,230 +238,234 @@ ButtonStateFlags::T TextBox::AsButton() const {
     );
 }
 
-void UIContextPushGlobal(int x, int y, int w, int h, int text_size, Color color) {
+void ui::PushGlobal(int x, int y, int w, int h, int text_size, Color color) {
     TextBox new_text_box = TextBox(x, y, w, h, text_size, color);
     GetUI()->text_box_stack.push(new_text_box);
 }
 
-void UIContextCreateNew(int x, int y, int w, int h, int text_size, Color color) {
+void ui::CreateNew(int x, int y, int w, int h, int text_size, Color color) {
     while (GetUI()->text_box_stack.size() > 0) {
         GetUI()->text_box_stack.pop();
     }
-    UIContextPushGlobal(x, y, w, h, text_size, color);
+    ui::PushGlobal(x, y, w, h, text_size, color);
 }
-void UIContextPushMouseHint(int width, int height) {
+void ui::PushMouseHint(int width, int height) {
     Vector2 m_pos = GetMousePosition();
     int x_pos = m_pos.x;
     int y_pos = m_pos.y;
     if (x_pos > GetScreenWidth() - width) x_pos = GetScreenWidth() - width;
     if (y_pos > GetScreenHeight() - width) y_pos = GetScreenHeight() - height;
 
-    UIContextPushGlobal(x_pos, y_pos, width, height, 16, Palette::ui_main);
+    ui::PushGlobal(x_pos, y_pos, width, height, 16, Palette::ui_main);
 }
 
-int UIContextPushInset(int margin, int h)
+int ui::PushInset(int margin, int h)
 {
     // Returns the actual height
-    TextBox& tb = UIContextCurrent();
-    tb.EnsureLineBreak();
-    int height = fmin(h, fmax(0, tb.height - tb.y_cursor - 2*margin));
+    TextBox* tb = ui::Current();
+    tb->EnsureLineBreak();
+    int height = fmin(h, fmax(0, tb->height - tb->y_cursor - 2*margin));
     TextBox new_text_box = TextBox(
-        tb.text_start_x + tb.x_cursor + margin,
-        tb.text_start_y + tb.y_cursor + margin,
-        tb.width - tb.x_cursor - 2*margin,
+        tb->text_start_x + tb->x_cursor + margin,
+        tb->text_start_y + tb->y_cursor + margin,
+        tb->width - tb->x_cursor - 2*margin,
         height,
-        tb.text_size,
-        tb.text_color
+        tb->text_size,
+        tb->text_color
     );
-    new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb.render_rec);
+    new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb->render_rec);
 
-    tb.y_cursor += h + 2*margin;
+    tb->y_cursor += h + 2*margin;
     GetUI()->text_box_stack.push(new_text_box);
     return height;
 }
 
-int UIContextPushScrollInset(int margin, int h, int allocated_height, int* scroll) {
+int ui::PushScrollInset(int margin, int h, int allocated_height, int* scroll) {
     // Returns the actual height
     int buildin_scrollbar_margin = 3;
     int buildin_scrollbar_width = 6;
 
-    if (UIContextAsButton() & ButtonStateFlags::HOVER) {
-        int max_scroll = MaxInt(allocated_height - UIContextCurrent().height, 0);
+    if (ui::AsButton() & ButtonStateFlags::HOVER) {
+        int max_scroll = MaxInt(allocated_height - ui::Current()->height, 0);
         *scroll = ClampInt(*scroll - GetMouseWheelMove() * 20, 0, max_scroll);
         GetUI()->scroll_lock = true;
     }
 
-    TextBox& tb = UIContextCurrent();
-    tb.EnsureLineBreak();
-    int height = fmin(h, fmax(0, tb.height - tb.y_cursor - 2*margin));
+    TextBox* tb = ui::Current();
+    tb->EnsureLineBreak();
+    int height = fmin(h, fmax(0, tb->height - tb->y_cursor - 2*margin));
     float scroll_progress = Clamp((float)(*scroll) / (allocated_height - h), 0, 1);
     int scrollbar_height = h * h / allocated_height;
     if (allocated_height > h) {
         DrawRectangleRounded({
-            (float) tb.text_start_x + tb.width - buildin_scrollbar_margin,
-            (float) tb.text_start_y + scroll_progress * (h - scrollbar_height),
+            (float) tb->text_start_x + tb->width - buildin_scrollbar_margin,
+            (float) tb->text_start_y + scroll_progress * (h - scrollbar_height),
             (float) buildin_scrollbar_width,
             (float) scrollbar_height},
             buildin_scrollbar_width/2,
-            4, tb.text_color
+            4, tb->text_color
         );
     } else {
         buildin_scrollbar_margin = 0;
         buildin_scrollbar_width = 0;
     }
     TextBox new_text_box = TextBox(
-        tb.text_start_x + tb.x_cursor + margin,
-        tb.text_start_y + tb.y_cursor + margin - *scroll,
-        tb.width - tb.x_cursor - 2*margin - 2*buildin_scrollbar_margin - buildin_scrollbar_width,
+        tb->text_start_x + tb->x_cursor + margin,
+        tb->text_start_y + tb->y_cursor + margin - *scroll,
+        tb->width - tb->x_cursor - 2*margin - 2*buildin_scrollbar_margin - buildin_scrollbar_width,
         allocated_height,
-        tb.text_size,
-        tb.text_color
+        tb->text_size,
+        tb->text_color
     );
-    new_text_box.render_rec.y = tb.text_start_y + tb.y_cursor + margin;
+    new_text_box.render_rec.y = tb->text_start_y + tb->y_cursor + margin;
     new_text_box.render_rec.height = height;
 
-    tb.y_cursor += h + 2*margin;
+    tb->y_cursor += h + 2*margin;
     GetUI()->text_box_stack.push(new_text_box);
     return height;
 }
 
-void UIContextPushInline(int margin) {
-    TextBox& tb = UIContextCurrent();
+void ui::PushInline(int margin) {
+    TextBox* tb = ui::Current();
     TextBox new_text_box = TextBox(
-        tb.text_start_x + tb.x_cursor + margin,
-        tb.text_start_y,
-        tb.width - tb.x_cursor - 2*margin,
-        tb.height,
-        tb.text_size,
-        tb.text_color
+        tb->text_start_x + tb->x_cursor + margin,
+        tb->text_start_y,
+        tb->width - tb->x_cursor - 2*margin,
+        tb->height,
+        tb->text_size,
+        tb->text_color
     );
-    new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb.render_rec);
+    new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb->render_rec);
 
-    tb.x_cursor = tb.width;
+    tb->x_cursor = tb->width;
     GetUI()->text_box_stack.push(new_text_box);
 }
 
-void UIContextPushAligned(int width, int height, TextAlignment::T alignment) {
-    TextBox& tb = UIContextCurrent();
-    tb.EnsureLineBreak();
+void ui::PushAligned(int width, int height, TextAlignment::T alignment) {
+    TextBox* tb = ui::Current();
+    tb->EnsureLineBreak();
 
-    int x = tb.text_start_x;
-    int y = tb.text_start_y;
+    int x = tb->text_start_x;
+    int y = tb->text_start_y;
     if (alignment & TextAlignment::HCENTER) {
-        x += (tb.width - width) / 2;
+        x += (tb->width - width) / 2;
     } else if (alignment & TextAlignment::RIGHT) {
-        x += tb.width - width;
+        x += tb->width - width;
     } else {  // left - aligned
         // Do nothing
     }
     if (alignment & TextAlignment::VCENTER) {
-        y += (tb.height - height) / 2;
+        y += (tb->height - height) / 2;
     } else if (alignment & TextAlignment::BOTTOM) {
-        y += (tb.height - height);
+        y += (tb->height - height);
     } else {  // top - aligned
         // Do nothing
     }
 
     TextBox new_text_box = TextBox(
         x, y, width, height,
-        tb.text_size,
-        tb.text_color
+        tb->text_size,
+        tb->text_color
     );
 
-    new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb.render_rec);
+    new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb->render_rec);
     GetUI()->text_box_stack.push(new_text_box);
 }
 
-void UIContextPushHSplit(int x_start, int x_end) {
-    TextBox& tb = UIContextCurrent();
-    if (x_start < 0) x_start += tb.width;
-    if (x_end < 0) x_end += tb.width;
+void ui::PushHSplit(int x_start, int x_end) {
+    TextBox* tb = ui::Current();
+    if (x_start < 0) x_start += tb->width;
+    if (x_end < 0) x_end += tb->width;
     TextBox new_text_box = TextBox(
-        tb.text_start_x + x_start,
-        tb.text_start_y,
+        tb->text_start_x + x_start,
+        tb->text_start_y,
         x_end - x_start,
-        tb.height,
-        tb.text_size,
-        tb.text_color
+        tb->height,
+        tb->text_size,
+        tb->text_color
     );
-    new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb.render_rec);
+    new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb->render_rec);
 
     GetUI()->text_box_stack.push(new_text_box);
 }
 
-void UIContextPushGridCell(int columns, int rows, int column, int row) {
-    TextBox& tb = UIContextCurrent();
+void ui::PushGridCell(int columns, int rows, int column, int row) {
+    TextBox* tb = ui::Current();
     TextBox new_text_box = TextBox(
-        tb.text_start_x + column * tb.width / columns,
-        tb.text_start_y + row * tb.height / rows,
-        tb.width / columns,
-        tb.height / rows,
-        tb.text_size,
-        tb.text_color
+        tb->text_start_x + column * tb->width / columns,
+        tb->text_start_y + row * tb->height / rows,
+        tb->width / columns,
+        tb->height / rows,
+        tb->text_size,
+        tb->text_color
     );
-    new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb.render_rec);
+    new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb->render_rec);
 
     GetUI()->text_box_stack.push(new_text_box);
 }
 
-ButtonStateFlags::T UIContextAsButton() {
-    return UIContextCurrent().AsButton();
+ButtonStateFlags::T ui::AsButton() {
+    return ui::Current()->AsButton();
 }
 
-void UIContextPop() {
+void ui::Pop() {
     GetUI()->text_box_stack.pop();
 }
 
-Vector2 UIContextGetRelMousePos() {
+Vector2 ui::GetRelMousePos() {
     return {
-        GetMousePosition().x - UIContextCurrent().text_start_x,
-        GetMousePosition().y - UIContextCurrent().text_start_y
+        GetMousePosition().x - ui::Current()->text_start_x,
+        GetMousePosition().y - ui::Current()->text_start_y
     };
 }
 
-void UIContextShrink(int dx, int dy) {
-    UIContextCurrent().text_start_x += dx;
-    UIContextCurrent().text_start_y += dy;
-    UIContextCurrent().width -= 2*dx;
-    UIContextCurrent().height -= 2*dy;
+void ui::Shrink(int dx, int dy) {
+    ui::Current()->text_start_x += dx;
+    ui::Current()->text_start_y += dy;
+    ui::Current()->width -= 2*dx;
+    ui::Current()->height -= 2*dy;
 }
 
-void UIContextEnclose(Color background_color, Color line_color) {
-    UIContextCurrent().Enclose(1, 1, background_color, line_color);
+void ui::Enclose(Color background_color, Color line_color) {
+    ui::Current()->Enclose(1, 1, 0, background_color, line_color);
 }
 
-void UIContextWrite(const char* text, bool linebreak) {
-    TextBox& tb = UIContextCurrent();
+void ui::EncloseEx(Color background_color, Color line_color, int corner_radius) {
+    ui::Current()->Enclose(1, 1, corner_radius, background_color, line_color);
+}
+
+void ui::Write(const char* text, bool linebreak) {
+    TextBox* tb = ui::Current();
     if (linebreak) {
-        tb.WriteLine(text);
+        tb->WriteLine(text);
     } else {
-        tb.Write(text);
+        tb->Write(text);
     }
 }
 
-void UIContextFillline(double value, Color fill_color, Color background_color) {
-    TextBox& tb = UIContextCurrent();
-    int y_end = tb.text_start_y + tb.y_cursor;
-    if (y_end > tb.render_rec.y + tb.render_rec.height || y_end < tb.render_rec.y)
+void ui::Fillline(double value, Color fill_color, Color background_color) {
+    TextBox* tb = ui::Current();
+    int y_end = tb->text_start_y + tb->y_cursor;
+    if (y_end > tb->render_rec.y + tb->render_rec.height || y_end < tb->render_rec.y)
         return;
     
-    int x_start = ClampInt(tb.text_start_x, tb.render_rec.x, tb.render_rec.x + tb.render_rec.width);
-    int x_end = ClampInt(tb.text_start_x + tb.width, tb.render_rec.x, tb.render_rec.x + tb.render_rec.width);
-    int x_mid_point = ClampInt(tb.text_start_x + tb.width * value, tb.render_rec.x, tb.render_rec.x + tb.render_rec.width);
+    int x_start = ClampInt(tb->text_start_x, tb->render_rec.x, tb->render_rec.x + tb->render_rec.width);
+    int x_end = ClampInt(tb->text_start_x + tb->width, tb->render_rec.x, tb->render_rec.x + tb->render_rec.width);
+    int x_mid_point = ClampInt(tb->text_start_x + tb->width * value, tb->render_rec.x, tb->render_rec.x + tb->render_rec.width);
     DrawLine(x_start, y_end, x_end, y_end, background_color);
     DrawLine(x_start, y_end, x_mid_point, y_end, fill_color);
     DrawLine(x_mid_point, y_end, x_mid_point, y_end - 4, fill_color);
 }
 
-ButtonStateFlags::T UIContextDirectButton(const char* text, int inset) {
-    TextBox& tb = UIContextCurrent();
-    ButtonStateFlags::T button_state = tb.WriteButton(text, inset);
+ButtonStateFlags::T ui::DirectButton(const char* text, int inset) {
+    TextBox* tb = ui::Current();
+    ButtonStateFlags::T button_state = tb->WriteButton(text, inset);
     HandleButtonSound(button_state);
     return button_state;
 }
 
-TextBox& UIContextCurrent() {
-    return GetUI()->text_box_stack.top();
+TextBox* ui::Current() {
+    return &GetUI()->text_box_stack.top();
 }
 
 void UISetMouseHint(const char* text) {

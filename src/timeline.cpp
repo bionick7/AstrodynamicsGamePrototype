@@ -201,18 +201,18 @@ void _DrawQuests(TimeLineCoordinateData* tcd, QuestManager* qm) {
         }
     }
     if (closest_mouse_dist < 15) {
-        UIContextPushAligned(400, 100, TextAlignment::TOP | TextAlignment::RIGHT);
+        ui::PushAligned(400, 100, TextAlignment::TOP | TextAlignment::RIGHT);
         if (closest_mouse_dist_quest_is_active) {
             qm->active_tasks.Get(closest_mouse_dist_quest)->DrawUI(false, false);
         } else {
             qm->available_quests.Get(closest_mouse_dist_quest)->DrawUI(false, false);
-            UIContextWrite("Press enter to accept quest", true);
+            ui::Write("Press enter to accept quest", true);
             if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_ENTER)) {
                 HandleButtonSound(ButtonStateFlags::JUST_PRESSED);
                 qm->AcceptQuest(closest_mouse_dist_quest);
             }
         }
-        UIContextPop();
+        ui::Pop();
     }
 }
 
@@ -296,15 +296,15 @@ void DrawTimeline() {
 
     // Create UI Context
     GlobalState* gs = GetGlobalState();
-    UIContextCreateNew(20, 100, GetScreenWidth() - 40, GetScreenHeight() - 100, 16, Palette::ui_main);
-    UIContextEnclose(Palette::bg, Palette::ui_main);
+    ui::CreateNew(20, 100, GetScreenWidth() - 40, GetScreenHeight() - 100, 16, Palette::ui_main);
+    ui::Enclose(Palette::bg, Palette::ui_main);
 
     // Initiualize Common Data Structure
     TimeLineCoordinateData tcd = TimeLineCoordinateData();
-    tcd.x0 = UIContextCurrent().text_start_x;
-    tcd.y0 = UIContextCurrent().text_start_y;
-    tcd.w  = UIContextCurrent().width;
-    tcd.h  = UIContextCurrent().height;
+    tcd.x0 = ui::Current()->text_start_x;
+    tcd.y0 = ui::Current()->text_start_y;
+    tcd.w  = ui::Current()->width;
+    tcd.h  = ui::Current()->height;
     tcd.planet_coords = new int[gs->planets.planet_count];
 
     // Scrolling
@@ -324,5 +324,5 @@ void DrawTimeline() {
 
     delete[] tcd.planet_coords;
 
-    UIContextPop();  // Timieline
+    ui::Pop();  // Timieline
 }
