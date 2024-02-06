@@ -196,7 +196,7 @@ void ShipModules::UpdateDragging() {
         return;
     }
     Vector2 pos = Vector2Add(GetMousePosition(), _dragging_mouse_offset);
-    ui::PushGlobal(pos.x, pos.y, SHIP_MODULE_WIDTH, SHIP_MODULE_HEIGHT, 16, Palette::ui_main);
+    ui::PushGlobal(pos.x, pos.y, SHIP_MODULE_WIDTH, SHIP_MODULE_HEIGHT, DEFAULT_FONT_SIZE, Palette::ui_main);
     DrawShipModule(_dragging);
     ui::Pop();  // Global
 

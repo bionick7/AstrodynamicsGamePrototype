@@ -116,7 +116,7 @@ void PlanetaryEconomy::UIDrawResources(const ResourceTransfer& transfer, double 
         char buffer[50];
         //sprintf(buffer, "%-10s %5d/%5d (%+3d)", GetResourceData(i)->name, qtt, cap, delta);
         sprintf(buffer, "%-10s %3d (%+2d /d)", GetResourceData(i)->name, resource_stock[i], resource_delta[i]);
-        ui::PushInset(0, 18);
+        ui::PushInset(0, DEFAULT_FONT_SIZE+4);
         if (GetTransferPlanUI()->IsActive()) {
             // Button
             if (ui::DirectButton(transfer.resource_id == i ? "X" : " ", 2) & ButtonStateFlags::JUST_PRESSED) {
@@ -183,7 +183,7 @@ void PlanetaryEconomy::UIDrawEconomy(const ResourceTransfer& transfer, double fu
     for (int i=0; i < RESOURCE_MAX; i++) {
         //char buffer[50];
         //sprintf(buffer, "%-10s %5d/%5d (%+3d)", GetResourceData(i)->name, qtt, cap, delta);
-        ui::PushInset(0, 18);
+        ui::PushInset(0, DEFAULT_FONT_SIZE+4);
         ResourceType resource = (ResourceType) i;
 
         if (GetTransferPlanUI()->IsActive()) {
@@ -207,7 +207,6 @@ void PlanetaryEconomy::UIDrawEconomy(const ResourceTransfer& transfer, double fu
         }
         if (qtt != 0) {
             sb.Clear().AddI(qtt).Add("(").AddCost(GetPrice(resource, qtt)).Add(")");
-            //sprintf(buffer, "   %+3d (M§M %3ld K)", qtt, GetPrice(resource, qtt) / 1000);
             ui::Write(sb.c_str, false);
         }
 

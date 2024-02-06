@@ -5,6 +5,8 @@
 #include "id_allocator.hpp"
 #include <stack>
 
+#define DEFAULT_FONT_SIZE 20
+
 static inline Vector2 GetScreenCenter() { return {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f}; }
 
 namespace TextAlignment {
@@ -31,6 +33,14 @@ namespace ButtonStateFlags {
     const static T JUST_HOVER_IN   = 0x20;
     const static T JUST_HOVER_OUT  = 0x40;
 };
+
+namespace Direction {
+    typedef uint8_t T;
+    const static T TOP   = 0x00;
+    const static T DOWN  = 0x01;
+    const static T LEFT  = 0x02;
+    const static T RIGHT = 0x04;
+}
 
 ButtonStateFlags::T GetButtonState(bool is_in_area, bool was_in_area);
 
@@ -61,7 +71,9 @@ struct TextBox {
     TextBox(int x, int y, int w, int h, int text_size, Color color);
     void LineBreak();
     void EnsureLineBreak();
-    void Enclose(int inset_x, int inset_y, int corner_radius, Color background_color, Color line_color);
+    void Enclose(int inset, int corner_radius, Color background_color, Color line_color);
+    void EnclosePartial(int inset, Color background_color, Color line_color, Direction::T directions);
+    void Shrink(int dx, int dy);
     void Write(const char* text);
     void WriteLine(const char* text);
     void DebugDrawRenderRec() const;
@@ -73,11 +85,13 @@ private:
     void _Advance(Vector2 size);
 };
 
-struct ImageAtlas {
-    int rows;
-    int columns;
+struct AtlasPos {
+    int x, y;
+    int size;
 
-    Texture2D texture;
+    AtlasPos() = default;
+    AtlasPos(int x, int y, int size);
+    Rectangle GetRect() const;
 };
 
 struct UIGlobals {
@@ -106,24 +120,22 @@ namespace ui {
 
     ButtonStateFlags::T AsButton();
     void Enclose(Color background_color, Color line_color);
-    void EncloseEx(Color background_color, Color line_color, int corner_radius);
+    void EncloseEx(int shrink, Color background_color, Color line_color, int corner_radius);
+    void EnclosePartial(int inset, Color background_color, Color line_color, Direction::T directions);
     void Shrink(int dx, int dy);
 
     void Write(const char* text, bool linebreak=true);
-    void DrawIcon(AtlasPos pos, int size);
-    void DrawIconInline(AtlasPos pos);
     void Fillline(double value, Color fill_color, Color background_color);
     ButtonStateFlags::T DirectButton(const char* text, int inset);
 
     Vector2 GetRelMousePos();
     TextBox* Current();
 }
-    
+
 void HandleButtonSound(ButtonStateFlags::T button_state_flags);
 
 Font GetCustomDefaultFont();
 void UISetMouseHint(const char* text);
-
 
 ButtonStateFlags::T DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color);
 ButtonStateFlags::T DrawCircleButton(Vector2 midpoint, double radius, Color color);

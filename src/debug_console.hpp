@@ -16,12 +16,16 @@ struct Setting {
     Setting(const char* name, const char* value);
 
     const char* Get();
+    bool GetAsBool();
+    double GetAsDouble();
     void Set(const char* value);
     void PushOverride(const char* value);
     void PopOverride();
 };
 
 Setting* GetSetting(const char* key);
-const char* GetSettingValue(const char* key, const char* default_);
+const char* GetSettingStr(const char* key, const char* default_);
+bool GetSettingBool(const char* key, bool default_);
+double GetSettingNum(const char* key, double default_);
 
 #endif  // DEBUG_CONSOLE_H

@@ -24,14 +24,7 @@ void RenderRings(DVector3 normal, double min_rad, double max_rad, Color color);
 void RenderSkyBox();
 void RenderDeferred(RenderTexture render_target);
 
-struct AtlasPos {
-    int x, y;
-    int size;
-
-    AtlasPos() = default;
-    AtlasPos(int x, int y, int size);
-    Rectangle GetRect() const;
-};
+struct AtlasPos;
 
 #define RELOAD_IF_NECAISSARY(shader_name) if (!IsShaderReady(shader_name::shader)) { shader_name::Load(); }
 #define LOAD_SHADER(shader_name) shader_name::shader = LoadShader("resources/shaders/"#shader_name".vs", "resources/shaders/"#shader_name".fs");

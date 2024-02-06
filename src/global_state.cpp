@@ -15,7 +15,7 @@ void GlobalState::_InspectState() {
 }
 
 bool _PauseMenuButton(const char* label) {
-    ui::PushInset(0, 20);
+    ui::PushInset(0, DEFAULT_FONT_SIZE+4);
     ui::Enclose(Palette::bg, Palette::ui_main);
     ui::Write(label);
     ButtonStateFlags::T button_state = ui::AsButton();
@@ -27,14 +27,14 @@ bool _PauseMenuButton(const char* label) {
 bool is_in_pause_menu;
 void _PauseMenu() {
     const int menu_width = 200;
-    const int button_height = 20;
+    const int button_height = DEFAULT_FONT_SIZE+4;
     const int menu_height = button_height * 3;
     ui::CreateNew(
         (GetScreenWidth() - menu_width)/2, 
         (GetScreenHeight() - menu_height)/2, 
         menu_width,
         menu_height,
-        16,
+        DEFAULT_FONT_SIZE,
         Palette::ui_main
     );
     ui::Enclose(Palette::bg, Palette::ui_main);

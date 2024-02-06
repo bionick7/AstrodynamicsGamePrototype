@@ -6,6 +6,7 @@
 #include "debug_drawing.hpp"
 #include "constants.hpp"
 #include "utils.hpp"
+#include "ui.hpp"
 
 #include "rlgl.h"
 

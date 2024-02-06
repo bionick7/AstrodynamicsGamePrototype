@@ -107,7 +107,7 @@ void QuestManager::Draw() {
     int y_margin = MinInt(50, GetScreenWidth()*.1);
     int w = GetScreenWidth() - x_margin*2;
     int h = GetScreenHeight() - y_margin*2;
-    ui::CreateNew(x_margin, y_margin, w, h, 16, Palette::ui_main);
+    ui::CreateNew(x_margin, y_margin, w, h, DEFAULT_FONT_SIZE, Palette::ui_main);
     ui::Enclose(Palette::bg, Palette::ui_main);
 
     // TABS
@@ -261,7 +261,7 @@ void QuestManager::TaskArrivedAt(RID task_index, RID planet_index) {
 
 void QuestManager::CompleteTask(RID task_index) {
     Task* q = active_tasks[task_index];
-    INFO("Task completed (M§M %f)", q->payout)
+    INFO("Task completed (M$M %f)", q->payout)
     active_quests[q->quest]->CompleteTask(true);
     active_tasks.Erase(task_index);
 }

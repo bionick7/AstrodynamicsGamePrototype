@@ -592,11 +592,7 @@ void TransferPlanUI::Draw3D() {
     }
 }
 
-void TransferPlanUI::DrawUI() {
-    if (!IsActive()) {
-        return;
-    }
-
+void TransferPlanUI::Draw3DGizmos() {
     // Gizmos
     
     const Planet* from = GetPlanet(plan->departure_planet);
@@ -623,6 +619,12 @@ void TransferPlanUI::DrawUI() {
         plan->arrival_time = new_arrival_time;
         redraw_queued = true;
     }
+}
+
+void TransferPlanUI::DrawUI() {
+    if (!IsActive()) {
+        return;
+    }
 
     // Panel
     
@@ -630,18 +632,18 @@ void TransferPlanUI::DrawUI() {
     
     const int y_margin = 5+50;
     ui::CreateNew(
-        GetScreenWidth() - 20*16 - 5, y_margin,
-        20*16, MinInt(200, GetScreenHeight()) - 2*5 - y_margin, 
-        16, Palette::ally
+        GetScreenWidth() - 20*DEFAULT_FONT_SIZE - 5, y_margin,
+        20*DEFAULT_FONT_SIZE, MinInt(200, GetScreenHeight()) - 2*5 - y_margin, 
+        DEFAULT_FONT_SIZE, Palette::ally
     );
 
-    ui::Current()->Enclose(2, 2, Palette::bg, is_valid ? Palette::ally : Palette::red);
+    ui::Enclose(Palette::bg, is_valid ? Palette::ally : Palette::red);
     
     StringBuilder sb = StringBuilder();
     sb.Add("Departs in ").AddTime(plan->departure_time - time_bounds[0]);
     sb.Add("\nArrives in ").AddTime(plan->arrival_time - time_bounds[0]);
     //DebugPrintText("%i", sb.CountLines());
-    ui::PushInset(0, 18 * sb.CountLines() + 5);
+    ui::PushInset(0, (DEFAULT_FONT_SIZE+4) * sb.CountLines() + 5);
     ui::Write(sb.c_str);
     ui::Fillline(
         fmin(timemath::Time::SecDiff(plan->arrival_time, time_bounds[0]) / timemath::Time::SecDiff(plan->hohmann_arrival_time, time_bounds[0]), 1.0), 
@@ -651,7 +653,7 @@ void TransferPlanUI::DrawUI() {
     sb.Clear();
 
     double total_dv = plan->tot_dv;
-    sb.AddFormat("DV Tot    %5.3f km/s\n", total_dv/1000.0);
+    sb.AddFormat("\u0394V Tot    %5.3f km/s\n", total_dv/1000.0);
     double savings = plan->dv1[plan->primary_solution] + plan->dv2[plan->primary_solution] - total_dv;
     if (savings != 0) {
         sb.AddFormat("  Saved   %5.3f km/s\n", savings/1000.0);
@@ -666,7 +668,7 @@ void TransferPlanUI::DrawUI() {
         sb.Add("Cannot make transfer");
     }
 
-    ui::PushInset(0, 18 * sb.CountLines() + 5);
+    ui::PushInset(0, (DEFAULT_FONT_SIZE+4) * sb.CountLines() + 5);
     ui::Write(sb.c_str);
     ui::Fillline(fmax(0, capacity_ratio), capacity >= 0 ? Palette::ally : Palette::red, Palette::bg);
     ui::Pop();  // Inset

@@ -146,7 +146,7 @@ void BattleLog::DrawUI() {
     int height = 800;
     if (GetScreenWidth() - 2 * 50 < width) width = GetScreenWidth() - 2 * 50;
     if (GetScreenHeight() - 2 * 50 < height) height = GetScreenHeight() - 2 * 50;
-    ui::CreateNew((GetScreenWidth() - width) / 2, (GetScreenHeight() - height) / 2, width, height, 16, Palette::ui_main);
+    ui::CreateNew((GetScreenWidth() - width) / 2, (GetScreenHeight() - height) / 2, width, height, DEFAULT_FONT_SIZE, Palette::ui_main);
     ui::Enclose(Palette::bg, Palette::ui_main);
     ui::Write(log.c_str);
 }

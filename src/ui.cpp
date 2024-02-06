@@ -4,6 +4,8 @@
 #include "audio_server.hpp"
 #include "global_state.hpp"
 #include "utils.hpp"
+#include "debug_console.hpp"
+#include "debug_drawing.hpp"
 
 // Copy of raylib's DrawTextEx(), but will not draw over a certain rectangle
 void DrawTextConstrained(Font font, const char *text, Vector2 position, float fontSize, float spacing, Color tint, Rectangle render_rect) {
@@ -72,10 +74,10 @@ Vector2 ApplyAlignment(Vector2 pos, Vector2 size, TextAlignment::T alignment) {
 }
 
 Rectangle DrawTextAligned(const char* text, Vector2 pos, TextAlignment::T alignment, Color c) {
-    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, 16, 1);
+    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, DEFAULT_FONT_SIZE, 1);
     pos = ApplyAlignment(pos, size, alignment);
     //Vector2 bottom_left = Vector2Subtract(pos, Vector2Scale(size, 0.5));
-    DrawTextEx(GetCustomDefaultFont(), text, pos, 16, 1, c);
+    DrawTextEx(GetCustomDefaultFont(), text, pos, DEFAULT_FONT_SIZE, 1, c);
     return { pos.x, pos.y, size.x, size.y };
 }
 
@@ -149,15 +151,50 @@ void TextBox::EnsureLineBreak() {
     line_size_y = 0;
 }
 
-void TextBox::Enclose(int inset_x, int inset_y, int corner_radius, Color background_color, Color line_color) {
+void TextBox::Enclose(int inset, int corner_radius, Color background_color, Color line_color) {
     Rectangle rect;
-    rect.x = text_start_x - inset_x;
-    rect.y = text_start_y - inset_y;
-    rect.width = width + inset_x*2;
-    rect.height = height + inset_y*2;
+    rect.x = text_start_x;
+    rect.y = text_start_y;
+    rect.width = width;
+    rect.height = height;
+
+    float roundness = corner_radius * 2.0f / fmin(rect.width, rect.height);
     rect = GetCollisionRec(rect, render_rec);
-    DrawRectangleRounded(rect, corner_radius, 16, background_color);
-    DrawRectangleRoundedLines(rect, corner_radius, 16, 1, line_color);
+    DrawRectangleRounded(rect, roundness, 16, background_color);
+    DrawRectangleRoundedLines(rect, roundness, 16, 1, line_color);
+    Shrink(inset, inset);
+}
+
+void TextBox::EnclosePartial(int inset, Color background_color, Color line_color, Direction::T directions) {
+    Rectangle rect;
+    rect.x = text_start_x;
+    rect.y = text_start_y;
+    rect.width = width;
+    rect.height = height;
+
+    DrawRectangleRounded(rect, 0, 1, background_color);
+    if (directions & Direction::TOP) {
+        DrawLine(rect.x, rect.y, rect.x + width, rect.y, line_color);
+    }
+    if (directions & Direction::DOWN) {
+        DrawLine(rect.x, rect.y + rect.height, rect.x + width, rect.y + rect.height, line_color);
+    }
+    if (directions & Direction::LEFT) {
+        DrawLine(rect.x, rect.y, rect.x, rect.y + rect.height, line_color);
+    }
+    if (directions & Direction::RIGHT) {
+        DrawLine(rect.x + width, rect.y, rect.x + width, rect.y + rect.height, line_color);
+    }
+
+    rect = GetCollisionRec(rect, render_rec);
+    Shrink(inset, inset);
+}
+
+void TextBox::Shrink(int dx, int dy) {
+    text_start_x += dx;
+    text_start_y += dy;
+    width -= 2*dx;
+    height -= 2*dy;
 }
 
 void TextBox::DebugDrawRenderRec() const {
@@ -184,6 +221,10 @@ void TextBox::Write(const char* text) {
         DrawRectangleV(pos, size, text_background);
     }
     DrawTextConstrained(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec);
+    //DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color);
+    if (GetSettingBool("text_boundrects", false)) {
+        DrawRectangleLines(pos.x, pos.y, size.x, size.y, GREEN);
+    }
     _Advance(size);
 }
 
@@ -200,6 +241,10 @@ void TextBox::WriteLine(const char* text) {
         DrawRectangleV(pos, size, text_background);
     }
     DrawTextConstrained(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec);
+    //DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color);
+    if (GetSettingBool("text_boundrects", false)) {
+        DrawRectangleLines(pos.x, pos.y, size.x, size.y, GREEN);
+    }
     _Advance(size);
     LineBreak();
 }
@@ -256,7 +301,7 @@ void ui::PushMouseHint(int width, int height) {
     if (x_pos > GetScreenWidth() - width) x_pos = GetScreenWidth() - width;
     if (y_pos > GetScreenHeight() - width) y_pos = GetScreenHeight() - height;
 
-    ui::PushGlobal(x_pos, y_pos, width, height, 16, Palette::ui_main);
+    ui::PushGlobal(x_pos, y_pos, width, height, DEFAULT_FONT_SIZE, Palette::ui_main);
 }
 
 int ui::PushInset(int margin, int h)
@@ -303,7 +348,7 @@ int ui::PushScrollInset(int margin, int h, int allocated_height, int* scroll) {
             (float) buildin_scrollbar_width,
             (float) scrollbar_height},
             buildin_scrollbar_width/2,
-            4, tb->text_color
+            1, tb->text_color
         );
     } else {
         buildin_scrollbar_margin = 0;
@@ -420,18 +465,19 @@ Vector2 ui::GetRelMousePos() {
 }
 
 void ui::Shrink(int dx, int dy) {
-    ui::Current()->text_start_x += dx;
-    ui::Current()->text_start_y += dy;
-    ui::Current()->width -= 2*dx;
-    ui::Current()->height -= 2*dy;
+    ui::Current()->Shrink(dx, dy);
 }
 
 void ui::Enclose(Color background_color, Color line_color) {
-    ui::Current()->Enclose(1, 1, 0, background_color, line_color);
+    ui::Current()->Enclose(4, 4, background_color, line_color);
 }
 
-void ui::EncloseEx(Color background_color, Color line_color, int corner_radius) {
-    ui::Current()->Enclose(1, 1, corner_radius, background_color, line_color);
+void ui::EncloseEx(int shrink, Color background_color, Color line_color, int corner_radius) {
+    ui::Current()->Enclose(shrink, corner_radius, background_color, line_color);
+}
+
+void ui::EnclosePartial(int inset, Color background_color, Color line_color, Direction::T directions) {
+    ui::Current()->EnclosePartial(inset, background_color, line_color, directions);
 }
 
 void ui::Write(const char* text, bool linebreak) {
@@ -473,18 +519,15 @@ void UISetMouseHint(const char* text) {
 }
 
 void UIGlobals::UIInit() {
-    Font text_font = LoadFontEx("resources/fonts/OCRAEXT.TTF", 128, NULL, 256);
-    Image font_image = LoadImageFromTexture(text_font.texture);
-    ExportImage(font_image, "resources/fonts/OCRAEXT_font_atlas.png");
-    Image img = LoadImageFromTexture(LoadTexture("resources/fonts/icons.png"));
-    Font icon_font = LoadFontFromImage(img, BLACK, 128);
+    Font text_font = LoadFont("resources/fonts/space_mono_small_ex.fnt");
     INFO("baseSize: %d, glyphCount: %d, glyphPadding: %d",
         text_font.baseSize,
         text_font.glyphCount,
         text_font.glyphPadding
     )
+    SetTextLineSpacing(20);
     GetUI()->default_font = text_font;
-    //GetUI()->default_font = LoadFontEx("resources/fonts/GOTHICB.TTF", 16, NULL, 256);
+    //GetUI()->default_font = LoadFontEx("resources/fonts/GOTHICB.TTF", DEFAULT_FONT_SIZE, NULL, 256);
 }
 
 void UIGlobals::UIStart() {
@@ -498,10 +541,10 @@ void UIGlobals::UIEnd() {
     if (strlen(GetUI()->mouseover_text) > 0) {
         // Draw mouse
         Vector2 mouse_pos = GetMousePosition();
-        Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), GetUI()->mouseover_text, 16, 1);
+        Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), GetUI()->mouseover_text, DEFAULT_FONT_SIZE, 1);
         DrawRectangleV(mouse_pos, text_size, Palette::bg);
         DrawRectangleLines(mouse_pos.x, mouse_pos.y, text_size.x, text_size.y, Palette::ui_main);
-        DrawTextEx(GetCustomDefaultFont(), GetUI()->mouseover_text, mouse_pos, 16, 1, Palette::ui_main);
+        DrawTextEx(GetCustomDefaultFont(), GetUI()->mouseover_text, mouse_pos, DEFAULT_FONT_SIZE, 1, Palette::ui_main);
     }
 }
 

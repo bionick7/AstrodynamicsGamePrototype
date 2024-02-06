@@ -63,6 +63,7 @@ struct TransferPlanUI {
     void Abort();
     void Update();
     void Draw3D();
+    void Draw3DGizmos();
     void DrawUI();
     void SetPlan(TransferPlan* plan, RID ship, timemath::Time min_time, timemath::Time pos_time);
     void SetResourceType(ResourceType resource_type);

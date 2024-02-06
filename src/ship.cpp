@@ -528,7 +528,7 @@ void Ship::DrawIcon(int x_offsets[], int y_offsets[], float grow_factor) {
     }
     
     Text3D* text_inst = GetRenderServer()->text_labels_3d.Get(text3d);
-    text_inst->scale = 16;
+    text_inst->scale = DEFAULT_FONT_SIZE;
     text_inst->offset = draw_offset;
     if (type < 2) {
         text_inst->offset.x -= icon_size - 3;
@@ -594,16 +594,16 @@ void _UIDrawStats(const Ship* ship) {
     ui::Write(sb.c_str);
     ui::Fillline(ship->GetPayloadMass() / ResourceCountsToKG(ship->GetMaxCapacity()), Palette::ui_main, Palette::bg);
     sb.Clear();
-    sb.AddFormat("dv %2.2f (I_sp: %2.2f)\n", ship->GetCapableDV(), GetShipClassByIndex(ship->ship_class)->v_e / 1000);
-    sb.AddFormat("Pw. %2d Init. %2d\n", ship->power(), ship->initiative());
-    sb.AddFormat("HP: %2d/%2d K - %2d/%2d E\n", 
+    sb.AddFormat("\u0394V %2.2f (I_sp: %2.2f)\n", ship->GetCapableDV(), GetShipClassByIndex(ship->ship_class)->v_e / 1000);
+    sb.AddFormat(ICON_POWER "%2d" ICON_ACS "%2d\n", ship->power(), ship->initiative());
+    sb.AddFormat("%2d/%2d " ICON_HEART_KINETIC " - %2d/%2d " ICON_HEART_ENERGY "\n", 
         ship->kinetic_hp() - ship->dammage_taken[ShipVariables::KINETIC_ARMOR], ship->kinetic_hp(),
         ship->energy_hp() - ship->dammage_taken[ShipVariables::ENERGY_ARMOR], ship->energy_hp()
     );
-    sb.AddFormat("Crew: %2d/%2d\n", ship->crew() - ship->dammage_taken[ShipVariables::CREW], ship->crew());
-    sb.AddFormat("Offense: %2d K - %2d O - %2d B\n", ship->kinetic_offense(), ship->ordnance_offense(), ship->boarding_offense());
-    sb.AddFormat("Defense: %2d K - %2d O - %2d B\n", ship->kinetic_defense(), ship->ordnance_defense(), ship->boarding_defense());
-    sb.AddFormat("++++++++++++++++++\n");
+    sb.AddFormat(ICON_HEART_BOARDING " %2d/%2d\n", ship->crew() - ship->dammage_taken[ShipVariables::CREW], ship->crew());
+    sb.AddFormat("%2d " ICON_ATTACK_KINETIC " - %2d " ICON_ATTACK_ORDNANCE " - %2d " ICON_ATTACK_BOARDING "\n", ship->kinetic_offense(), ship->ordnance_offense(), ship->boarding_offense());
+    sb.AddFormat("%2d " ICON_SHIELD_KINETIC " - %2d " ICON_SHIELD_ORDNANCE " - %2d " ICON_SHIELD_BOARDING "\n", ship->kinetic_defense(), ship->ordnance_defense(), ship->boarding_defense());
+    sb.AddFormat("++++++++++++++++++");
     ui::Write(sb.c_str);
 }
 
@@ -703,7 +703,7 @@ void _UIDrawTransferplans(Ship* ship) {
 void _UIDrawFleet(Ship* ship) {
     // Following
     if (!ship->IsLeading()) {
-        ui::PushInset(0, 20);
+        ui::PushInset(0, DEFAULT_FONT_SIZE+4);
         StringBuilder sb;
         if (ship->IsParked()) {
             sb.Add("Detach from").Add(GetShip(ship->parent_obj)->name);
@@ -726,7 +726,7 @@ void _UIDrawFleet(Ship* ship) {
         if (candidates[i] == ship->id) continue;
         const Ship* candidate = GetShip(candidates[i]);
         if (!candidate->IsLeading()) continue;
-        ui::PushInset(0, 20);
+        ui::PushInset(0, DEFAULT_FONT_SIZE + 4);
         ui::Write("Attach to ", false);
         ui::Write(candidate->name);
         ButtonStateFlags::T button_state = ui::AsButton();
@@ -767,7 +767,7 @@ void Ship::DrawUI() {
     if (mouse_hover) {
         // Hover
         DrawCircleLines(draw_pos.x, draw_pos.y, 10, Palette::ui_main);
-        //DrawTextEx(GetCustomDefaultFont(), name, Vector2Add(draw_pos, {5, 5}), 16, 1, GetColor());
+        //DrawTextEx(GetCustomDefaultFont(), name, Vector2Add(draw_pos, {5, 5}), DEFAULT_FONT_SIZE, 1, GetColor());
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             _OnClicked();
@@ -782,11 +782,11 @@ void Ship::DrawUI() {
 
     const int INSET_MARGIN = 6;
     const int OUTSET_MARGIN = 6;
-    const int TEXT_SIZE = 16;
+    const int TEXT_SIZE = DEFAULT_FONT_SIZE;
     ui::CreateNew(
-        GetScreenWidth() - 430 - 2*INSET_MARGIN - OUTSET_MARGIN, 
+        GetScreenWidth() - 440 - 2*INSET_MARGIN - OUTSET_MARGIN, 
         OUTSET_MARGIN + 200,
-        430 + 2*INSET_MARGIN, 
+        440 + 2*INSET_MARGIN, 
         GetScreenHeight() - 200 - OUTSET_MARGIN - 2*INSET_MARGIN,
         TEXT_SIZE, Palette::ui_main
     );

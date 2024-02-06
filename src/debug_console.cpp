@@ -38,16 +38,17 @@ Setting* GetSetting(const char* key) {
     return NULL;
 }
 
-const char* GetSettingValue(const char* key, const char* default_) {
-    Setting* setting = GetSetting(key);
-    if (setting == NULL) {
-        return default_;
-    }
-    return setting->Get();
-}
-
 const char *Setting::Get() {
     return overrides[override_index];
+}
+
+bool Setting::GetAsBool() {
+    const char* c = overrides[override_index];
+    return strcmp(c, "y") * strcmp(c, "true") == 0;
+}
+
+double Setting::GetAsDouble() {
+    return atof(overrides[override_index]);
 }
 
 void Setting::Set(const char *value) {
@@ -65,6 +66,31 @@ void Setting::PopOverride() {
     if (override_index > 0) {
         override_index--;
     }
+}
+
+const char* GetSettingStr(const char* key, const char* default_) {
+    Setting* setting = GetSetting(key);
+    if (setting == NULL) {
+        return default_;
+    }
+    return setting->Get();
+}
+
+
+bool GetSettingBool(const char* key, bool default_) {
+    Setting* setting = GetSetting(key);
+    if (setting == NULL) {
+        return default_;
+    }
+    return setting->GetAsBool();
+}
+
+double GetSettingNum(const char* key, double default_) {
+    Setting* setting = GetSetting(key);
+    if (setting == NULL) {
+        return default_;
+    }
+    return setting->GetAsDouble();
 }
 
 #define DEBUG_CONSOLE_MAX_LINES 128
@@ -175,7 +201,7 @@ void DrawDebugConsole() {
     
     int height = 500;
     if (height > GetScreenHeight()) height = GetScreenHeight();
-    ui::CreateNew(0, 0, GetScreenWidth(), height, 16, WHITE);
+    ui::CreateNew(0, 0, GetScreenWidth(), height, DEFAULT_FONT_SIZE, WHITE);
     ui::Enclose(BLACK, WHITE);
     int line_height = ui::Current()->text_size + ui::Current()->text_margin_y;
     const int input_height = 30;
@@ -254,6 +280,6 @@ void DrawDebugConsole() {
     StringBuilder sb;
     sb.Add(" $ ").Add(current_prompt);
     ui::Write(sb.c_str);
-    int x_offset = MeasureTextEx(GetCustomDefaultFont(), TextSubtext(sb.c_str, 0, cursor + 3), 16, 1).x;
+    int x_offset = MeasureTextEx(GetCustomDefaultFont(), TextSubtext(sb.c_str, 0, cursor + 3), DEFAULT_FONT_SIZE, 1).x;
     DrawLine(x_offset, ui::Current()->y_cursor, x_offset, ui::Current()->y_cursor - line_height, WHITE);
 }

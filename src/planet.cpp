@@ -165,10 +165,13 @@ void Planet::RemoveShipModuleInInventory(int index) {
 }
 
 bool Planet::HasMouseHover(double* min_distance) const {
+    // TODO: proximity approximation is pretty shit at flat angles
+
     OrbitSegment segment = OrbitSegment(&orbit);
     Ray mouse_ray = GetMouseRay(GetMousePosition(), GetCamera()->rl_camera);
     Matrix orbit_transform = MatrixFromColumns((Vector3) orbit.periapsis_dir, (Vector3) orbit.normal, (Vector3) orbit.periapsis_dir.Cross(orbit.normal));
     Matrix inv_orbit_transform = MatrixInvert(orbit_transform);
+    Vector3 mouse_repr = Vector3Add(mouse_ray.position, mouse_ray.direction);
     mouse_ray.position = Vector3Transform(mouse_ray.position, inv_orbit_transform);
     mouse_ray.direction = Vector3Transform(mouse_ray.direction, inv_orbit_transform);
     
@@ -182,6 +185,7 @@ bool Planet::HasMouseHover(double* min_distance) const {
     //float scale = GameCamera::WorldToRender(orbit.sma);
     //DebugDrawTransform(MatrixMultiply(MatrixScale(scale, scale, scale), orbit_transform));
     Vector2 closest_on_screen = GetWorldToScreen(Vector3Transform(local_pos, orbit_transform), GetCamera()->rl_camera);
+    //DebugDrawLineRenderSpace(Vector3Transform(local_pos, orbit_transform), mouse_repr);
 
     if (Vector2Distance(closest_on_screen, GetMousePosition()) <= 2.0f && distance < *min_distance) {
         *min_distance = distance;
@@ -313,7 +317,7 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
     int char_width = MeasureTextEx(
         GetCustomDefaultFont(), 
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 
-        16, 1.0
+        DEFAULT_FONT_SIZE, 1.0
     ).x/62;
     StringBuilder sb;
     const resource_count_t* construction_resources = NULL;
@@ -525,10 +529,10 @@ void Planet::DrawUI() {
         return;
     }
 
-    ui::CreateNew(10, y_start, 16*30, height, 16, Palette::ui_main);
-    ui::Current()->Enclose(2, 2, Palette::bg, Palette::ui_main);
+    ui::CreateNew(10, y_start, DEFAULT_FONT_SIZE*30, height, DEFAULT_FONT_SIZE, Palette::ui_main);
+    ui::Enclose(Palette::bg, Palette::ui_main);
 
-    ui::PushInset(4, 20*2);  // Tab container
+    ui::PushInset(4, (DEFAULT_FONT_SIZE+4)*2);  // Tab container
     int w = ui::Current()->width;
     const int n_tabs = 6;
     const char* tab_descriptions[] = {
@@ -555,7 +559,7 @@ void Planet::DrawUI() {
             current_tab = i;
         }
         if (button_state & ButtonStateFlags::HOVER || i == current_tab) {
-            ui::Enclose(Palette::bg, Palette::ui_main);
+            ui::EnclosePartial(0, Palette::bg, Palette::ui_main, Direction::DOWN);
         }
         ui::Write(tab_descriptions[i]);
         ui::Pop();  // GridCell

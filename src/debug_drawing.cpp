@@ -59,7 +59,7 @@ char lines[64][256];
 int lines_index = 0;
 
 void DebugFlushText() {
-    TextBox debug_textbox = TextBox(5, 35, 500, GetScreenHeight() - 40, 16, Palette::green);
+    TextBox debug_textbox = TextBox(5, 35, 500, GetScreenHeight() - 40, DEFAULT_FONT_SIZE, Palette::green);
     debug_textbox.text_background = BLACK;
     for (int i=0; i < lines_index; i++) {
         debug_textbox.WriteLine(lines[i]);

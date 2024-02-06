@@ -137,7 +137,7 @@ StringBuilder& StringBuilder::AddCost(int64_t cost) {
     // +1 - sign
     // +1 terminator
     char buffer[24];
-    sprintf(buffer, "M§M %lldK", (long long int) (cost / 1000));
+    sprintf(buffer, "M$M %lldK", (long long int) (cost / 1000));
     return _AddBuffer(buffer);
 }
 

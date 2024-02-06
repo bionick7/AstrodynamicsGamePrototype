@@ -98,9 +98,9 @@ Regardless of implementability
 
 ## Collective todo for next milestone
 - Animation tracker system
-- Implement way to show icons within text/at arbitrary positions  >> ???
+- V Implement way to show icons within text/at arbitrary positions  >> ???
     V 3D
-      2D
+    V 2D
 - Mesh loading  >> ???
     preview small 3D models for flavor >> partially implemented by raylib
 - V global settings (with push_override etc.) / debug console >> known code
