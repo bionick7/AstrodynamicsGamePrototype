@@ -232,6 +232,7 @@ void DrawDebugConsole() {
 
             current_prompt[0] = '\0';
             cursor = 0;
+            prompt_backlog_offset = 0;
         }
         else if (key == KEY_BACKSPACE && cursor > 0) {
             cursor--;
@@ -280,6 +281,6 @@ void DrawDebugConsole() {
     StringBuilder sb;
     sb.Add(" $ ").Add(current_prompt);
     ui::Write(sb.c_str);
-    int x_offset = MeasureTextEx(GetCustomDefaultFont(), TextSubtext(sb.c_str, 0, cursor + 3), DEFAULT_FONT_SIZE, 1).x;
+    int x_offset = ui::Current()->text_start_x + MeasureTextEx(GetCustomDefaultFont(), TextSubtext(sb.c_str, 0, cursor + 3), DEFAULT_FONT_SIZE, 1).x;
     DrawLine(x_offset, ui::Current()->y_cursor, x_offset, ui::Current()->y_cursor - line_height, WHITE);
 }

@@ -6,54 +6,7 @@
 #include "utils.hpp"
 #include "debug_console.hpp"
 #include "debug_drawing.hpp"
-
-// Copy of raylib's DrawTextEx(), but will not draw over a certain rectangle
-void DrawTextConstrained(Font font, const char *text, Vector2 position, float fontSize, float spacing, Color tint, Rectangle render_rect) {
-    if (font.texture.id == 0) font = GetFontDefault();  // (Raylib cmt) Security check in case of not valid font
-
-    int size = TextLength(text);    // (Raylib cmt) Total size in bytes of the text, scanned by codepoints in loop
-
-    int textOffsetY = 0;            // (Raylib cmt) Offset between lines (on linebreak '\n')
-    float textOffsetX = 0.0f;       // (Raylib cmt) Offset X to next character to draw
-
-    float scaleFactor = fontSize/font.baseSize;         // (Raylib cmt) Character quad scaling factor
-
-    for (int i = 0; i < size;)
-    {
-        // (Raylib cmt)Get next codepoint from byte string and glyph index in font
-        int codepointByteCount = 0;
-        int codepoint = GetCodepointNext(&text[i], &codepointByteCount);
-        int index = GetGlyphIndex(font, codepoint);
-
-        if (codepoint == '\n')
-        {
-            // (Raylib cmt) NOTE: Line spacing is a global variable, use SetTextLineSpacing() to setup
-            textOffsetY += 20;  // TODO, raylib doesn't expose line space, so how to?
-            textOffsetX = 0.0f;
-        }
-        else
-        {
-            float x_increment = (float)font.recs[index].width*scaleFactor + spacing;
-            Vector2 char_pos = { position.x + textOffsetX, position.y + textOffsetY };
-
-            // This part is custom
-
-            Vector2 char_pos2 = { position.x + textOffsetX + x_increment, position.y + textOffsetY + fontSize };
-            if (
-                (codepoint != ' ') && (codepoint != '\t')
-                && CheckCollisionPointRec(char_pos, render_rect)
-                && CheckCollisionPointRec(char_pos2, render_rect)
-            ) {
-                DrawTextCodepoint(font, codepoint, char_pos, fontSize, tint);
-            }
-
-            if (font.glyphs[index].advanceX == 0) textOffsetX += x_increment;
-            else textOffsetX += ((float)font.glyphs[index].advanceX*scaleFactor + spacing);
-        }
-
-        i += codepointByteCount;   // (Raylib cmt) Move text bytes counter to next codepoint
-    }
-}
+#include "render_utils.hpp"
 
 Vector2 ApplyAlignment(Vector2 pos, Vector2 size, TextAlignment::T alignment) {
     if (alignment & TextAlignment::HCENTER) {
@@ -77,8 +30,9 @@ Rectangle DrawTextAligned(const char* text, Vector2 pos, TextAlignment::T alignm
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, DEFAULT_FONT_SIZE, 1);
     pos = ApplyAlignment(pos, size, alignment);
     //Vector2 bottom_left = Vector2Subtract(pos, Vector2Scale(size, 0.5));
-    DrawTextEx(GetCustomDefaultFont(), text, pos, DEFAULT_FONT_SIZE, 1, c);
-    return { pos.x, pos.y, size.x, size.y };
+    Rectangle rect = { pos.x, pos.y, size.x, size.y };
+    InternalDrawTextEx(GetCustomDefaultFont(), text, pos, DEFAULT_FONT_SIZE, 1, c);
+    return rect;
 }
 
 ButtonStateFlags::T GetButtonState(bool is_in_area, bool was_in_area) {
@@ -220,7 +174,7 @@ void TextBox::Write(const char* text) {
     if(text_background.a != 0) {
         DrawRectangleV(pos, size, text_background);
     }
-    DrawTextConstrained(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec);
+    InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec);
     //DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color);
     if (GetSettingBool("text_boundrects", false)) {
         DrawRectangleLines(pos.x, pos.y, size.x, size.y, GREEN);
@@ -240,13 +194,33 @@ void TextBox::WriteLine(const char* text) {
     if (text_background.a != 0) {
         DrawRectangleV(pos, size, text_background);
     }
-    DrawTextConstrained(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec);
+    InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec);
     //DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color);
     if (GetSettingBool("text_boundrects", false)) {
         DrawRectangleLines(pos.x, pos.y, size.x, size.y, GREEN);
     }
     _Advance(size);
     LineBreak();
+}
+
+void TextBox::DrawTexture(Texture2D texture, Rectangle source, int texture_height, Color tint, bool sdf) {
+    Vector2 pos = {text_start_x + x_cursor, text_start_y + y_cursor + text_margin_y};
+    int texture_width = texture_height * source.width / source.height;
+    if (sdf) {
+        DrawTextureSDF(
+            texture, source, 
+            { pos.x, pos.y, (float)texture_width, (float)texture_height }, 
+            Vector2Zero(), 0, tint
+        );
+    } else {
+        DrawTexturePro(
+            texture, source, 
+            { pos.x, pos.y, (float)texture_width, (float)texture_height }, 
+            Vector2Zero(), 0, tint
+        );
+    }
+    x_cursor = 0;
+    y_cursor += height;
 }
 
 ButtonStateFlags::T TextBox::WriteButton(const char* text, int inset) {
@@ -271,7 +245,7 @@ ButtonStateFlags::T TextBox::WriteButton(const char* text, int inset) {
     );
     Color c = is_in_area ? Palette::ui_main : Palette::blue;
     DrawRectangleLines(pos.x - inset, pos.y - inset, size.x, size.y, c);
-    DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, c);
+    InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec);
     _Advance(size);
     return res;
 }
@@ -304,9 +278,9 @@ void ui::PushMouseHint(int width, int height) {
     ui::PushGlobal(x_pos, y_pos, width, height, DEFAULT_FONT_SIZE, Palette::ui_main);
 }
 
-int ui::PushInset(int margin, int h)
-{
+int ui::PushInset(int margin, int h) {
     // Returns the actual height
+    h += 8;  // straight up allocating extra space for magins
     TextBox* tb = ui::Current();
     tb->EnsureLineBreak();
     int height = fmin(h, fmax(0, tb->height - tb->y_cursor - 2*margin));
@@ -480,7 +454,16 @@ void ui::EnclosePartial(int inset, Color background_color, Color line_color, Dir
     ui::Current()->EnclosePartial(inset, background_color, line_color, directions);
 }
 
-void ui::Write(const char* text, bool linebreak) {
+void ui::DrawIcon(AtlasPos atlas_index, Color tint, int height) {
+    ui::Current()->DrawTexture(GetUI()->GetIconAtlas(), atlas_index.GetRect(ATLAS_SIZE), height, tint, false);
+}
+
+void ui::DrawIconSDF(AtlasPos atlas_index, Color tint, int height) {
+    ui::Current()->DrawTexture(GetUI()->GetIconAtlasSDF(), atlas_index.GetRect(ATLAS_SIZE), height, tint, true);
+}
+
+void ui::Write(const char *text, bool linebreak)
+{
     TextBox* tb = ui::Current();
     if (linebreak) {
         tb->WriteLine(text);
@@ -519,37 +502,53 @@ void UISetMouseHint(const char* text) {
 }
 
 void UIGlobals::UIInit() {
-    Font text_font = LoadFont("resources/fonts/space_mono_small_ex.fnt");
-    INFO("baseSize: %d, glyphCount: %d, glyphPadding: %d",
-        text_font.baseSize,
-        text_font.glyphCount,
-        text_font.glyphPadding
-    )
+    if (IsTextureReady(default_font.texture) && IsTextureReady(default_font_sdf.texture)) return;
+    default_font = LoadFont("resources/fonts/space_mono_small.fnt");
+    default_font_sdf = LoadFont("resources/fonts/space_mono_small_sdf.fnt");
+    SetTextureFilter(default_font_sdf.texture, TEXTURE_FILTER_BILINEAR);  // Very important step
     SetTextLineSpacing(20);
-    GetUI()->default_font = text_font;
-    //GetUI()->default_font = LoadFontEx("resources/fonts/GOTHICB.TTF", DEFAULT_FONT_SIZE, NULL, 256);
 }
 
-void UIGlobals::UIStart() {
+void UIGlobals::UIStart() {  // Called each frame before drawing UI
     SetMouseCursor(MOUSE_CURSOR_CROSSHAIR);
     //SetMouseCursor(MOUSE_CURSOR_DEFAULT);
     GetUI()->scroll_lock = false;
     GetUI()->mouseover_text[0] = '\0';
 }
 
-void UIGlobals::UIEnd() {
-    if (strlen(GetUI()->mouseover_text) > 0) {
+void UIGlobals::UIEnd() {  // Called each frame after drawing UI
+    if (strlen(mouseover_text) > 0) {
         // Draw mouse
         Vector2 mouse_pos = GetMousePosition();
-        Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), GetUI()->mouseover_text, DEFAULT_FONT_SIZE, 1);
-        DrawRectangleV(mouse_pos, text_size, Palette::bg);
-        DrawRectangleLines(mouse_pos.x, mouse_pos.y, text_size.x, text_size.y, Palette::ui_main);
-        DrawTextEx(GetCustomDefaultFont(), GetUI()->mouseover_text, mouse_pos, DEFAULT_FONT_SIZE, 1, Palette::ui_main);
+        Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), mouseover_text, DEFAULT_FONT_SIZE, 1);
+        ui::PushMouseHint(text_size.x+8, text_size.y+8);
+        ui::Enclose(Palette::bg, Palette::ui_main);
+        ui::Write(mouseover_text);
     }
 }
 
+Texture2D UIGlobals::GetIconAtlas() {
+    if (!IsTextureReady(default_font.texture)) {
+        UIInit();
+    }
+    return default_font.texture;
+}
+
+Texture2D UIGlobals::GetIconAtlasSDF() {
+    if (!IsTextureReady(default_font_sdf.texture)) {
+        UIInit();
+    }
+    return default_font_sdf.texture;
+}
+
 Font GetCustomDefaultFont() {
-    return GetUI()->default_font;
+    if (!IsTextureReady(GetUI()->default_font.texture) || !IsTextureReady(GetUI()->default_font_sdf.texture)) {
+        GetUI()->UIInit();
+    }
+    if (GetSettingBool("sdf_text", false))
+        return GetUI()->default_font_sdf;
+    else
+        return GetUI()->default_font;
 }
 
 ButtonStateFlags::T DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color) {

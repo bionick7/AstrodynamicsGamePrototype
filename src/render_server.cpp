@@ -5,25 +5,21 @@
 #include "constants.hpp"
 #include "utils.hpp"
 #include "debug_drawing.hpp"
+#include "debug_console.hpp"
 
 #include "rlgl.h"
 
 namespace icon_shader {
     Shader shader;
-    
-    Texture2D icon_atlas_128;
 
     void Load() {
         shader = LoadShader(0, "resources/shaders/icon_shader.fs");
-        icon_atlas_128 = LoadTexture("resources/icons/font_icons.png");
     }
 
     void UnLoad() {
         UnloadShader(shader);
-        UnloadTexture(icon_atlas_128);
     }
 }
-
 
 void Icon3D::Draw() const {
     Vector3 render_pos = GameCamera::WorldToRender(world_pos);
@@ -43,10 +39,10 @@ void Icon3D::Draw() const {
     Vector3 offset_render_pos = GetFinalRenderPos();
     float render_scale = GetFinalRenderScale();
 
-    Rectangle source = atlas_pos.GetRect();
+    Rectangle source = atlas_pos.GetRect(ATLAS_SIZE);
 
     DrawBillboardPro(
-        GetCamera()->rl_camera, icon_shader::icon_atlas_128, source, 
+        GetCamera()->rl_camera, GetUI()->GetIconAtlasSDF(), source, 
         offset_render_pos, cam_y, 
         { render_scale, render_scale }, Vector2Zero(), 0.0f, 
         color
@@ -90,10 +86,12 @@ float Icon3D::GetFinalRenderScale() const {
 namespace text3d_shader {
     Shader shader;
     int ndcDepth = -1;
+    int useSdf = -1;
     
     void Load() {
-        shader = LoadShader(0, "resources/shaders/text3d_shader.fs");
-        LOAD_SHADER_UNIFORM(text3d_shader, ndcDepth);
+        LOAD_SHADER_FS(text3d_shader)
+        LOAD_SHADER_UNIFORM(text3d_shader, ndcDepth)
+        LOAD_SHADER_UNIFORM(text3d_shader, useSdf)
     }
 
     void UnLoad() {
@@ -124,6 +122,8 @@ void Text3D::Draw() const {
     screen_pos = ApplyAlignment(screen_pos, text_size, alignment);
 
     SetShaderValue(text3d_shader::shader, text3d_shader::ndcDepth, &ndcPos.z, SHADER_UNIFORM_FLOAT);
+    int use_sdf = GetSettingBool("sdf_text", false) ? 1 : 0;
+    SetShaderValue(text3d_shader::shader, text3d_shader::useSdf, &use_sdf, SHADER_UNIFORM_INT);
 
     // Cannot render in a single batch, because of the ndcPos.z uniform
     BeginShaderMode(text3d_shader::shader);

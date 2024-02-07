@@ -517,7 +517,7 @@ void Ship::DrawIcon(int x_offsets[], int y_offsets[], float grow_factor) {
     Icon3D* icon_inst = GetRenderServer()->icons.Get(icon3d);
     icon_inst->scale = icon_size;
     icon_inst->offset = draw_offset;
-    icon_inst->atlas_pos = AtlasPos(type, 12, 128);
+    icon_inst->atlas_pos = AtlasPos(type, 28);
     icon_inst->color = GetColor();
     icon_inst->world_pos = position.cartesian;
     Vector3 from = GameCamera::WorldToRender(position.cartesian);
@@ -767,7 +767,6 @@ void Ship::DrawUI() {
     if (mouse_hover) {
         // Hover
         DrawCircleLines(draw_pos.x, draw_pos.y, 10, Palette::ui_main);
-        //DrawTextEx(GetCustomDefaultFont(), name, Vector2Add(draw_pos, {5, 5}), DEFAULT_FONT_SIZE, 1, GetColor());
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             _OnClicked();

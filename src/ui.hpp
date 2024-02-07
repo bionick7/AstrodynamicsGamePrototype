@@ -6,6 +6,7 @@
 #include <stack>
 
 #define DEFAULT_FONT_SIZE 20
+#define ATLAS_SIZE 40
 
 static inline Vector2 GetScreenCenter() { return {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f}; }
 
@@ -76,6 +77,7 @@ struct TextBox {
     void Shrink(int dx, int dy);
     void Write(const char* text);
     void WriteLine(const char* text);
+    void DrawTexture(Texture2D texture, Rectangle source, int height, Color tint, bool sdf);
     void DebugDrawRenderRec() const;
     int GetLineHeight() const;
     ButtonStateFlags::T WriteButton(const char* text, int inset);
@@ -87,11 +89,10 @@ private:
 
 struct AtlasPos {
     int x, y;
-    int size;
 
     AtlasPos() = default;
-    AtlasPos(int x, int y, int size);
-    Rectangle GetRect() const;
+    AtlasPos(int x, int y);
+    Rectangle GetRect(int size) const;
 };
 
 struct UIGlobals {
@@ -99,10 +100,14 @@ struct UIGlobals {
     char mouseover_text[1024] = "";
     bool scroll_lock;
     Font default_font;
+    Font default_font_sdf;
 
     void UIInit();
     void UIStart();
     void UIEnd();
+    
+    Texture2D GetIconAtlas();
+    Texture2D GetIconAtlasSDF();
 };
 
 namespace ui {
@@ -124,6 +129,8 @@ namespace ui {
     void EnclosePartial(int inset, Color background_color, Color line_color, Direction::T directions);
     void Shrink(int dx, int dy);
 
+    void DrawIcon(AtlasPos atlas_index, Color tint, int height);
+    void DrawIconSDF(AtlasPos atlas_index, Color tint, int height);
     void Write(const char* text, bool linebreak=true);
     void Fillline(double value, Color fill_color, Color background_color);
     ButtonStateFlags::T DirectButton(const char* text, int inset);
@@ -133,7 +140,6 @@ namespace ui {
 }
 
 void HandleButtonSound(ButtonStateFlags::T button_state_flags);
-
 Font GetCustomDefaultFont();
 void UISetMouseHint(const char* text);
 

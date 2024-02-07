@@ -6,15 +6,20 @@
 
 #include "rlgl.h"
 
-#define MAX_LINE_BUFFER 1024*128
-static Vector3 line_buffer[MAX_LINE_BUFFER];
-int line_buffer_index;
+namespace debug_drawing {
+    #define MAX_LINE_BUFFER 1024*128
+    static Vector3 line_buffer[MAX_LINE_BUFFER];
+    int line_buffer_index;
+
+    char lines[64][256];
+    int lines_index = 0;
+}
 
 void DebugDrawLineRenderSpace(Vector3 from, Vector3 to) {
-    if (line_buffer_index >= line_buffer_index + 1)
+    if (debug_drawing::line_buffer_index >= debug_drawing::line_buffer_index + 1)
         return;
-    line_buffer[line_buffer_index++] = from;
-    line_buffer[line_buffer_index++] = to;
+    debug_drawing::line_buffer[debug_drawing::line_buffer_index++] = from;
+    debug_drawing::line_buffer[debug_drawing::line_buffer_index++] = to;
 }
 
 void DebugDrawLine(DVector3 from, DVector3 to) {
@@ -55,34 +60,32 @@ void DebugDrawConic(DVector3 focus, DVector3 ecc_vector, DVector3 normal, double
     DebugDrawLine(focus, focus - x * 2*sma*e);
 }
 
-char lines[64][256];
-int lines_index = 0;
 
 void DebugFlushText() {
     TextBox debug_textbox = TextBox(5, 35, 500, GetScreenHeight() - 40, DEFAULT_FONT_SIZE, Palette::green);
     debug_textbox.text_background = BLACK;
-    for (int i=0; i < lines_index; i++) {
-        debug_textbox.WriteLine(lines[i]);
+    for (int i=0; i < debug_drawing::lines_index; i++) {
+        debug_textbox.WriteLine(debug_drawing::lines[i]);
     }
-    lines_index = 0;
+    debug_drawing::lines_index = 0;
 }
 
 void DebugFlush3D() {
     rlBegin(RL_LINES);
     rlColor4ub(0, 255, 0, 255);
-    for(int i=0; i < line_buffer_index; i++) {
-        rlVertex3f(line_buffer[i].x, line_buffer[i].y, line_buffer[i].z);
+    for(int i=0; i < debug_drawing::line_buffer_index; i++) {
+        rlVertex3f(debug_drawing::line_buffer[i].x, debug_drawing::line_buffer[i].y, debug_drawing::line_buffer[i].z);
     }
     rlEnd();
-    line_buffer_index = 0;
+    debug_drawing::line_buffer_index = 0;
 }
 
 void DebugPrintText(const char* format, ...) {
     va_list args;
     va_start(args, format);
-    vsprintf(lines[lines_index], format, args);
+    vsprintf(debug_drawing::lines[debug_drawing::lines_index], format, args);
     va_end(args);
     
-    if (lines_index >= 63) return;
-    lines_index++;
+    if (debug_drawing::lines_index >= 63) return;
+    debug_drawing::lines_index++;
 }

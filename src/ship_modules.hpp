@@ -5,10 +5,11 @@
 #include "datanode.hpp"
 #include "id_system.hpp"
 #include "planetary_economy.hpp"
+#include "ui.hpp"
 
 struct Ship;
 
-#define SHIP_MODULE_WIDTH 100
+#define SHIP_MODULE_WIDTH 50
 #define SHIP_MODULE_HEIGHT 50
 
 #define X_SHIP_STATS \
@@ -72,6 +73,8 @@ struct ShipModuleClass {
     bool has_activation_requirements;
     int construction_time;
     bool is_hidden;
+
+    AtlasPos icon_index;
 
     ShipModuleClass();
     void UpdateStats(Ship* ship) const;

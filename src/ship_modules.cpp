@@ -122,6 +122,13 @@ int ShipModules::Load(const DataNode* data) {
 
         module_data->FillBufferWithChild("construction_resources", ship_modules[i].construction_resources, RESOURCE_MAX, resource_names);
         module_data->FillBufferWithChild("produce", ship_modules[i].production, RESOURCE_MAX, resource_names);
+        if (module_data->GetArrayLen("icon_index") == 2) {
+            ship_modules[i].icon_index = AtlasPos(
+                module_data->GetArrayElemI("icon_index", 0),
+                module_data->GetArrayElemI("icon_index", 1));
+        } else {
+            ship_modules[i].icon_index = AtlasPos(31, 31);
+        }
 
         const char* string_id = module_data->Get("id", "_");
         RID rid = RID(i, EntityType::MODULE_CLASS);
@@ -177,7 +184,8 @@ void ShipModules::DrawShipModule(RID index) const {
         if (button_state & ButtonStateFlags::PRESSED) {
             return;
         }
-        ui::Write(smc->name);
+        ui::DrawIconSDF(smc->icon_index, Palette::ui_main, 40);
+        //ui::Write(smc->name);
     }
 }
 

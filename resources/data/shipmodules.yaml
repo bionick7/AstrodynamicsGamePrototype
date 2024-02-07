@@ -7,6 +7,7 @@ shipmodules:
   construction_resources: 
     metal: 10
   construction_time: 10
+  icon_index: [8, 25]
 
 - id: shpmod_droptank
   name: Drop-tank
@@ -17,6 +18,7 @@ shipmodules:
     water: 10
   construction_time: 2
   construction_batch_size: 1
+  icon_index: [9, 25]
 
 # Production
 - id: shpmod_farm
@@ -28,6 +30,7 @@ shipmodules:
   construction_resources:
     metal: 10
     electronics: 1
+  icon_index: [31, 31]
 
 - id: shpmod_water_extractor
   name: Water extractor
@@ -38,6 +41,7 @@ shipmodules:
   construction_resources:
     metal: 10
     electronics: 1
+  icon_index: [8, 24]
 
 # Shipyard
 # Build modules: workshop + storage
@@ -51,6 +55,7 @@ shipmodules:
   construction_resources:
     metal: 10
     electronics: 1
+  icon_index: [8, 26]
 
 - id: shpmod_small_yard_2
   name: Shipyard storage facility
@@ -59,6 +64,7 @@ shipmodules:
   construction_time: 10
   construction_resources:
     metal: 20
+  icon_index: [9, 26]
 
 - id: shpmod_small_yard_3
   name: Small shipyard workshop
@@ -68,6 +74,7 @@ shipmodules:
   construction_resources:
     metal: 40
     electronics: 5
+  icon_index: [10, 26]
 
 - id: shpmod_small_yard_4
   name: Small shipyard scaffolding
@@ -76,6 +83,7 @@ shipmodules:
   construction_time: 30
   construction_resources:
     metal: 20
+  icon_index: [11, 26]
 
 # Military
 - id: shpmod_railgun
@@ -90,6 +98,7 @@ shipmodules:
   construction_time: 10
   construction_resources:
     metal: 20
+  icon_index: [8, 27]
   
 - id: shpmod_missiles
   name: Missiles
@@ -101,6 +110,7 @@ shipmodules:
     metal: 10
     electronics: 1
     water: 10
+  icon_index: [9, 27]
 
 - id: shpmod_light_armor
   name: Light armor
@@ -112,6 +122,7 @@ shipmodules:
   construction_time: 5
   construction_resources:
     metal: 10
+  icon_index: [10, 27]
 
 - id: shpmod_armor
   name: Extra armor
@@ -124,6 +135,7 @@ shipmodules:
   construction_time: 10
   construction_resources:
     metal: 20
+  icon_index: [11, 27]
   
 - id: shpmod_pdc
   name: Point-defence cannons
@@ -136,6 +148,7 @@ shipmodules:
   construction_resources:
     metal: 5
     electronics: 1
+  icon_index: [12, 27]
 
 - id: shpmod_acs
   name: High-fi Attitude Control System
@@ -147,6 +160,7 @@ shipmodules:
   construction_resources:
     mass: 5
     electronics: 2
+  icon_index: [14, 27]
 
 # Support
 - id: shpmod_reactor
@@ -164,6 +178,7 @@ shipmodules:
     metal: 30
     water: 10
     uranium: 1
+  icon_index: [6, 25]
 
 # Boarding
 - id: shpmod_exp_brigade
@@ -176,6 +191,7 @@ shipmodules:
     crew: 16
   mass: 5
   hidden: y
+  icon_index: [31, 31]
   
 - id: shpmod_armory
   name: Armory
@@ -185,6 +201,7 @@ shipmodules:
     boarding_defense: 1
   mass: 1
   hidden: y
+  icon_index: [31, 31]
 
 # Developer
 - id: shpmod_boost_init
@@ -194,6 +211,7 @@ shipmodules:
     initiative: 1
   mass: 0
   hidden: y
+  icon_index: [31, 31]
 
 # ... Weapons, time extenders
 # e.g. loadout for gunship:

@@ -301,7 +301,10 @@ void GlobalState::DrawUI() {
     ui.UIEnd();
 
     DebugFlushText();
-    //DrawFPS(0, 0);
+    if (GetSettingBool("show_fps", false)) {
+        DrawText(TextFormat("%2.5f ms", GetFrameTime() * 1000), 0, 0, 20, LIME);
+        DrawFPS(0, 20);
+    }
 }
 
 bool GlobalState::IsKeyBoardFocused() const {

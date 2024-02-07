@@ -1,6 +1,7 @@
 #include "app_meta.hpp"
 #include "constants.hpp"
 #include "logging.hpp"
+#include "debug_console.hpp"
 #include <time.h>
 
 const char* WINDOW_TITLE = "Astro navigation game prototype";
@@ -9,6 +10,8 @@ int prev_screen_width = SCREEN_WIDTH;
 int prev_screen_height = SCREEN_HEIGHT;
 
 void InternalToggleFullScreen() {
+    if (!GetSettingBool("allow_fullscreen", false))
+        return;
     if (IsWindowFullscreen()) {
         SetWindowSize(
             GetMonitorWidth(prev_screen_width),
@@ -37,13 +40,13 @@ void DatedScreenShot() {
 
 void AppMetaInit() {
     SetConfigFlags(FLAG_MSAA_4X_HINT);
-    SetConfigFlags(FLAG_VSYNC_HINT);
+    //SetConfigFlags(FLAG_VSYNC_HINT);
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
     InitAudioDevice();
     
     SetExitKey(KEY_NULL);
-    SetTargetFPS(120);
+    SetTargetFPS(1e6);
     SetWindowState(FLAG_WINDOW_RESIZABLE);
 
     LogSetOutput("log.txt");

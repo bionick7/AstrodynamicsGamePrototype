@@ -14,11 +14,21 @@ namespace OrbitRenderMode {
     };
 }
 
+
 bool ShaderNeedReload(Shader shader);
 
 void ReloadShaders();
 
-void RenderOrbit(const OrbitSegment* orbit, int point_count, OrbitRenderMode::E render_mode, Color color);
+void InternalDrawText(const char *text, Vector2 position);
+void InternalDrawTextEx(Font font, const char *text, Vector2 position, 
+                        float fontSize, float spacing, Color tint);
+void InternalDrawTextEx(Font font, const char *text, Vector2 position, 
+                        float fontSize, float spacing, Color tint, Rectangle render_rect);
+void DrawTextureSDF(Texture2D texture, Rectangle source, Rectangle dest, 
+                    Vector2 origin, float rotation, Color tint);
+
+void RenderOrbit(const OrbitSegment* orbit, int point_count, 
+                 OrbitRenderMode::E render_mode, Color color);
 void RenderPerfectSphere(DVector3 pos, double radius, Color color);
 void RenderRings(DVector3 normal, double min_rad, double max_rad, Color color);
 void RenderSkyBox();
@@ -28,6 +38,7 @@ struct AtlasPos;
 
 #define RELOAD_IF_NECAISSARY(shader_name) if (!IsShaderReady(shader_name::shader)) { shader_name::Load(); }
 #define LOAD_SHADER(shader_name) shader_name::shader = LoadShader("resources/shaders/"#shader_name".vs", "resources/shaders/"#shader_name".fs");
+#define LOAD_SHADER_FS(shader_name) shader_name::shader = LoadShader(NULL, "resources/shaders/"#shader_name".fs");
 #define LOAD_SHADER_UNIFORM(shader_name, uniform_name) shader_name::uniform_name = GetShaderLocation(shader_name::shader, #uniform_name);
 
 #endif  // RENDER_UTILS_H
