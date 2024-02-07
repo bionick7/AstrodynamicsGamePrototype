@@ -206,18 +206,24 @@ void TextBox::WriteLine(const char* text) {
 void TextBox::DrawTexture(Texture2D texture, Rectangle source, int texture_height, Color tint, bool sdf) {
     Vector2 pos = {text_start_x + x_cursor, text_start_y + y_cursor + text_margin_y};
     int texture_width = texture_height * source.width / source.height;
+    Rectangle destination = { pos.x, pos.y, (float)texture_width, (float)texture_height };
+    bool outside_render_rect = !CheckCollisionRecs(render_rec, destination);
+    bool inside_render_rect = 
+        render_rec.x > destination.x && render_rec.x + render_rec.width  < destination.x + destination.width &&
+        render_rec.y > destination.y && render_rec.y + render_rec.height < destination.y + destination.height;
+    if (outside_render_rect) {
+        return;
+    }
+    if (!inside_render_rect) {
+        BeginScissorMode(render_rec.x, render_rec.y, render_rec.width, render_rec.height);
+    }
     if (sdf) {
-        DrawTextureSDF(
-            texture, source, 
-            { pos.x, pos.y, (float)texture_width, (float)texture_height }, 
-            Vector2Zero(), 0, tint
-        );
+        DrawTextureSDF(texture, source, destination, Vector2Zero(), 0, tint);
     } else {
-        DrawTexturePro(
-            texture, source, 
-            { pos.x, pos.y, (float)texture_width, (float)texture_height }, 
-            Vector2Zero(), 0, tint
-        );
+        DrawTexturePro(texture, source, destination, Vector2Zero(), 0, tint);
+    }
+    if (!inside_render_rect) {
+        EndScissorMode();
     }
     x_cursor = 0;
     y_cursor += height;
@@ -266,6 +272,7 @@ void ui::CreateNew(int x, int y, int w, int h, int text_size, Color color) {
     while (GetUI()->text_box_stack.size() > 0) {
         GetUI()->text_box_stack.pop();
     }
+    GetUI()->AddBlockingRect({(float)x, (float)y, (float)w, (float)h});
     ui::PushGlobal(x, y, w, h, text_size, color);
 }
 void ui::PushMouseHint(int width, int height) {
@@ -514,6 +521,10 @@ void UIGlobals::UIStart() {  // Called each frame before drawing UI
     //SetMouseCursor(MOUSE_CURSOR_DEFAULT);
     GetUI()->scroll_lock = false;
     GetUI()->mouseover_text[0] = '\0';
+    for(; blocking_rect_index >= 0; blocking_rect_index--) {
+        blocking_rects[blocking_rect_index] = {0};
+    }
+    blocking_rect_index = 0;  // Undershoots in loop
 }
 
 void UIGlobals::UIEnd() {  // Called each frame after drawing UI
@@ -525,6 +536,20 @@ void UIGlobals::UIEnd() {  // Called each frame after drawing UI
         ui::Enclose(Palette::bg, Palette::ui_main);
         ui::Write(mouseover_text);
     }
+}
+
+void UIGlobals::AddBlockingRect(Rectangle rect) {
+    if (blocking_rect_index == MAX_BLOCKING_RECTS-1) return;
+    blocking_rects[blocking_rect_index++] = rect;
+}
+
+bool UIGlobals::IsPointBlocked(Vector2 pos) const {
+    for(int i=0; i < blocking_rect_index; i++) {
+        if (CheckCollisionPointRec(pos, blocking_rects[i])) {
+            return true;
+        }
+    }
+    return false;
 }
 
 Texture2D UIGlobals::GetIconAtlas() {

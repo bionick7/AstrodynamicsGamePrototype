@@ -190,37 +190,27 @@ void _UpdateShipsPlanets(GlobalState* gs) {
     RID hover = GetInvalidId();
     double min_distance = INFINITY;
 
-    IDList ship_list;
+    // Ships take priority in selection
+    for (auto it = gs->ships.alloc.GetIter(); it; it++) {
+        Ship* ship = gs->ships.alloc[it];
+        ship->mouse_hover = false;
+        ship->Update();
+        if (ship->HasMouseHover(&min_distance)) {
+            hover = ship->id;
+        }
+    }
+    bool ship_selected = IsIdValidTyped(hover, EntityType::SHIP);
     for (int planet_id = 0; planet_id < gs->planets.GetPlanetCount(); planet_id++) {
         Planet* planet = GetPlanetByIndex(planet_id);
         planet->Update();
         planet->mouse_hover = false;
-        if (planet->HasMouseHover(&min_distance)) {
+        if (!ship_selected && planet->HasMouseHover(&min_distance)) {
             hover = planet->id;
         }
-        ship_list.Clear();
-        gs->ships.GetOnPlanet(&ship_list, planet->id, 0xFFFFFFFFU);
-        for (int i=0; i < ship_list.size; i++) {
-            Ship* ship = GetShip(ship_list[i]);
-            ship->Update();
-            ship->index_on_planet = i;
-            ship->total_on_planet = ship_list.size;
-            ship->mouse_hover = false;
-            if (ship->HasMouseHover(&min_distance)) {
-                hover = ship->id;
-            }
-        }
     }
-
-    // Update "orphan" ships
-    gs->ships.GetOnPlanet(&ship_list, GetInvalidId(), 0xFFFFFFFFU);
-    for (int i=0; i < ship_list.size; i++) {
-        Ship* ship = GetShip(ship_list[i]);
-        ship->Update();
-        ship->mouse_hover = false;
-        if (ship->HasMouseHover(&min_distance)) {
-            hover = ship->id;
-        }
+    
+    if (prev_hover != hover && GetUI()->IsPointBlocked(GetMousePosition()) && IsIdValid(hover)) {
+        hover = prev_hover;
     }
 
     switch (IdGetType(hover)) {
@@ -230,7 +220,6 @@ void _UpdateShipsPlanets(GlobalState* gs) {
     }
 
     if (prev_hover != hover) {
-    //if (!IsIdValid(prev_hover.id) && IsIdValid(hover.id)) {
         HandleButtonSound(ButtonStateFlags::JUST_HOVER_IN);
     }
     if (IsIdValid(prev_hover) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {

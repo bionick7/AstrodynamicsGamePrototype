@@ -759,7 +759,6 @@ void _UIDrawQuests(Ship* ship) {
 }
 
 void Ship::DrawUI() {
-    Color color = GetColor();
 
     //          PANEL UI
     // =============================

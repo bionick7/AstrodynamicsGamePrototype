@@ -80,9 +80,9 @@ namespace sdf_shader {
 }
 
 
-void InternalDrawText(const char *text, Vector2 position) {
+void InternalDrawText(const char *text, Vector2 position, Color color) {
     Rectangle screen_rect = {0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()};
-    InternalDrawTextEx(GetCustomDefaultFont(), text, position, DEFAULT_FONT_SIZE, 1, WHITE, screen_rect);
+    InternalDrawTextEx(GetCustomDefaultFont(), text, position, DEFAULT_FONT_SIZE, 1, color, screen_rect);
 }
 
 void InternalDrawTextEx(Font font, const char *text, Vector2 position, float fontSize, float spacing, Color tint) {
@@ -415,7 +415,7 @@ void RenderSkyBox() {
     SetShaderValueTexture(skybox_shader::shader, skybox_shader::starMap, skybox_shader::starmap);
 
     //skybox_shader::starmap = LoadTexture("resources/textures/vsauce.png");
-    DrawTexture(skybox_shader::starmap, 1e10, 1e10, WHITE);
+    DrawTexture(skybox_shader::starmap, INT32_MAX, INT32_MAX, WHITE);
     //rlDisableDepthTest();
     //rlDisableDepthMask();
     BeginShaderMode(skybox_shader::shader);

@@ -50,11 +50,11 @@ void Calendar::DrawUI() const {
     const char* text = TextFormat("II Time x %.1f", time_scale);
     if (!paused) text += 3;
     Vector2 pos = { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(), text, font_size, 1).x - 10, 10 };
-    InternalDrawText(text, pos);
+    InternalDrawText(text, pos, Palette::ui_main);
     char text_date[100];
     GlobalGetNow().FormatAsDate(text_date, 100);
     pos = { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(), text_date, font_size, 1).x - 10, 30 };
-    InternalDrawText(text_date, pos);
+    InternalDrawText(text_date, pos, Palette::ui_main);
 }
 
 bool Calendar::IsNewDay() const {
@@ -131,7 +131,6 @@ void GameCamera::HandleInput() {
 }
 
 bool GameCamera::IsInView(Vector3 render_pos) const {
-    Vector3 camera_dir = Vector3Subtract(rl_camera.target, rl_camera.position);
     return Vector3DotProduct(
         Vector3Subtract(render_pos, rl_camera.position),
         Vector3Subtract(rl_camera.target, rl_camera.position)

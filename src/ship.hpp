@@ -88,8 +88,6 @@ struct Ship {
     // UI/visual state
     Vector2 draw_pos;
     bool mouse_hover;
-    int index_on_planet;
-    int total_on_planet;
     int ui_scroll = 0;
     // 3D references
     RID icon3d;

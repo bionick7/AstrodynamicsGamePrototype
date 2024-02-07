@@ -253,7 +253,7 @@ void Planet::AdvanceShipProductionQueue() {
     GetShips()->AddShip(&ship_data);
 
     for (int i=0; i < RESOURCE_MAX; i++) {
-        if (sc->construction_resources != 0) {
+        if (sc->construction_resources[i] != 0) {
             economy.DrawResource(ResourceTransfer((ResourceType) i, sc->construction_resources[i]));
         }
     }
@@ -274,7 +274,7 @@ void Planet::AdvanceModuleProductionQueue() {
 
     AddShipModuleToInventory(module_production_queue[0]);
     for (int i=0; i < RESOURCE_MAX; i++) {
-        if (smc->construction_resources != 0) {
+        if (smc->construction_resources[i] != 0) {
             economy.DrawResource(ResourceTransfer((ResourceType) i, smc->construction_resources[i]));
         }
     }

@@ -228,7 +228,8 @@ void _ShipDrawPathLine(const TimeLineCoordinateData* tcd, int* x_pos, int* y_pos
 void _DrawShips(TimeLineCoordinateData* tcd, const Ships* ships) {
     for (auto it = ships->alloc.GetIter(); it; it++) {
         const Ship* ship = ships->alloc.Get(it);
-        int x_offset = (ship->index_on_planet + 1) * 4;
+        int index_on_planet = 0;
+        int x_offset = (index_on_planet + 1) * 4;
 
         int start_tp_index = 0;
         int end_point_x = 0;

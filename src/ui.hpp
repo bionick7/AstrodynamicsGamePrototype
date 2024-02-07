@@ -95,16 +95,23 @@ struct AtlasPos {
     Rectangle GetRect(int size) const;
 };
 
+#define MAX_BLOCKING_RECTS 20
+
 struct UIGlobals {
     std::stack<TextBox> text_box_stack = std::stack<TextBox>();
     char mouseover_text[1024] = "";
     bool scroll_lock;
     Font default_font;
     Font default_font_sdf;
+    Rectangle blocking_rects[MAX_BLOCKING_RECTS];
+    int blocking_rect_index = 0;
 
     void UIInit();
     void UIStart();
     void UIEnd();
+
+    void AddBlockingRect(Rectangle rect);
+    bool IsPointBlocked(Vector2 pos) const;
     
     Texture2D GetIconAtlas();
     Texture2D GetIconAtlasSDF();

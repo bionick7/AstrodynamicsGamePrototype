@@ -101,7 +101,7 @@ def build_app():
 
     flags = GLOBAL_FLAGS[:]
     defines = GLOBAL_DEFINES[:] + ["WREN_OPT_RANDOM"]
-    flags += ['-Wall', '-Wno-narrowing', '-Wno-sign-compare']  # Warnings we care about
+    flags += ['-Wall', '-Wno-narrowing', '-Wno-sign-compare', '-Wno-unused-variable']  # Warnings we care about
     if build == 'debug':
         flags.append('-ggdb')
     elif build == 'release':

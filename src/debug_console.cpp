@@ -209,12 +209,7 @@ void DrawDebugConsole() {
     for(int i = shown_lines-1; i >= 0; i--) {
         int show_line = (line_index - i) % DEBUG_CONSOLE_MAX_LINES;
         if (show_line < 0) show_line += DEBUG_CONSOLE_MAX_LINES;
-        if (lines[show_line] == NULL) {
-            ui::Write("");
-        }
-        else {
-            ui::Write(lines[show_line]);
-        }
+        ui::Write(lines[show_line]);
     }
 
     for(;;) {

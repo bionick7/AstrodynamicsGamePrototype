@@ -19,7 +19,7 @@ bool ShaderNeedReload(Shader shader);
 
 void ReloadShaders();
 
-void InternalDrawText(const char *text, Vector2 position);
+void InternalDrawText(const char *text, Vector2 position, Color color);
 void InternalDrawTextEx(Font font, const char *text, Vector2 position, 
                         float fontSize, float spacing, Color tint);
 void InternalDrawTextEx(Font font, const char *text, Vector2 position, 

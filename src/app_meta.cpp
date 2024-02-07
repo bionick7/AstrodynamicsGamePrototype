@@ -2,6 +2,7 @@
 #include "constants.hpp"
 #include "logging.hpp"
 #include "debug_console.hpp"
+#include "global_state.hpp"
 #include <time.h>
 
 const char* WINDOW_TITLE = "Astro navigation game prototype";
@@ -40,10 +41,13 @@ void DatedScreenShot() {
 
 void AppMetaInit() {
     SetConfigFlags(FLAG_MSAA_4X_HINT);
+    //SetConfigFlags(FLAG_WINDOW_UNDECORATED);
     //SetConfigFlags(FLAG_VSYNC_HINT);
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
     InitAudioDevice();
+    Image img = LoadImage("resources/icons/app_icon.png");
+    SetWindowIcon(img);
     
     SetExitKey(KEY_NULL);
     SetTargetFPS(1e6);
