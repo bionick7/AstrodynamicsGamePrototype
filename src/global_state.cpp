@@ -187,7 +187,7 @@ void _HandleDeselect(GlobalState* gs) {
 
 RID prev_hover = GetInvalidId();
 void _UpdateShipsPlanets(GlobalState* gs) {
-    RID hover = GetInvalidId();
+    gs->hover = GetInvalidId();
     double min_distance = INFINITY;
 
     // Ships take priority in selection
@@ -196,36 +196,36 @@ void _UpdateShipsPlanets(GlobalState* gs) {
         ship->mouse_hover = false;
         ship->Update();
         if (ship->HasMouseHover(&min_distance)) {
-            hover = ship->id;
+            gs->hover = ship->id;
         }
     }
-    bool ship_selected = IsIdValidTyped(hover, EntityType::SHIP);
+    bool ship_selected = IsIdValidTyped(gs->hover, EntityType::SHIP);
     for (int planet_id = 0; planet_id < gs->planets.GetPlanetCount(); planet_id++) {
         Planet* planet = GetPlanetByIndex(planet_id);
         planet->Update();
         planet->mouse_hover = false;
         if (!ship_selected && planet->HasMouseHover(&min_distance)) {
-            hover = planet->id;
+            gs->hover = planet->id;
         }
     }
     
-    if (prev_hover != hover && GetUI()->IsPointBlocked(GetMousePosition()) && IsIdValid(hover)) {
-        hover = prev_hover;
+    if (prev_hover != gs->hover && GetUI()->IsPointBlocked(GetMousePosition()) && IsIdValid(gs->hover)) {
+        gs->hover = prev_hover;
     }
 
-    switch (IdGetType(hover)) {
-    case EntityType::PLANET: GetPlanet(hover)->mouse_hover = true; break;
-    case EntityType::SHIP: gs->ships.GetShip(hover)->mouse_hover = true; break;
+    switch (IdGetType(gs->hover)) {
+    case EntityType::PLANET: GetPlanet(gs->hover)->mouse_hover = true; break;
+    case EntityType::SHIP: gs->ships.GetShip(gs->hover)->mouse_hover = true; break;
     default: break;
     }
 
-    if (prev_hover != hover) {
+    if (prev_hover != gs->hover) {
         HandleButtonSound(ButtonStateFlags::JUST_HOVER_IN);
     }
     if (IsIdValid(prev_hover) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         HandleButtonSound(ButtonStateFlags::JUST_PRESSED);
     }
-    prev_hover = hover;
+    prev_hover = gs->hover;
 }
 
 // Update

@@ -47,6 +47,7 @@ struct ShipClass {
     resource_count_t construction_resources[RESOURCE_MAX] = {0};
     int construction_batch_size;
     bool is_hidden;
+    AtlasPos icon_index;
 
     // Ease-of-use variables
     double oem;  // kg

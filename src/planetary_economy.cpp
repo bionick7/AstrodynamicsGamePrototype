@@ -163,7 +163,7 @@ void _UIDrawResourceGrpah(const cost_t price_history[], int resource_index) {
         current_draw_x = next_draw_x;
         current_draw_y = next_draw_y;
     }
-    DrawLine(current_draw_x, current_draw_y, box->text_start_x, current_draw_y, Palette::blue);
+    DrawLine(current_draw_x, current_draw_y, box->text_start_x, current_draw_y, Palette::interactable_main);
 }
 
 void PlanetaryEconomy::TryPlayerTransaction(ResourceTransfer rt) {

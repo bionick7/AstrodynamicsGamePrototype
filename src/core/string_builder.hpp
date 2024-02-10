@@ -9,6 +9,7 @@ struct StringBuilder {
 
     StringBuilder();
     StringBuilder(int p_length);
+    StringBuilder(const char* str);
     ~StringBuilder();
     int CountLines() const;
     void WriteToFile(const char* filename) const;

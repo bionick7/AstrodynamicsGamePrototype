@@ -519,7 +519,7 @@ timemath::Time _DrawHandle(
     Vector2 pos, Vector2 radial_dir, const Orbit* orbit, 
     timemath::Time current, timemath::Time t0, bool* is_dragging
 ) {
-    Color c = Palette::blue;
+    Color c = Palette::interactable_main;
 
     Vector2 tangent_dir = Vector2Rotate(radial_dir, PI/2);
     Vector2 node_pos = Vector2Add(pos, Vector2Scale(radial_dir, 20));
@@ -617,10 +617,24 @@ void TransferPlanUI::Draw3DGizmos() {
 }
 
 void TransferPlanUI::DrawUI() {
+    if (IsSelectingDestination()) {
+        StringBuilder sb = StringBuilder("Select Destination [RMB to cancel]");
+        if (IsIdValidTyped(GetGlobalState()->hover, EntityType::PLANET)) {
+            const Planet* hover_planet = GetPlanet(GetGlobalState()->hover);
+            double dv1, dv2;
+            HohmannTransfer(
+                &GetPlanet(plan->departure_planet)->orbit, &hover_planet->orbit, 
+                GlobalGetNow(), NULL, NULL, &dv1, &dv2
+            );
+            sb.AddFormat("\n[LMB to select %s] (\u2265 %4.2f km/s \u0394V)", hover_planet->name, (dv1+dv2) / 1e3);
+        }
+        ui::SetMouseHint(sb.c_str);
+    }
+
     if (!IsActive()) {
         return;
     }
-
+    
     // Panel
     
     Ship* ship_instance = GetShip(ship);

@@ -220,7 +220,7 @@ ButtonStateFlags::T TextBox::WriteButton(const char* text, int inset) {
     bool is_in_area = CheckCollisionPointRec(GetMousePosition(), {pos.x, pos.y, size.x, size.y});
     bool was_in_area = CheckCollisionPointRec(Vector2Subtract(GetMousePosition(), GetMouseDelta()), {pos.x, pos.y, size.x, size.y});
     ButtonStateFlags::T res = GetButtonState(is_in_area, was_in_area);
-    Color c = is_in_area ? Palette::ui_main : Palette::blue;
+    Color c = is_in_area ? Palette::ui_main : Palette::interactable_main;
     DrawRectangleLines(pos.x - inset, pos.y - inset, size.x, size.y, c);
     InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec);
     _Advance(pos, size);
@@ -277,12 +277,13 @@ void ui::CreateNew(int x, int y, int w, int h, int text_size, Color color) {
     GetUI()->AddBlockingRect({(float)x, (float)y, (float)w, (float)h});
     ui::PushGlobal(x, y, w, h, text_size, color);
 }
+
 void ui::PushMouseHint(int width, int height) {
     Vector2 m_pos = GetMousePosition();
     int x_pos = m_pos.x;
     int y_pos = m_pos.y;
     if (x_pos > GetScreenWidth() - width) x_pos = GetScreenWidth() - width;
-    if (y_pos > GetScreenHeight() - width) y_pos = GetScreenHeight() - height;
+    if (y_pos > GetScreenHeight() - height) y_pos = GetScreenHeight() - height;
 
     ui::PushGlobal(x_pos, y_pos, width, height, DEFAULT_FONT_SIZE, Palette::ui_main);
 }
@@ -292,12 +293,12 @@ int ui::PushInset(int margin, int h) {
     h += 8;  // straight up allocating extra space for magins
     TextBox* tb = ui::Current();
     tb->EnsureLineBreak();
-    int height = fmin(h, fmax(0, tb->height - tb->y_cursor - 2*margin));
+    h = fmin(h, fmax(0, tb->height - tb->y_cursor - 2*margin));
     TextBox new_text_box = TextBox(
         tb->text_start_x + tb->x_cursor + margin,
         tb->text_start_y + tb->y_cursor + margin,
         tb->width - tb->x_cursor - 2*margin,
-        height,
+        h,
         tb->text_size,
         tb->text_color
     );
@@ -305,7 +306,7 @@ int ui::PushInset(int margin, int h) {
 
     tb->y_cursor += h + 2*margin;
     GetUI()->text_box_stack.push(new_text_box);
-    return height;
+    return h;
 }
 
 int ui::PushScrollInset(int margin, int h, int allocated_height, int* scroll) {
@@ -352,20 +353,25 @@ int ui::PushScrollInset(int margin, int h, int allocated_height, int* scroll) {
     return height;
 }
 
-void ui::PushInline(int margin) {
+void ui::PushInline(int width, int height) {
     TextBox* tb = ui::Current();
-    TextBox new_text_box = TextBox(
-        tb->text_start_x + tb->x_cursor + margin,
-        tb->text_start_y,
-        tb->width - tb->x_cursor - 2*margin,
-        tb->height,
+    if (width > tb->width - tb->x_cursor)
+        width = tb->width - tb->x_cursor;
+    TextBox new_tb = TextBox(
+        tb->text_start_x + tb->x_cursor,
+        tb->text_start_y + tb->y_cursor,
+        width,
+        height + 8,
         tb->text_size,
         tb->text_color
     );
-    new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb->render_rec);
+    new_tb.render_rec = GetCollisionRec(new_tb.render_rec, tb->render_rec);
 
-    tb->x_cursor = tb->width;
-    GetUI()->text_box_stack.push(new_text_box);
+    tb->_Advance(
+        {(float)new_tb.text_start_x, (float)new_tb.text_start_y}, 
+        {(float)new_tb.width, (float)new_tb.height}
+    );
+    GetUI()->text_box_stack.push(new_tb);
 }
 
 void ui::PushAligned(int width, int height, TextAlignment::T alignment) {
@@ -487,8 +493,7 @@ Rectangle ui::MeasureTextEx(const char *text, TextAlignment::T alignemnt) {
     return ui::Current()->TbMeasureTextEx(text, alignemnt);
 }
 
-void ui::Fillline(double value, Color fill_color, Color background_color)
-{
+void ui::Fillline(double value, Color fill_color, Color background_color) {
     TextBox* tb = ui::Current();
     int y_end = tb->text_start_y + tb->y_cursor;
     if (y_end > tb->render_rec.y + tb->render_rec.height || y_end < tb->render_rec.y)
@@ -502,11 +507,37 @@ void ui::Fillline(double value, Color fill_color, Color background_color)
     DrawLine(x_mid_point, y_end, x_mid_point, y_end - 4, fill_color);
 }
 
-ButtonStateFlags::T ui::DirectButton(const char* text, int inset) {
+ButtonStateFlags::T ui::DirectButton(const char* text, int margin) {
     TextBox* tb = ui::Current();
-    ButtonStateFlags::T button_state = tb->WriteButton(text, inset);
+    /*ButtonStateFlags::T button_state = tb->WriteButton(text, inset);
+    HandleButtonSound(button_state);*/
+    Rectangle text_rect = tb->TbMeasureTextEx(text, TextAlignment::CONFORM);
+    ui::PushInline(text_rect.width + 2*margin, text_rect.height + 2*margin);
+    ButtonStateFlags::T button_state = ui::AsButton();
+    if (button_state & ButtonStateFlags::HOVER) {
+        ui::Enclose(tb->text_background, Palette::interactable_main);
+    } else {
+        ui::Enclose(tb->text_background, tb->text_color);
+    }
+    ui::WriteEx(text, TextAlignment::CENTER, false);
     HandleButtonSound(button_state);
+    ui::Pop();
     return button_state;
+}
+
+void ui::HelperText(const char* description) {
+    StringBuilder sb = StringBuilder(description);
+    sb.AutoBreak(100);
+    Vector2 buton_size = { 24, 24 };
+    TextAlignment::T button_align = TextAlignment::TOP | TextAlignment::RIGHT;
+    Vector2 buton_pos = ApplyAlignment(ui::Current()->GetAnchorPoint(button_align), buton_size, button_align);
+    buton_pos.x -= 2;
+    buton_pos.y -= 2;
+    Rectangle rect = { buton_pos.x, buton_pos.y, buton_size.x, buton_size.y };
+    InternalDrawText("??", { buton_pos.x, buton_pos.y }, Palette::interactable_main);
+    if (CheckCollisionPointRec(GetMousePosition(), rect)) {
+        ui::SetMouseHint(sb.c_str);
+    }
 }
 
 TextBox* ui::Current() {
@@ -535,7 +566,6 @@ void UIGlobals::UIInit() {
 
 void UIGlobals::UIStart() {  // Called each frame before drawing UI
     SetMouseCursor(MOUSE_CURSOR_CROSSHAIR);
-    GetUI()->mouseover_text[0] = '\0';
     for(; blocking_rect_index >= 0; blocking_rect_index--) {
         blocking_rects[blocking_rect_index] = {0};
     }
@@ -543,13 +573,14 @@ void UIGlobals::UIStart() {  // Called each frame before drawing UI
 }
 
 void UIGlobals::UIEnd() {  // Called each frame after drawing UI
-    if (strlen(mouseover_text) > 0) {
+    if (mouseover_text[0] != '\0') {
         // Draw mouse
         Vector2 mouse_pos = GetMousePosition();
         Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), mouseover_text, DEFAULT_FONT_SIZE, 1);
         ui::PushMouseHint(text_size.x+8, text_size.y+8);
         ui::Enclose(Palette::bg, Palette::ui_main);
         ui::Write(mouseover_text);
+        GetUI()->mouseover_text[0] = '\0';
     }
 }
 
@@ -565,6 +596,13 @@ bool UIGlobals::IsPointBlocked(Vector2 pos) const {
         }
     }
     return false;
+}
+
+const char* UIGlobals::GetConceptDescription(const char* key) {
+    if (concept_descriptions.GetFieldCount() == 0) {
+        DataNode::FromFile(&concept_descriptions, "resources/data/concepts.yaml");
+    }
+    return concept_descriptions.Get(key, "No descritpion found", true);
 }
 
 Texture2D UIGlobals::GetIconAtlas() {
@@ -598,9 +636,9 @@ ButtonStateFlags::T DrawTriangleButton(Vector2 point, Vector2 base, double width
     Vector2 side_2 =  Vector2Add(base_pos, Vector2Scale(tangent_dir, width));
     bool is_in_area = CheckCollisionPointTriangle(GetMousePosition(), side_1, point, side_2);
     if (is_in_area) {
-        DrawTriangle(side_1, point, side_2, Palette::blue);
+        DrawTriangle(side_1, point, side_2, Palette::interactable_main);
     } else {
-        DrawTriangleLines(side_1, point, side_2, Palette::blue);
+        DrawTriangleLines(side_1, point, side_2, Palette::interactable_main);
     }
     return GetButtonState(
         is_in_area,
@@ -611,9 +649,9 @@ ButtonStateFlags::T DrawTriangleButton(Vector2 point, Vector2 base, double width
 ButtonStateFlags::T DrawCircleButton(Vector2 midpoint, double radius, Color color) {
     bool is_in_area = CheckCollisionPointCircle(GetMousePosition(), midpoint, radius);
     if (is_in_area) {
-        DrawCircleV(midpoint, radius, Palette::blue);
+        DrawCircleV(midpoint, radius, Palette::interactable_main);
     } else {
-        DrawCircleLines(midpoint.x, midpoint.y, radius, Palette::blue);
+        DrawCircleLines(midpoint.x, midpoint.y, radius, Palette::interactable_main);
     }
     return GetButtonState(
         is_in_area,

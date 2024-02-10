@@ -96,8 +96,6 @@ struct TextBox {
     int GetLineHeight() const;
     Rectangle TbMeasureTextEx(const char* text, TextAlignment::T alignemnt) const;
 
-
-private:
     void _Advance(Vector2 pos, Vector2 size);
 };
 
@@ -119,12 +117,15 @@ struct UIGlobals {
     Rectangle blocking_rects[MAX_BLOCKING_RECTS];
     int blocking_rect_index = 0;
 
+    DataNode concept_descriptions;
+
     void UIInit();
     void UIStart();
     void UIEnd();
 
     void AddBlockingRect(Rectangle rect);
     bool IsPointBlocked(Vector2 pos) const;
+    const char* GetConceptDescription(const char* key);
     
     Texture2D GetIconAtlas();
     Texture2D GetIconAtlasSDF();
@@ -137,7 +138,7 @@ namespace ui {
 
     int PushInset(int margin, int h);
     int PushScrollInset(int margin, int h, int allocated_height, int* scroll);
-    void PushInline(int x_margin);
+    void PushInline(int width, int height);
     void PushAligned(int width, int height, TextAlignment::T align);
     void PushHSplit(int x_start, int x_end);
     void PushGridCell(int columns, int rows, int column, int row);
@@ -156,6 +157,7 @@ namespace ui {
     Rectangle MeasureTextEx(const char* text, TextAlignment::T alignemnt);
     void Fillline(double value, Color fill_color, Color background_color);
     ButtonStateFlags::T DirectButton(const char* text, int inset);
+    void HelperText(const char* description);
 
     void HSpace(int pixels);
     void VSpace(int pixels);

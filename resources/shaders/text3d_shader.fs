@@ -25,9 +25,12 @@ void main() {
         float d_dist_d_frag = length(vec2(dFdx(outside_distance), dFdy(outside_distance))) * 0.5;
         float alpha = smoothstep(d_dist_d_frag, -d_dist_d_frag, outside_distance);
         finalColor = colDiffuse * fragColor;
-        finalColor.a *= alpha;
+        finalColor.a *= colDiffuse.a * fragColor.a * alpha;
     } else {
         vec4 texel_color = texture(texture0, fragTexCoord);
         finalColor = texel_color * colDiffuse * fragColor;
+    }
+    if (finalColor.a < 0.05) {
+        discard;
     }
 }

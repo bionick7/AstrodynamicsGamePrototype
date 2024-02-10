@@ -7,8 +7,8 @@
 
 const char* WINDOW_TITLE = "Astro navigation game prototype";
 
-int prev_screen_width = SCREEN_WIDTH;
-int prev_screen_height = SCREEN_HEIGHT;
+int prev_screen_width = 0;
+int prev_screen_height = 0;
 
 void InternalToggleFullScreen() {
     if (!GetSettingBool("allow_fullscreen", false))
@@ -22,7 +22,7 @@ void InternalToggleFullScreen() {
         prev_screen_width = GetScreenWidth();
         prev_screen_height = GetScreenHeight();
         int monitor = GetCurrentMonitor();
-        printf("Current monitor %d/%d (%s) %dx%d\n", monitor, GetMonitorCount(), GetMonitorName(monitor), GetMonitorWidth(monitor), GetMonitorHeight(monitor));
+        //printf("Current monitor %d/%d (%s) %dx%d\n", monitor, GetMonitorCount(), GetMonitorName(monitor), GetMonitorWidth(monitor), GetMonitorHeight(monitor));
         SetWindowSize(
             GetMonitorWidth(monitor),
             GetMonitorHeight(monitor)
@@ -42,15 +42,15 @@ void DatedScreenShot() {
 void AppMetaInit() {
     SetConfigFlags(FLAG_MSAA_4X_HINT);
     //SetConfigFlags(FLAG_WINDOW_UNDECORATED);
-    //SetConfigFlags(FLAG_VSYNC_HINT);
+    SetConfigFlags(FLAG_VSYNC_HINT);
 
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
+    InitWindow(1600, 900, WINDOW_TITLE);
     InitAudioDevice();
     Image img = LoadImage("resources/icons/app_icon.png");
     SetWindowIcon(img);
     
     SetExitKey(KEY_NULL);
-    SetTargetFPS(1e6);
+    //SetTargetFPS(1e6);
     SetWindowState(FLAG_WINDOW_RESIZABLE);
 
     LogSetOutput("log.txt");

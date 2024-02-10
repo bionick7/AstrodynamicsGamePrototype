@@ -588,13 +588,23 @@ void Ship::DrawTrajectories() const {
     }
 }
 
+const char* _GetTypeIcon(ShipType::E ship_type) {
+    switch (ship_type) {
+        case ShipType::SHIPYARD: return " " ICON_STATION;
+        case ShipType::UTILITY: return " " ICON_UTIL_SHIP;
+        case ShipType::TRANSPORT: return " " ICON_TRANSPORT_SHIP;
+        case ShipType::MILITARY: return " " ICON_MIL_SHIP;
+    }
+    return ICON_EMPTY;
+}
+
 void _UIDrawHeader(const Ship* ship) {
-    ui::WriteEx(ship->name, TextAlignment::CONFORM, false);
-    ui::WriteEx(" " ICON_TRANSPORT_SHIP, TextAlignment::CONFORM, false);
-    const char* text = ICON_EMPTY " " ICON_EMPTY " ";  // use ICON_EMPTY instead of space to get the right spacing
-    if (!ship->IsParked() && !ship->IsLeading()) text = ICON_EMPTY " " ICON_TRANSPORT_FLEET " ";
-    if (ship->IsParked() && ship->IsLeading()) text = ICON_PLANET " " ICON_EMPTY " ";
-    if (ship->IsParked() && !ship->IsLeading()) text = ICON_PLANET " " ICON_TRANSPORT_FLEET " ";
+    ui::WriteEx(ship->name, TextAlignment::CONFORM, false);  
+    ui::WriteEx(_GetTypeIcon(ship->GetShipType()), TextAlignment::CONFORM, false);
+    const char* text = ICON_EMPTY " " ICON_EMPTY "  ";  // use ICON_EMPTY instead of space to get the right spacing
+    if (!ship->IsParked() && !ship->IsLeading()) text = ICON_EMPTY " " ICON_TRANSPORT_FLEET "  ";
+    if (ship->IsParked() && ship->IsLeading()) text = ICON_PLANET " " ICON_EMPTY "  ";
+    if (ship->IsParked() && !ship->IsLeading()) text = ICON_PLANET " " ICON_TRANSPORT_FLEET "  ";
     Rectangle top_buttons_rect = ui::MeasureTextEx(text, TextAlignment::RIGHT | TextAlignment::VCONFORM);
     Rectangle planet_button_rect = {top_buttons_rect.x, top_buttons_rect.y, top_buttons_rect.width/2, top_buttons_rect.height};
     Rectangle fleet_button_rect = {top_buttons_rect.x + top_buttons_rect.width/2, top_buttons_rect.y, top_buttons_rect.width/2, top_buttons_rect.height};
@@ -626,17 +636,20 @@ void _UIDrawStats(const Ship* ship) {
     ui::WriteEx(sb.c_str, TextAlignment::RIGHT | TextAlignment::VCONFORM, true);
     ui::Fillline(ship->GetPayloadMass() / ResourceCountsToKG(ship->GetMaxCapacity()), Palette::ui_main, Palette::bg);
     ui::VSpace(15);
+    ui::PushInset(0, 4 * 20-8);
     sb.Clear();
     sb.AddFormat(ICON_POWER "%2d" ICON_ACS "%2d\n", ship->power(), ship->initiative());
-    sb.AddFormat(" %2d/%2d" ICON_HEART_KINETIC "  %2d/%2d" ICON_HEART_ENERGY "  %2d/%2d" ICON_HEART_BOARDING "\n", 
+    sb.AddFormat(" %2d/%2d" ICON_HEART_KINETIC "  %2d/%2d" ICON_HEART_ENERGY "  %3d/%3d" ICON_HEART_BOARDING "\n", 
         ship->kinetic_hp() - ship->dammage_taken[ShipVariables::KINETIC_ARMOR], ship->kinetic_hp(),
         ship->energy_hp() - ship->dammage_taken[ShipVariables::ENERGY_ARMOR], ship->energy_hp(),
         ship->crew() - ship->dammage_taken[ShipVariables::CREW], ship->crew()
     );
-    sb.AddFormat("   %2d " ICON_ATTACK_KINETIC "    %2d " ICON_ATTACK_ORDNANCE "    %2d " ICON_ATTACK_BOARDING "\n", ship->kinetic_offense(), ship->ordnance_offense(), ship->boarding_offense());
-    sb.AddFormat("   %2d " ICON_SHIELD_KINETIC "    %2d " ICON_SHIELD_ORDNANCE "    %2d " ICON_SHIELD_BOARDING "\n", ship->kinetic_defense(), ship->ordnance_defense(), ship->boarding_defense());
-    sb.AddFormat("++++++++++++++++++");
+    sb.AddFormat("   %2d " ICON_ATTACK_KINETIC "    %2d " ICON_ATTACK_ORDNANCE "     %3d " ICON_ATTACK_BOARDING "\n", ship->kinetic_offense(), ship->ordnance_offense(), ship->boarding_offense());
+    sb.AddFormat("   %2d " ICON_SHIELD_KINETIC "    %2d " ICON_SHIELD_ORDNANCE "     %3d " ICON_SHIELD_BOARDING "\n", ship->kinetic_defense(), ship->ordnance_defense(), ship->boarding_defense());
+    //sb.AddFormat("++++++++++++++++++");
     ui::Write(sb.c_str);
+    ui::HelperText(GetUI()->GetConceptDescription("stat"));
+    ui::Pop();  // Inset
 }
 
 int ship_selecting_module_index = -1;
@@ -666,10 +679,16 @@ void _UIDrawInventory(Ship* ship) {
         sms->DrawShipModule(ship->modules[i]);
         ui::Pop(); // GridCell
     }
+    ui::HelperText(GetUI()->GetConceptDescription("module"));
     ui::Pop(); // Inset
 }
 
 void _UIDrawTransferplans(Ship* ship) {
+    int inset_height = ship->prepared_plans_count * (ui::Current()->GetLineHeight() * 2 + 8 + 4);
+    inset_height += 20;
+
+    ui::PushInset(0, inset_height);
+    ui::VSpace(20);
     timemath::Time now = GlobalGetNow();
     for (int i=0; i < ship->prepared_plans_count; i++) {
         char tp_str[2][40];
@@ -703,11 +722,15 @@ void _UIDrawTransferplans(Ship* ship) {
 
         // Double Button
         ui::PushInset(2, ui::Current()->GetLineHeight() * 2);
+        ButtonStateFlags::T button_state = ui::AsButton();
+        if (button_state & ButtonStateFlags::HOVER) {
+            ui::Enclose(Palette::bg, Palette::interactable_main);
+        } else {
+            ui::Enclose(Palette::bg, Palette::ui_main);
+        }
         ui::PushHSplit(0, -32);
-        ui::Enclose(Palette::bg, Palette::blue);
         ui::Write(tp_str[0]);
         ui::Write(tp_str[1]);
-        ButtonStateFlags::T button_state = ui::AsButton();
         HandleButtonSound(button_state & ButtonStateFlags::JUST_PRESSED);
         if (button_state & ButtonStateFlags::HOVER) {
             ship->highlighted_plan_index = i;
@@ -719,9 +742,13 @@ void _UIDrawTransferplans(Ship* ship) {
 
         if (i != ship->plan_edit_index) {
             ui::PushHSplit(-32, -1);
-            ui::Write("X");
-            ui::Enclose(Palette::bg, Palette::blue);
             ButtonStateFlags::T button_state = ui::AsButton();
+            if (button_state & ButtonStateFlags::HOVER) {
+                ui::Enclose(Palette::interactable_alt, Palette::interactable_alt);
+            } else {
+                ui::Enclose(Palette::bg, Palette::bg);
+            }
+            ui::WriteEx(ICON_X, TextAlignment::CENTER, false);
             HandleButtonSound(button_state & ButtonStateFlags::JUST_PRESSED);
             if (button_state & ButtonStateFlags::JUST_PRESSED) {
                 ship->RemoveTransferPlan(i);
@@ -731,7 +758,23 @@ void _UIDrawTransferplans(Ship* ship) {
 
         ui::Pop();  // Insert
     }
-    if (ui::DirectButton("+", 10) & ButtonStateFlags::JUST_PRESSED) {
+    ui::HelperText(GetUI()->GetConceptDescription("transfer"));
+    ui::Pop();  // Inset
+    
+    // 'New transfer' button
+
+    Rectangle text_rect = ui::Current()->TbMeasureTextEx("New transfer", TextAlignment::CONFORM);
+    ui::PushInline(text_rect.width + 2, text_rect.height + 2);
+    ButtonStateFlags::T new_button_state = ui::AsButton();
+    if (new_button_state & ButtonStateFlags::HOVER) {
+        ui::EnclosePartial(0, Palette::bg, Palette::interactable_main, Direction::DOWN);
+    } else {
+        ui::EnclosePartial(0, Palette::bg, Palette::ui_main, Direction::DOWN);
+    }
+    ui::WriteEx("New transfer", TextAlignment::CENTER, false);
+    HandleButtonSound(new_button_state);
+    ui::Pop();  // Inline
+    if (new_button_state & ButtonStateFlags::JUST_PRESSED) {
         ship->_OnNewPlanClicked();
     }
 }
@@ -849,6 +892,7 @@ void Ship::DrawUI() {
     _UIDrawQuests(this);
 
     ui::Pop();  // ScrollInset
+    ui::HelperText(GetUI()->GetConceptDescription("ship"));
 }
 
 void Ship::Inspect() {
@@ -1130,6 +1174,7 @@ int Ships::LoadShipClasses(const DataNode* data) {
         sc.oem = ResourceCountsToKG(sc.max_capacity) / (exp(sc.max_dv/sc.v_e) - 1);
         sc.construction_batch_size = ship_data->GetI("batch_size", 1, true);
         sc.is_hidden = strcmp(ship_data->Get("hidden", "n", true), "y") == 0;
+        sc.icon_index = AtlasPos(0, 16);
 
         ship_data->FillBufferWithChild("construction_resources", sc.construction_resources, RESOURCE_MAX, resource_names);
         ship_data->FillBufferWithChild("stats", sc.stats, ShipStats::MAX, ship_stat_names);

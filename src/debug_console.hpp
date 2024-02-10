@@ -15,9 +15,9 @@ struct Setting {
     Setting() = default;
     Setting(const char* name, const char* value);
 
-    const char* Get();
-    bool GetAsBool();
-    double GetAsDouble();
+    const char* Get() const;
+    bool GetAsBool() const;
+    double GetAsDouble() const;
     void Set(const char* value);
     void PushOverride(const char* value);
     void PopOverride();

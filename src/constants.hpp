@@ -93,8 +93,8 @@ namespace Palette {
 #define ICON_PDC "\u046c"
 #define ICON_ACS "\u046e"
 
-#define SCREEN_WIDTH 1600
-#define SCREEN_HEIGHT 900
+#define ICON_X "X"
+#define ICON_LINK ICON_EMPTY
 
 const double G = 6.6743015e-11;  // m³/(s²kg)
 

@@ -16,6 +16,12 @@ StringBuilder::StringBuilder(int p_len) {
     length = p_len;
 }
 
+StringBuilder::StringBuilder(const char* str) {
+    length = strlen(str) + 1;
+    c_str = (char*)malloc(length);
+    strcpy(c_str, str);
+}
+
 StringBuilder::~StringBuilder() {
     free(c_str);
 }

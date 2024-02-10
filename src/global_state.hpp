@@ -28,6 +28,7 @@ struct GlobalState {
     FocusablesPanels current_focus;
     RID focused_planet;
     RID focused_ship;
+    RID hover;
 
     GameCamera camera;
 	Calendar calendar;

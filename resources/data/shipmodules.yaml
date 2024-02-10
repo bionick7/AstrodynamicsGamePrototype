@@ -22,7 +22,7 @@ shipmodules:
 
 # Production
 - id: shpmod_farm
-  name: Food house
+  name: Metal refinery
   description: Provides + 1 count food / day
   produce: { food: 10 }
   mass: 10
@@ -125,7 +125,7 @@ shipmodules:
   icon_index: [10, 27]
 
 - id: shpmod_armor
-  name: Extra armor
+  name: Armor
   description: TODO
   add: 
     kinetic_hp: 20

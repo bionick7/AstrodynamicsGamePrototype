@@ -5,14 +5,15 @@
 #include "global_state.hpp"
 #include "basic.hpp"
 
+#define SETTINGS_FILE_PATH "settings.yaml"
+
 namespace settings {
     Setting* list = NULL;
     int size = 0;
 
     void Init() {
-        // TODO: Load file
         DataNode dn;
-        DataNode::FromFile(&dn, "settings.yaml", FileFormat::Auto, true);
+        DataNode::FromFile(&dn, SETTINGS_FILE_PATH, FileFormat::Auto, true);
         size = dn.GetFieldCount();
         list = new Setting[size];
         for(int i=0; i < size; i++) {
@@ -38,16 +39,16 @@ Setting* GetSetting(const char* key) {
     return NULL;
 }
 
-const char *Setting::Get() {
+const char *Setting::Get() const {
     return overrides[override_index];
 }
 
-bool Setting::GetAsBool() {
+bool Setting::GetAsBool() const {
     const char* c = overrides[override_index];
     return strcmp(c, "y") * strcmp(c, "true") == 0;
 }
 
-double Setting::GetAsDouble() {
+double Setting::GetAsDouble() const {
     return atof(overrides[override_index]);
 }
 
@@ -132,6 +133,28 @@ const char* FetchArg(char* arg, const char* inp) {
     return NULL;
 }
 
+void Help(const char*);
+void SetSetting(const char*);
+void ListSettings(const char*);
+void SaveSettings(const char*);
+void RelaodSettings(const char*);
+void GiveResource(const char*);
+
+struct { const char* name; void(*func)(const char*); } commands[] = {
+    { "help", Help },
+    { "set", SetSetting },
+    { "list", ListSettings },
+    { "save", SaveSettings },
+    { "reload", RelaodSettings },
+    { "give_rsc", GiveResource },
+};
+
+void Help(const char* prompt) {
+    for(int i=0; i < sizeof(commands) / sizeof(commands[0]); i++) {
+        PushLine(commands[i].name);
+    }
+}
+
 void SetSetting(const char* prompt) {
     static char setting_name[DEBUG_CONSOLE_MAX_LINE_SIZE];
     static char setting_value[DEBUG_CONSOLE_MAX_LINE_SIZE];
@@ -168,10 +191,48 @@ void ReloadShaders(const char* prompt) {
     RenderServer::ReloadShaders();
 }
 
-struct { const char* name; void(*func)(const char*); } commands[] = {
-    { "set", SetSetting },
-    { "list", ListSettings },
-};
+void SaveSettings(const char* prompt) {
+    if (settings::list == NULL) { settings::Init(); }
+    DataNode dn;
+    for(int i=0; i < settings::size; i++) {
+        dn.Set(settings::list[i].name, settings::list[i].Get());  // Applies any overrides
+    }
+    dn.WriteToFile(SETTINGS_FILE_PATH, FileFormat::YAML);
+}
+
+void RelaodSettings(const char* prompt) {
+    settings::Init();
+}
+
+void GiveResource(const char* prompt) {
+    static char planet_name[DEBUG_CONSOLE_MAX_LINE_SIZE];
+    static char resource_name[DEBUG_CONSOLE_MAX_LINE_SIZE];
+    static char resource_value[DEBUG_CONSOLE_MAX_LINE_SIZE];
+    prompt = FetchArg(planet_name, prompt);
+    prompt = FetchArg(resource_name, prompt);
+    if (*prompt == '\0') {
+        PushLine("3 arguments expected");
+        return;
+    }
+    prompt = FetchArg(resource_value, prompt);
+    
+    ResourceType rsc_index = RESOURCE_NONE;
+    for (int i=0; i < RESOURCE_MAX; i++) {
+        if (strcmp(resource_name, resource_names[i]) == 0)
+            rsc_index = (ResourceType)i;
+    }
+    if (rsc_index < 0) {
+        PushLine("Invalid resource name");
+        return;
+    }
+
+    Planet* planet = GetPlanet(GetPlanets()->GetIndexByName(planet_name));
+    if (planet == NULL) {
+        PushLine("No such planet");
+    }
+    int val = TextToInteger(resource_value);
+    planet->economy.GiveResource(ResourceTransfer(rsc_index, val));
+}
 
 void InterpreteResult(const char* prompt) {
     static char command_str[DEBUG_CONSOLE_MAX_LINE_SIZE];
@@ -228,6 +289,14 @@ void DrawDebugConsole() {
             current_prompt[0] = '\0';
             cursor = 0;
             prompt_backlog_offset = 0;
+        }
+        else if (key == KEY_C && IsKeyDown(KEY_LEFT_CONTROL)) {
+            SetClipboardText(current_prompt);
+        }
+        else if (key == KEY_V && IsKeyDown(KEY_LEFT_CONTROL)) {
+            const char* insert = GetClipboardText();
+            strncpy(&current_prompt[cursor], insert, DEBUG_CONSOLE_MAX_LINE_SIZE - cursor);
+            cursor += strlen(insert);
         }
         else if (key == KEY_BACKSPACE && cursor > 0) {
             cursor--;

@@ -295,6 +295,7 @@ void Planet::_UIDrawInventory() {
     int rows = height / (SHIP_MODULE_HEIGHT + MARGIN);
     int i_max = MinInt(rows * columns, MAX_PLANET_INVENTORY);
     ui::PushInset(0, height);
+    ui::Current()->width = (SHIP_MODULE_WIDTH + MARGIN) * columns;
     
     ShipModules* sms = GetShipModules();
     for (int i = 0; i < i_max; i++) {
@@ -333,6 +334,7 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
     switch (IdGetType(id)) {
         case EntityType::SHIP_CLASS: {
             const ShipClass* ship_class = GetShipClassByIndex(id);
+            sb.Add(ship_class->name).Add("\n");
             sb.Add(ship_class->description);
             construction_resources = &ship_class->construction_resources[0];
             build_time = ship_class->construction_time;
@@ -341,6 +343,7 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
         }
         case EntityType::MODULE_CLASS: {
             const ShipModuleClass* module_class = GetModule(id);
+            sb.Add(module_class->name).Add("\n");
             sb.Add(module_class->description);
             construction_resources = &module_class->construction_resources[0];
             build_time = module_class->construction_time;
@@ -357,7 +360,7 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
     if (planet_resource_array == NULL) {
         return;
     }
-    ui::Write("++++++++");
+    ui::VSpace(10);
     for (int i=0; i < RESOURCE_MAX; i++) {
         if (construction_resources[i] == 0) {
             continue;
@@ -381,11 +384,12 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
 }
 
 void _UIDrawProduction(int option_size, IDList* queue, resource_count_t resources[], double progress,
-    RID id_getter(int), const char* name_getter(RID), bool include_getter(RID)
+    RID id_getter(int), AtlasPos icon_getter(RID), bool include_getter(RID)
 ) {
     // Draw options
-    const int COLUMNS = 4;
-    int rows = std::ceil(option_size / (double)COLUMNS);
+    int margin = 3;
+    int columns = ui::Current()->width / (SHIP_MODULE_WIDTH + margin);
+    int rows = std::ceil(option_size / (double)columns);
     ui::PushInset(0, 50*rows);
     ui::Shrink(5, 5);
 
@@ -395,23 +399,23 @@ void _UIDrawProduction(int option_size, IDList* queue, resource_count_t resource
         if (!include_getter(id)) {
             continue;
         }
-        ui::PushGridCell(COLUMNS, rows, i % COLUMNS, i / COLUMNS);
-        ui::Shrink(3, 3);
+        ui::PushGridCell(columns, rows, i % columns, i / columns);
+        ui::Shrink(margin, margin);
         
         // Possible since Shipclasses get loaded once in continuous mempry
         ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
-            ui::Enclose(Palette::bg, Palette::ui_main);
+            ui::Enclose(Palette::bg, Palette::interactable_main);
             hovered_id = id;
         } else {
-            ui::Enclose(Palette::bg, Palette::blue);
+            ui::Enclose(Palette::bg, Palette::ui_main);
         }
         HandleButtonSound(button_state);
         if ((button_state & ButtonStateFlags::JUST_PRESSED) && _CanProduce(id, &resources[0])) {
             queue->Append(id);
         }
 
-        ui::Write(name_getter(id));
+        ui::DrawIcon(icon_getter(id), Palette::ui_main, ui::Current()->height);
         //ui::Fillline(1.0, Palette::ui_main, Palette::bg);
         //ui::Write(ship_class->description);
         ui::Pop();  // GridCell
@@ -422,21 +426,21 @@ void _UIDrawProduction(int option_size, IDList* queue, resource_count_t resource
     bool hover_over_queue = false;
     for(int i=0; i < queue->size; i++) {
         RID id = queue->Get(i);
-        ui::PushInset(0, 50);
-        ui::Shrink(3, 3);
+        ui::PushInset(0, SHIP_MODULE_HEIGHT);
+        ui::Shrink(margin, margin);
         ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
             ui::Enclose(Palette::bg, Palette::ui_main);
             hovered_id = id;
             hover_over_queue = true;
         } else {
-            ui::Enclose(Palette::bg, Palette::blue);
+            ui::Enclose(Palette::bg, Palette::interactable_main);
         }
         if (button_state & ButtonStateFlags::JUST_PRESSED) {
             queue->EraseAt(i);
             i--;
         }
-        ui::Write(name_getter(id));
+        ui::DrawIcon(icon_getter(id), Palette::ui_main, ui::Current()->height);
         if (i == 0) {
             ui::Fillline(progress, Palette::ui_main, Palette::bg);
         }
@@ -467,7 +471,7 @@ void Planet::_UIDrawModuleProduction() {
         economy.resource_stock,
         progress,
         [](int i) { return RID(i, EntityType::MODULE_CLASS); },
-        [](RID id) { return GetModule(id)->name; },
+        [](RID id) { return GetModule(id)->icon_index; },
         [](RID id) { return !GetModule(id)->is_hidden; }
     );
 }
@@ -484,7 +488,7 @@ void Planet::_UIDrawShipProduction() {
         economy.resource_stock,
         progress,
         [](int i) { return RID(i, EntityType::SHIP_CLASS); },
-        [](RID id) { return GetShipClassByIndex(id)->name; },
+        [](RID id) { return GetShipClassByIndex(id)->icon_index; },
         [](RID id) { return !GetShipClassByIndex(id)->is_hidden; }
     );
 }
@@ -573,6 +577,7 @@ void Planet::DrawUI() {
         ui::Pop();  // GridCell
     }
     ui::Pop();  // Tab container
+    ui::PushInset(0, 10000);  // Constrained by outside container
 
     ui::Write(name);
     ui::Fillline(1, Palette::ui_main, Palette::ui_main);
@@ -597,7 +602,8 @@ void Planet::DrawUI() {
         break;
     }
 
-    ui::Pop();  // Outside
+    ui::HelperText(GetUI()->GetConceptDescription("planet"));
+    ui::Pop();  // Inset
 }
 
 Planets::Planets() {
