@@ -77,12 +77,17 @@ RID ShipModuleSlot::GetSlot() const {
 }
 
 void ShipModuleSlot::AssignIfValid(ShipModuleSlot other) {
-    if (IsIdValid(other.entity) && other.index >= 0) {
+    if (other.IsValid()) {
         *this = other;
     }
 }
 
-bool ShipModuleSlot::IsReachable(ShipModuleSlot other) {
+bool ShipModuleSlot::IsValid() const {
+    return IsIdValid(entity) && index >= 0;
+}
+
+bool ShipModuleSlot::IsReachable(ShipModuleSlot other) const {
+    if (!IsValid() || !other.IsValid()) return false;
     RID own_planet = GetInvalidId();
     RID other_planet = GetInvalidId();
     if (type == ShipModuleSlot::DRAGGING_FROM_PLANET) {
@@ -196,7 +201,30 @@ void ShipModules::InitDragging(ShipModuleSlot slot, Rectangle current_draw_rect)
 
     Vector2 draw_pos = {current_draw_rect.x, current_draw_rect.y};
     _dragging_mouse_offset = Vector2Subtract(draw_pos, GetMousePosition());
+}
 
+void ShipModules::DirectSwap(ShipModuleSlot slot) {
+    ShipModuleSlot available = ShipModuleSlot();
+    if (slot.type == ShipModuleSlot::DRAGGING_FROM_SHIP
+        && IsIdValidTyped(GetGlobalState()->focused_planet, EntityType::PLANET)
+    ) {
+        const Planet* planet = GetPlanet(GetGlobalState()->focused_planet);
+        available = planet->GetFreeModuleSlot();
+    }
+    if (slot.type == ShipModuleSlot::DRAGGING_FROM_PLANET
+        && IsIdValidTyped(GetGlobalState()->focused_ship, EntityType::SHIP)
+    ) {
+        const Ship* ship = GetShip(GetGlobalState()->focused_ship);
+        available = ship->GetFreeModuleSlot();
+    }
+    if (!available.IsValid()) {
+        return;
+    }
+    if (!slot.IsReachable(available)) {
+        return;
+    }
+    available.SetSlot(slot.GetSlot());
+    slot.SetSlot(GetInvalidId());
 }
 
 void ShipModules::UpdateDragging() {

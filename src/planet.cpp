@@ -150,14 +150,13 @@ void Planet::RecalcStats() {
     }
 }
 
-bool Planet::AddShipModuleToInventory(RID module_) {
+ShipModuleSlot Planet::GetFreeModuleSlot() const {
     for (int index = 0; index < MAX_PLANET_INVENTORY; index++) {
         if(!IsIdValid(ship_module_inventory[index])) {
-            ship_module_inventory[index] = module_;
-            return true;
+            return ShipModuleSlot(id, index, ShipModuleSlot::DRAGGING_FROM_PLANET);
         }
     }
-    return false;  // No free space
+    return ShipModuleSlot(id, -1, ShipModuleSlot::DRAGGING_FROM_PLANET);
 }
 
 void Planet::RemoveShipModuleInInventory(int index) {
@@ -271,8 +270,12 @@ void Planet::AdvanceModuleProductionQueue() {
     module_production_process++;
     const ShipModuleClass* smc = GetModule(module_production_queue[0]);
     if (module_production_process < smc->construction_time) return;
+    
+    ShipModuleSlot free_slot = GetFreeModuleSlot();
+    if (free_slot.IsValid()) {
+        free_slot.SetSlot(module_production_queue[0]);
+    }
 
-    AddShipModuleToInventory(module_production_queue[0]);
     for (int i=0; i < RESOURCE_MAX; i++) {
         if (smc->construction_resources[i] != 0) {
             economy.DrawResource(ResourceTransfer((ResourceType) i, smc->construction_resources[i]));
@@ -303,7 +306,11 @@ void Planet::_UIDrawInventory() {
             current_slot = ShipModuleSlot(id, i, ShipModuleSlot::DRAGGING_FROM_PLANET);
         }
         if (button_state & ButtonStateFlags::JUST_PRESSED) {
-            sms->InitDragging(current_slot, ui::Current()->render_rec);
+            if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) {
+                sms->DirectSwap(current_slot);
+            } else {
+                sms->InitDragging(current_slot, ui::Current()->render_rec);
+            }
         }
         sms->DrawShipModule(ship_module_inventory[i]);
         ui::Pop();  // GridCell
@@ -529,12 +536,13 @@ void Planet::DrawUI() {
         return;
     }
 
-    ui::CreateNew(10, y_start, DEFAULT_FONT_SIZE*30, height, DEFAULT_FONT_SIZE, Palette::ui_main);
+    ui::CreateNew(10, y_start, 340, height, DEFAULT_FONT_SIZE, Palette::ui_main);
     ui::Enclose(Palette::bg, Palette::ui_main);
 
     ui::PushInset(4, (DEFAULT_FONT_SIZE+4)*2);  // Tab container
     int w = ui::Current()->width;
     const int n_tabs = 6;
+    const int tab_columns = 3;
     const char* tab_descriptions[] = {
         "Resources",
         "Economy",
@@ -546,7 +554,7 @@ void Planet::DrawUI() {
     static_assert(sizeof(tab_descriptions) / sizeof(tab_descriptions[0]) == n_tabs);
 
     for (int i=0; i < n_tabs; i++) {
-        ui::PushGridCell(4, 2, i%4, i/4);
+        ui::PushGridCell(tab_columns, 2, i%tab_columns, i/tab_columns);
         //ui::PushHSplit(i * w / n_tabs, (i + 1) * w / n_tabs);
         ButtonStateFlags::T button_state = ui::AsButton();
         HandleButtonSound(button_state & ButtonStateFlags::JUST_PRESSED);

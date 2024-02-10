@@ -27,8 +27,8 @@ bool _PauseMenuButton(const char* label) {
 bool is_in_pause_menu;
 void _PauseMenu() {
     const int menu_width = 200;
-    const int button_height = DEFAULT_FONT_SIZE+4;
-    const int menu_height = button_height * 3;
+    const int button_height = DEFAULT_FONT_SIZE+10;
+    const int menu_height = button_height * 3 + 8;
     ui::CreateNew(
         (GetScreenWidth() - menu_width)/2, 
         (GetScreenHeight() - menu_height)/2, 

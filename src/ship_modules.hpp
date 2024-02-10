@@ -95,7 +95,8 @@ struct ShipModuleSlot {
     void SetSlot(RID module) const;
     RID GetSlot() const;
     void AssignIfValid(ShipModuleSlot other);
-    bool IsReachable(ShipModuleSlot other);
+    bool IsValid() const;
+    bool IsReachable(ShipModuleSlot other) const;
 };
 
 struct ShipModules {
@@ -115,6 +116,7 @@ struct ShipModules {
     void DrawShipModule(RID index) const;
 
     void InitDragging(ShipModuleSlot slot, Rectangle current_draw_rect);
+    void DirectSwap(ShipModuleSlot slot);
     void UpdateDragging();
     
     struct{

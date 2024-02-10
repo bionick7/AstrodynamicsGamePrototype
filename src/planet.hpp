@@ -61,7 +61,7 @@ struct Planet {
 
     void RecalcStats();
 
-    bool AddShipModuleToInventory(RID module);
+    ShipModuleSlot GetFreeModuleSlot() const;
     void RemoveShipModuleInInventory(int index);
 
     bool HasMouseHover(double* distance) const;

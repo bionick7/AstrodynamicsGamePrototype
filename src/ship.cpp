@@ -657,7 +657,11 @@ void _UIDrawInventory(Ship* ship) {
             ship->current_slot = ShipModuleSlot(ship->id, i, ShipModuleSlot::DRAGGING_FROM_SHIP);
         }
         if (button_state & ButtonStateFlags::JUST_PRESSED) {
-            sms->InitDragging(ship->current_slot, ui::Current()->render_rec);
+            if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) {
+                sms->DirectSwap(ship->current_slot);
+            } else {
+                sms->InitDragging(ship->current_slot, ui::Current()->render_rec);
+            }
         }
         sms->DrawShipModule(ship->modules[i]);
         ui::Pop(); // GridCell
@@ -871,6 +875,15 @@ void Ship::Repair(int hp) {
     dammage_taken[ShipVariables::KINETIC_ARMOR] -= kinetic_repair;
     dammage_taken[ShipVariables::ENERGY_ARMOR] -= energy_repair;
     dammage_taken[ShipVariables::CREW] -= crew_repair;
+}
+
+ShipModuleSlot Ship::GetFreeModuleSlot() const {
+    for (int index = 0; index < SHIP_MAX_MODULES; index++) {
+        if(!IsIdValid(modules[index])) {
+            return ShipModuleSlot(id, index, ShipModuleSlot::DRAGGING_FROM_SHIP);
+        }
+    }
+    return ShipModuleSlot(id, -1, ShipModuleSlot::DRAGGING_FROM_SHIP);
 }
 
 void Ship::AttachTo(RID parent_ship) {

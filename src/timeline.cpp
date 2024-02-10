@@ -309,7 +309,6 @@ void DrawTimeline() {
     tcd.planet_coords = new int[gs->planets.planet_count];
 
     // Scrolling
-    GetUI()->scroll_lock = true;
     if (GetGlobalState()->current_focus == GlobalState::TIMELINE) {
         float scroll_ratio = 1 + 0.1 * GetMouseWheelMove();
         if (scroll_ratio > 1) {

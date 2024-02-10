@@ -115,6 +115,7 @@ struct Ship {
     void DrawUI();
     void Inspect();
 
+    ShipModuleSlot GetFreeModuleSlot() const;
     void RemoveShipModuleAt(int index);
     void Repair(int hp);
     void AttachTo(RID parent_ship);

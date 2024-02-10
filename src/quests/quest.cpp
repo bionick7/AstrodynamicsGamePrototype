@@ -305,7 +305,10 @@ void Quest::_NextTask() {
             const char* module_string_id = GetWrenInterface()->GetStringFromMap("module", "");
             int planet_index = GetWrenInterface()->GetNumFromMap("location", 0);
             RID module_id = GetShipModules()->GetModuleRIDFromStringId(module_string_id);
-            GetPlanetByIndex(planet_index)->AddShipModuleToInventory(module_id);
+            ShipModuleSlot free_slot = GetPlanetByIndex(planet_index)->GetFreeModuleSlot();
+            if (free_slot.IsValid()) {
+                free_slot.SetSlot(module_id);
+            }
         }
         else if (strcmp(type, "gain reputation") == 0) {
             GetWrenInterface()->GetStringFromMap("faction", "");

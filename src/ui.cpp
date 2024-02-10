@@ -316,7 +316,6 @@ int ui::PushScrollInset(int margin, int h, int allocated_height, int* scroll) {
     if (ui::AsButton() & ButtonStateFlags::HOVER) {
         int max_scroll = MaxInt(allocated_height - ui::Current()->height, 0);
         *scroll = ClampInt(*scroll - GetMouseWheelMove() * 20, 0, max_scroll);
-        GetUI()->scroll_lock = true;
     }
 
     TextBox* tb = ui::Current();
@@ -536,8 +535,6 @@ void UIGlobals::UIInit() {
 
 void UIGlobals::UIStart() {  // Called each frame before drawing UI
     SetMouseCursor(MOUSE_CURSOR_CROSSHAIR);
-    //SetMouseCursor(MOUSE_CURSOR_DEFAULT);
-    GetUI()->scroll_lock = false;
     GetUI()->mouseover_text[0] = '\0';
     for(; blocking_rect_index >= 0; blocking_rect_index--) {
         blocking_rects[blocking_rect_index] = {0};
