@@ -588,6 +588,35 @@ void Ship::DrawTrajectories() const {
     }
 }
 
+void _UIDrawHeader(const Ship* ship) {
+    ui::WriteEx(ship->name, TextAlignment::CONFORM, false);
+    ui::WriteEx(" " ICON_TRANSPORT_SHIP, TextAlignment::CONFORM, false);
+    const char* text = ICON_EMPTY " " ICON_EMPTY " ";  // use ICON_EMPTY instead of space to get the right spacing
+    if (!ship->IsParked() && !ship->IsLeading()) text = ICON_EMPTY " " ICON_TRANSPORT_FLEET " ";
+    if (ship->IsParked() && ship->IsLeading()) text = ICON_PLANET " " ICON_EMPTY " ";
+    if (ship->IsParked() && !ship->IsLeading()) text = ICON_PLANET " " ICON_TRANSPORT_FLEET " ";
+    Rectangle top_buttons_rect = ui::MeasureTextEx(text, TextAlignment::RIGHT | TextAlignment::VCONFORM);
+    Rectangle planet_button_rect = {top_buttons_rect.x, top_buttons_rect.y, top_buttons_rect.width/2, top_buttons_rect.height};
+    Rectangle fleet_button_rect = {top_buttons_rect.x + top_buttons_rect.width/2, top_buttons_rect.y, top_buttons_rect.width/2, top_buttons_rect.height};
+    ui::WriteEx(text, TextAlignment::RIGHT | TextAlignment::VCONFORM, true);
+    ButtonStateFlags::T planet_button_state = GetButtonState(CheckCollisionPointRec(GetMousePosition(), planet_button_rect), false);  // Don't care about hover_in
+    ButtonStateFlags::T fleet_button_state = GetButtonState(CheckCollisionPointRec(GetMousePosition(), fleet_button_rect), false);  // Don't care about hover_in
+    if (planet_button_state & ButtonStateFlags::JUST_PRESSED && ship->IsParked()) {
+        GetGlobalState()->focused_planet = ship->GetParentPlanet();
+    }
+    if (fleet_button_state & ButtonStateFlags::JUST_PRESSED && !ship->IsLeading()) {
+        GetGlobalState()->focused_ship = ship->parent_obj;
+    }
+    
+    if (planet_button_state & ButtonStateFlags::HOVER && ship->IsParked()) {
+        ui::SetMouseHint("Select parent planet");
+    }
+    if (fleet_button_state & ButtonStateFlags::HOVER && !ship->IsLeading()) {
+        ui::SetMouseHint("Select leading ship");
+    }
+    ui::VSpace(10);
+}
+
 void _UIDrawStats(const Ship* ship) {
     StringBuilder sb;
     sb.AddFormat(ICON_PAYLOAD " %d / %d ", KGToResourceCounts(ship->GetPayloadMass()), ship->GetMaxCapacity());
@@ -803,10 +832,8 @@ void Ship::DrawUI() {
 
     ui::PushScrollInset(0, ui::Current()->height, allocated, &ui_scroll);
 
-    ui::WriteEx(name, TextAlignment::CONFORM, false);
-    ui::WriteEx(" " ICON_TRANSPORT_SHIP, TextAlignment::CONFORM, false);
-    ui::WriteEx(ICON_PLANET ICON_TRANSPORT_FLEET, TextAlignment::RIGHT | TextAlignment::VCONFORM, true);
-    ui::VSpace(10);
+    _UIDrawHeader(this);
+
     _UIDrawStats(this);
     //if (!IsPlayerControlled()) {
     //    ui::Pop();  // ScrollInset

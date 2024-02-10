@@ -100,7 +100,7 @@ ButtonStateFlags::T Task::DrawUI(bool show_as_button, bool highlight) const {
     // Line 1
     sb.AddFormat("%s >> %s  %d cts", GetPlanet(departure_planet)->name, GetPlanet(arrival_planet)->name, KGToResourceCounts(payload_mass));
     if (button_state == ButtonStateFlags::HOVER) {
-        UISetMouseHint(sb_mouse.c_str);
+        ui::SetMouseHint(sb_mouse.c_str);
     }
     if (IsIdValid(current_planet)) {
         sb.Add("  Now: [").Add(GetPlanet(current_planet)->name).AddLine("]");

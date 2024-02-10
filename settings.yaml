@@ -2,7 +2,7 @@ enable_ai: y
 enable_player_ai: y
 skip_postprocessing: n
 show_fps: y
-text_boundrects: y
+text_boundrects: n
 sdf_text: y
 allow_fullscreen: n
 show_fps: y

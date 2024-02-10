@@ -179,7 +179,7 @@ void ShipModules::DrawShipModule(RID index) const {
         ui::Enclose(Palette::bg, Palette::ui_main);
         ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
-            UISetMouseHint(smc->name);
+            ui::SetMouseHint(smc->name);
         }
         if (button_state & ButtonStateFlags::PRESSED) {
             return;

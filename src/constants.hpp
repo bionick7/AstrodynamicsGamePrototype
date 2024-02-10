@@ -23,9 +23,9 @@ namespace Palette {
     extern Color enemy_alt;
 }
 
-#define ICON_EMPTY "\u04df"  // lower-right corner
+#define ICON_EMPTY "\u04ff"  // lower-right corner
 
-#define ICON_PLANET ICON_EMPTY
+#define ICON_PLANET "\u0300"
 
 #define ICON_HEART "\u0400"
 #define ICON_HEART_ORDNANCE "\u0401"

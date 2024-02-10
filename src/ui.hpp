@@ -84,14 +84,18 @@ struct TextBox {
     void Enclose(int inset, int corner_radius, Color background_color, Color line_color);
     void EnclosePartial(int inset, Color background_color, Color line_color, Direction::T directions);
     void Shrink(int dx, int dy);
-    Vector2 GetAnchorPoint(TextAlignment::T align) const;
     void Write(const char* text, TextAlignment::T align);
     void WriteLine(const char* text, TextAlignment::T align);
     void DrawTexture(Texture2D texture, Rectangle source, int height, Color tint, bool sdf);
-    void DebugDrawRenderRec() const;
-    int GetLineHeight() const;
     ButtonStateFlags::T WriteButton(const char* text, int inset);
     ButtonStateFlags::T AsButton() const;
+
+    void DebugDrawRenderRec() const;
+
+    Vector2 GetAnchorPoint(TextAlignment::T align) const;
+    int GetLineHeight() const;
+    Rectangle TbMeasureTextEx(const char* text, TextAlignment::T alignemnt) const;
+
 
 private:
     void _Advance(Vector2 pos, Vector2 size);
@@ -150,11 +154,13 @@ namespace ui {
     void DrawIconSDF(AtlasPos atlas_index, Color tint, int height);
     void Write(const char* text);
     void WriteEx(const char* text, TextAlignment::T alignemnt, bool linebreak);
+    Rectangle MeasureTextEx(const char* text, TextAlignment::T alignemnt);
     void Fillline(double value, Color fill_color, Color background_color);
     ButtonStateFlags::T DirectButton(const char* text, int inset);
 
     void HSpace(int pixels);
     void VSpace(int pixels);
+    void SetMouseHint(const char* text);
 
     Vector2 GetRelMousePos();
     TextBox* Current();
@@ -162,7 +168,6 @@ namespace ui {
 
 void HandleButtonSound(ButtonStateFlags::T button_state_flags);
 Font GetCustomDefaultFont();
-void UISetMouseHint(const char* text);
 
 ButtonStateFlags::T DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color);
 ButtonStateFlags::T DrawCircleButton(Vector2 midpoint, double radius, Color color);

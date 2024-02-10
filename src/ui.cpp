@@ -145,31 +145,6 @@ void TextBox::Shrink(int dx, int dy) {
     height -= 2*dy;
 }
 
-void TextBox::DebugDrawRenderRec() const {
-    DrawRectangleRec(render_rec, BLACK);
-    DrawRectangleLinesEx(render_rec, 4, PURPLE);
-}
-
-
-int TextBox::GetLineHeight() const {
-    return text_size + text_margin_y;
-}
-
-Vector2 TextBox::GetAnchorPoint(TextAlignment::T align) const {
-    Vector2 res = { (float)text_start_x, (float)text_start_y };
-    switch(align & TextAlignment::HFILTER){
-        case TextAlignment::HCENTER: res.x += width/2; break;
-        case TextAlignment::RIGHT: res.x += width; break;
-        case TextAlignment::HCONFORM: res.x += x_cursor; break;
-    }
-    switch(align & TextAlignment::VFILTER){
-        case TextAlignment::VCENTER: res.y += height/2; break;
-        case TextAlignment::BOTTOM: res.y += height; break;
-        case TextAlignment::VCONFORM: res.y += y_cursor; break;
-    }
-    return res;
-}
-
 void TextBox::Write(const char* text, TextAlignment::T align) {
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
     Vector2 pos = ApplyAlignment(GetAnchorPoint(align), size, align);
@@ -257,6 +232,37 @@ ButtonStateFlags::T TextBox::AsButton() const {
         CheckCollisionPointRec(GetMousePosition(), {(float)text_start_x, (float)text_start_y, (float)width, (float)height}),
         CheckCollisionPointRec(Vector2Subtract(GetMousePosition(), GetMouseDelta()), {(float)text_start_x, (float)text_start_y, (float)width, (float)height})
     );
+}
+
+void TextBox::DebugDrawRenderRec() const {
+    DrawRectangleRec(render_rec, BLACK);
+    DrawRectangleLinesEx(render_rec, 4, PURPLE);
+}
+
+
+int TextBox::GetLineHeight() const {
+    return text_size + text_margin_y;
+}
+
+Vector2 TextBox::GetAnchorPoint(TextAlignment::T align) const {
+    Vector2 res = { (float)text_start_x, (float)text_start_y };
+    switch(align & TextAlignment::HFILTER){
+        case TextAlignment::HCENTER: res.x += width/2; break;
+        case TextAlignment::RIGHT: res.x += width; break;
+        case TextAlignment::HCONFORM: res.x += x_cursor; break;
+    }
+    switch(align & TextAlignment::VFILTER){
+        case TextAlignment::VCENTER: res.y += height/2; break;
+        case TextAlignment::BOTTOM: res.y += height; break;
+        case TextAlignment::VCONFORM: res.y += y_cursor; break;
+    }
+    return res;
+}
+
+Rectangle TextBox::TbMeasureTextEx(const char* text, TextAlignment::T alignemnt) const {
+    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
+    Vector2 pos = ApplyAlignment(GetAnchorPoint(alignemnt), size, alignemnt);
+    return {pos.x, pos.y, size.x, size.y};
 }
 
 void ui::PushGlobal(int x, int y, int w, int h, int text_size, Color color) {
@@ -478,6 +484,10 @@ void ui::WriteEx(const char *text, TextAlignment::T alignemnt, bool linebreak) {
     }
 }
 
+Rectangle ui::MeasureTextEx(const char *text, TextAlignment::T alignemnt) {
+    return ui::Current()->TbMeasureTextEx(text, alignemnt);
+}
+
 void ui::Fillline(double value, Color fill_color, Color background_color)
 {
     TextBox* tb = ui::Current();
@@ -512,7 +522,7 @@ void ui::VSpace(int pixels) {
     ui::Current()->y_cursor += pixels;
 }
 
-void UISetMouseHint(const char* text) {
+void ui::SetMouseHint(const char* text) {
     strncpy(GetUI()->mouseover_text, text, 1024);
 }
 
