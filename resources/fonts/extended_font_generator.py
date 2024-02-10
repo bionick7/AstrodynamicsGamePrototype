@@ -44,7 +44,12 @@ def main(base_font, new_font, base_size, downsampled_size):
         for x in range(0, 32):
             if x < 320:
                 base_retangles.append([x*base_size, (x+1)*base_size, y*base_size, (y+1)*base_size])
-                lines.append(f"char id={char_id:<3} x={x*downsampled_size:<3}   y={y*downsampled_size:<3}   width={downsampled_size:<3}   height={downsampled_size:<3}   xoffset=0     yoffset=0     xadvance=20    page=0  chnl=15\n")
+                lines.append(
+                    f"char id={char_id:<3} x={x*downsampled_size:<3}   "
+                    f"y={y*downsampled_size:<3}   width={downsampled_size:<3}   "
+                    f"height={downsampled_size:<3}   xoffset=0     yoffset=0     "
+                    f"xadvance={downsampled_size:<3}    page=0  chnl=15\n"
+                )
             char_id += 1
             counter += 1
 

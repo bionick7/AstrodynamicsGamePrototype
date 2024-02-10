@@ -126,7 +126,7 @@ void PlanetaryEconomy::UIDrawResources(const ResourceTransfer& transfer, double 
                     GetTransferPlanUI()->SetResourceType((ResourceType) i);
             }
         }
-        ui::Write(buffer, false);
+        ui::WriteEx(buffer, TextAlignment::CONFORM, false);
 
         resource_count_t qtt = 0;
         if (transfer.resource_id == i) {
@@ -137,7 +137,7 @@ void PlanetaryEconomy::UIDrawResources(const ResourceTransfer& transfer, double 
         }
         if (qtt != 0) {
             sprintf(buffer, "   %+3d", qtt);
-            ui::Write(buffer, false);
+            ui::WriteEx(buffer, TextAlignment::CONFORM, false);
         }
         ui::Fillline(resource_stock[i] / resource_capacity[i], Palette::ui_main, Palette::bg);
         ui::Pop();  // Inset
@@ -196,7 +196,7 @@ void PlanetaryEconomy::UIDrawEconomy(const ResourceTransfer& transfer, double fu
         StringBuilder sb = StringBuilder();
         sb.AddFormat("%-10s", GetResourceData(i)->name).AddCost(resource_price[i]);
         //sprintf(buffer, "%-10sM§M  %+3fK /cnt", GetResourceData(i)->name, resource_price[i]/1e3);
-        ui::Write(sb.c_str, false);
+        ui::WriteEx(sb.c_str, TextAlignment::CONFORM, false);
 
         resource_count_t qtt = 0;
         if (transfer.resource_id == i) {
@@ -207,7 +207,7 @@ void PlanetaryEconomy::UIDrawEconomy(const ResourceTransfer& transfer, double fu
         }
         if (qtt != 0) {
             sb.Clear().AddI(qtt).Add("(").AddCost(GetPrice(resource, qtt)).Add(")");
-            ui::Write(sb.c_str, false);
+            ui::WriteEx(sb.c_str, TextAlignment::CONFORM, false);
         }
 
         resource_count_t trade_ammount = 0;

@@ -15,9 +15,18 @@ namespace TextAlignment {
     const static T LEFT      = 0x00;
     const static T HCENTER   = 0x01;
     const static T RIGHT     = 0x02;
+    const static T HCONFORM  = 0x03;
+
     const static T TOP       = 0x00;
     const static T VCENTER   = 0x04;
     const static T BOTTOM    = 0x08;
+    const static T VCONFORM  = 0x0c;
+
+    const static T CENTER    = 0x05;
+    const static T CONFORM   = 0x0f;
+
+    const static T HFILTER   = 0x03;
+    const static T VFILTER   = 0x0c;
 };
 
 Vector2 ApplyAlignment(Vector2 pos, Vector2 size, TextAlignment::T alignment);
@@ -75,8 +84,9 @@ struct TextBox {
     void Enclose(int inset, int corner_radius, Color background_color, Color line_color);
     void EnclosePartial(int inset, Color background_color, Color line_color, Direction::T directions);
     void Shrink(int dx, int dy);
-    void Write(const char* text);
-    void WriteLine(const char* text);
+    Vector2 GetAnchorPoint(TextAlignment::T align) const;
+    void Write(const char* text, TextAlignment::T align);
+    void WriteLine(const char* text, TextAlignment::T align);
     void DrawTexture(Texture2D texture, Rectangle source, int height, Color tint, bool sdf);
     void DebugDrawRenderRec() const;
     int GetLineHeight() const;
@@ -84,7 +94,7 @@ struct TextBox {
     ButtonStateFlags::T AsButton() const;
 
 private:
-    void _Advance(Vector2 size);
+    void _Advance(Vector2 pos, Vector2 size);
 };
 
 struct AtlasPos {
@@ -138,9 +148,13 @@ namespace ui {
 
     void DrawIcon(AtlasPos atlas_index, Color tint, int height);
     void DrawIconSDF(AtlasPos atlas_index, Color tint, int height);
-    void Write(const char* text, bool linebreak=true);
+    void Write(const char* text);
+    void WriteEx(const char* text, TextAlignment::T alignemnt, bool linebreak);
     void Fillline(double value, Color fill_color, Color background_color);
     ButtonStateFlags::T DirectButton(const char* text, int inset);
+
+    void HSpace(int pixels);
+    void VSpace(int pixels);
 
     Vector2 GetRelMousePos();
     TextBox* Current();

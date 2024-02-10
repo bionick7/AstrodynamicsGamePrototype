@@ -590,11 +590,14 @@ void Ship::DrawTrajectories() const {
 
 void _UIDrawStats(const Ship* ship) {
     StringBuilder sb;
-    sb.AddFormat("Payload %d / %d ", KGToResourceCounts(ship->GetPayloadMass()), ship->GetMaxCapacity());
-    ui::Write(sb.c_str);
-    ui::Fillline(ship->GetPayloadMass() / ResourceCountsToKG(ship->GetMaxCapacity()), Palette::ui_main, Palette::bg);
+    sb.AddFormat(ICON_PAYLOAD " %d / %d ", KGToResourceCounts(ship->GetPayloadMass()), ship->GetMaxCapacity());
+    ui::WriteEx(sb.c_str, TextAlignment::LEFT | TextAlignment::VCONFORM, false);
     sb.Clear();
-    sb.AddFormat("\u0394V %2.2f (I_sp: %2.2f)\n", ship->GetCapableDV(), GetShipClassByIndex(ship->ship_class)->v_e / 1000);
+    sb.AddFormat("\u0394V %2.2f km/s  ", ship->GetCapableDV() / 1000.f);
+    ui::WriteEx(sb.c_str, TextAlignment::RIGHT | TextAlignment::VCONFORM, true);
+    ui::Fillline(ship->GetPayloadMass() / ResourceCountsToKG(ship->GetMaxCapacity()), Palette::ui_main, Palette::bg);
+    ui::VSpace(15);
+    sb.Clear();
     sb.AddFormat(ICON_POWER "%2d" ICON_ACS "%2d\n", ship->power(), ship->initiative());
     sb.AddFormat(" %2d/%2d" ICON_HEART_KINETIC "  %2d/%2d" ICON_HEART_ENERGY "  %2d/%2d" ICON_HEART_BOARDING "\n", 
         ship->kinetic_hp() - ship->dammage_taken[ShipVariables::KINETIC_ARMOR], ship->kinetic_hp(),
@@ -727,7 +730,7 @@ void _UIDrawFleet(Ship* ship) {
         const Ship* candidate = GetShip(candidates[i]);
         if (!candidate->IsLeading()) continue;
         ui::PushInset(0, DEFAULT_FONT_SIZE + 4);
-        ui::Write("Attach to ", false);
+        ui::WriteEx("Attach to ", TextAlignment::CONFORM, false);
         ui::Write(candidate->name);
         ButtonStateFlags::T button_state = ui::AsButton();
         HandleButtonSound(button_state);
@@ -781,15 +784,15 @@ void Ship::DrawUI() {
     const int INSET_MARGIN = 6;
     const int OUTSET_MARGIN = 6;
     const int TEXT_SIZE = DEFAULT_FONT_SIZE;
+    int width = (SHIP_MODULE_WIDTH + 3) * 6 + 9 + 8 + 3;
     ui::CreateNew(
-        GetScreenWidth() - 440 - 2*INSET_MARGIN - OUTSET_MARGIN, 
+        GetScreenWidth() - width - 2*INSET_MARGIN - OUTSET_MARGIN, 
         OUTSET_MARGIN + 200,
-        440 + 2*INSET_MARGIN, 
+        width + 2*INSET_MARGIN, 
         GetScreenHeight() - 200 - OUTSET_MARGIN - 2*INSET_MARGIN,
         TEXT_SIZE, Palette::ui_main
     );
     ui::Enclose(Palette::bg, GetColor());
-
     ui::Shrink(INSET_MARGIN, INSET_MARGIN);
 
     if ((GetIntelLevel() & IntelLevel::STATS) == 0) {
@@ -800,7 +803,10 @@ void Ship::DrawUI() {
 
     ui::PushScrollInset(0, ui::Current()->height, allocated, &ui_scroll);
 
-    ui::Write(name);
+    ui::WriteEx(name, TextAlignment::CONFORM, false);
+    ui::WriteEx(" " ICON_TRANSPORT_SHIP, TextAlignment::CONFORM, false);
+    ui::WriteEx(ICON_PLANET ICON_TRANSPORT_FLEET, TextAlignment::RIGHT | TextAlignment::VCONFORM, true);
+    ui::VSpace(10);
     _UIDrawStats(this);
     //if (!IsPlayerControlled()) {
     //    ui::Pop();  // ScrollInset

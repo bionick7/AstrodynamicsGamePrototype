@@ -25,6 +25,8 @@ namespace Palette {
 
 #define ICON_EMPTY "\u04df"  // lower-right corner
 
+#define ICON_PLANET ICON_EMPTY
+
 #define ICON_HEART "\u0400"
 #define ICON_HEART_ORDNANCE "\u0401"
 #define ICON_HEART_ENERGY "\u0402"

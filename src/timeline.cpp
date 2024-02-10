@@ -206,7 +206,7 @@ void _DrawQuests(TimeLineCoordinateData* tcd, QuestManager* qm) {
             qm->active_tasks.Get(closest_mouse_dist_quest)->DrawUI(false, false);
         } else {
             qm->available_quests.Get(closest_mouse_dist_quest)->DrawUI(false, false);
-            ui::Write("Press enter to accept quest", true);
+            ui::Write("Press enter to accept quest");
             if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_ENTER)) {
                 HandleButtonSound(ButtonStateFlags::JUST_PRESSED);
                 qm->AcceptQuest(closest_mouse_dist_quest);

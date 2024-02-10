@@ -8,22 +8,16 @@
 #include "debug_drawing.hpp"
 #include "render_utils.hpp"
 
-Vector2 ApplyAlignment(Vector2 pos, Vector2 size, TextAlignment::T alignment) {
-    if (alignment & TextAlignment::HCENTER) {
-        pos.x -= size.x / 2;
-    } else if (alignment & TextAlignment::RIGHT) {
-        pos.x -= size.x;
-    } else {  // left - aligned
-        // Do nothing
+Vector2 ApplyAlignment(Vector2 anchorpoint, Vector2 size, TextAlignment::T alignment) {
+    switch(alignment & TextAlignment::HFILTER){
+        case TextAlignment::HCENTER: anchorpoint.x -= size.x/2; break;
+        case TextAlignment::RIGHT: anchorpoint.x -= size.x; break;
     }
-    if (alignment & TextAlignment::VCENTER) {
-        pos.y -= size.y / 2;
-    } else if (alignment & TextAlignment::BOTTOM) {
-        pos.y -= size.y;
-    } else {  // top - aligned
-        // Do nothing
+    switch(alignment & TextAlignment::VFILTER){
+        case TextAlignment::VCENTER: anchorpoint.y -= size.y/2; break;
+        case TextAlignment::BOTTOM: anchorpoint.y -= size.y; break;
     }
-    return pos;
+    return anchorpoint;
 }
 
 Rectangle DrawTextAligned(const char* text, Vector2 pos, TextAlignment::T alignment, Color c) {
@@ -84,9 +78,9 @@ TextBox::TextBox(int x, int y, int w, int h, int ptext_size, Color color) {
     text_background = BLANK;
 }
 
-void TextBox::_Advance(Vector2 size) {
+void TextBox::_Advance(Vector2 pos, Vector2 size) {
     if (size.y > line_size_y) line_size_y = size.y;
-    x_cursor += size.x + text_margin_x;
+    if (pos.x + size.x > text_start_x + x_cursor) x_cursor = pos.x + size.x - text_start_x;
 }
 
 void TextBox::LineBreak() {
@@ -161,45 +155,49 @@ int TextBox::GetLineHeight() const {
     return text_size + text_margin_y;
 }
 
-void TextBox::Write(const char* text) {
-    Vector2 pos = {text_start_x + x_cursor, text_start_y + y_cursor};
-    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
-    // text fully in render rectangle
-    /*if (
-        !CheckCollisionPointRec(pos, render_rec)
-        || !CheckCollisionPointRec(Vector2Add(pos, size), render_rec)
-    ) return;*/
+Vector2 TextBox::GetAnchorPoint(TextAlignment::T align) const {
+    Vector2 res = { (float)text_start_x, (float)text_start_y };
+    switch(align & TextAlignment::HFILTER){
+        case TextAlignment::HCENTER: res.x += width/2; break;
+        case TextAlignment::RIGHT: res.x += width; break;
+        case TextAlignment::HCONFORM: res.x += x_cursor; break;
+    }
+    switch(align & TextAlignment::VFILTER){
+        case TextAlignment::VCENTER: res.y += height/2; break;
+        case TextAlignment::BOTTOM: res.y += height; break;
+        case TextAlignment::VCONFORM: res.y += y_cursor; break;
+    }
+    return res;
+}
 
-    // avoid drawing if the Palette::bg is fully transparent (most cases)
+void TextBox::Write(const char* text, TextAlignment::T align) {
+    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
+    Vector2 pos = ApplyAlignment(GetAnchorPoint(align), size, align);
+    // avoid drawing text_background is fully transparent (useless)
     if(text_background.a != 0) {
         DrawRectangleV(pos, size, text_background);
     }
     InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec);
-    //DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color);
     if (GetSettingBool("text_boundrects", false)) {
         DrawRectangleLines(pos.x, pos.y, size.x, size.y, GREEN);
     }
-    _Advance(size);
+    _Advance(pos, size);
 }
 
-void TextBox::WriteLine(const char* text) {
-    Vector2 pos = {text_start_x + x_cursor, text_start_y + y_cursor};
+void TextBox::WriteLine(const char* text, TextAlignment::T align) {
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
-    // text fully in render rectangle
-    /*if (
-        !CheckCollisionPointRec(pos, render_rec)
-        || !CheckCollisionPointRec(Vector2Add(pos, size), render_rec)
-    ) return;*/
+    Vector2 pos = ApplyAlignment(GetAnchorPoint(align), size, align);
+    //DebugPrintText("(%f, %f) ; (%f, %f)", pos.x, pos.y, size.x, size.y);
 
+    // avoid drawing if text_background is fully transparent (useless)
     if (text_background.a != 0) {
         DrawRectangleV(pos, size, text_background);
     }
     InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec);
-    //DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color);
     if (GetSettingBool("text_boundrects", false)) {
         DrawRectangleLines(pos.x, pos.y, size.x, size.y, GREEN);
     }
-    _Advance(size);
+    _Advance(pos, size);
     LineBreak();
 }
 
@@ -245,14 +243,12 @@ ButtonStateFlags::T TextBox::WriteButton(const char* text, int inset) {
         pos.y += inset;
     }
     bool is_in_area = CheckCollisionPointRec(GetMousePosition(), {pos.x, pos.y, size.x, size.y});
-    ButtonStateFlags::T res = GetButtonState(
-        is_in_area,
-        CheckCollisionPointRec(Vector2Subtract(GetMousePosition(), GetMouseDelta()), {pos.x, pos.y, size.x, size.y})
-    );
+    bool was_in_area = CheckCollisionPointRec(Vector2Subtract(GetMousePosition(), GetMouseDelta()), {pos.x, pos.y, size.x, size.y});
+    ButtonStateFlags::T res = GetButtonState(is_in_area, was_in_area);
     Color c = is_in_area ? Palette::ui_main : Palette::blue;
     DrawRectangleLines(pos.x - inset, pos.y - inset, size.x, size.y, c);
     InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec);
-    _Advance(size);
+    _Advance(pos, size);
     return res;
 }
 
@@ -269,7 +265,7 @@ void ui::PushGlobal(int x, int y, int w, int h, int text_size, Color color) {
 }
 
 void ui::CreateNew(int x, int y, int w, int h, int text_size, Color color) {
-    while (GetUI()->text_box_stack.size() > 0) {
+    while (GetUI()->text_box_stack.size() > 0) {  // Clear stack
         GetUI()->text_box_stack.pop();
     }
     GetUI()->AddBlockingRect({(float)x, (float)y, (float)w, (float)h});
@@ -469,17 +465,21 @@ void ui::DrawIconSDF(AtlasPos atlas_index, Color tint, int height) {
     ui::Current()->DrawTexture(GetUI()->GetIconAtlasSDF(), atlas_index.GetRect(ATLAS_SIZE), height, tint, true);
 }
 
-void ui::Write(const char *text, bool linebreak)
-{
+void ui::Write(const char *text) {
+    ui::WriteEx(text, TextAlignment::CONFORM, true);
+}
+
+void ui::WriteEx(const char *text, TextAlignment::T alignemnt, bool linebreak) {
     TextBox* tb = ui::Current();
     if (linebreak) {
-        tb->WriteLine(text);
+        tb->WriteLine(text, alignemnt);
     } else {
-        tb->Write(text);
+        tb->Write(text, alignemnt);
     }
 }
 
-void ui::Fillline(double value, Color fill_color, Color background_color) {
+void ui::Fillline(double value, Color fill_color, Color background_color)
+{
     TextBox* tb = ui::Current();
     int y_end = tb->text_start_y + tb->y_cursor;
     if (y_end > tb->render_rec.y + tb->render_rec.height || y_end < tb->render_rec.y)
@@ -502,6 +502,14 @@ ButtonStateFlags::T ui::DirectButton(const char* text, int inset) {
 
 TextBox* ui::Current() {
     return &GetUI()->text_box_stack.top();
+}
+
+void ui::HSpace(int pixels) {
+    ui::Current()->x_cursor += pixels;
+}
+
+void ui::VSpace(int pixels) {
+    ui::Current()->y_cursor += pixels;
 }
 
 void UISetMouseHint(const char* text) {

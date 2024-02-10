@@ -120,6 +120,10 @@ void Text3D::Draw() const {
     screen_pos.y = (ndcPos.y + 1.0f)/2.0f * GetScreenHeight() + offset.y;
     Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), text, text_h, 1);
     screen_pos = ApplyAlignment(screen_pos, text_size, alignment);
+    
+    if (GetSettingBool("text_boundrects", false)) {
+        DrawRectangleLines(screen_pos.x, screen_pos.y, text_size.x, text_size.y, GREEN);
+    }
 
     SetShaderValue(text3d_shader::shader, text3d_shader::ndcDepth, &ndcPos.z, SHADER_UNIFORM_FLOAT);
     int use_sdf = GetSettingBool("sdf_text", false) ? 1 : 0;
