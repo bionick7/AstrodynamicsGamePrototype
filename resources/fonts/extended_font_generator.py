@@ -15,7 +15,7 @@ def main(base_font, new_font, base_size, downsampled_size):
     for i, l in enumerate(lines[4:]):
         re_search = re.search(r"x=(\d+)\s+y=(\d+)\s+width=(\d+)\s+height=(\d+)", l)
         if re_search is None:
-            raise LookupError(f"Couldn't find pattern 'x=(\d+)\s+y=(\d+)\s+width=(\d+)\s+height=(\d+)' in line {i+5}")
+            raise LookupError(f"Couldn't find pattern 'x=(\\d+)\\s+y=(\\d+)\\s+width=(\\d+)\\s+height=(\\d+)' in line {i+5}")
         x = int(re_search.group(1))
         y = int(re_search.group(2))
         w = int(re_search.group(3))

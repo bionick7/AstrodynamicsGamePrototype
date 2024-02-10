@@ -1,0 +1,79 @@
+ship: >
+  A ship represents any artificial construction in space that the party has influence over.
+  These can be transport ships, mining vessels, military ships or even space stations. Ships consist of a 
+  [[ship_class]] that set the basic stats, like payload capacity and can be customized with [[module]]s
+  to customize it for a certain role. In addition to their modules any ship can carry as much of any resource
+  as the [[transfer]] allows.
+planet: >
+  A planet refers to any natural satellite at which ships can park. A planet may be a source of
+  [[resource]] and can contain [[resource]] and [[module]].
+
+ship_class: >
+  A ship class determines the base [[stat]] for a ship as well as the maximum cargo capacity,
+  [[Δv]] and [[specific_impulse]]. Ship classes can be build in a [[shipyard]] if it is fitted appropriatly* 
+  (cf [[shipyard]]) and then fitted with modules afterwards.
+module: >
+  A ship module is an entity that can be fitted to a ship. To fit a module onto a ship is instant for the
+  purpose of this simulation. The modules can be anything from production facilities to military equipment to 
+  [[shipyard]] parts. Some, like [[shpmod_heatshield]] or [[shpmod_droptank]] provide a special benefit, 
+  while others provide an increase to certain stats. Most modules have a [[weight]] associated with them,
+  so certain [[transfer]] are limited in the types of modules they can bring.
+  Modules can be build in a [[shipyard]] if it is fitted appropriatly* (cf [[shipyard]]).
+
+stat: >
+  A stat (short for statistical measurement of abiliat<) is a measure of capability of a [[ship]] to do a
+  certain task. The stats modeled in this simulation are [[health]], [[attack]] and [[defense]] for [[ordonance]]
+  [[kinetic]] and [[boarding]] attacks, [[initiative]] and [[power]]
+Δv: A measure of capability of the ship to perform certain [[transfer]]. Decrases with increasing payload.
+specific_impulse: A measure of engine efficiency. Determines how much [[Δv]] decreases with increasing payload.
+weight: >
+  The prime measurement of quantity of a [[resource]] or size of a [[module]]. Weight is measured in 'counts',
+  where 1 count corresponds to roughly 10 metric tonns. The count is often omitted in user interface.
+  Physically knowladgable readers should know that weight is simply used as an alias for mass in the cosmonautics
+  jargon. A tradition that is carried over from shipping and aviation.
+
+ordonance: >
+  A type of attack that represents attacks by mostly missile/torpedos that deal dammage by their
+  carried ordonancy. These can be chemical explosives or tactical nuclear weapons. Ordonance weapons 
+  thend to be slow-moving, but powerfull. Ordonance defense can be provided by armor
+   or point-defense systems.
+kinetic: >
+  A type of attack that represents attacks by hyper-velocity cannons, like rail- or coilguns.
+  Kinetic weapons tend to provide quick, hard to avoid dammage and get more powerfull the higher the relative
+  velocities of the ships. Kinetic defense can only be provided by special armor.
+boarding: TBD
+
+health:  A family of [[stat]] measuring the ammount of damage that the ship can take. Split up by attack type.
+attack:  A family of [[stat]] measuring the ammount of damage that the ship can deal. Split up by attack type.
+defense: A family of [[stat]] measuring the ammount of damage that the ship can negate. Split up by attack type.
+
+initiative: >
+  A [[stat]] measuring a combination of accuracy and evasiveness of a ship in combat. 
+  A ship with higher initiative gets to deal dammage before a ship with low one. In the simulation, initiative
+  direcly relates to the number of attacks a ship can make before a ship with 0 initiative.
+power: >
+  A [[stat]] measuring the surplus power a reactor can provide. This mostly refers to the surge power 
+  that military ships can bring in combat to power modules like railguns, coilguns power-intensive ACS.
+  Power can be increased with modules like [[shpmod_reactor]]
+
+resource: >
+  A resource reperesents a certain collection of goods needed to build a modules of ship. Resources are
+  stored and produced on a planet-by-planet level. Resources can be transported between planets by any 
+  [[ship]] in a [[transfer]].
+  A special resource is [[water]], which is used as fuel every [[transfer]]
+allegiance: TBD
+
+shipyard: >
+  A shipyard is a collection of modules that can be used to build modules and ships. There are 4 shipyard
+  modules: [[shpmod_small_yard_1]], [[shpmod_small_yard_2]], [[shpmod_small_yard_3]], [[shpmod_small_yard_4]].
+  Each collection of [[shpmod_small_yard_2]] & [[shpmod_small_yard_3]] can build modules.
+  Each collection of [[shpmod_small_yard_3]] & [[shpmod_small_yard_4]] can reapair ships.
+  Each collection of all 4 can build ships.
+transfer: >
+  A transfer of a single [[ship]] between [[planet]]. A transfer is defined by the departure and arrival times.
+  By default the times are set to give the transfer with the least [[Δv]], thus able to carry the most payload.
+  The arrival time can be rushed or the departure time delayed in cost for more [[Δv]].
+  Depending on how much [[Δv]] the transfer costs, how much [[weight]] the ship carries and if the engine
+  is hydrogen consuming, the ship will use a certain ammount of [[water]] as fuel. More exotic [[ship_class]]
+  may use different materials a fuel. The fuel will be lost from the departuring [[planet]]. If the planet cannot 
+  provide enough fuel, the trnasfer cannot take place.

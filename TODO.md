@@ -51,8 +51,9 @@ Near-term, realizable only
 - jump from ship to parent ship and plane
 - shift-click in inventory to switch inventory
 - ships icons
-- modules icons
+- modules icons (Done)
 - warn before committing to an empty transform ("empty" in red or required to choose it explicitly)
+- Recursive tooltips
 
 - Show tasks and wait times also in dialogue
 - front-end info and error log
@@ -130,3 +131,4 @@ UX tweaking:
 
 Tutorial:
 - Physical looking booklet that can appear
+- Include helper tooltips

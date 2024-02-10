@@ -243,3 +243,22 @@ Also combat AI is kinda hard.
 I honestly think that this is the MVP done, it just really lacks in content and balance
 And approachability/explenation before playtesting.
 Honesty time to work on looks/UX
+
+## Status 09 Feb 24
+Gameplay wise, inner gameplay loop works (moving resources to build stuff), but outer one
+still uncertain. Multiple directions possible:
+- City builder:
+    build out home shipyard
+    placing modules exactly is a choice
+- 4X:
+    exploration element
+    otherwise grand strategy
+    would need to be procedural to some degree
+- Grand strategy:
+    diplomacy
+    lots of AI
+- Military strategy:
+    focus on fleet management
+
+City builder it is? Or at least a version of that, where the goal is to build up the home station
+Combat can be mainly raiding-based, i.e. go in, don't be able to seize control, take all you can back

@@ -596,13 +596,13 @@ void _UIDrawStats(const Ship* ship) {
     sb.Clear();
     sb.AddFormat("\u0394V %2.2f (I_sp: %2.2f)\n", ship->GetCapableDV(), GetShipClassByIndex(ship->ship_class)->v_e / 1000);
     sb.AddFormat(ICON_POWER "%2d" ICON_ACS "%2d\n", ship->power(), ship->initiative());
-    sb.AddFormat("%2d/%2d " ICON_HEART_KINETIC " - %2d/%2d " ICON_HEART_ENERGY "\n", 
+    sb.AddFormat(" %2d/%2d" ICON_HEART_KINETIC "  %2d/%2d" ICON_HEART_ENERGY "  %2d/%2d" ICON_HEART_BOARDING "\n", 
         ship->kinetic_hp() - ship->dammage_taken[ShipVariables::KINETIC_ARMOR], ship->kinetic_hp(),
-        ship->energy_hp() - ship->dammage_taken[ShipVariables::ENERGY_ARMOR], ship->energy_hp()
+        ship->energy_hp() - ship->dammage_taken[ShipVariables::ENERGY_ARMOR], ship->energy_hp(),
+        ship->crew() - ship->dammage_taken[ShipVariables::CREW], ship->crew()
     );
-    sb.AddFormat(ICON_HEART_BOARDING " %2d/%2d\n", ship->crew() - ship->dammage_taken[ShipVariables::CREW], ship->crew());
-    sb.AddFormat("%2d " ICON_ATTACK_KINETIC " - %2d " ICON_ATTACK_ORDNANCE " - %2d " ICON_ATTACK_BOARDING "\n", ship->kinetic_offense(), ship->ordnance_offense(), ship->boarding_offense());
-    sb.AddFormat("%2d " ICON_SHIELD_KINETIC " - %2d " ICON_SHIELD_ORDNANCE " - %2d " ICON_SHIELD_BOARDING "\n", ship->kinetic_defense(), ship->ordnance_defense(), ship->boarding_defense());
+    sb.AddFormat("   %2d " ICON_ATTACK_KINETIC "    %2d " ICON_ATTACK_ORDNANCE "    %2d " ICON_ATTACK_BOARDING "\n", ship->kinetic_offense(), ship->ordnance_offense(), ship->boarding_offense());
+    sb.AddFormat("   %2d " ICON_SHIELD_KINETIC "    %2d " ICON_SHIELD_ORDNANCE "    %2d " ICON_SHIELD_BOARDING "\n", ship->kinetic_defense(), ship->ordnance_defense(), ship->boarding_defense());
     sb.AddFormat("++++++++++++++++++");
     ui::Write(sb.c_str);
 }
