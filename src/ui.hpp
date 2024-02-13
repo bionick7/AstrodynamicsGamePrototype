@@ -7,6 +7,7 @@
 
 #define DEFAULT_FONT_SIZE 20
 #define ATLAS_SIZE 40
+#define MAX_TOOLTIP_RECURSIONS 50
 
 static inline Vector2 GetScreenCenter() { return {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f}; }
 
@@ -70,6 +71,7 @@ struct TextBox {
     int text_size;
     Color text_color;
     Color text_background;
+    Color background_color;
 
     // Variables
     int x_cursor;
@@ -77,8 +79,9 @@ struct TextBox {
     int line_size_x;
     int line_size_y;
     int text_counter;
+    int z_layer;
 
-    TextBox(int x, int y, int w, int h, int text_size, Color color);
+    TextBox(int x, int y, int w, int h, int text_size, Color color, Color background_color);
     void LineBreak();
     void EnsureLineBreak();
     void Enclose(int inset, int corner_radius, Color background_color, Color line_color);
@@ -132,9 +135,10 @@ struct UIGlobals {
 };
 
 namespace ui {
-    void PushGlobal(int x, int y, int w, int h, int text_size, Color color);
-    void CreateNew(int x, int y, int w, int h, int text_size, Color color);
-    void PushMouseHint(int width, int height);
+    void PushTextBox(TextBox tb);
+    void PushGlobal(int x, int y, int w, int h, int text_size, Color color, Color background);
+    void CreateNew(int x, int y, int w, int h, int text_size, Color color, Color background);
+    void PushMouseHint(Vector2 mouse_pos, int width, int height);
 
     int PushInset(int margin, int h);
     int PushScrollInset(int margin, int h, int allocated_height, int* scroll);
@@ -145,7 +149,7 @@ namespace ui {
     void Pop();
 
     ButtonStateFlags::T AsButton();
-    void Enclose(Color background_color, Color line_color);
+    void Enclose();
     void EncloseEx(int shrink, Color background_color, Color line_color, int corner_radius);
     void EnclosePartial(int inset, Color background_color, Color line_color, Direction::T directions);
     void Shrink(int dx, int dy);

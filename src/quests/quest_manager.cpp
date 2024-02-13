@@ -107,8 +107,8 @@ void QuestManager::Draw() {
     int y_margin = MinInt(50, GetScreenWidth()*.1);
     int w = GetScreenWidth() - x_margin*2;
     int h = GetScreenHeight() - y_margin*2;
-    ui::CreateNew(x_margin, y_margin, w, h, DEFAULT_FONT_SIZE, Palette::ui_main);
-    ui::Enclose(Palette::bg, Palette::ui_main);
+    ui::CreateNew(x_margin, y_margin, w, h, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg);
+    ui::Enclose();
 
     // TABS
 
@@ -128,7 +128,7 @@ void QuestManager::Draw() {
             current_tab_qst = i_tab;
         }
         if (button_state & ButtonStateFlags::HOVER || i_tab == current_tab_qst) {
-            ui::Enclose(Palette::bg, Palette::ui_main);
+            ui::Enclose();
         }
         if (i_tab == 0) {
             ui::Write("tasks");
@@ -146,7 +146,7 @@ void QuestManager::Draw() {
         ui::Shrink(5, 5);
         // Active quests
         if (active_tasks.Count() == 0) {
-            ui::Enclose(Palette::bg, Palette::ui_main);
+            ui::Enclose();
         }
         for(auto i = active_tasks.GetIter(); i; i++) {
             active_tasks[i]->DrawUI(false, IsIdValid(active_tasks[i]->ship));

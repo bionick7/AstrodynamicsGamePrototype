@@ -2,6 +2,7 @@
 #define RENDER_UTILS_H
 
 #include "dvector3.hpp"
+#include <inttypes.h>
 
 struct OrbitSegment;
 struct Text3D;
@@ -22,10 +23,14 @@ void ReloadShaders();
 void InternalDrawText(const char *text, Vector2 position, Color color);
 void InternalDrawTextEx(Font font, const char *text, Vector2 position, 
                         float fontSize, float spacing, Color tint);
-void InternalDrawTextEx(Font font, const char *text, Vector2 position, 
-                        float fontSize, float spacing, Color tint, Rectangle render_rect);
+void InternalDrawTextEx(Font font, const char *text, Vector2 position, float fontSize, 
+                        float spacing, Color tint, Rectangle render_rect, uint8_t z_layer);
 void DrawTextureSDF(Texture2D texture, Rectangle source, Rectangle dest, 
-                    Vector2 origin, float rotation, Color tint);
+                    Vector2 origin, float rotation, Color tint, uint8_t z_layer);
+void InternalDrawTexturePro(Texture2D texture, Rectangle source, Rectangle dest, 
+                            Vector2 origin, float rotation, Color tint, uint8_t z_layer);
+void InternalDrawRectangleRounded(Rectangle rec, float roundness, int segments, Color color, float z_layer);
+void InternalDrawRectangleRoundedLines(Rectangle rec, float roundness, int segments, float lineThick, Color color, float z_layer);
 
 void RenderOrbit(const OrbitSegment* orbit, int point_count, 
                  OrbitRenderMode::E render_mode, Color color);

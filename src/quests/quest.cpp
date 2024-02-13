@@ -111,9 +111,9 @@ ButtonStateFlags::T Quest::DrawUI(bool show_as_button, bool highlight) const {
         return ButtonStateFlags::NONE;
     }
     if (highlight) {
-        ui::Enclose(Palette::bg, Palette::ally);
+        ui::EncloseEx(4, Palette::bg, Palette::ally, 4);
     } else {
-        ui::Enclose(Palette::bg, Palette::ui_main);
+        ui::Enclose();
     }
     ui::Shrink(6, 6);
     ButtonStateFlags::T button_state = ui::AsButton();

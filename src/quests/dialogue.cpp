@@ -93,7 +93,7 @@ void Dialogue::DrawToUIContext() {
     ui::PushInset(0, 32);
     for(int i=0; i < reply_count; i++) {
         ui::PushHSplit(i * w / reply_count, (i + 1) * w / reply_count);
-        ui::Enclose(Palette::bg, Palette::ui_main);
+        ui::Enclose();
         ButtonStateFlags::T state_flags = ui::AsButton();
         if (state_flags & ButtonStateFlags::JUST_PRESSED) {
             reply = i;

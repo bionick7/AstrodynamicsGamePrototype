@@ -405,10 +405,10 @@ void _UIDrawProduction(int option_size, IDList* queue, resource_count_t resource
         // Possible since Shipclasses get loaded once in continuous mempry
         ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
-            ui::Enclose(Palette::bg, Palette::interactable_main);
+            ui::EncloseEx(4, Palette::bg, Palette::interactable_main, 4);
             hovered_id = id;
         } else {
-            ui::Enclose(Palette::bg, Palette::ui_main);
+            ui::Enclose();
         }
         HandleButtonSound(button_state);
         if ((button_state & ButtonStateFlags::JUST_PRESSED) && _CanProduce(id, &resources[0])) {
@@ -430,11 +430,11 @@ void _UIDrawProduction(int option_size, IDList* queue, resource_count_t resource
         ui::Shrink(margin, margin);
         ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
-            ui::Enclose(Palette::bg, Palette::ui_main);
+            ui::Enclose();
             hovered_id = id;
             hover_over_queue = true;
         } else {
-            ui::Enclose(Palette::bg, Palette::interactable_main);
+            ui::EncloseEx(4, Palette::bg, Palette::interactable_main, 4);
         }
         if (button_state & ButtonStateFlags::JUST_PRESSED) {
             queue->EraseAt(i);
@@ -448,8 +448,8 @@ void _UIDrawProduction(int option_size, IDList* queue, resource_count_t resource
         ui::Pop();  // Inset
     }
     if (IsIdValid(hovered_id)) {
-        ui::PushMouseHint(400, 400);
-        ui::Enclose(Palette::bg, Palette::ui_main);
+        ui::PushMouseHint(GetMousePosition(), 400, 400);
+        ui::Enclose();
         if (hover_over_queue) {
             _ProductionQueueMouseHint(hovered_id, NULL);
         } else {
@@ -540,8 +540,8 @@ void Planet::DrawUI() {
         return;
     }
 
-    ui::CreateNew(10, y_start, 340, height, DEFAULT_FONT_SIZE, Palette::ui_main);
-    ui::Enclose(Palette::bg, Palette::ui_main);
+    ui::CreateNew(10, y_start, 340, height, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg);
+    ui::Enclose();
 
     ui::PushInset(4, (DEFAULT_FONT_SIZE+4)*2);  // Tab container
     int w = ui::Current()->width;

@@ -276,26 +276,26 @@ void _UnloadRenderTextureDepthTex(RenderTexture2D target) {
 }
 
 void RenderServer::OnScreenResize() {
-    if (IsRenderTextureReady(render_target)) {
-        _UnloadRenderTextureDepthTex(render_target);
+    if (IsRenderTextureReady(render_targets[0])) {
+        _UnloadRenderTextureDepthTex(render_targets[0]);
+        _UnloadRenderTextureDepthTex(render_targets[1]);
     }
-    render_target = _LoadRenderTextureDepthTex(GetScreenWidth(), GetScreenHeight());
+    render_targets[0] = _LoadRenderTextureDepthTex(GetScreenWidth(), GetScreenHeight());
+    render_targets[1] = _LoadRenderTextureDepthTex(GetScreenWidth(), GetScreenHeight());
 }
 
-//#define IGNORE_RENDER_TARGET
 
 void RenderServer::Draw() {
-    if (render_target.texture.width != GetScreenWidth() || render_target.texture.height != GetScreenHeight()) {
+    if (render_targets[0].texture.width != GetScreenWidth() || render_targets[0].texture.height != GetScreenHeight()) {
         OnScreenResize();
     }
 
-    if (!IsRenderTextureReady(render_target)) {
-        render_target = _LoadRenderTextureDepthTex(GetScreenWidth(), GetScreenHeight());
+    if (!IsRenderTextureReady(render_targets[0])) {
+        render_targets[0] = _LoadRenderTextureDepthTex(GetScreenWidth(), GetScreenHeight());
+        render_targets[1] = _LoadRenderTextureDepthTex(GetScreenWidth(), GetScreenHeight());
     }
 
-#ifndef IGNORE_RENDER_TARGET
-    BeginTextureMode(render_target);
-#endif
+    BeginTextureMode(render_targets[0]);
     ClearBackground(WHITE);  // Very important apperently
     BeginMode3D(GetCamera()->rl_camera);
     RenderSkyBox();
@@ -341,16 +341,20 @@ void RenderServer::Draw() {
     }
     rlDisableDepthTest();
     GetTransferPlanUI()->Draw3DGizmos();
+    
+    EndTextureMode();
 
+    BeginTextureMode(render_targets[1]);
+    ClearBackground(ColorAlpha(Palette::bg, 0));
     // All UI shenanigans
+    rlEnableDepthTest(); 
     GetGlobalState()->DrawUI();
-
-#ifndef IGNORE_RENDER_TARGET
+    rlDisableDepthTest();
     EndTextureMode();
 
     // Postprocessing etc.
-    RenderDeferred(render_target);
-#endif
+    RenderDeferred(render_targets[0]);
+    RenderDeferred(render_targets[1]);
 }
 
 void RenderServer::ReloadShaders() {

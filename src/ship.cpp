@@ -724,9 +724,9 @@ void _UIDrawTransferplans(Ship* ship) {
         ui::PushInset(2, ui::Current()->GetLineHeight() * 2);
         ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
-            ui::Enclose(Palette::bg, Palette::interactable_main);
+            ui::EncloseEx(4, Palette::bg, Palette::interactable_main, 4);
         } else {
-            ui::Enclose(Palette::bg, Palette::ui_main);
+            ui::Enclose();
         }
         ui::PushHSplit(0, -32);
         ui::Write(tp_str[0]);
@@ -744,9 +744,9 @@ void _UIDrawTransferplans(Ship* ship) {
             ui::PushHSplit(-32, -1);
             ButtonStateFlags::T button_state = ui::AsButton();
             if (button_state & ButtonStateFlags::HOVER) {
-                ui::Enclose(Palette::interactable_alt, Palette::interactable_alt);
+                ui::EncloseEx(4, Palette::interactable_alt, Palette::interactable_alt, 4);
             } else {
-                ui::Enclose(Palette::bg, Palette::bg);
+                ui::EncloseEx(4, Palette::bg, Palette::bg, 4);
             }
             ui::WriteEx(ICON_X, TextAlignment::CENTER, false);
             HandleButtonSound(button_state & ButtonStateFlags::JUST_PRESSED);
@@ -866,9 +866,9 @@ void Ship::DrawUI() {
         OUTSET_MARGIN + 200,
         width + 2*INSET_MARGIN, 
         GetScreenHeight() - 200 - OUTSET_MARGIN - 2*INSET_MARGIN,
-        TEXT_SIZE, Palette::ui_main
+        TEXT_SIZE, Palette::ui_main, Palette::bg
     );
-    ui::Enclose(Palette::bg, GetColor());
+    ui::EncloseEx(4, Palette::bg, GetColor(), 4);
     ui::Shrink(INSET_MARGIN, INSET_MARGIN);
 
     if ((GetIntelLevel() & IntelLevel::STATS) == 0) {

@@ -16,7 +16,7 @@ void GlobalState::_InspectState() {
 
 bool _PauseMenuButton(const char* label) {
     ui::PushInset(0, DEFAULT_FONT_SIZE+4);
-    ui::Enclose(Palette::bg, Palette::ui_main);
+    ui::Enclose();
     ui::Write(label);
     ButtonStateFlags::T button_state = ui::AsButton();
     HandleButtonSound(button_state & ButtonStateFlags::JUST_PRESSED);
@@ -35,9 +35,10 @@ void _PauseMenu() {
         menu_width,
         menu_height,
         DEFAULT_FONT_SIZE,
-        Palette::ui_main
+        Palette::ui_main,
+        Palette::bg
     );
-    ui::Enclose(Palette::bg, Palette::ui_main);
+    ui::Enclose();
     if (_PauseMenuButton("Save")) {
         INFO("Save")
         DataNode dn;

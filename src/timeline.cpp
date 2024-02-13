@@ -297,8 +297,8 @@ void DrawTimeline() {
 
     // Create UI Context
     GlobalState* gs = GetGlobalState();
-    ui::CreateNew(20, 100, GetScreenWidth() - 40, GetScreenHeight() - 100, DEFAULT_FONT_SIZE, Palette::ui_main);
-    ui::Enclose(Palette::bg, Palette::ui_main);
+    ui::CreateNew(20, 100, GetScreenWidth() - 40, GetScreenHeight() - 100, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg);
+    ui::Enclose();
 
     // Initiualize Common Data Structure
     TimeLineCoordinateData tcd = TimeLineCoordinateData();

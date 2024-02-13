@@ -7,6 +7,7 @@ in vec4 fragColor;
 // Input uniform values
 uniform sampler2D texture0;
 uniform vec4 colDiffuse;
+uniform float depth;
 //uniform float dSDFsFrag;
 
 // Output fragment color
@@ -22,6 +23,7 @@ void main() {
     float alpha = smoothstep(d_dist_d_frag, -d_dist_d_frag, sdf);
     //alpha *= smoothstep(d_dist_d_frag*2.0, d_dist_d_frag*1.0, -sdf);
     finalColor.a = fragColor.a * alpha;
+    gl_FragDepth = depth;
 
     //finalColor.a = 1.0;
     //finalColor.rgb = texture(texture0, fragTexCoord).rgb;

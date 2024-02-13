@@ -643,10 +643,10 @@ void TransferPlanUI::DrawUI() {
     ui::CreateNew(
         GetScreenWidth() - 20*DEFAULT_FONT_SIZE - 5, y_margin,
         20*DEFAULT_FONT_SIZE, MinInt(200, GetScreenHeight()) - 2*5 - y_margin, 
-        DEFAULT_FONT_SIZE, Palette::ally
+        DEFAULT_FONT_SIZE, Palette::ally, Palette::bg
     );
 
-    ui::Enclose(Palette::bg, is_valid ? Palette::ally : Palette::red);
+    ui::EncloseEx(4, Palette::bg, is_valid ? Palette::ally : Palette::red, 4);
     
     StringBuilder sb = StringBuilder();
     sb.Add("Departs in ").AddTime(plan->departure_time - time_bounds[0]);
@@ -688,7 +688,7 @@ void TransferPlanUI::DrawUI() {
         ui::PushHSplit(0, w/3);
         ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
-            ui::Enclose(Palette::bg, Palette::ui_main);
+            ui::Enclose();
         }
         if(button_state & ButtonStateFlags::JUST_PRESSED) {
             TransferPlanSoonest(plan, ship_instance->GetCapableDV() - 1);
@@ -700,7 +700,7 @@ void TransferPlanUI::DrawUI() {
         ui::PushHSplit(w/3, 2*w/3);
         ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
-            ui::Enclose(Palette::bg, Palette::ui_main);
+            ui::Enclose();
         }
         if(button_state & ButtonStateFlags::JUST_PRESSED) {
             if (is_valid) {
@@ -718,7 +718,7 @@ void TransferPlanUI::DrawUI() {
             departure_time_automatic = !departure_time_automatic;
         }
         if (departure_time_automatic || (button_state & ButtonStateFlags::HOVER)) {
-            ui::Enclose(Palette::bg, Palette::ui_main);
+            ui::Enclose();
         }
         ui::Write("Lock");
         ui::Pop();  // HSplit

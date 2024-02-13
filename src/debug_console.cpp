@@ -262,8 +262,8 @@ void DrawDebugConsole() {
     
     int height = 500;
     if (height > GetScreenHeight()) height = GetScreenHeight();
-    ui::CreateNew(0, 0, GetScreenWidth(), height, DEFAULT_FONT_SIZE, WHITE);
-    ui::Enclose(BLACK, WHITE);
+    ui::CreateNew(0, 0, GetScreenWidth(), height, DEFAULT_FONT_SIZE, WHITE, BLACK);
+    ui::Enclose();
     int line_height = ui::Current()->text_size + ui::Current()->text_margin_y;
     const int input_height = 30;
     const int shown_lines = (height - input_height) / line_height;
@@ -273,11 +273,19 @@ void DrawDebugConsole() {
         ui::Write(lines[show_line]);
     }
 
-    for(;;) {
-        int c = GetCharPressed();
-        int key = GetKeyPressed();
+    for(int c = GetCharPressed(); c != 0; c = GetCharPressed()) {
         int prompt_len = strlen(current_prompt);
-        if (key == 0) break;
+        if (c != 0 && strlen(current_prompt) < DEBUG_CONSOLE_MAX_LINE_SIZE){
+            for(int i=prompt_len; i >= cursor; i--) {
+                current_prompt[i+1] = current_prompt[i];
+            }
+            current_prompt[cursor] = c;
+            cursor++;
+        }
+    }
+    
+    for(int key = GetKeyPressed(); key != 0; key = GetKeyPressed()) {
+        int prompt_len = strlen(current_prompt);
         if (key == KEY_ENTER || key == KEY_KP_ENTER) {
             strcpy(prompt_backlog[prompt_backlog_index], current_prompt);
             prompt_backlog_index = (prompt_backlog_index + 1) % DEBUG_CONSOLE_PROMPT_BACKLOG_SIZE;
@@ -332,13 +340,6 @@ void DrawDebugConsole() {
         }
         else if (key == KEY_HOME) {
             cursor = 0;
-        }
-        else if (c != 0 && strlen(current_prompt) < DEBUG_CONSOLE_MAX_LINE_SIZE){
-            for(int i=prompt_len; i >= cursor; i--) {
-                current_prompt[i+1] = current_prompt[i];
-            }
-            current_prompt[cursor] = c;
-            cursor++;
         }
     }
     

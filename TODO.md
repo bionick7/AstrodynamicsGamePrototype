@@ -124,11 +124,11 @@ Art:
 
 UX tweaking:
 - V Select planet when clicking on orbit
-- X list ships to select next to planet
+-   list ships to select next to planet
 - V jump from ship to parent ship and planet
--   shift-click in inventory to switch inventory
+- V shift-click in inventory to switch inventory
 -   warn before committing to an empty transform ("empty" in red or required to choose it explicitly)
 
 Tutorial:
-- Physical looking booklet that can appear
-- Include helper tooltips
+- V Physical looking booklet that can appear
+- V Include helper tooltips

@@ -35,7 +35,7 @@ struct Text3D {
 struct RenderServer {
     IDAllocatorList<Icon3D, EntityType::ICON3D> icons;
     IDAllocatorList<Text3D, EntityType::TEXT3D> text_labels_3d;
-    RenderTexture2D render_target;
+    RenderTexture2D render_targets[2];
     
     void OnScreenResize();
 

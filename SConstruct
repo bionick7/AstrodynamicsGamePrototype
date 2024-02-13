@@ -1,7 +1,7 @@
 import os
 
-platform = "win"
-#platform = "linux"
+#platform = "win"
+platform = "linux"
 
 #build = "release"
 build = "debug"
@@ -70,7 +70,9 @@ def build_raylib():
     env, lib_dir = get_base_env()
 
     raylib_src_dirs = ['dependencies/raylib/src']  #, 'dependencies/raylib/src/platforms']
-    raylib_include_dirs = ['dependencies/raylib/src/external', 'dependencies/glfw/include']
+    #raylib_include_dirs = ['dependencies/raylib/src/external', 'dependencies/glfw/include']
+    raylib_include_dirs = ['dependencies/glfw/include']
+
 
     raylib_src = get_all_files(raylib_src_dirs, "c")
     env.Append(CPPPATH = raylib_src_dirs + raylib_include_dirs)

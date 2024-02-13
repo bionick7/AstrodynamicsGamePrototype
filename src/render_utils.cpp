@@ -69,9 +69,25 @@ void _ColorToFloat4Buffer(float buffer[], Color color) {
 
 namespace sdf_shader {
     Shader shader;
+    int depth = -1;
 
     void Load() {
         LOAD_SHADER_FS(sdf_shader)
+        LOAD_SHADER_UNIFORM(sdf_shader, depth)
+    }
+
+    void UnLoad() {
+        UnloadShader(shader);
+    }
+}
+
+namespace ui_shader {
+    Shader shader;
+    int depth = -1;
+
+    void Load() {
+        LOAD_SHADER_FS(ui_shader)
+        LOAD_SHADER_UNIFORM(ui_shader, depth)
     }
 
     void UnLoad() {
@@ -82,15 +98,16 @@ namespace sdf_shader {
 
 void InternalDrawText(const char *text, Vector2 position, Color color) {
     Rectangle screen_rect = {0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()};
-    InternalDrawTextEx(GetCustomDefaultFont(), text, position, DEFAULT_FONT_SIZE, 1, color, screen_rect);
+    InternalDrawTextEx(GetCustomDefaultFont(), text, position, DEFAULT_FONT_SIZE, 1, color, screen_rect, 0);
 }
 
 void InternalDrawTextEx(Font font, const char *text, Vector2 position, float fontSize, float spacing, Color tint) {
     Rectangle screen_rect = {0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()};
-    InternalDrawTextEx(font, text, position, fontSize, spacing, tint, screen_rect);
+    InternalDrawTextEx(font, text, position, fontSize, spacing, tint, screen_rect, 0);
 }
 
-void InternalDrawTextEx(Font font, const char *text, Vector2 position, float fontSize, float spacing, Color tint, Rectangle render_rect) {
+void InternalDrawTextEx(Font font, const char *text, Vector2 position, float fontSize, float spacing, 
+                        Color tint, Rectangle render_rect, uint8_t z_layer) {
     if (font.texture.id == 0) font = GetFontDefault();  // (Raylib cmt) Security check in case of not valid font
 
     int size = TextLength(text);    // (Raylib cmt) Total size in bytes of the text, scanned by codepoints in loop
@@ -102,6 +119,8 @@ void InternalDrawTextEx(Font font, const char *text, Vector2 position, float fon
 
     if (GetSettingBool("sdf_text", false)) {
         RELOAD_IF_NECAISSARY(sdf_shader)
+        float z_layer_f = 1.0f - z_layer / 256.0f;
+        SetShaderValue(sdf_shader::shader, sdf_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT);
         BeginShaderMode(sdf_shader::shader);
     }
 
@@ -144,10 +163,40 @@ void InternalDrawTextEx(Font font, const char *text, Vector2 position, float fon
         EndShaderMode();
 }
 
-void DrawTextureSDF(Texture2D texture, Rectangle source, Rectangle dest, Vector2 origin, float rotation, Color tint) {
+void DrawTextureSDF(Texture2D texture, Rectangle source, Rectangle dest, 
+                    Vector2 origin, float rotation, Color tint, uint8_t z_layer) {
     RELOAD_IF_NECAISSARY(sdf_shader)
     BeginShaderMode(sdf_shader::shader);
+    float z_layer_f = 1.0f - z_layer / 256.0f;
+    SetShaderValue(sdf_shader::shader, sdf_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT);
     DrawTexturePro(texture, source, dest, origin, rotation, tint);
+    EndShaderMode();
+}
+
+void InternalDrawTexturePro(Texture2D texture, Rectangle source, Rectangle dest, Vector2 origin, float rotation, Color tint, uint8_t z_layer) {
+    RELOAD_IF_NECAISSARY(ui_shader)
+    BeginShaderMode(ui_shader::shader);
+    float z_layer_f = 1.0f - z_layer / 256.0f;
+    SetShaderValue(ui_shader::shader, ui_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT);
+    DrawTexturePro(texture, source, dest, origin, rotation, tint);
+    EndShaderMode();
+}
+
+void InternalDrawRectangleRounded(Rectangle rec, float roundness, int segments, Color color, float z_layer) {
+    RELOAD_IF_NECAISSARY(ui_shader)
+    BeginShaderMode(ui_shader::shader);
+    float z_layer_f = 1.0f - z_layer / 256.0f;
+    SetShaderValue(ui_shader::shader, ui_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT);
+    DrawRectangleRounded(rec, roundness, segments, color);
+    EndShaderMode();
+}
+
+void InternalDrawRectangleRoundedLines(Rectangle rec, float roundness, int segments, float lineThick, Color color, float z_layer) {
+    RELOAD_IF_NECAISSARY(ui_shader)
+    BeginShaderMode(ui_shader::shader);
+    float z_layer_f = 1.0f - z_layer / 256.0f;
+    SetShaderValue(ui_shader::shader, ui_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT);
+    DrawRectangleRoundedLines(rec, roundness, segments, lineThick, color);
     EndShaderMode();
 }
 
@@ -442,14 +491,17 @@ namespace postprocessing_shader {
 }
 
 void RenderDeferred(RenderTexture render_target) {
-    RELOAD_IF_NECAISSARY(postprocessing_shader)
-
     Rectangle screen_rect = {
         0, 0, GetScreenWidth(), -GetScreenHeight()
     };
-    
-    BeginShaderMode(postprocessing_shader::shader);
-    SetShaderValueTexture(postprocessing_shader::shader, postprocessing_shader::depthMap, render_target.depth);
+
+    if (!GetSettingBool("skip_postprocessing", false)) {
+        RELOAD_IF_NECAISSARY(postprocessing_shader)
+
+        BeginShaderMode(postprocessing_shader::shader);
+        SetShaderValueTexture(postprocessing_shader::shader, postprocessing_shader::depthMap, render_target.depth);
+    }
+
     DrawTextureRec(render_target.texture, screen_rect, Vector2Zero(), WHITE);
     EndShaderMode();
 }

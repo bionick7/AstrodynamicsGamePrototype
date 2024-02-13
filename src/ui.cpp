@@ -53,7 +53,7 @@ void HandleButtonSound(ButtonStateFlags::T state) {
     }
 }
 
-TextBox::TextBox(int x, int y, int w, int h, int ptext_size, Color color) {
+TextBox::TextBox(int x, int y, int w, int h, int ptext_size, Color color, Color pbackground_color) {
     ASSERT(w > 0)
     ASSERT(h >= 0)
     text_start_x = x;
@@ -65,6 +65,7 @@ TextBox::TextBox(int x, int y, int w, int h, int ptext_size, Color color) {
     render_rec.y = y;
     render_rec.width = w;
     render_rec.height = h;
+    z_layer = 0;
 
     text_size = ptext_size;
     text_counter = 0;
@@ -76,6 +77,7 @@ TextBox::TextBox(int x, int y, int w, int h, int ptext_size, Color color) {
     line_size_x = 0;
     line_size_y = 0;
     text_background = BLANK;
+    background_color = pbackground_color;
 }
 
 void TextBox::_Advance(Vector2 pos, Vector2 size) {
@@ -108,8 +110,8 @@ void TextBox::Enclose(int inset, int corner_radius, Color background_color, Colo
 
     float roundness = corner_radius * 2.0f / fmin(rect.width, rect.height);
     rect = GetCollisionRec(rect, render_rec);
-    DrawRectangleRounded(rect, roundness, 16, background_color);
-    DrawRectangleRoundedLines(rect, roundness, 16, 1, line_color);
+    InternalDrawRectangleRounded(rect, roundness, 16, background_color, z_layer);
+    InternalDrawRectangleRoundedLines(rect, roundness, 16, 1, line_color, z_layer);
     Shrink(inset, inset);
 }
 
@@ -150,11 +152,11 @@ void TextBox::Write(const char* text, TextAlignment::T align) {
     Vector2 pos = ApplyAlignment(GetAnchorPoint(align), size, align);
     // avoid drawing text_background is fully transparent (useless)
     if(text_background.a != 0) {
-        DrawRectangleV(pos, size, text_background);
+        InternalDrawRectangleRounded({pos.x, pos.y, size.x, size.y}, 0, 0, text_background, z_layer);
     }
-    InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec);
+    InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec, z_layer);
     if (GetSettingBool("text_boundrects", false)) {
-        DrawRectangleLines(pos.x, pos.y, size.x, size.y, GREEN);
+        InternalDrawRectangleRoundedLines({pos.x, pos.y, size.x, size.y}, 0, 0, 1, GREEN, z_layer);
     }
     _Advance(pos, size);
 }
@@ -166,11 +168,11 @@ void TextBox::WriteLine(const char* text, TextAlignment::T align) {
 
     // avoid drawing if text_background is fully transparent (useless)
     if (text_background.a != 0) {
-        DrawRectangleV(pos, size, text_background);
+        InternalDrawRectangleRounded({pos.x, pos.y, size.x, size.y}, 0, 0, text_background, z_layer);
     }
-    InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec);
+    InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec, z_layer);
     if (GetSettingBool("text_boundrects", false)) {
-        DrawRectangleLines(pos.x, pos.y, size.x, size.y, GREEN);
+        InternalDrawRectangleRoundedLines({pos.x, pos.y, size.x, size.y}, 0, 0, 1, GREEN, z_layer);
     }
     _Advance(pos, size);
     LineBreak();
@@ -190,10 +192,11 @@ void TextBox::DrawTexture(Texture2D texture, Rectangle source, int texture_heigh
     if (!inside_render_rect) {
         BeginScissorMode(render_rec.x, render_rec.y, render_rec.width, render_rec.height);
     }
+
     if (sdf) {
-        DrawTextureSDF(texture, source, destination, Vector2Zero(), 0, tint);
+        DrawTextureSDF(texture, source, destination, Vector2Zero(), 0, tint, z_layer);
     } else {
-        DrawTexturePro(texture, source, destination, Vector2Zero(), 0, tint);
+        InternalDrawTexturePro(texture, source, destination, Vector2Zero(), 0, tint, z_layer);
     }
     if (!inside_render_rect) {
         EndScissorMode();
@@ -222,7 +225,7 @@ ButtonStateFlags::T TextBox::WriteButton(const char* text, int inset) {
     ButtonStateFlags::T res = GetButtonState(is_in_area, was_in_area);
     Color c = is_in_area ? Palette::ui_main : Palette::interactable_main;
     DrawRectangleLines(pos.x - inset, pos.y - inset, size.x, size.y, c);
-    InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec);
+    InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec, z_layer);
     _Advance(pos, size);
     return res;
 }
@@ -265,27 +268,33 @@ Rectangle TextBox::TbMeasureTextEx(const char* text, TextAlignment::T alignemnt)
     return {pos.x, pos.y, size.x, size.y};
 }
 
-void ui::PushGlobal(int x, int y, int w, int h, int text_size, Color color) {
-    TextBox new_text_box = TextBox(x, y, w, h, text_size, color);
-    GetUI()->text_box_stack.push(new_text_box);
+void ui::PushTextBox(TextBox tb) {
+    TextBox* parent = ui::Current();
+    if (parent == NULL)
+        tb.z_layer = 0;
+    else
+        tb.z_layer = parent->z_layer + 1;
+    GetUI()->text_box_stack.push(tb);
 }
 
-void ui::CreateNew(int x, int y, int w, int h, int text_size, Color color) {
+void ui::PushGlobal(int x, int y, int w, int h, int text_size, Color color, Color background) {
+    TextBox new_text_box = TextBox(x, y, w, h, text_size, color, background);
+    ui::PushTextBox(new_text_box);
+}
+
+void ui::CreateNew(int x, int y, int w, int h, int text_size, Color color, Color background) {
     while (GetUI()->text_box_stack.size() > 0) {  // Clear stack
-        GetUI()->text_box_stack.pop();
+        ui::Pop();
     }
     GetUI()->AddBlockingRect({(float)x, (float)y, (float)w, (float)h});
-    ui::PushGlobal(x, y, w, h, text_size, color);
+    ui::PushGlobal(x, y, w, h, text_size, color, background);
 }
 
-void ui::PushMouseHint(int width, int height) {
-    Vector2 m_pos = GetMousePosition();
-    int x_pos = m_pos.x;
-    int y_pos = m_pos.y;
-    if (x_pos > GetScreenWidth() - width) x_pos = GetScreenWidth() - width;
-    if (y_pos > GetScreenHeight() - height) y_pos = GetScreenHeight() - height;
-
-    ui::PushGlobal(x_pos, y_pos, width, height, DEFAULT_FONT_SIZE, Palette::ui_main);
+void ui::PushMouseHint(Vector2 mousepos, int width, int height) {
+    const int border_margin = 2;
+    int x_pos = ClampInt(mousepos.x, border_margin, GetScreenWidth() - width - border_margin);
+    int y_pos = ClampInt(mousepos.y, border_margin, GetScreenHeight() - height - border_margin);
+    ui::PushGlobal(x_pos, y_pos, width, height, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg);
 }
 
 int ui::PushInset(int margin, int h) {
@@ -300,12 +309,13 @@ int ui::PushInset(int margin, int h) {
         tb->width - tb->x_cursor - 2*margin,
         h,
         tb->text_size,
-        tb->text_color
+        tb->text_color,
+        tb->background_color
     );
     new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb->render_rec);
 
     tb->y_cursor += h + 2*margin;
-    GetUI()->text_box_stack.push(new_text_box);
+    ui::PushTextBox(new_text_box);
     return h;
 }
 
@@ -343,13 +353,14 @@ int ui::PushScrollInset(int margin, int h, int allocated_height, int* scroll) {
         tb->width - tb->x_cursor - 2*margin - 2*buildin_scrollbar_margin - buildin_scrollbar_width,
         allocated_height,
         tb->text_size,
-        tb->text_color
+        tb->text_color,
+        tb->background_color
     );
     new_text_box.render_rec.y = tb->text_start_y + tb->y_cursor + margin;
     new_text_box.render_rec.height = height;
 
     tb->y_cursor += h + 2*margin;
-    GetUI()->text_box_stack.push(new_text_box);
+    ui::PushTextBox(new_text_box);
     return height;
 }
 
@@ -363,7 +374,8 @@ void ui::PushInline(int width, int height) {
         width,
         height + 8,
         tb->text_size,
-        tb->text_color
+        tb->text_color,
+        tb->background_color
     );
     new_tb.render_rec = GetCollisionRec(new_tb.render_rec, tb->render_rec);
 
@@ -371,7 +383,7 @@ void ui::PushInline(int width, int height) {
         {(float)new_tb.text_start_x, (float)new_tb.text_start_y}, 
         {(float)new_tb.width, (float)new_tb.height}
     );
-    GetUI()->text_box_stack.push(new_tb);
+    ui::PushTextBox(new_tb);
 }
 
 void ui::PushAligned(int width, int height, TextAlignment::T alignment) {
@@ -398,11 +410,12 @@ void ui::PushAligned(int width, int height, TextAlignment::T alignment) {
     TextBox new_text_box = TextBox(
         x, y, width, height,
         tb->text_size,
-        tb->text_color
+        tb->text_color,
+        tb->background_color
     );
 
     new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb->render_rec);
-    GetUI()->text_box_stack.push(new_text_box);
+    ui::PushTextBox(new_text_box);
 }
 
 void ui::PushHSplit(int x_start, int x_end) {
@@ -415,11 +428,11 @@ void ui::PushHSplit(int x_start, int x_end) {
         x_end - x_start,
         tb->height,
         tb->text_size,
-        tb->text_color
+        tb->text_color,
+        tb->background_color
     );
     new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb->render_rec);
-
-    GetUI()->text_box_stack.push(new_text_box);
+    ui::PushTextBox(new_text_box);
 }
 
 void ui::PushGridCell(int columns, int rows, int column, int row) {
@@ -430,11 +443,11 @@ void ui::PushGridCell(int columns, int rows, int column, int row) {
         tb->width / columns,
         tb->height / rows,
         tb->text_size,
-        tb->text_color
+        tb->text_color,
+        tb->background_color
     );
     new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb->render_rec);
-
-    GetUI()->text_box_stack.push(new_text_box);
+    ui::PushTextBox(new_text_box);
 }
 
 ButtonStateFlags::T ui::AsButton() {
@@ -456,8 +469,8 @@ void ui::Shrink(int dx, int dy) {
     ui::Current()->Shrink(dx, dy);
 }
 
-void ui::Enclose(Color background_color, Color line_color) {
-    ui::Current()->Enclose(4, 4, background_color, line_color);
+void ui::Enclose() {
+    ui::Current()->Enclose(4, 4, ui::Current()->background_color, ui::Current()->text_color);
 }
 
 void ui::EncloseEx(int shrink, Color background_color, Color line_color, int corner_radius) {
@@ -515,9 +528,9 @@ ButtonStateFlags::T ui::DirectButton(const char* text, int margin) {
     ui::PushInline(text_rect.width + 2*margin, text_rect.height + 2*margin);
     ButtonStateFlags::T button_state = ui::AsButton();
     if (button_state & ButtonStateFlags::HOVER) {
-        ui::Enclose(tb->text_background, Palette::interactable_main);
+        ui::EncloseEx(4, tb->text_background, Palette::interactable_main, 4);
     } else {
-        ui::Enclose(tb->text_background, tb->text_color);
+        ui::Enclose();
     }
     ui::WriteEx(text, TextAlignment::CENTER, false);
     HandleButtonSound(button_state);
@@ -535,13 +548,21 @@ void ui::HelperText(const char* description) {
     buton_pos.y -= 2;
     Rectangle rect = { buton_pos.x, buton_pos.y, buton_size.x, buton_size.y };
     InternalDrawText("??", { buton_pos.x, buton_pos.y }, Palette::interactable_main);
+    Vector2 anchor = { buton_pos.x, buton_pos.y + buton_size.y };  // bottom-left
     if (CheckCollisionPointRec(GetMousePosition(), rect)) {
-        ui::SetMouseHint(sb.c_str);
+        Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), sb.c_str, DEFAULT_FONT_SIZE, 1);
+        ui::PushMouseHint(anchor, text_size.x + 8, text_size.y + 8);
+        ui::Current()->z_layer = 255 - MAX_TOOLTIP_RECURSIONS;  // Only for 1s mousehint
+        ui::Enclose();
+        ui::Write(sb.c_str);
+        ui::Pop();
     }
 }
 
 TextBox* ui::Current() {
-    return &GetUI()->text_box_stack.top();
+    if (GetUI()->text_box_stack.size() > 0)
+        return &GetUI()->text_box_stack.top();
+    return NULL;
 }
 
 void ui::HSpace(int pixels) {
@@ -577,8 +598,9 @@ void UIGlobals::UIEnd() {  // Called each frame after drawing UI
         // Draw mouse
         Vector2 mouse_pos = GetMousePosition();
         Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), mouseover_text, DEFAULT_FONT_SIZE, 1);
-        ui::PushMouseHint(text_size.x+8, text_size.y+8);
-        ui::Enclose(Palette::bg, Palette::ui_main);
+        ui::PushMouseHint(mouse_pos, text_size.x+8, text_size.y+8);
+        ui::Current()->z_layer = 255 - MAX_TOOLTIP_RECURSIONS;  // Only for 1s mousehint
+        ui::Enclose();
         ui::Write(mouseover_text);
         GetUI()->mouseover_text[0] = '\0';
     }

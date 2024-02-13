@@ -19,6 +19,9 @@ void main() {
     //vec4 texel_color = texture(texture0, fragTexCoord);
 
     finalColor = texture(texture0, fragTexCoord);
+    // Alpha scissor prevents unfortunate fading
+    if (finalColor.a > 0.01) finalColor.a = 1.0;
+    else discard;
 
     float depth_map = texture(depthMap, fragTexCoord).r;
     float z_n = 2.0 * depth_map - 1.0;
@@ -26,4 +29,5 @@ void main() {
     float far = 1000.0;
     float z_e = 2.0 * near * far / (far + near - z_n * (far - near));
     //finalColor.rgb = 1. - vec3(z_e / 10.0);
+    //finalColor.rgb = vec3(1) * depth_map * 20.0;
 }
