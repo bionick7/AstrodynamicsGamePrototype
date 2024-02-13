@@ -27,10 +27,9 @@ void InternalDrawTextEx(Font font, const char *text, Vector2 position, float fon
                         float spacing, Color tint, Rectangle render_rect, uint8_t z_layer);
 void DrawTextureSDF(Texture2D texture, Rectangle source, Rectangle dest, 
                     Vector2 origin, float rotation, Color tint, uint8_t z_layer);
-void InternalDrawTexturePro(Texture2D texture, Rectangle source, Rectangle dest, 
-                            Vector2 origin, float rotation, Color tint, uint8_t z_layer);
-void InternalDrawRectangleRounded(Rectangle rec, float roundness, int segments, Color color, float z_layer);
-void InternalDrawRectangleRoundedLines(Rectangle rec, float roundness, int segments, float lineThick, Color color, float z_layer);
+
+void BeginRenderInUIMode(uint8_t z_layer);
+void EndRenderInUIMode();
 
 void RenderOrbit(const OrbitSegment* orbit, int point_count, 
                  OrbitRenderMode::E render_mode, Color color);

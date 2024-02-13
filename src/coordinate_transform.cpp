@@ -109,7 +109,7 @@ void GameCamera::HandleInput() {
     }
     
     float scroll_ratio = 1 - 0.1 * GetMouseWheelMove();
-    if (scroll_ratio != 1 && !GetUI()->IsPointBlocked(GetMousePosition())) {
+    if (scroll_ratio != 1 && !GetUI()->IsPointBlocked(GetMousePosition(), 0)) {
         dist *= scroll_ratio;
     }
 

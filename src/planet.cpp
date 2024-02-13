@@ -448,7 +448,7 @@ void _UIDrawProduction(int option_size, IDList* queue, resource_count_t resource
         ui::Pop();  // Inset
     }
     if (IsIdValid(hovered_id)) {
-        ui::PushMouseHint(GetMousePosition(), 400, 400);
+        ui::PushMouseHint(GetMousePosition(), 400, 400, 255 - MAX_TOOLTIP_RECURSIONS);
         ui::Enclose();
         if (hover_over_queue) {
             _ProductionQueueMouseHint(hovered_id, NULL);

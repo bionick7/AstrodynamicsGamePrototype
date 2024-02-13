@@ -234,9 +234,8 @@ void ShipModules::UpdateDragging() {
     Vector2 pos = Vector2Add(GetMousePosition(), _dragging_mouse_offset);
     ui::PushGlobal(
         pos.x, pos.y, SHIP_MODULE_WIDTH, SHIP_MODULE_HEIGHT, 
-        DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg
+        DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, 200
     );
-    ui::Current()->z_layer = 200;
     DrawShipModule(_dragging);
     ui::Pop();  // Global
 

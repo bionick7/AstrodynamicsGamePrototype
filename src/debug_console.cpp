@@ -263,6 +263,7 @@ void DrawDebugConsole() {
     int height = 500;
     if (height > GetScreenHeight()) height = GetScreenHeight();
     ui::CreateNew(0, 0, GetScreenWidth(), height, DEFAULT_FONT_SIZE, WHITE, BLACK);
+    ui::Current()->z_layer = 254;
     ui::Enclose();
     int line_height = ui::Current()->text_size + ui::Current()->text_margin_y;
     const int input_height = 30;

@@ -97,13 +97,11 @@ namespace ui_shader {
 
 
 void InternalDrawText(const char *text, Vector2 position, Color color) {
-    Rectangle screen_rect = {0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()};
-    InternalDrawTextEx(GetCustomDefaultFont(), text, position, DEFAULT_FONT_SIZE, 1, color, screen_rect, 0);
+    InternalDrawTextEx(GetCustomDefaultFont(), text, position, DEFAULT_FONT_SIZE, 1, color, GetScreenRect(), 0);
 }
 
 void InternalDrawTextEx(Font font, const char *text, Vector2 position, float fontSize, float spacing, Color tint) {
-    Rectangle screen_rect = {0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()};
-    InternalDrawTextEx(font, text, position, fontSize, spacing, tint, screen_rect, 0);
+    InternalDrawTextEx(font, text, position, fontSize, spacing, tint, GetScreenRect(), 0);
 }
 
 void InternalDrawTextEx(Font font, const char *text, Vector2 position, float fontSize, float spacing, 
@@ -173,30 +171,14 @@ void DrawTextureSDF(Texture2D texture, Rectangle source, Rectangle dest,
     EndShaderMode();
 }
 
-void InternalDrawTexturePro(Texture2D texture, Rectangle source, Rectangle dest, Vector2 origin, float rotation, Color tint, uint8_t z_layer) {
+void BeginRenderInUIMode(uint8_t z_layer) {
     RELOAD_IF_NECAISSARY(ui_shader)
     BeginShaderMode(ui_shader::shader);
     float z_layer_f = 1.0f - z_layer / 256.0f;
     SetShaderValue(ui_shader::shader, ui_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT);
-    DrawTexturePro(texture, source, dest, origin, rotation, tint);
-    EndShaderMode();
 }
 
-void InternalDrawRectangleRounded(Rectangle rec, float roundness, int segments, Color color, float z_layer) {
-    RELOAD_IF_NECAISSARY(ui_shader)
-    BeginShaderMode(ui_shader::shader);
-    float z_layer_f = 1.0f - z_layer / 256.0f;
-    SetShaderValue(ui_shader::shader, ui_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT);
-    DrawRectangleRounded(rec, roundness, segments, color);
-    EndShaderMode();
-}
-
-void InternalDrawRectangleRoundedLines(Rectangle rec, float roundness, int segments, float lineThick, Color color, float z_layer) {
-    RELOAD_IF_NECAISSARY(ui_shader)
-    BeginShaderMode(ui_shader::shader);
-    float z_layer_f = 1.0f - z_layer / 256.0f;
-    SetShaderValue(ui_shader::shader, ui_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT);
-    DrawRectangleRoundedLines(rec, roundness, segments, lineThick, color);
+void EndRenderInUIMode() {
     EndShaderMode();
 }
 

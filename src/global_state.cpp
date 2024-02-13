@@ -210,7 +210,7 @@ void _UpdateShipsPlanets(GlobalState* gs) {
         }
     }
     
-    if (prev_hover != gs->hover && GetUI()->IsPointBlocked(GetMousePosition()) && IsIdValid(gs->hover)) {
+    if (prev_hover != gs->hover && GetUI()->IsPointBlocked(GetMousePosition(), 0) && IsIdValid(gs->hover)) {
         gs->hover = prev_hover;
     }
 

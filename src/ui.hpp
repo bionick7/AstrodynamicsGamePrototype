@@ -10,6 +10,7 @@
 #define MAX_TOOLTIP_RECURSIONS 50
 
 static inline Vector2 GetScreenCenter() { return {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f}; }
+static inline Rectangle GetScreenRect() { return {0, 0, GetScreenWidth(), GetScreenHeight()}; }
 
 namespace TextAlignment {
     typedef uint8_t T;
@@ -81,7 +82,8 @@ struct TextBox {
     int text_counter;
     int z_layer;
 
-    TextBox(int x, int y, int w, int h, int text_size, Color color, Color background_color);
+    TextBox(int x, int y, int w, int h, int text_size, Color color, Color background_color, uint8_t z_layer);
+    TextBox(const TextBox* parent, int x, int y, int w, int h);
     void LineBreak();
     void EnsureLineBreak();
     void Enclose(int inset, int corner_radius, Color background_color, Color line_color);
@@ -117,8 +119,17 @@ struct UIGlobals {
     char mouseover_text[1024] = "";
     Font default_font;
     Font default_font_sdf;
-    Rectangle blocking_rects[MAX_BLOCKING_RECTS];
+    struct {Rectangle rec; uint8_t z;} blocking_rects[MAX_BLOCKING_RECTS];
     int blocking_rect_index = 0;
+    int helper_active_index;
+    struct HelperText {
+        float lock_progress = 0.0;
+        bool hover = false;
+        int index;
+
+        HelperText* next;
+        HelperText* prev;
+    } helper_text;
 
     DataNode concept_descriptions;
 
@@ -126,8 +137,8 @@ struct UIGlobals {
     void UIStart();
     void UIEnd();
 
-    void AddBlockingRect(Rectangle rect);
-    bool IsPointBlocked(Vector2 pos) const;
+    void AddBlockingRect(Rectangle rect, uint8_t z_layer);
+    bool IsPointBlocked(Vector2 pos, uint8_t z_layer) const;
     const char* GetConceptDescription(const char* key);
     
     Texture2D GetIconAtlas();
@@ -136,9 +147,9 @@ struct UIGlobals {
 
 namespace ui {
     void PushTextBox(TextBox tb);
-    void PushGlobal(int x, int y, int w, int h, int text_size, Color color, Color background);
+    void PushGlobal(int x, int y, int w, int h, int text_size, Color color, Color background, uint8_t z_layer);
     void CreateNew(int x, int y, int w, int h, int text_size, Color color, Color background);
-    void PushMouseHint(Vector2 mouse_pos, int width, int height);
+    void PushMouseHint(Vector2 mouse_pos, int width, int height, uint8_t z_layer);
 
     int PushInset(int margin, int h);
     int PushScrollInset(int margin, int h, int allocated_height, int* scroll);

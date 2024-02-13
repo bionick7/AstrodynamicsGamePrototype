@@ -62,7 +62,7 @@ void DebugDrawConic(DVector3 focus, DVector3 ecc_vector, DVector3 normal, double
 
 
 void DebugFlushText() {
-    TextBox debug_textbox = TextBox(5, 35, 500, GetScreenHeight() - 40, DEFAULT_FONT_SIZE, GREEN, BLACK);
+    TextBox debug_textbox = TextBox(5, 35, 500, GetScreenHeight() - 40, DEFAULT_FONT_SIZE, GREEN, BLACK, 255);
     debug_textbox.text_background = BLACK;
     for (int i=0; i < debug_drawing::lines_index; i++) {
         debug_textbox.WriteLine(debug_drawing::lines[i], TextAlignment::CONFORM);
