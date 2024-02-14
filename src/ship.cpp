@@ -1146,7 +1146,7 @@ RID Ships::AddShip(const DataNode* data) {
     if (!data->HasArray("variables")) {
         ship->Repair(1e6);
     }
-    INFO("Spawned %s (%s-class)", ship->name, GetShipClassByIndex(ship->ship_class)->name);
+    //INFO("Spawned %s (%s-class)", ship->name, GetShipClassByIndex(ship->ship_class)->name);
     return ship_entity;
 }
 

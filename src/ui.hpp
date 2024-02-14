@@ -121,15 +121,16 @@ struct UIGlobals {
     Font default_font_sdf;
     struct {Rectangle rec; uint8_t z;} blocking_rects[MAX_BLOCKING_RECTS];
     int blocking_rect_index = 0;
-    int helper_active_index;
-    struct HelperText {
-        float lock_progress = 0.0;
-        bool hover = false;
-        int index;
 
-        HelperText* next;
-        HelperText* prev;
-    } helper_text;
+    struct MouseHints {
+        float lock_progress = 0.0;
+        Rectangle origin_button_rects[MAX_TOOLTIP_RECURSIONS+1];
+        Rectangle hint_rects[MAX_TOOLTIP_RECURSIONS+1];
+        char* hints[MAX_TOOLTIP_RECURSIONS+1] = { NULL };
+        int count = 0;
+
+        void AddHint(Rectangle source_button, const char *hint);
+    } mousehints;
 
     DataNode concept_descriptions;
 

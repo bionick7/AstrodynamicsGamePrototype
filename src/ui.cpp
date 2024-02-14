@@ -161,7 +161,7 @@ void TextBox::Write(const char* text, TextAlignment::T align) {
     // avoid drawing text_background is fully transparent (useless)
     BeginRenderInUIMode(z_layer);
     if(text_background.a != 0) {
-        DrawRectangleV(pos, size, text_background);
+        DrawRectangleRec(GetCollisionRec({pos.x, pos.y, size.x, size.y}, render_rec), text_background);
     }
     InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec, z_layer);
     if (GetSettingBool("text_boundrects", false)) {
@@ -172,19 +172,7 @@ void TextBox::Write(const char* text, TextAlignment::T align) {
 }
 
 void TextBox::WriteLine(const char* text, TextAlignment::T align) {
-    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
-    Vector2 pos = ApplyAlignment(GetAnchorPoint(align), size, align);
-    //DebugPrintText("(%f, %f) ; (%f, %f)", pos.x, pos.y, size.x, size.y);
-
-    // avoid drawing if text_background is fully transparent (useless)
-    if(text_background.a != 0) {
-        DrawRectangleV(pos, size, text_background);
-    }
-    InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec, z_layer);
-    if (GetSettingBool("text_boundrects", false)) {
-        DrawRectangleRoundedLines({pos.x, pos.y, size.x, size.y}, 0, 0, 1, GREEN);
-    }
-    _Advance(pos, size);
+    Write(text, align);
     LineBreak();
 }
 
@@ -507,7 +495,7 @@ void ui::Fillline(double value, Color fill_color, Color background_color) {
     BeginRenderInUIMode(tb->z_layer);
     DrawLine(x_start, y_end, x_end, y_end, background_color);
     DrawLine(x_start, y_end, x_mid_point, y_end, fill_color);
-    DrawLine(x_mid_point, y_end, x_mid_point, y_end - 4, fill_color);
+    //DrawLine(x_mid_point, y_end, x_mid_point, y_end - 4, fill_color);
     EndRenderInUIMode();
 }
 
@@ -530,7 +518,6 @@ ButtonStateFlags::T ui::DirectButton(const char* text, int margin) {
 }
 
 void ui::HelperText(const char* description) {
-    GetUI()->helper_active_index++;
     TextBox* tb = ui::Current();
     StringBuilder sb = StringBuilder(description);
     sb.AutoBreak(100);
@@ -543,26 +530,39 @@ void ui::HelperText(const char* description) {
     InternalDrawTextEx(GetCustomDefaultFont(), "??", { buton_pos.x, buton_pos.y }, tb->text_size, 1, 
         Palette::interactable_main, GetScreenRect(), tb->z_layer
     );
-    Vector2 anchor = { buton_pos.x, buton_pos.y + buton_size.y };  // bottom-left
-    
-    if (!(
-        (  // Case: hint is locked
-            GetUI()->helper_text.lock_progress >= 0.99
-            && GetUI()->helper_text.index == GetUI()->helper_active_index
-        ) || (  // Case: hint is not locked
-            CheckCollisionPointRec(GetMousePosition(), rect)
-            && !GetUI()->IsPointBlocked(GetMousePosition(), tb->z_layer)
-            && !(  // Check if another hint is locked: hint is locked
-                GetUI()->helper_text.lock_progress >= 0.99
-                && GetUI()->helper_text.index != GetUI()->helper_active_index
-            )
-        )
-    )) return;
 
-    Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), sb.c_str, DEFAULT_FONT_SIZE, 1);
-    ui::PushMouseHint(anchor, text_size.x + 8, text_size.y + 12, 255 - MAX_TOOLTIP_RECURSIONS);
-    ui::Enclose();
-    ui::Write(sb.c_str);
+    if (CheckCollisionCircleRec(GetMousePosition(), 2, rect)) {
+        GetUI()->mousehints.AddHint(rect, description);
+    }
+    /*
+    // Unwind mousebutton stack
+    for (int i=GetUI()->count-1; i <= 0; i--) {
+        bool mouse_hover = CheckCollisionCircleRec(GetMousePosition(), 5, GetUI()->mousehints[i].origin_button_rects);
+        if (GetUI()->mousehints[i].lock_progress >= 0.99) {
+            mouse_hover = mouse_hover || CheckCollisionCircleRec(GetMousePosition(), 2, GetUI()->mousehints[i].hint_rect);
+        }
+        if (!mouse_hover) {
+            GetUI()->count--;
+        } else {
+            break;
+        }
+    }
+
+    for (int i=GetUI()->count-1; i <= 0; i--) {
+        // top-down to minimize overdraw
+        Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), sb.c_str, DEFAULT_FONT_SIZE, 1);
+        ui::PushMouseHint(anchor, text_size.x + 8, text_size.y + 12, 255 - MAX_TOOLTIP_RECURSIONS + i);
+        ui::Enclose();
+        ui::Write(sb.c_str);
+        ui::Pop();
+    }
+
+    UIGlobals::HelperText* topmost = &GetUI()->mousehints[GetUI()->count-1];
+    ui::Fillline(topmost->lock_progress, Palette::ui_alt, ui::Current()->background_color);
+    ButtonStateFlags::T mouserect_button = ui::AsButton();
+    
+    topmost->hover = true;
+    topmost->index = GetUI()->helper_active_index;*/
     /*TextScreenPos positions = ui::Current()->MeasureTextScreenPositions("[[", "]]", sb.c_str);
     for (int i=0; positions[i].text_pos != NULL; i++) {
         if (CheckCollisionPointRec(GetMousePosition(), positions[i])) {
@@ -570,19 +570,6 @@ void ui::HelperText(const char* description) {
         }
     }
     delete[] positions;*/
-    ui::Fillline(GetUI()->helper_text.lock_progress, Palette::ui_alt, ui::Current()->background_color);
-    ButtonStateFlags::T mouserect_button = ui::AsButton();
-    ui::Pop();
-    
-    if (
-        GetUI()->helper_text.lock_progress > 0.99
-        && (mouserect_button & ButtonStateFlags::HOVER) == 0
-        && !CheckCollisionCircleRec(GetMousePosition(), 5, rect) // Circle give the collision some margin
-    ) {
-        return;
-    }
-    GetUI()->helper_text.hover = true;
-    GetUI()->helper_text.index = GetUI()->helper_active_index;
 
 }
 
@@ -613,8 +600,6 @@ void UIGlobals::UIInit() {
 }
 
 void UIGlobals::UIStart() {  // Called each frame before drawing UI
-    helper_text.hover = false;
-    helper_active_index = 0;
     SetMouseCursor(MOUSE_CURSOR_CROSSHAIR);
     for(; blocking_rect_index >= 0; blocking_rect_index--) {
         blocking_rects[blocking_rect_index] = {0};
@@ -623,11 +608,12 @@ void UIGlobals::UIStart() {  // Called each frame before drawing UI
 }
 
 void UIGlobals::UIEnd() {  // Called each frame after drawing UI
-    if (helper_text.hover) {
-        helper_text.lock_progress = Clamp(helper_text.lock_progress + GetFrameTime() * 1.0f, 0.0f, 1.0f);
+    /*UIGlobals::HelperText* topmost = &GetUI()->mousehints[GetUI()->count-1];
+    if (topmost->hover) {
+        topmost->lock_progress = Clamp(topmost->lock_progress + GetFrameTime() * 1.0f, 0.0f, 1.0f);
     } else {
-        helper_text.lock_progress = 0.0f;
-    }
+        topmost->lock_progress = 0.0f;
+    }*/
     if (mouseover_text[0] != '\0') {
         // Draw mouse
         Vector2 mouse_pos = GetMousePosition();
@@ -635,7 +621,54 @@ void UIGlobals::UIEnd() {  // Called each frame after drawing UI
         ui::PushMouseHint(mouse_pos, text_size.x+8, text_size.y+8, 255 - MAX_TOOLTIP_RECURSIONS);
         ui::Enclose();
         ui::Write(mouseover_text);
-        GetUI()->mouseover_text[0] = '\0';
+        ui::Pop();
+        mouseover_text[0] = '\0';
+    }
+
+    // Draw
+    DEBUG_SHOW_I(mousehints.count)
+    for (int i=mousehints.count-1; i >= 0; i--) {  // Avoid overdraw
+        StringBuilder sb = StringBuilder(mousehints.hints[i]);
+        sb.AutoBreak(100);
+        Rectangle org_rect = mousehints.origin_button_rects[i];
+        Vector2 anchor = { org_rect.x, org_rect.y + org_rect.height };  // bottom-left
+        Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), sb.c_str, DEFAULT_FONT_SIZE, 1);
+        ui::PushMouseHint(anchor, text_size.x+8, text_size.y+8, 255 - MAX_TOOLTIP_RECURSIONS + i);
+        mousehints.hint_rects[i] = ui::Current()->render_rec;
+        ui::Enclose();
+        ui::Write(sb.c_str);
+
+        Rectangle r = {ui::Current()->text_start_x, ui::Current()->text_start_y, 20, 20};
+        BeginRenderInUIMode(ui::Current()->z_layer);
+        DrawRectangleRec(r, RED);
+        EndRenderInUIMode();
+        if (CheckCollisionPointRec(GetMousePosition(), r)) {
+            mousehints.AddHint(r, "PerkelePerkelePerkelePerkelePerkelePerkelePerkelePerkelePerkelePerkelePerkele");
+        }
+
+        if (i == mousehints.count-1) {
+            ui::Fillline(mousehints.lock_progress, Palette::ui_main, Palette::bg);
+        }
+        ui::Pop();
+    }
+
+    int top_hint_index = mousehints.count - 1;
+    for (int i=top_hint_index; i >= 0; i--) {
+        bool hover = CheckCollisionCircleRec(GetMousePosition(), 5, mousehints.origin_button_rects[i]);
+        if (mousehints.lock_progress > 0.99 || i != top_hint_index) {
+            hover = hover || CheckCollisionPointRec(GetMousePosition(), mousehints.hint_rects[i]);
+        }
+        //BeginRenderInUIMode(255);
+        //DrawRectangleRec(mousehints.hint_rects[i], hover ? GREEN : RED);
+        //EndRenderInUIMode();
+        if (hover) {
+            mousehints.lock_progress = Clamp(mousehints.lock_progress + GetFrameTime() * 1.0f, 0.0f, 1.0f);
+            break;
+        } else {
+            //mousehints.lock_progress = 0.0f;
+            mousehints.lock_progress = 1.0f;
+            mousehints.count = i;
+        }
     }
 }
 
@@ -674,6 +707,29 @@ Texture2D UIGlobals::GetIconAtlasSDF() {
         UIInit();
     }
     return default_font_sdf.texture;
+}
+
+void UIGlobals::MouseHints::AddHint(Rectangle origin_button, const char *hint) {
+    // Adds iff it dousn't find the rectangle in list
+    int hash = (int)origin_button.x * 10000 + (int)origin_button.y;
+
+    for (int i=0; i < count; i++) {
+        int rect_hash = (int)origin_button_rects[i].x * 10000 + (int)origin_button_rects[i].y;
+        if (rect_hash == hash) {
+            return;
+        }
+    }
+
+    // Not found in list
+    if (count > MAX_TOOLTIP_RECURSIONS) return;
+
+    lock_progress = 0.0f;
+
+    origin_button_rects[count] = origin_button;
+    delete[] hints[count];
+    hints[count] = new char[strlen(hint) + 1];
+    strcpy(hints[count], hint);
+    count++;
 }
 
 Font GetCustomDefaultFont() {
