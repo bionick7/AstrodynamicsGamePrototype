@@ -3,6 +3,38 @@
 #include "logging.hpp"
 #include "tests.hpp"
 
+
+TokenList::TokenList() {
+    start_positions = NULL;
+    end_positions = NULL;
+    length = 0;
+    capacity = 0;
+}
+
+TokenList::~TokenList() {
+    delete[] start_positions;
+    delete[] end_positions;
+}
+
+void TokenList::AddToken(int start, int end) {
+    if (length >= capacity) {
+        capacity += 5;
+        int* new_start_positions = new int[capacity];
+        int* new_end_positions = new int[capacity];
+        for(int i=0; i < length; i++) {
+            new_start_positions[i] = start_positions[i];
+            new_end_positions[i] = end_positions[i];
+        }
+        delete[] start_positions;
+        delete[] end_positions;
+        start_positions = new_start_positions;
+        end_positions = new_end_positions;
+    }
+    start_positions[length] = start;
+    end_positions[length] = end;
+    length++;
+}
+
 StringBuilder::StringBuilder() {
     c_str = (char*)malloc(1);
     c_str[0] = '\0';
@@ -39,18 +71,17 @@ void StringBuilder::WriteToFile(const char * filename) const {
     SaveFileText(filename, c_str);
 }
 
-StringBuilder& StringBuilder::Clear() {
+void StringBuilder::Clear() {
     c_str = (char*)malloc(1);
     c_str[0] = '\0';
     length = 1;
-    return *this;
 }
 
-StringBuilder & StringBuilder::AutoBreak(int max_width) {
+void StringBuilder::AutoBreak(int max_width) {
     int character_toll = 0;
     int last_space = 0;
     int num_words = 0;
-    for(int i=0; i < length; i++) {
+    for(int i=0; i < length - 1; i++) {
         if (c_str[i] == ' ' || c_str[i] == '\t' || i == length-1) {
             if (character_toll > max_width && num_words > 0) {
                 c_str[last_space] = '\n';
@@ -66,7 +97,49 @@ StringBuilder & StringBuilder::AutoBreak(int max_width) {
             character_toll = 0;
         }
     }
-    return *this;
+}
+
+TokenList StringBuilder::ExtractTokens(const char *start_delim, const char *end_delim) {
+    TokenList res = TokenList();
+
+    int start_delim_len = strlen(start_delim);
+    int end_delim_len = strlen(start_delim);
+
+    int current_start = 0;
+    int original_length = length;
+    for(int i=0; i < length; i++) {
+        int consume = 0;
+        if (i < length - end_delim_len - start_delim_len && strncmp(&c_str[i], start_delim, start_delim_len) == 0) {
+            current_start = i;
+            consume = start_delim_len;
+        }
+        if (i < length - end_delim_len && strncmp(&c_str[i], end_delim, end_delim_len) == 0) {
+            res.AddToken(current_start, i);
+            consume = end_delim_len;
+        }
+        if (consume > 0) {
+            for (int j=i; j < length - consume; j++) {
+                c_str[j] = c_str[j+consume];
+            }
+            length -= consume;
+        }
+    }
+    
+    if (original_length != length) {
+        c_str = (char*) realloc(c_str, sizeof(char*) * length);
+    }
+
+    return res;
+}
+
+StringBuilder StringBuilder::GetSubstring(int from, int to) {
+    if (to <= from || to > length) {
+        return StringBuilder();
+    }
+    StringBuilder sb = StringBuilder(to - from + 1);
+    strncpy(sb.c_str, c_str, to - from + 1);
+    sb.c_str[to - from] = '\0';
+    return sb;
 }
 
 StringBuilder& StringBuilder::Add(const char* add_str) {

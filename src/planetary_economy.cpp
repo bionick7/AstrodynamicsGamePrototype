@@ -206,7 +206,8 @@ void PlanetaryEconomy::UIDrawEconomy(const ResourceTransfer& transfer, double fu
             qtt -= fuel_draw;
         }
         if (qtt != 0) {
-            sb.Clear().AddI(qtt).Add("(").AddCost(GetPrice(resource, qtt)).Add(")");
+            sb.Clear();
+            sb.AddI(qtt).Add("(").AddCost(GetPrice(resource, qtt)).Add(")");
             ui::WriteEx(sb.c_str, TextAlignment::CONFORM, false);
         }
 

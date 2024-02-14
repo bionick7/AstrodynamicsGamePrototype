@@ -95,6 +95,88 @@ namespace ui_shader {
     }
 }
 
+int GetCharacterIndex(Vector2 position, Font font, const char *text, float fontSize, float spacing) {
+    // Returns byte offset into the char array, rather than glyph position
+    // Returns -1 if position is outside text region
+    if (font.texture.id == 0) font = GetFontDefault();
+    int size = TextLength(text);
+
+    int textOffsetY = 0;
+    float textOffsetX = 0.0f;
+
+    float scaleFactor = fontSize/font.baseSize;
+
+    for (int i = 0; i < size;) {
+        int codepointByteCount = 0;
+        int codepoint = GetCodepointNext(&text[i], &codepointByteCount);
+        int index = GetGlyphIndex(font, codepoint);
+
+        if (codepoint == '\n') {
+            textOffsetY += 20;
+            textOffsetX = 0.0f;
+        } else {
+            float x_increment = (float)font.recs[index].width*scaleFactor + spacing;
+            Rectangle char_rect = { textOffsetX, textOffsetY, x_increment, fontSize };
+            if (CheckCollisionPointRec(position, char_rect)) {
+                return i;
+            }
+
+            if (font.glyphs[index].advanceX == 0) textOffsetX += x_increment;
+            else textOffsetX += ((float)font.glyphs[index].advanceX*scaleFactor + spacing);
+        }
+
+        i += codepointByteCount;   // (Raylib cmt) Move text bytes counter to next codepoint
+    }
+    return -1;
+}
+
+Rectangle GetTextRect(int token_start, int token_end, int token_from, Font font, const char *text, float fontSize, float spacing) {
+    if (font.texture.id == 0) font = GetFontDefault();
+    int size = TextLength(text);
+
+    int textOffsetY = 0;
+    float textOffsetX = 0.0f;
+
+    float scaleFactor = fontSize/font.baseSize;
+
+    Rectangle rect = Rectangle{0, 0, 0, fontSize};
+
+    for (int i = 0; i < size;) {
+        int codepointByteCount = 0;
+        int codepoint = GetCodepointNext(&text[i], &codepointByteCount);
+        int index = GetGlyphIndex(font, codepoint);
+        if (i == token_start) {
+            rect.x = textOffsetX;
+            rect.y = textOffsetY;
+        }
+        else if (i == token_end) {
+            rect.width = textOffsetX - rect.x;
+            return rect;
+        }
+        if (codepoint == '\n') {
+            if (i > token_from) {
+                rect.width = textOffsetX - rect.x;
+                return rect;
+            }
+            textOffsetY += 20;
+            textOffsetX = 0.0f;
+            if (i > token_start) {
+                rect.x = textOffsetX;
+                rect.y = textOffsetY;
+            }
+        } else {
+            float x_increment = (float)font.recs[index].width*scaleFactor + spacing;
+            //Rectangle char_rect = { textOffsetX, textOffsetY, x_increment, fontSize };
+
+
+            if (font.glyphs[index].advanceX == 0) textOffsetX += x_increment;
+            else textOffsetX += ((float)font.glyphs[index].advanceX*scaleFactor + spacing);
+        }
+
+        i += codepointByteCount;   // (Raylib cmt) Move text bytes counter to next codepoint
+    }
+    return rect;
+}
 
 void InternalDrawText(const char *text, Vector2 position, Color color) {
     InternalDrawTextEx(GetCustomDefaultFont(), text, position, DEFAULT_FONT_SIZE, 1, color, GetScreenRect(), 0);

@@ -99,7 +99,9 @@ struct TextBox {
 
     Vector2 GetAnchorPoint(TextAlignment::T align) const;
     int GetLineHeight() const;
-    Rectangle TbMeasureTextEx(const char* text, TextAlignment::T alignemnt) const;
+    int TbGetCharacterIndex(Vector2 collision_pos, const char* text, TextAlignment::T alignemnt) const;
+    Rectangle TbGetTextRect(const char* text, TextAlignment::T alignemnt, int token_start, int token_end, int token_from) const;
+    Rectangle TbMeasureText(const char* text, TextAlignment::T alignemnt) const;
 
     void _Advance(Vector2 pos, Vector2 size);
 };

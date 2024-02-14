@@ -21,7 +21,7 @@ module: >
   Modules can be build in a [[shipyard]] if it is fitted appropriatly* (cf [[shipyard]]).
 
 stat: >
-  A stat (short for statistical measurement of abiliat<) is a measure of capability of a [[ship]] to do a
+  A stat (short for statistical measurement of abiliaty) is a measure of capability of a [[ship]] to do a
   certain task. The stats modeled in this simulation are [[health]], [[attack]] and [[defense]] for [[ordonance]]
   [[kinetic]] and [[boarding]] attacks, [[initiative]] and [[power]]
 Δv: A measure of capability of the ship to perform certain [[transfer]]. Decrases with increasing payload.

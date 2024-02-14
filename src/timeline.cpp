@@ -94,8 +94,9 @@ void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
         int y = GetTimeCoord(tcd, t);
         DrawLine(tcd->x0 - 2, y, tcd->x0 + 15, y, Palette::ui_main);
         if (t_indx++ % time_interval == 0) {
+            sb.Clear();
             DrawTextAligned(
-                sb.Clear().AddDate(t, true).c_str, 
+                sb.AddDate(t, true).c_str, 
                 { (float) tcd->x0 + 20, (float) y },
                 TextAlignment::BOTTOM | TextAlignment::LEFT,
                 Palette::ui_alt

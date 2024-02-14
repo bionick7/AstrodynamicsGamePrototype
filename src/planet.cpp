@@ -170,7 +170,7 @@ bool Planet::HasMouseHover(double* min_distance) const {
     Ray mouse_ray = GetMouseRay(GetMousePosition(), GetCamera()->rl_camera);
     Matrix orbit_transform = MatrixFromColumns((Vector3) orbit.periapsis_dir, (Vector3) orbit.normal, (Vector3) orbit.periapsis_dir.Cross(orbit.normal));
     Matrix inv_orbit_transform = MatrixInvert(orbit_transform);
-    Vector3 mouse_repr = Vector3Add(mouse_ray.position, mouse_ray.direction);
+    //Vector3 mouse_repr = Vector3Add(mouse_ray.position, mouse_ray.direction);
     mouse_ray.position = Vector3Transform(mouse_ray.position, inv_orbit_transform);
     mouse_ray.direction = Vector3Transform(mouse_ray.direction, inv_orbit_transform);
     

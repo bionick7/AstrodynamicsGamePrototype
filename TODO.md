@@ -32,6 +32,7 @@
 - SAVING: Ships don't reload correctly (Done)
 - ASTRO: Transfer plan cancels wen it shouldn't (Done)
 - QUESTS: Accepting more than one quest fucks up the order
+- UI: measuring inline (conforming) text cannot rely on raylibs MeassureTextEx
 
 ## Necessary Incomplete features
 - save wren quest state (Done)

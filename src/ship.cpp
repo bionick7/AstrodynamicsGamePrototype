@@ -605,12 +605,10 @@ void _UIDrawHeader(const Ship* ship) {
     if (!ship->IsParked() && !ship->IsLeading()) text = ICON_EMPTY " " ICON_TRANSPORT_FLEET "  ";
     if (ship->IsParked() && ship->IsLeading()) text = ICON_PLANET " " ICON_EMPTY "  ";
     if (ship->IsParked() && !ship->IsLeading()) text = ICON_PLANET " " ICON_TRANSPORT_FLEET "  ";
-    Rectangle top_buttons_rect = ui::MeasureTextEx(text, TextAlignment::RIGHT | TextAlignment::VCONFORM);
-    Rectangle planet_button_rect = {top_buttons_rect.x, top_buttons_rect.y, top_buttons_rect.width/2, top_buttons_rect.height};
-    Rectangle fleet_button_rect = {top_buttons_rect.x + top_buttons_rect.width/2, top_buttons_rect.y, top_buttons_rect.width/2, top_buttons_rect.height};
+    int pos = ui::Current()->TbGetCharacterIndex(GetMousePosition(), text, TextAlignment::RIGHT | TextAlignment::VCONFORM);
     ui::WriteEx(text, TextAlignment::RIGHT | TextAlignment::VCONFORM, true);
-    ButtonStateFlags::T planet_button_state = GetButtonState(CheckCollisionPointRec(GetMousePosition(), planet_button_rect), false);  // Don't care about hover_in
-    ButtonStateFlags::T fleet_button_state = GetButtonState(CheckCollisionPointRec(GetMousePosition(), fleet_button_rect), false);  // Don't care about hover_in
+    ButtonStateFlags::T planet_button_state = GetButtonState(pos >= 0 && pos < 2, false);  // Don't care about hover_in
+    ButtonStateFlags::T fleet_button_state = GetButtonState(pos >= 3 && pos < 5, false);  // Don't care about hover_in
     if (planet_button_state & ButtonStateFlags::JUST_PRESSED && ship->IsParked()) {
         GetGlobalState()->focused_planet = ship->GetParentPlanet();
     }
@@ -763,7 +761,7 @@ void _UIDrawTransferplans(Ship* ship) {
     
     // 'New transfer' button
 
-    Rectangle text_rect = ui::Current()->TbMeasureTextEx("New transfer", TextAlignment::CONFORM);
+    Rectangle text_rect = ui::Current()->TbMeasureText("New transfer", TextAlignment::CONFORM);
     ui::PushInline(text_rect.width + 2, text_rect.height + 2);
     ButtonStateFlags::T new_button_state = ui::AsButton();
     if (new_button_state & ButtonStateFlags::HOVER) {
