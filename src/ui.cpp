@@ -155,6 +155,22 @@ void TextBox::Shrink(int dx, int dy) {
     height -= 2*dy;
 }
 
+void TextBox::WriteRaw(const char *text, TextAlignment::T align) {
+    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
+    Vector2 pos = ApplyAlignment(GetAnchorPoint(align), size, align);
+    // avoid drawing text_background is fully transparent (useless)
+    BeginRenderInUIMode(z_layer);
+    if(text_background.a != 0) {
+        DrawRectangleRec(GetCollisionRec({pos.x, pos.y, size.x, size.y}, render_rec), text_background);
+    }
+    InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec, z_layer);
+    if (GetSettingBool("text_boundrects", false)) {
+        DrawRectangleRoundedLines({pos.x, pos.y, size.x, size.y}, 0, 0, 1, GREEN);
+    }
+    EndRenderInUIMode();
+    // Not Advance
+}
+
 void TextBox::Write(const char* text, TextAlignment::T align) {
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
     Vector2 pos = ApplyAlignment(GetAnchorPoint(align), size, align);
@@ -174,6 +190,32 @@ void TextBox::Write(const char* text, TextAlignment::T align) {
 void TextBox::WriteLine(const char* text, TextAlignment::T align) {
     Write(text, align);
     LineBreak();
+}
+
+void TextBox::Decorate(const char *text, TextAlignment::T align, const TokenList* tokens) {
+    /*int len = strlen(text);
+    char* underline_txt = new char[len+1];
+    for (int i=0; i < len; i++) {
+        underline_txt[i] = ' ';
+    }
+    underline_txt[len+1] = '\0'
+    for (int i=0; i < tokens->length; i++) {
+        for (int j=tokens->start_positions[i]; j < tokens->end_positions[i]; j++) {
+            underline_txt[j] = '_';
+        }
+    }
+    WriteRaw(underline_txt, align);
+    delete[] underline_txt;*/
+    std::vector rr = GetTextRects(
+        tokens, GetCustomDefaultFont(),
+        text, text_size, 1
+    );
+    BeginRenderInUIMode(z_layer);
+    for (Rectangle rec : rr) {
+        int y = text_start_y + rec.y + rec.height;
+        DrawLine(text_start_x + rec.x, y, text_start_x + rec.x + rec.width, y, text_color);
+    }
+    EndRenderInUIMode();
 }
 
 void TextBox::DrawTexture(Texture2D texture, Rectangle source, int texture_height, Color tint, bool sdf) {
@@ -509,6 +551,10 @@ void ui::WriteEx(const char *text, TextAlignment::T alignemnt, bool linebreak) {
     }
 }
 
+void ui::DecorateEx(const char *text, TextAlignment::T alignemnt, const TokenList* tokens) {
+    ui::Current()->Decorate(text, alignemnt, tokens);
+}
+
 Rectangle ui::MeasureTextEx(const char *text, TextAlignment::T alignemnt) {
     return ui::Current()->TbMeasureText(text, alignemnt);
 }
@@ -551,18 +597,22 @@ void ui::HelperText(const char* description) {
     TextBox* tb = ui::Current();
     StringBuilder sb = StringBuilder(description);
     sb.AutoBreak(100);
-    Vector2 buton_size = { 24, 24 };
+    Vector2 button_size = { 24, 24 };
     TextAlignment::T button_align = TextAlignment::TOP | TextAlignment::RIGHT;
-    Vector2 buton_pos = ApplyAlignment(ui::Current()->GetAnchorPoint(button_align), buton_size, button_align);
-    buton_pos.x -= 2;
-    buton_pos.y -= 2;
-    Rectangle rect = { buton_pos.x, buton_pos.y, buton_size.x, buton_size.y };
-    InternalDrawTextEx(GetCustomDefaultFont(), "??", { buton_pos.x, buton_pos.y }, tb->text_size, 1, 
-        Palette::interactable_main, GetScreenRect(), tb->z_layer
+    Vector2 button_pos = ApplyAlignment(ui::Current()->GetAnchorPoint(button_align), button_size, button_align);
+    button_pos.x -= 2;
+    button_pos.y += 2;
+    Rectangle rect = { button_pos.x, button_pos.y, button_size.x, button_size.y };
+    //BeginRenderInUIMode(tb->z_layer);
+    //DrawRectangleLinesEx(tb->render_rec, 1, GREEN);
+    //EndRenderInUIMode();
+    InternalDrawTextEx(GetCustomDefaultFont(), "??", { button_pos.x, button_pos.y }, tb->text_size, 1, 
+        Palette::interactable_main, tb->render_rec, tb->z_layer
     );
 
-    if (CheckCollisionCircleRec(GetMousePosition(), 2, rect)) {
-        GetUI()->mousehints.AddHint(rect, description);
+    if (CheckCollisionCircleRec(GetMousePosition(), 2, rect) && !GetUI()->IsPointBlocked(GetMousePosition(), tb->z_layer)) {
+        //GetUI()->mousehints.count = 0;
+        GetUI()->mousehints.AddHint(rect, { button_pos.x, button_pos.y + button_size.y}, description);
     }
 }
 
@@ -594,13 +644,21 @@ void UIGlobals::UIInit() {
 
 void UIGlobals::UIStart() {  // Called each frame before drawing UI
     SetMouseCursor(MOUSE_CURSOR_CROSSHAIR);
-    for(; blocking_rect_index >= 0; blocking_rect_index--) {
-        blocking_rects[blocking_rect_index] = {0};
+    for( int i=0; i < acc_blocking_rect_index; i++) {
+        blocking_rects[i].rec = acc_blocking_rects[i].rec;
+        blocking_rects[i].z = acc_blocking_rects[i].z;
     }
-    blocking_rect_index = 0;  // Undershoots in loop
+    blocking_rect_index = acc_blocking_rect_index;
+    while(acc_blocking_rect_index > 0) {
+        acc_blocking_rects[--acc_blocking_rect_index] = {0};
+    }
 }
 
 void UIGlobals::UIEnd() {  // Called each frame after drawing UI
+    _HandleMouseTips();
+}
+
+void UIGlobals::_HandleMouseTips() {
     if (mouseover_text[0] != '\0') {
         // Draw mouse
         Vector2 mouse_pos = GetMousePosition();
@@ -612,40 +670,65 @@ void UIGlobals::UIEnd() {  // Called each frame after drawing UI
         mouseover_text[0] = '\0';
     }
 
-    // Draw
     for (int i=mousehints.count-1; i >= 0; i--) {  // Avoid overdraw
+        bool top_most = i == mousehints.count-1;
         StringBuilder sb = StringBuilder(mousehints.hints[i]);
         sb.AutoBreak(100);
         TokenList tokens = sb.ExtractTokens("[[", "]]");
         Rectangle org_rect = mousehints.origin_button_rects[i];
-        Vector2 anchor = { org_rect.x, org_rect.y + org_rect.height };  // bottom-left
+        //Vector2 anchor = { org_rect.x, org_rect.y + org_rect.height };  // bottom-left
         Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), sb.c_str, DEFAULT_FONT_SIZE, 1);
+        mousehints.hint_rects[i].width = text_size.x;
+        mousehints.hint_rects[i].height = text_size.y;
+        Vector2 anchor = { mousehints.hint_rects[i].x, mousehints.hint_rects[i].y};
         ui::PushMouseHint(anchor, text_size.x+8, text_size.y+8, 255 - MAX_TOOLTIP_RECURSIONS + i);
         mousehints.hint_rects[i] = ui::Current()->render_rec;
         
+        int hover_char_index = -1;
+        int hover_token_index = -1;
+        // Check for recursive tooltips
         if (!IsPointBlocked(GetMousePosition(), ui::Current()->z_layer)) {
             int char_index = ui::Current()->TbGetCharacterIndex(GetMousePosition(), sb.c_str, TextAlignment::CONFORM);
-            BeginRenderInUIMode(255);
             for (int j=0; j < tokens.length; j++) {
-                if (char_index < tokens.start_positions[j] || char_index >= tokens.end_positions[j]) {
-                    continue;
+                if (char_index > tokens.start_positions[j] && char_index < tokens.end_positions[j]) {
+                    hover_token_index = j;
+                    hover_char_index = char_index;
+                    break;
                 }
-                Rectangle rect = ui::Current()->TbGetTextRect(sb.c_str, TextAlignment::CONFORM, tokens.start_positions[j], tokens.end_positions[j], char_index);
-                DrawRectangleLinesEx(rect, 1, GREEN);
-
-                int substr_len =  tokens.end_positions[j] - tokens.start_positions[j];
-                char* substr = new char[substr_len + 1];
-                strncpy(substr, &sb.c_str[tokens.start_positions[j]], substr_len);
-                substr[substr_len] = '\0';
-                const char* new_hint = GetConceptDescription(substr);
-                delete[] substr;
-
-                mousehints.AddHint(rect, new_hint);
             }
-            EndRenderInUIMode();
+        }
+        // Add recursive tooltips
+        if (hover_token_index >= 0) {
+            Rectangle rect = ui::Current()->TbGetTextRect(
+                sb.c_str, TextAlignment::CONFORM, tokens.start_positions[hover_token_index], 
+                tokens.end_positions[hover_token_index], hover_char_index
+            );
+            //DrawRectangleLinesEx(rect, 1, GREEN);
+
+            int substr_len =  tokens.end_positions[hover_token_index] - tokens.start_positions[hover_token_index];
+            char* substr = new char[substr_len + 1];
+            strncpy(substr, &sb.c_str[tokens.start_positions[hover_token_index]], substr_len);
+            substr[substr_len] = '\0';
+            const char* new_hint = GetConceptDescription(substr);
+            delete[] substr;
+
+            Vector2 new_anchor = {
+                rect.x + rect.width / 2.0f,
+                mousehints.hint_rects[i].y + mousehints.hint_rects[i].height + 10
+            };
+            if (!top_most && (MouseHints::Hash(mousehints.origin_button_rects[i+1]) != MouseHints::Hash(rect))) {
+                mousehints.count = i + 1;
+            }
+            mousehints.AddHint(rect, new_anchor, new_hint);
         }
 
+        if (i < mousehints.count-1) {
+            //ui::Current()->text_color = Palette::ui_alt;
+        }
+
+        // Draw 
         ui::Enclose();
+        ui::DecorateEx(sb.c_str, TextAlignment::CONFORM, &tokens);
         ui::Write(sb.c_str);
         if (i == mousehints.count-1) {
             ui::Fillline(mousehints.lock_progress, Palette::ui_main, Palette::bg);
@@ -653,11 +736,44 @@ void UIGlobals::UIEnd() {  // Called each frame after drawing UI
         ui::Pop();
     }
 
+    // Draw connections
+    BeginRenderInUIMode(255 - MAX_TOOLTIP_RECURSIONS + mousehints.count);
+    for (int i = mousehints.count - 1; i >= 0; i--) {
+        int midpoint = mousehints.origin_button_rects[i].x + mousehints.origin_button_rects[i].width / 2.0f;
+        DrawLine(
+            midpoint, mousehints.origin_button_rects[i].y + mousehints.origin_button_rects[i].height,
+            midpoint, mousehints.hint_rects[i].y,
+            Palette::ui_main
+        );
+        /*DrawLine(
+            mousehints.hint_rects[i].x,
+            mousehints.hint_rects[i].y,
+            mousehints.origin_button_rects[i].x,
+            mousehints.origin_button_rects[i].y + mousehints.origin_button_rects[i].height,
+            Palette::ui_alt
+        );
+        DrawLine(
+            mousehints.hint_rects[i].x + mousehints.hint_rects[i].width,
+            mousehints.hint_rects[i].y,
+            mousehints.origin_button_rects[i].x + mousehints.origin_button_rects[i].width,
+            mousehints.origin_button_rects[i].y + mousehints.origin_button_rects[i].height,
+            Palette::ui_alt
+        );*/
+    }
+    EndRenderInUIMode();
+    // Handle deselect
     int top_hint_index = mousehints.count - 1;
     for (int i=top_hint_index; i >= 0; i--) {
         bool hover = CheckCollisionCircleRec(GetMousePosition(), 5, mousehints.origin_button_rects[i]);
+        //DrawRectangleLinesEx(mousehints.origin_button_rects[i], 1, GREEN);
         if (mousehints.lock_progress > 0.99 || i != top_hint_index) {
-            hover = hover || CheckCollisionPointRec(GetMousePosition(), mousehints.hint_rects[i]);
+            Rectangle encapsulating = EncapsulationRectangle(
+                mousehints.origin_button_rects[i], 
+                mousehints.hint_rects[i]
+            );
+            //DrawRectangleLinesEx(mousehints.hint_rects[i], 1, GREEN);
+            //DrawRectangleLinesEx(encapsulating, 1, RED);
+            hover = CheckCollisionPointRec(GetMousePosition(), encapsulating);
         }
         if (hover) {
             mousehints.lock_progress = Clamp(mousehints.lock_progress + GetFrameTime() * 1.0f, 0.0f, 1.0f);
@@ -670,10 +786,10 @@ void UIGlobals::UIEnd() {  // Called each frame after drawing UI
 }
 
 void UIGlobals::AddBlockingRect(Rectangle rect, uint8_t z_layer) {
-    if (blocking_rect_index == MAX_BLOCKING_RECTS-1) return;
-    blocking_rects[blocking_rect_index].rec = rect;
-    blocking_rects[blocking_rect_index].z = z_layer;
-    blocking_rect_index++;
+    if (acc_blocking_rect_index == MAX_BLOCKING_RECTS-1) return;
+    acc_blocking_rects[acc_blocking_rect_index].rec = rect;
+    acc_blocking_rects[acc_blocking_rect_index].z = z_layer;
+    acc_blocking_rect_index++;
 }
 
 bool UIGlobals::IsPointBlocked(Vector2 pos, uint8_t z_layer) const {
@@ -706,27 +822,33 @@ Texture2D UIGlobals::GetIconAtlasSDF() {
     return default_font_sdf.texture;
 }
 
-void UIGlobals::MouseHints::AddHint(Rectangle origin_button, const char *hint) {
+void UIGlobals::MouseHints::AddHint(Rectangle origin_button, Vector2 anchor, const char *hint) {
     // Adds iff it dousn't find the rectangle in list
-    int hash = (int)origin_button.x * 10000 + (int)origin_button.y;
+    int hash = Hash(origin_button);
 
     for (int i=0; i < count; i++) {
-        int rect_hash = (int)origin_button_rects[i].x * 10000 + (int)origin_button_rects[i].y;
-        if (rect_hash == hash) {
+        if (Hash(origin_button_rects[i]) == hash) {
             return;
         }
     }
 
     // Not found in list
     if (count > MAX_TOOLTIP_RECURSIONS) return;
+    //INFO("new tt: %f, %f", origin_button.x, origin_button.y)
 
     lock_progress = 0.0f;
 
     origin_button_rects[count] = origin_button;
+    hint_rects[count].x = anchor.x;
+    hint_rects[count].y = anchor.y;
     delete[] hints[count];
     hints[count] = new char[strlen(hint) + 1];
     strcpy(hints[count], hint);
     count++;
+}
+
+int UIGlobals::MouseHints::Hash(Rectangle origin_button) {
+    return (int)origin_button.x * 10000 + (int)origin_button.y;
 }
 
 Font GetCustomDefaultFont() {

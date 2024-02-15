@@ -3,6 +3,7 @@
 
 #include "basic.hpp"
 #include "id_allocator.hpp"
+#include "string_builder.hpp"
 #include <stack>
 
 #define DEFAULT_FONT_SIZE 20
@@ -89,8 +90,10 @@ struct TextBox {
     void Enclose(int inset, int corner_radius, Color background_color, Color line_color);
     void EnclosePartial(int inset, Color background_color, Color line_color, Direction::T directions);
     void Shrink(int dx, int dy);
+    void WriteRaw(const char* text, TextAlignment::T align);
     void Write(const char* text, TextAlignment::T align);
     void WriteLine(const char* text, TextAlignment::T align);
+    void Decorate(const char* text, TextAlignment::T align, const TokenList* tokens);
     void DrawTexture(Texture2D texture, Rectangle source, int height, Color tint, bool sdf);
     ButtonStateFlags::T WriteButton(const char* text, int inset);
     ButtonStateFlags::T AsButton() const;
@@ -121,8 +124,11 @@ struct UIGlobals {
     char mouseover_text[1024] = "";
     Font default_font;
     Font default_font_sdf;
-    struct {Rectangle rec; uint8_t z;} blocking_rects[MAX_BLOCKING_RECTS];
+    struct BlockingRect {Rectangle rec; uint8_t z;};
+    BlockingRect acc_blocking_rects[MAX_BLOCKING_RECTS];
+    BlockingRect blocking_rects[MAX_BLOCKING_RECTS];
     int blocking_rect_index = 0;
+    int acc_blocking_rect_index = 0;
 
     struct MouseHints {
         float lock_progress = 0.0;
@@ -131,7 +137,8 @@ struct UIGlobals {
         char* hints[MAX_TOOLTIP_RECURSIONS+1] = { NULL };
         int count = 0;
 
-        void AddHint(Rectangle source_button, const char *hint);
+        void AddHint(Rectangle origin_button, Vector2 anchor, const char *hint);
+        static int Hash(Rectangle origin_button);
     } mousehints;
 
     DataNode concept_descriptions;
@@ -140,7 +147,10 @@ struct UIGlobals {
     void UIStart();
     void UIEnd();
 
+    void _HandleMouseTips();
+
     void AddBlockingRect(Rectangle rect, uint8_t z_layer);
+    // Relies on previous's frame information
     bool IsPointBlocked(Vector2 pos, uint8_t z_layer) const;
     const char* GetConceptDescription(const char* key);
     
@@ -172,6 +182,7 @@ namespace ui {
     void DrawIconSDF(AtlasPos atlas_index, Color tint, int height);
     void Write(const char* text);
     void WriteEx(const char* text, TextAlignment::T alignemnt, bool linebreak);
+    void DecorateEx(const char* text, TextAlignment::T alignemnt, const TokenList* tokens);
     Rectangle MeasureTextEx(const char* text, TextAlignment::T alignemnt);
     void Fillline(double value, Color fill_color, Color background_color);
     ButtonStateFlags::T DirectButton(const char* text, int inset);

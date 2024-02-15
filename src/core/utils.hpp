@@ -18,6 +18,8 @@ double PosMod(double x, double period);
 double Smoothstep(double a, double b, double x);
 float Smoothstep(float a, float b, float x);
 
+Rectangle EncapsulationRectangle(Rectangle a, Rectangle b);
+
 Matrix MatrixFromColumns(Vector3 col_x, Vector3 col_y, Vector3 col_z);
 Matrix MatrixFromColumns(Vector3 col_x, Vector3 col_y, Vector3 col_z, Vector3 origin);
 

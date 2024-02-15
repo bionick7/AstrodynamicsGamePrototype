@@ -2,7 +2,8 @@
 #define RENDER_UTILS_H
 
 #include "dvector3.hpp"
-#include <inttypes.h>
+#include "string_builder.hpp"
+#include "basic.hpp"
 
 struct OrbitSegment;
 struct Text3D;
@@ -22,6 +23,7 @@ void ReloadShaders();
 
 int GetCharacterIndex(Vector2 position, Font font, const char *text, float fontSize, float spacing);
 Rectangle GetTextRect(int token_start, int token_end, int token_from, Font font, const char *text, float fontSize, float spacing);
+std::vector<Rectangle> GetTextRects(const TokenList* tokens, Font font, const char *text, float fontSize, float spacing);
 
 void InternalDrawText(const char *text, Vector2 position, Color color);
 void InternalDrawTextEx(Font font, const char *text, Vector2 position, 

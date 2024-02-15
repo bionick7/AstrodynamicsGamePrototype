@@ -53,8 +53,9 @@ Near-term, realizable only
 - shift-click in inventory to switch inventory
 - ships icons
 - modules icons (Done)
+- Recursive tooltips (Done)
 - warn before committing to an empty transform ("empty" in red or required to choose it explicitly)
-- Recursive tooltips
+- special UI for 0 dv ships (e.g. disallow transfer entirely)
 
 - Show tasks and wait times also in dialogue
 - front-end info and error log

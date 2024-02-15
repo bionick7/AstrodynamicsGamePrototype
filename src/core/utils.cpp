@@ -95,6 +95,14 @@ float Smoothstep(float a, float b, float t) {
     return x*x*(3 - 2*x);
 }
 
+Rectangle EncapsulationRectangle(Rectangle a, Rectangle b) {
+    if (b.x < a.x) a.x = b.x;
+    if (b.x < a.x) a.x = b.x;
+    if (b.x + b.width > a.x + a.width) a.width = b.x + b.width - a.x;
+    if (b.y + b.height > a.y + a.height) a.height = b.y + b.height - a.y;
+    return a;
+}
+
 Matrix MatrixFromColumns(Vector3 col_x, Vector3 col_y, Vector3 col_z) {
     Matrix m = {0};
     m.m0  = col_x.x;
