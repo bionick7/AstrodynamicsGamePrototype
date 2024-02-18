@@ -36,26 +36,34 @@ void TokenList::AddToken(int start, int end) {
 }
 
 StringBuilder::StringBuilder() {
-    c_str = (char*)malloc(1);
+    c_str = new char[1];
     c_str[0] = '\0';
     length = 1;
 }
 
 StringBuilder::StringBuilder(int p_len) {
     if (p_len < 1) p_len = 1;
-    c_str = (char*)malloc(p_len);
+    c_str = new char[p_len];
     c_str[0] = '\0';
     length = p_len;
 }
 
 StringBuilder::StringBuilder(const char* str) {
     length = strlen(str) + 1;
-    c_str = (char*)malloc(length);
+    c_str = new char[length];
     strcpy(c_str, str);
 }
 
+void StringBuilder::_ReSize(int new_length) {
+    char* c_str2 = new char[new_length];
+    strcpy(c_str2, c_str);
+    length = new_length;
+    delete[] c_str;
+    c_str = c_str2;
+}
+
 StringBuilder::~StringBuilder() {
-    free(c_str);
+    delete[] c_str;
 }
 
 int StringBuilder::CountLines() const {
@@ -72,7 +80,7 @@ void StringBuilder::WriteToFile(const char * filename) const {
 }
 
 void StringBuilder::Clear() {
-    c_str = (char*)malloc(1);
+    c_str = new char[1];
     c_str[0] = '\0';
     length = 1;
 }
@@ -82,7 +90,7 @@ void StringBuilder::AutoBreak(int max_width) {
     int last_space = 0;
     int num_words = 0;
     for(int i=0; i < length - 1; i++) {
-        if (c_str[i] == ' ' || c_str[i] == '\t' || i == length-1) {
+        if (c_str[i] == ' ' || c_str[i] == '\t' || i == length - 2) {
             if (character_toll > max_width && num_words > 0) {
                 c_str[last_space] = '\n';
                 int word_length = i - last_space - 1;
@@ -106,27 +114,27 @@ TokenList StringBuilder::ExtractTokens(const char *start_delim, const char *end_
     int end_delim_len = strlen(start_delim);
 
     int current_start = 0;
-    int original_length = length;
+    int new_length = length;
     for(int i=0; i < length; i++) {
         int consume = 0;
-        if (i < length - end_delim_len - start_delim_len && strncmp(&c_str[i], start_delim, start_delim_len) == 0) {
+        if (i < new_length - end_delim_len - start_delim_len && strncmp(&c_str[i], start_delim, start_delim_len) == 0) {
             current_start = i;
             consume = start_delim_len;
         }
-        if (i < length - end_delim_len && strncmp(&c_str[i], end_delim, end_delim_len) == 0) {
+        if (i < new_length - end_delim_len && strncmp(&c_str[i], end_delim, end_delim_len) == 0) {
             res.AddToken(current_start, i);
             consume = end_delim_len;
         }
         if (consume > 0) {
-            for (int j=i; j < length - consume; j++) {
+            for (int j=i; j < new_length - consume; j++) {
                 c_str[j] = c_str[j+consume];
             }
-            length -= consume;
+            new_length -= consume;
         }
     }
     
-    if (original_length != length) {
-        c_str = (char*) realloc(c_str, sizeof(char*) * length);
+    if (new_length != length) {
+        _ReSize(new_length);
     }
 
     return res;
@@ -144,8 +152,7 @@ StringBuilder StringBuilder::GetSubstring(int from, int to) {
 
 StringBuilder& StringBuilder::Add(const char* add_str) {
     int write_offset = length - 1;
-    length += strlen(add_str);
-    c_str = (char*)realloc(c_str, length);
+    _ReSize(length + strlen(add_str));
     strcpy(c_str + write_offset, add_str);
     c_str[length - 1] = '\0';
     return *this;
@@ -153,8 +160,7 @@ StringBuilder& StringBuilder::Add(const char* add_str) {
 
 StringBuilder& StringBuilder::_AddBuffer(char buffer[]) {
     int write_offset = length - 1;
-    length += strlen(buffer);
-    c_str = (char*)realloc(c_str, length);
+    _ReSize(length + strlen(buffer));
     strcpy(c_str + write_offset, buffer);
     c_str[length - 1] = '\0';
     return *this;
@@ -162,8 +168,7 @@ StringBuilder& StringBuilder::_AddBuffer(char buffer[]) {
 
 StringBuilder& StringBuilder::AddLine(const char *add_str) {
     int write_offset = length - 1;
-    length += strlen(add_str) + 1;
-    c_str = (char*)realloc(c_str, length);
+    _ReSize(length + strlen(add_str) + 1);
     strcpy(c_str + write_offset, add_str);
     c_str[length - 2] = '\n';
     c_str[length - 1] = '\0';

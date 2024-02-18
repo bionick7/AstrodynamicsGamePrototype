@@ -591,7 +591,6 @@ void DataNode::SetDate(const char* key, timemath::Time value) {
 
 DataNode* DataNode::SetChild(const char* key) {
     // Adds a copy to the DataNode to the map and returns pointer to it
-    //DataNode* child = (DataNode*) malloc(sizeof(DataNode));
     //CopyTo(val, child);
     DataNode* child = new DataNode();
     if (IsReadOnly) {
@@ -738,13 +737,13 @@ void DataNode::Remove(const char* key) {
     FieldArrays.erase(key);
     auto it_children = Children.find(key);
     if (it_children != Children.end()) {
-        free(it_children->second);
+        //free(it_children->second);
         Children.erase(it_children);
     }
     Children.erase(key);
     auto it_children_arr = ChildArrays.find(key);
     if (it_children_arr != ChildArrays.end()) {
-        free(it_children_arr->second);
+        //free(it_children_arr->second);
         ChildArrays.erase(it_children_arr);
     }
     ChildArrays.erase(key);

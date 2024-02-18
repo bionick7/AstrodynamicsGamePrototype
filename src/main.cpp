@@ -6,7 +6,7 @@
 #include "constants.hpp"
 #include "tests.hpp"
 
-const char* GetSetting(int argc, const char** argv, const char* find) {
+const char* GetCmdSetting(int argc, const char** argv, const char* find) {
     for (int i=0; i < argc; i++) {
         if (strcmp(argv[i], find) == 0) {
             return i == argc - 1 ? "" : argv[i+1];
@@ -32,7 +32,7 @@ void TestingSetup(GlobalState* app) {
 
 void Load(int argc, const char** argv) {
     INFO("Init from working directory: '%s'", GetWorkingDirectory());
-    if (!GetSetting(argc, argv, "-randseed")) {
+    if (!GetCmdSetting(argc, argv, "-randseed")) {
         SetRandomSeed(0);  // For consistency
     }
 
@@ -43,7 +43,7 @@ void Load(int argc, const char** argv) {
     app->Make(1e6);
     app->LoadData();
     //app->LoadGame("resources/data/start_saves/combat_waves.yaml");
-    app->LoadGame("resources/data/start_saves/combat_waves.yaml");
+    app->LoadGame("resources/data/start_saves/industry.yaml");
     TestingSetup(app);
 
     // Interpreting cmdline
@@ -58,7 +58,7 @@ void MainLoopStep(GlobalState* app) {
 }
 
 int main(int argc, const char** argv) {
-    if (GetSetting(argc, argv, "-run_tests")) {
+    if (GetCmdSetting(argc, argv, "-run_tests")) {
         return UnitTests();
     }
 

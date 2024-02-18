@@ -265,7 +265,11 @@ void GlobalState::DrawUI() {
         factions.GetMoney(factions.player_faction) / (int)1e6, 
         factions.GetMoney(factions.player_faction) % 1000000 / 1000
     );
-    DrawTextAligned(capital_str, {GetScreenWidth() / 2.0f, 10}, TextAlignment::HCENTER & TextAlignment::TOP, Palette::ui_main);
+    DrawTextAligned(
+        capital_str, {GetScreenWidth() / 2.0f, 10}, 
+        TextAlignment::HCENTER & TextAlignment::TOP, 
+        Palette::ui_main, 0
+    );
 
     // planets
     for (int planet_id = 0; planet_id < planets.GetPlanetCount(); planet_id++) {

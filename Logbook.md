@@ -262,3 +262,16 @@ still uncertain. Multiple directions possible:
 
 City builder it is? Or at least a version of that, where the goal is to build up the home station
 Combat can be mainly raiding-based, i.e. go in, don't be able to seize control, take all you can back
+
+## Status 18 Feb 24
+A lot of techinal QoL shit is done now. Really need to pick up gameplay loop again.
+*the goal is to build up the home station*, i.e. focus on tall growth.
+raid > build > grow
+
+1. Urbek/Terra nil manage a good loop by needing to cover a large area with X stats in an optimal way
+2. Factorio manages a loop from increasing groth by balancing between resources
+3. Stellaris/Civ manage a loop from competitive research between AI and player + expansion
+
+Lets try 2.
+-> Different planets produce different resources
+-> Differenct planets can convert different resources (can also be done by ships)

@@ -119,7 +119,7 @@ void PlanetaryEconomy::UIDrawResources(const ResourceTransfer& transfer, double 
         ui::PushInset(0, DEFAULT_FONT_SIZE+4);
         if (GetTransferPlanUI()->IsActive()) {
             // Button
-            if (ui::DirectButton(transfer.resource_id == i ? "X" : " ", 2) & ButtonStateFlags::JUST_PRESSED) {
+            if (ui::ToggleButton(transfer.resource_id == i) & ButtonStateFlags::JUST_PRESSED) {
                 if (transfer.resource_id == i) 
                     GetTransferPlanUI()->SetResourceType(ResourceType::RESOURCE_NONE);
                 else
@@ -188,7 +188,7 @@ void PlanetaryEconomy::UIDrawEconomy(const ResourceTransfer& transfer, double fu
 
         if (GetTransferPlanUI()->IsActive()) {
             // Button
-            if (ui::DirectButton(transfer.resource_id == i ? "X" : " ", 2) & ButtonStateFlags::JUST_PRESSED) {
+            if (ui::ToggleButton(transfer.resource_id == i) & ButtonStateFlags::JUST_PRESSED) {
                 GetTransferPlanUI()->SetResourceType(resource);
             }
         }

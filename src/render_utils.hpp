@@ -9,7 +9,7 @@ struct OrbitSegment;
 struct Text3D;
 
 namespace OrbitRenderMode {
-    enum E {
+    enum T {
         Solid = 0,
         Gradient = 1,
         Dashed = 2
@@ -37,7 +37,7 @@ void BeginRenderInUIMode(uint8_t z_layer);
 void EndRenderInUIMode();
 
 void RenderOrbit(const OrbitSegment* orbit, int point_count, 
-                 OrbitRenderMode::E render_mode, Color color);
+                 OrbitRenderMode::T render_mode, Color color);
 void RenderPerfectSphere(DVector3 pos, double radius, Color color);
 void RenderRings(DVector3 normal, double min_rad, double max_rad, Color color);
 void RenderSkyBox();

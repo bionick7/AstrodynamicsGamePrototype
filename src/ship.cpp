@@ -277,6 +277,10 @@ Color Ship::GetColor() const {
     return IsPlayerControlled() ? Palette::ally : Palette::enemy;
 }
 
+bool Ship::IsStatic() const {
+    return GetShipClassByIndex(ship_class)->max_dv == 0;
+}
+
 bool Ship::IsParked() const {
     switch (IdGetType(parent_obj)) {
     case EntityType::PLANET: return true;
@@ -307,12 +311,9 @@ int Ship::CountModulesOfClass(RID module_class) const {
     return res;
 }
 
-ShipType::E Ship::GetShipType() const {
+ShipType::T Ship::GetShipType() const {
+    if (IsStatic()) return ShipType::SHIPYARD;
     for(int i=0; i < SHIP_MAX_MODULES; i++) {
-        if (modules[i] == GetShipModules()->expected_modules.small_yard_1) return ShipType::SHIPYARD;
-        if (modules[i] == GetShipModules()->expected_modules.small_yard_2) return ShipType::SHIPYARD;
-        if (modules[i] == GetShipModules()->expected_modules.small_yard_3) return ShipType::SHIPYARD;
-        if (modules[i] == GetShipModules()->expected_modules.small_yard_4) return ShipType::SHIPYARD;
         //if (GetShipModules()->GetModuleByRID(modules[i])->production) return ShipType::UTILITY;
         // TODO: when is it 'UTILITY'?
     }
@@ -588,7 +589,7 @@ void Ship::DrawTrajectories() const {
     }
 }
 
-const char* _GetTypeIcon(ShipType::E ship_type) {
+const char* _GetTypeIcon(ShipType::T ship_type) {
     switch (ship_type) {
         case ShipType::SHIPYARD: return " " ICON_STATION;
         case ShipType::UTILITY: return " " ICON_UTIL_SHIP;
@@ -630,7 +631,11 @@ void _UIDrawStats(const Ship* ship) {
     sb.AddFormat(ICON_PAYLOAD " %d / %d ", KGToResourceCounts(ship->GetPayloadMass()), ship->GetMaxCapacity());
     ui::WriteEx(sb.c_str, TextAlignment::LEFT | TextAlignment::VCONFORM, false);
     sb.Clear();
-    sb.AddFormat("\u0394V %2.2f km/s  ", ship->GetCapableDV() / 1000.f);
+    if (ship->IsStatic()) {
+        sb.AddFormat("\u0394V --       ", ship->GetCapableDV() / 1000.f);
+    } else {
+        sb.AddFormat("\u0394V %2.2f km/s  ", ship->GetCapableDV() / 1000.f);
+    }
     ui::WriteEx(sb.c_str, TextAlignment::RIGHT | TextAlignment::VCONFORM, true);
     ui::Fillline(ship->GetPayloadMass() / ResourceCountsToKG(ship->GetMaxCapacity()), Palette::ui_main, Palette::bg);
     ui::VSpace(15);
@@ -885,9 +890,11 @@ void Ship::DrawUI() {
     //    return;
     //}
     _UIDrawInventory(this);
-    _UIDrawTransferplans(this);
-    _UIDrawFleet(this);
-    _UIDrawQuests(this);
+    if (!IsStatic()) {
+        _UIDrawTransferplans(this);
+        _UIDrawFleet(this);
+        _UIDrawQuests(this);
+    }
 
     ui::Pop();  // ScrollInset
     ui::HelperText(GetUI()->GetConceptDescription("ship"));

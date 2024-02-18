@@ -65,36 +65,39 @@ bool IsIdValidTyped(RID id, EntityType type) {
 IDList::IDList() {
     capacity = 5;
     size = 0;
-    buffer = (RID*) malloc(sizeof(RID) * capacity);
+    buffer = new RID[capacity];
 }
 
 IDList::IDList(int initial_capacity){
     capacity = initial_capacity;
     size = 0;
-    buffer = (RID*) malloc(sizeof(RID) * capacity);
+    buffer = new RID[capacity];
 }
 
 IDList::IDList(const IDList& other) {
     capacity = other.size;
     size = other.size;
-    buffer = (RID*) malloc(sizeof(RID) * capacity);
+    buffer = new RID[capacity];
     for(int i=0; i < size; i++) {
         buffer[i] = other[i];
     }
 }
 
 IDList::~IDList() {
-    free(buffer);
+    delete[] buffer;
 }
 
 void IDList::Resize(int new_capacity) {
-    capacity = new_capacity;
     if (new_capacity == 0) {
-        free(buffer);
+        delete[] buffer;
         buffer = NULL;
     } else {
-        buffer = (RID*) realloc(buffer, sizeof(RID) * capacity);
+        RID* buffer2 = new RID[new_capacity];
+        memcpy(buffer2, buffer, sizeof(RID) * size);
+        delete[] buffer;
+        buffer = buffer2;
     }
+    capacity = new_capacity;
 }
 
 void IDList::Append(RID id) {
@@ -161,7 +164,7 @@ IDList& IDList::operator=(const IDList& other) {
     if (capacity == 0) {
         buffer = NULL;    
     } else {
-        buffer = (RID*) malloc(sizeof(RID) * capacity);
+        buffer = new RID[capacity];
         for(int i=0; i < size; i++) {
             buffer[i] = other[i];
         }

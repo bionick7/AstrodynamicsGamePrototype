@@ -33,7 +33,7 @@ namespace TextAlignment {
 };
 
 Vector2 ApplyAlignment(Vector2 pos, Vector2 size, TextAlignment::T alignment);
-Rectangle DrawTextAligned(const char* text, Vector2 pos, TextAlignment::T alignment, Color c);
+Rectangle DrawTextAligned(const char* text, Vector2 pos, TextAlignment::T alignment, Color c, uint8_t z_layer);
 
 namespace ButtonStateFlags {
     typedef uint8_t T;
@@ -186,6 +186,7 @@ namespace ui {
     Rectangle MeasureTextEx(const char* text, TextAlignment::T alignemnt);
     void Fillline(double value, Color fill_color, Color background_color);
     ButtonStateFlags::T DirectButton(const char* text, int inset);
+    ButtonStateFlags::T ToggleButton(bool on);
     void HelperText(const char* description);
 
     void HSpace(int pixels);

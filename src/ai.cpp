@@ -128,7 +128,7 @@ void AIBlackboard::HighLevelFactionAI() {
         for(int j=0; j < owned_planets.size; j++) {
             int arrival_planet_tensor_lookup = IdGetIndex(owned_planets[j])*RESOURCE_MAX;
             const Planet* arrival_planet = GetPlanet(owned_planets[j]);
-            for(int k=0; k < owned_planets.size; k++) {
+            for(int k=0; k < RESOURCE_MAX; k++) {
                 int tensor_index = departure_planet_tensor_lookup + arrival_planet_tensor_lookup + k;
                 //double utility_per_count = GetUtilityOfTransfer(departure_planet, arrival_planet, (ResourceType) k);
                 double utility_per_count = resource_worth[j*RESOURCE_MAX + k] - resource_worth[i*RESOURCE_MAX + k];

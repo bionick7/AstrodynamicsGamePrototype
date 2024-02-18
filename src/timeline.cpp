@@ -52,6 +52,8 @@ void _DrawHohmanTFs(const TimeLineCoordinateData* tcd, RID from, RID to) {
 }
 
 void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
+    uint8_t z_layer = ui::Current()->z_layer;
+
     double min_sma = INFINITY, max_sma = 0;
     for (int planet_index = 0; planet_index < planets->planet_count; planet_index++) {
         const Planet* planet = &planets->planet_array[planet_index];
@@ -66,6 +68,7 @@ void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
 
     int previous_x = 40;
     int mouse_hover_planet = -1;
+
     for (int planet_index = 0; planet_index < planets->planet_count; planet_index++) {
         const Planet* planet = &planets->planet_array[planet_index];
         double ratio = log(planet->orbit.sma/min_sma) / log(max_sma/min_sma);
@@ -74,11 +77,19 @@ void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
             x = previous_x + min_planet_spacing;
         }
         //DebugPrintText("%s: sma = %f, x = %d", planet->name, planet->orbit.sma, x);
-        Rectangle rect = DrawTextAligned(planet->name, {(float)x, (float)tcd->y0 + 18}, TextAlignment::HCENTER | TextAlignment::BOTTOM, Palette::ui_main);
+        Rectangle rect = DrawTextAligned(
+            planet->name, {(float)x, (float)tcd->y0 + 18}, 
+            TextAlignment::HCENTER | TextAlignment::BOTTOM, 
+            Palette::ui_main, z_layer
+        );
+        //DebugPrintText("%f, %f; %f, %f", rect.x, rect.y, rect.width, rect.height);
+        //DrawRectangleRec(rect, RED);
         if(CheckCollisionPointRec(GetMousePosition(), rect)) {
             mouse_hover_planet = planet_index;
         }
+        BeginRenderInUIMode(z_layer);
         DrawLine(x, tcd->y0 + 24, x, tcd->y0 + tcd->h, Palette::ui_main);
+        EndRenderInUIMode();
         previous_x = x;
         tcd->planet_coords[planet_index] = x;
     }
@@ -92,18 +103,24 @@ void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
     if (pixels_per_day_vscale < 4) time_interval = 31;
     for (timemath::Time t = day_start; t < GetEndTime(tcd); t = t + timemath::Time::Day()) {
         int y = GetTimeCoord(tcd, t);
-        DrawLine(tcd->x0 - 2, y, tcd->x0 + 15, y, Palette::ui_main);
         if (t_indx++ % time_interval == 0) {
             sb.Clear();
             DrawTextAligned(
                 sb.AddDate(t, true).c_str, 
                 { (float) tcd->x0 + 20, (float) y },
                 TextAlignment::BOTTOM | TextAlignment::LEFT,
-                Palette::ui_alt
+                Palette::ui_alt,
+                z_layer
             );
         }
+    }
+    BeginRenderInUIMode(z_layer);
+    for (timemath::Time t = day_start; t < GetEndTime(tcd); t = t + timemath::Time::Day()) {
+        int y = GetTimeCoord(tcd, t);
+        DrawLine(tcd->x0 - 2, y, tcd->x0 + 15, y, Palette::ui_main);
         DrawLine(tcd->x0 + 40, y, tcd->x0 + tcd->w - 10, y, Palette::ui_dark);
     }
+    EndRenderInUIMode();
 
     if (mouse_hover_planet >= 0) {
         for (int planet_index = 0; planet_index < planets->planet_count; planet_index++) {
@@ -121,6 +138,7 @@ float _SDSegment(Vector2 p, Vector2 a, Vector2 b) {
 }
 
 float  _QuestDrawLine(TimeLineCoordinateData* tcd, const Task* q, bool active) {
+    uint8_t z_layer = ui::Current()->z_layer;
     // returns the mouse distance to the line (in pixels)
     RID from = q->departure_planet;
     RID to = q->arrival_planet;
@@ -147,7 +165,8 @@ float  _QuestDrawLine(TimeLineCoordinateData* tcd, const Task* q, bool active) {
     DrawTextAligned(
         StringBuilder().AddI(KGToResourceCounts(q->payload_mass)).c_str, 
         Vector2Lerp(start_pos, end_pos, 0.15), 
-        TextAlignment::HCENTER | TextAlignment::BOTTOM, c
+        TextAlignment::HCENTER | TextAlignment::BOTTOM, 
+        c, z_layer
     );
     start_pos = Vector2Add(start_pos, scaled_unit);
     end_pos = Vector2Subtract(end_pos, scaled_unit);
@@ -227,6 +246,7 @@ void _ShipDrawPathLine(const TimeLineCoordinateData* tcd, int* x_pos, int* y_pos
 }
 
 void _DrawShips(TimeLineCoordinateData* tcd, const Ships* ships) {
+    BeginRenderInUIMode(ui::Current()->z_layer);
     for (auto it = ships->alloc.GetIter(); it; it++) {
         const Ship* ship = ships->alloc.Get(it);
         int index_on_planet = 0;
@@ -278,6 +298,7 @@ void _DrawShips(TimeLineCoordinateData* tcd, const Ships* ships) {
         DrawLine(end_point_x, end_point_y, end_point_x, GetTimeCoord(tcd, GetEndTime(tcd)), ship->GetColor());
         //_ShipDrawPathLine(tcd, &end_point_x, &end_point_y, end_planet, GetEndTime(tcd), x_offset, ship->GetColor());
     }
+    EndRenderInUIMode();
 }
 
 bool TimelineIsOpen() {

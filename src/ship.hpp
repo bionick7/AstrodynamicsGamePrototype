@@ -26,7 +26,7 @@ namespace IntelLevel {
 };
 
 namespace ShipType {
-    enum E {
+    enum T {
         UTILITY = 0,
         SHIPYARD,
         TRANSPORT,
@@ -138,9 +138,9 @@ struct Ship {
     bool IsLeading() const;
     RID GetParentPlanet() const;
     int CountModulesOfClass(RID module_class) const;
-    ShipType::E GetShipType() const;
-
+    ShipType::T GetShipType() const;
     Color GetColor() const;
+    bool IsStatic() const;
 
     TransferPlan* GetEditedTransferPlan();
     void ConfirmEditedTransferPlan();

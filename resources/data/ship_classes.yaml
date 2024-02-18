@@ -47,7 +47,7 @@ ship_classes:
     The station has just enough propulsion to maintain orbit and attitude 
     and cannot be used to transport equipment between points
   dv: 0
-  Isp: 0
+  Isp: 1
   capacity: 1000
   stats:
     kinetic_hp: 10

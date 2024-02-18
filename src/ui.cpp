@@ -20,12 +20,12 @@ Vector2 ApplyAlignment(Vector2 anchorpoint, Vector2 size, TextAlignment::T align
     return anchorpoint;
 }
 
-Rectangle DrawTextAligned(const char* text, Vector2 pos, TextAlignment::T alignment, Color c) {
+Rectangle DrawTextAligned(const char* text, Vector2 pos, TextAlignment::T alignment, Color c, uint8_t z_layer) {
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, DEFAULT_FONT_SIZE, 1);
     pos = ApplyAlignment(pos, size, alignment);
     //Vector2 bottom_left = Vector2Subtract(pos, Vector2Scale(size, 0.5));
     Rectangle rect = { pos.x, pos.y, size.x, size.y };
-    InternalDrawTextEx(GetCustomDefaultFont(), text, pos, DEFAULT_FONT_SIZE, 1, c);
+    InternalDrawTextEx(GetCustomDefaultFont(), text, pos, DEFAULT_FONT_SIZE, 1, c, GetScreenRect(), z_layer);
     return rect;
 }
 
@@ -583,14 +583,21 @@ ButtonStateFlags::T ui::DirectButton(const char* text, int margin) {
     ui::PushInline(text_rect.width + 2*margin, text_rect.height + 2*margin);
     ButtonStateFlags::T button_state = ui::AsButton();
     if (button_state & ButtonStateFlags::HOVER) {
-        ui::EncloseEx(4, tb->text_background, Palette::interactable_main, 4);
+        ui::EncloseEx(2, tb->background_color, Palette::interactable_main, 0);
     } else {
-        ui::Enclose();
+        ui::EncloseEx(2, tb->background_color, tb->text_color, 0);
     }
     ui::WriteEx(text, TextAlignment::CENTER, false);
     HandleButtonSound(button_state);
     ui::Pop();
     return button_state;
+}
+
+ButtonStateFlags::T ui::ToggleButton(bool on) {
+    ui::WriteEx(" ", TextAlignment::CONFORM, false);
+    ButtonStateFlags::T res = ui::DirectButton(on ? " X " : "   ", -2);
+    ui::WriteEx(" ", TextAlignment::CONFORM, false);
+    return res;
 }
 
 void ui::HelperText(const char* description) {

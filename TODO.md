@@ -49,12 +49,12 @@ Near-term, realizable only
 
 - Select planet when clicking on orbit (Done)
 - list ships to select next to planet
-- jump from ship to parent ship and plane
-- shift-click in inventory to switch inventory
-- ships icons
+- jump from ship to parent ship and plane (Done)
+- shift-click in inventory to switch inventory (Done)
+- ships icons (Done)
 - modules icons (Done)
 - Recursive tooltips (Done)
-- warn before committing to an empty transform ("empty" in red or required to choose it explicitly)
+- warn before committing to an empty transform ("empty" in red or required to choose it explicitly) (Done)
 - special UI for 0 dv ships (e.g. disallow transfer entirely)
 
 - Show tasks and wait times also in dialogue
@@ -67,13 +67,13 @@ Near-term, realizable only
 ## Graphics improvements wishlist
 - Post-processing shader
 - preview small 3D models for flavor
-- Render to different buffers/layers
+- Render to different buffers/layers  (Done)
 - UI labels as underlined by thin lines pointing to the thing
 
 ## Tech wishlist
-- Implement way to show icons within text/at arbitrary positions
-- global settings (with push_override etc.)
-- debug console
+- Implement way to show icons within text/at arbitrary positions (Done)
+- global settings (Done) (with push_override etc.)
+- debug console (Done)
 - Animation tracker system
 
 - Hot reloading
@@ -86,7 +86,7 @@ Regardless of implementability
 - combat (Done)
 - tanker fleets (share dv among fleet)
 - aerobreaking (Done)
-- expand to 3D
+- expand to 3D (Done)
 - gravity assists
 - crew & population morale
 - "policies"
@@ -129,7 +129,7 @@ UX tweaking:
 -   list ships to select next to planet
 - V jump from ship to parent ship and planet
 - V shift-click in inventory to switch inventory
--   warn before committing to an empty transform ("empty" in red or required to choose it explicitly)
+- V warn before committing to an empty transform ("empty" in red or required to choose it explicitly)
 
 Tutorial:
 - V Physical looking booklet that can appear

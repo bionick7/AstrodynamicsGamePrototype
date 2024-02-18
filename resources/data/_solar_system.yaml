@@ -1,8 +1,8 @@
 name: Sun
 body_size: Solar
-__source: >
-  https://ssd.jpl.nasa.gov/sats/elem/
-  https://ssd.jpl.nasa.gov/planets/approx_pos.html
+# source:
+# https://ssd.jpl.nasa.gov/sats/elem/
+# https://ssd.jpl.nasa.gov/planets/approx_pos.html
 radius: 696.34e+6
 mass: 1.989e+30
 satellites:

@@ -14,7 +14,6 @@ struct TokenList {
     void AddToken(int start, int end);
 };
 
-
 struct StringBuilder {
     char* c_str;
     int length;  // size of buffer, not of  string
@@ -22,10 +21,10 @@ struct StringBuilder {
     StringBuilder();
     StringBuilder(int p_length);
     StringBuilder(const char* str);
+    void _ReSize(int new_length);
     ~StringBuilder();
     int CountLines() const;
     void WriteToFile(const char* filename) const;
-    
 
     void Clear();
     void AutoBreak(int max_width);

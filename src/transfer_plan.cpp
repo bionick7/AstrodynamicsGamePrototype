@@ -532,7 +532,7 @@ timemath::Time _DrawHandle(
     if (full_orbits > 0) {
         char text_content[4];
         sprintf(text_content, "%+3d", full_orbits);
-        DrawTextAligned(text_content, text_pos, TextAlignment::HCENTER | TextAlignment::RIGHT, c);
+        DrawTextAligned(text_content, text_pos, TextAlignment::HCENTER | TextAlignment::RIGHT, c, 0);
     }
     if (DrawTriangleButton(pos, Vector2Scale(radial_dir, 20), 10, c) & ButtonStateFlags::JUST_PRESSED) {
         *is_dragging = true;
@@ -628,7 +628,14 @@ void TransferPlanUI::DrawUI() {
             );
             sb.AddFormat("\n[LMB to select %s] (\u2265 %4.2f km/s \u0394V)", hover_planet->name, (dv1+dv2) / 1e3);
         }
-        ui::SetMouseHint(sb.c_str);
+        //ui::SetMouseHint(sb.c_str);
+
+        // Manually draw mousehint at z-level 0 to avaid interference with mouse cursor
+        Vector2 txt_size = MeasureTextEx(GetFontDefault(), sb.c_str, DEFAULT_FONT_SIZE, 1);
+        ui::PushMouseHint(GetMousePosition(), txt_size.x + 8, txt_size.y + 8, 0);
+        ui::Enclose();
+        ui::Write(sb.c_str);
+        ui::Pop();
     }
 
     if (!IsActive()) {
@@ -652,7 +659,7 @@ void TransferPlanUI::DrawUI() {
     sb.Add("Departs in ").AddTime(plan->departure_time - time_bounds[0]);
     sb.Add("\nArrives in ").AddTime(plan->arrival_time - time_bounds[0]);
     //DebugPrintText("%i", sb.CountLines());
-    ui::PushInset(0, (DEFAULT_FONT_SIZE+4) * sb.CountLines() + 5);
+    ui::PushInset(0, (DEFAULT_FONT_SIZE) * sb.CountLines() + 1);
     ui::Write(sb.c_str);
     ui::Fillline(
         fmin(timemath::Time::SecDiff(plan->arrival_time, time_bounds[0]) / timemath::Time::SecDiff(plan->hohmann_arrival_time, time_bounds[0]), 1.0), 
@@ -677,30 +684,33 @@ void TransferPlanUI::DrawUI() {
         sb.Add("Cannot make transfer");
     }
 
-    ui::PushInset(0, (DEFAULT_FONT_SIZE+4) * sb.CountLines() + 5);
+    ui::PushInset(0, (DEFAULT_FONT_SIZE) * sb.CountLines() + 1);
     ui::Write(sb.c_str);
     ui::Fillline(fmax(0, capacity_ratio), capacity >= 0 ? Palette::ally : Palette::red, Palette::bg);
     ui::Pop();  // Inset
 
     int w = ui::Current()->width;
-    ui::PushInset(0, 20);
+    ui::PushInset(0, DEFAULT_FONT_SIZE+4);
     {
         ui::PushHSplit(0, w/3);
         ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
-            ui::Enclose();
+            ui::EncloseEx(0, Palette::bg, Palette::ui_main, 4);
         }
         if(button_state & ButtonStateFlags::JUST_PRESSED) {
             TransferPlanSoonest(plan, ship_instance->GetCapableDV() - 1);
         }
-        ui::Write("ASAP");
+        ui::WriteEx("ASAP", TextAlignment::CENTER, false);
         ui::Pop();  // HSplit
     }
     {
         ui::PushHSplit(w/3, 2*w/3);
         ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
-            ui::Enclose();
+            ui::EncloseEx(0, Palette::bg, Palette::ui_main, 4);
+            if (plan->resource_transfer.resource_id == RESOURCE_NONE && GetShip(ship)->GetShipType() == ShipType::TRANSPORT) {
+                ui::SetMouseHint("WARNING: Transferring with a transport ship\nwithout resources");
+            }
         }
         if(button_state & ButtonStateFlags::JUST_PRESSED) {
             if (is_valid) {
@@ -708,19 +718,19 @@ void TransferPlanUI::DrawUI() {
                 Reset();
             }
         }
-        ui::Write("Confirm");
+        ui::WriteEx("Confirm", TextAlignment::CENTER, false);
         ui::Pop();  // HSplit
     }
     {
         ui::PushHSplit(2*w/3, w);
         ButtonStateFlags::T button_state = ui::AsButton();
+        if (departure_time_automatic || (button_state & ButtonStateFlags::HOVER)) {
+            ui::EncloseEx(0, Palette::bg, Palette::ui_main, 4);
+        }
         if(button_state & ButtonStateFlags::JUST_PRESSED) {
             departure_time_automatic = !departure_time_automatic;
         }
-        if (departure_time_automatic || (button_state & ButtonStateFlags::HOVER)) {
-            ui::Enclose();
-        }
-        ui::Write("Lock");
+        ui::WriteEx("Lock", TextAlignment::CENTER, false);
         ui::Pop();  // HSplit
     }
     ui::Pop();  // Inset
