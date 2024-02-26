@@ -266,6 +266,20 @@ int Ship::GetMissingHealth() const {
     ;
 }
 
+const char* _GetTypeIcon(ShipType::T ship_type) {
+    switch (ship_type) {
+        case ShipType::SHIPYARD: return " " ICON_STATION;
+        case ShipType::UTILITY: return " " ICON_UTIL_SHIP;
+        case ShipType::TRANSPORT: return " " ICON_TRANSPORT_SHIP;
+        case ShipType::MILITARY: return " " ICON_MIL_SHIP;
+    }
+    return ICON_EMPTY;
+}
+
+const char *Ship::GetTypeIcon() const {
+    return _GetTypeIcon(GetShipType());
+}
+
 bool Ship::CanDragModule(int index) const {
     if (!IsIdValid(modules[index]))
         return true;
@@ -597,19 +611,9 @@ void Ship::DrawTrajectories() const {
     }
 }
 
-const char* _GetTypeIcon(ShipType::T ship_type) {
-    switch (ship_type) {
-        case ShipType::SHIPYARD: return " " ICON_STATION;
-        case ShipType::UTILITY: return " " ICON_UTIL_SHIP;
-        case ShipType::TRANSPORT: return " " ICON_TRANSPORT_SHIP;
-        case ShipType::MILITARY: return " " ICON_MIL_SHIP;
-    }
-    return ICON_EMPTY;
-}
-
 void _UIDrawHeader(const Ship* ship) {
     ui::WriteEx(ship->name, TextAlignment::CONFORM, false);  
-    ui::WriteEx(_GetTypeIcon(ship->GetShipType()), TextAlignment::CONFORM, false);
+    ui::WriteEx(ship->GetTypeIcon(), TextAlignment::CONFORM, false);
     const char* text = ICON_EMPTY " " ICON_EMPTY "  ";  // use ICON_EMPTY instead of space to get the right spacing
     if (!ship->IsParked() && !ship->IsLeading()) text = ICON_EMPTY " " ICON_TRANSPORT_FLEET "  ";
     if (ship->IsParked() && ship->IsLeading()) text = ICON_PLANET " " ICON_EMPTY "  ";

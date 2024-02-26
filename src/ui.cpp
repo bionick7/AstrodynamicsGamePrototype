@@ -171,9 +171,9 @@ void TextBox::WriteRaw(const char *text, TextAlignment::T align) {
         EndRenderInUIMode();
     }
     InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec, z_layer);
-    if (GetSettingBool("text_boundrects", false)) {
+    if (GetSettingBool("draw_textrects", false)) {
         BeginRenderInUIMode(z_layer);
-        DrawRectangleRoundedLines({pos.x, pos.y, size.x, size.y}, 0, 0, 1, GREEN);
+        DrawRectangleLinesEx({pos.x, pos.y, size.x, size.y}, 1, RED);
         EndRenderInUIMode();
     }
     // Not Advance
@@ -185,13 +185,13 @@ void TextBox::Write(const char* text, TextAlignment::T align) {
     // avoid drawing text_background is fully transparent (useless)
     if(text_background.a != 0) {
         BeginRenderInUIMode(z_layer);
-        DrawRectangleRec(GetCollisionRec({pos.x, pos.y, size.x, size.y}, render_rec), text_background);
+        DrawRectangleRec(GetCollisionRec({ pos.x, pos.y, size.x, size.y }, render_rec), text_background);
         EndRenderInUIMode();
     }
     InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec, z_layer);
-    if (GetSettingBool("text_boundrects", false)) {
+    if (GetSettingBool("draw_textrects", false)) {
         BeginRenderInUIMode(z_layer);
-        DrawRectangleRoundedLines({pos.x, pos.y, size.x, size.y}, 0, 0, 1, GREEN);
+        DrawRectangleLinesEx({pos.x, pos.y, size.x, size.y}, 1, RED);
         EndRenderInUIMode();
     }
     _Advance(pos, size);
@@ -289,11 +289,6 @@ ButtonStateFlags::T TextBox::AsButton() const {
     );
 }
 
-void TextBox::DebugDrawRenderRec() const {
-    DrawRectangleRec(render_rec, BLACK);
-    DrawRectangleLinesEx(render_rec, 4, PURPLE);
-}
-
 
 int TextBox::GetLineHeight() const {
     return text_size + text_margin_y;
@@ -352,6 +347,11 @@ Rectangle TextBox::TbMeasureText(const char* text, TextAlignment::T alignemnt) c
 
 void ui::PushTextBox(TextBox tb) {
     GetUI()->text_box_stack.push(tb);
+    if (GetSettingBool("draw_renderrects", false)) {
+        BeginRenderInUIMode(tb.z_layer);
+        DrawRectangleLinesEx(tb.render_rec, 1, GREEN);
+        EndRenderInUIMode();
+    }
 }
 
 void ui::PushGlobal(int x, int y, int w, int h, int text_size, Color color, Color background, uint8_t z_layer) {

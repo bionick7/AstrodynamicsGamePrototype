@@ -99,8 +99,6 @@ struct TextBox {
     ButtonStateFlags::T WriteButton(const char* text, int inset);
     ButtonStateFlags::T AsButton() const;
 
-    void DebugDrawRenderRec() const;
-
     Vector2 GetAnchorPoint(TextAlignment::T align) const;
     int GetLineHeight() const;
     int TbGetCharacterIndex(Vector2 collision_pos, const char* text, TextAlignment::T alignemnt) const;

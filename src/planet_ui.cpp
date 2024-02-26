@@ -246,7 +246,9 @@ void Planet::DrawUI() {
         } else {
             return;
         }
-    } else if (mouse_hover || GetGlobalState()->focused_planet == id) {
+    } else if (mouse_hover || 
+        (GetGlobalState()->focused_planet == id && !IsIdValidTyped(GetGlobalState()->hover, EntityType::PLANET))
+    ) {
         y_start = 10;
         height = GetScreenHeight() - 20;
         transfer = ResourceTransfer();
@@ -319,4 +321,31 @@ void Planet::DrawUI() {
 
     ui::HelperText(GetUI()->GetConceptDescription("planet"));
     ui::Pop();  // Inset
+
+
+    // Side ship buttons
+
+    IDList ships_around_planet = IDList();
+    GetShips()->GetOnPlanet(&ships_around_planet, id, UINT32_MAX);
+
+    int x_max = ui::Current()->text_start_x + ui::Current()->width;
+    ui::PushGlobal(x_max + 10, y_start, 200, 30 * ships_around_planet.size, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, 10);
+    for(int i=0; i < ships_around_planet.size; i++) {
+        const Ship* ship = GetShip(ships_around_planet[i]);
+        ui::PushInset(0, 30-8);
+        ButtonStateFlags::T button_state = ui::AsButton();
+        if (button_state & ButtonStateFlags::JUST_PRESSED) {
+            GetGlobalState()->focused_ship = ships_around_planet[i];
+        }
+        if (button_state & ButtonStateFlags::HOVER) {
+            ui::Current()->text_color = Palette::ui_main;
+        } else {
+            ui::Current()->text_color = ship->GetColor();
+        }
+        HandleButtonSound(button_state);
+        ui::WriteEx(ship->GetTypeIcon(), TextAlignment::CONFORM, false);
+        ui::Write(ship->name);
+        ui::Pop();
+    }
+    ui::Pop();  // Global
 }

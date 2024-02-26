@@ -135,6 +135,9 @@ struct Ship {
     bool IsTrajectoryKnown(int index) const;
     int GetCombatStrength() const;
     int GetMissingHealth() const;
+    const char* GetTypeIcon() const;
+
+
     bool CanDragModule(int index) const;
     bool IsParked() const;
     bool IsLeading() const;
