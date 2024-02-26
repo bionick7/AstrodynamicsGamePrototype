@@ -22,6 +22,28 @@ rings:
   AoP: 0
 
 satellites:
+- name: Low Saturn Orbit
+  body_size: Minor
+  Ecc: 0
+  Inc: 0
+  SMA: 60.0e+6
+  Ann: 275
+  LoA: 40.6
+  AoP: 160
+  radius: 0
+  mass: 0
+  
+- name: Rings
+  body_size: Minor
+  Ecc: 0
+  Inc: 0.5
+  SMA: 120.0e+6
+  Ann: 275
+  LoA: 40.6
+  AoP: 160
+  radius: 0
+  mass: 0
+
 - name: Mimas
   body_size: Minor
   Ecc: 0.02

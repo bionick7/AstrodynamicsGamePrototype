@@ -87,7 +87,7 @@ def main(base_font, new_font, base_size, downsampled_size):
 
     # Generate sdfs
     icons_w, icons_h = 16*base_size, 16*base_size
-    im_icons = Image.open("../icons/font_icons.png").resize((icons_w, icons_h))
+    im_icons = Image.open("../icons/font_icons.png").resize((icons_w, icons_h)).convert("L")
     im_icons = PIL.ImageOps.invert(im_icons)
     im_font = Image.open(old_img_file)
     font_w, font_h = im_font.size

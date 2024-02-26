@@ -7,7 +7,7 @@
 
 struct TransferPlan {
     ResourceTransfer resource_transfer;
-    resource_count_t fuel_mass;
+    ResourceTransfer fuel;
 
     // Inputs
     RID departure_planet;

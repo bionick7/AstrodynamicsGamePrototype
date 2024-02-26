@@ -745,6 +745,7 @@ void TransferPlanUI::SetPlan(TransferPlan* pplan, RID pship, timemath::Time pmin
     if (plan == NULL) {
         return;
     }
+    plan->fuel.resource_id = GetShipClassByRID(GetShip(ship)->ship_class)->fuel_resource;
     /*Ship& ship_comp = GetShip(ship);
     if (ship_comp.confirmed_plans_count > 0) {
         time_bounds[0] = ship_comp.prepared_plans[ship_comp.confirmed_plans_count - 1].arrival_time;
@@ -761,7 +762,7 @@ void TransferPlanUI::SetPlan(TransferPlan* pplan, RID pship, timemath::Time pmin
     }
 }
 
- void TransferPlanUI::SetResourceType(ResourceType resource_type) {
+void TransferPlanUI::SetResourceType(ResourceType resource_type) {
     if (plan == NULL) return;
     plan->resource_transfer.resource_id = resource_type;
 }
@@ -769,7 +770,7 @@ void TransferPlanUI::SetPlan(TransferPlan* pplan, RID pship, timemath::Time pmin
  void TransferPlanUI::SetLogistics(resource_count_t payload_mass, resource_count_t fuel_mass) {
     if (plan == NULL) return;
     plan->resource_transfer.quantity = payload_mass;
-    plan->fuel_mass = fuel_mass;
+    plan->fuel.quantity = fuel_mass;
 }
 
  void TransferPlanUI::SetDestination(RID planet) {

@@ -159,15 +159,17 @@ void TextBox::WriteRaw(const char *text, TextAlignment::T align) {
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
     Vector2 pos = ApplyAlignment(GetAnchorPoint(align), size, align);
     // avoid drawing text_background is fully transparent (useless)
-    BeginRenderInUIMode(z_layer);
     if(text_background.a != 0) {
+        BeginRenderInUIMode(z_layer);
         DrawRectangleRec(GetCollisionRec({pos.x, pos.y, size.x, size.y}, render_rec), text_background);
+        EndRenderInUIMode();
     }
     InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec, z_layer);
     if (GetSettingBool("text_boundrects", false)) {
+        BeginRenderInUIMode(z_layer);
         DrawRectangleRoundedLines({pos.x, pos.y, size.x, size.y}, 0, 0, 1, GREEN);
+        EndRenderInUIMode();
     }
-    EndRenderInUIMode();
     // Not Advance
 }
 
@@ -175,15 +177,17 @@ void TextBox::Write(const char* text, TextAlignment::T align) {
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
     Vector2 pos = ApplyAlignment(GetAnchorPoint(align), size, align);
     // avoid drawing text_background is fully transparent (useless)
-    BeginRenderInUIMode(z_layer);
     if(text_background.a != 0) {
+        BeginRenderInUIMode(z_layer);
         DrawRectangleRec(GetCollisionRec({pos.x, pos.y, size.x, size.y}, render_rec), text_background);
+        EndRenderInUIMode();
     }
     InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec, z_layer);
     if (GetSettingBool("text_boundrects", false)) {
+        BeginRenderInUIMode(z_layer);
         DrawRectangleRoundedLines({pos.x, pos.y, size.x, size.y}, 0, 0, 1, GREEN);
+        EndRenderInUIMode();
     }
-    EndRenderInUIMode();
     _Advance(pos, size);
 }
 

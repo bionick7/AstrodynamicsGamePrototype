@@ -270,6 +270,14 @@ timemath::Time Orbit::GetPeriod() const {
     return 2 * PI * sqrt(sma*sma*sma / mu);
 }
 
+OrbitPos Orbit::FromRightAscention(double ra) const {
+    DVector3 target_dir = DVector3(cos(ra), 0, sin(ra));
+    //DebugDrawLine(DVector3::Zero(), periapsis_dir * sma);
+    //DebugDrawLine(DVector3::Zero(), target_dir * 2e9);
+    double target_focal = periapsis_dir.SignedAngleTo(target_dir, normal);
+    return FromFocal(target_focal);
+}
+
 OrbitPos Orbit::FromFocal(double focal) const {
     OrbitPos res;
     res.θ = focal;

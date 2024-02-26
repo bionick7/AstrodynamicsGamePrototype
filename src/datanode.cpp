@@ -517,12 +517,15 @@ size_t DataNode::GetChildArrayCount() const {
 
 void DataNode::FillBufferWithChild(const char* name, int buffer[], int buffer_size, const char* names[]) const {
     if (!HasChild(name)) {
+        for(int i=0; i < buffer_size; i++) buffer[i] = 0;
         return;
     }
     const DataNode* child = GetChild(name);
     for(int i=0; i < buffer_size; i++) {
         if (child->Has(names[i])) {
             buffer[i] = child->GetI(names[i]);
+        } else {
+            buffer[i] = 0;
         }
     }
 }

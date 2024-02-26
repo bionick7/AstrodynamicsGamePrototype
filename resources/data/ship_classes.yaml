@@ -65,6 +65,7 @@ ship_classes:
     High-end ship
   dv: 12
   Isp: 10
+  fuel: hydrogen
   capacity: 100
   stats:
     kinetic_hp: 2

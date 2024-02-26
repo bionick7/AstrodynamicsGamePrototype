@@ -41,6 +41,7 @@ struct ShipClass {
 
     double max_dv;  // m/s
     double v_e;     // m/s
+    ResourceType fuel_resource;
     resource_count_t max_capacity;  // counts
     int stats[ShipStats::MAX] = {0};
     int construction_time;
@@ -171,14 +172,14 @@ struct Ships {
 
     Ship* GetShip(RID uuid) const;
     RID GetShipClassIndexById(const char* id) const;
-    const ShipClass* GetShipClassByIndex(RID index) const;
+    const ShipClass* GetShipClassByRID(RID index) const;
     void GetOnPlanet(IDList* list, RID planet, uint32_t allegiance_bits) const;
     void GetFleet(IDList* list, RID ship) const;
     void KillShip(RID uuid, bool notify_callback);
 };
 
 Ship* GetShip(RID uuid);
-const ShipClass* GetShipClassByIndex(RID index);
+const ShipClass* GetShipClassByRID(RID index);
 int LoadShipClasses(const DataNode* data);
 
 #endif  // SHIP_H

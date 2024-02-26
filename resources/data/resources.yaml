@@ -34,3 +34,34 @@ electronics:
 
 hydrogen:
   description: ...
+
+oxygen:
+  description: ...
+
+co2:
+  description: ...
+
+carbon:
+  description: ...
+
+ore:
+  description: ...
+
+aluminium_ore:
+  description: It's called 'Bauxite' actually
+
+aluminium:
+  description: It's called 'Bauxite' actually
+
+rock:
+  description: ...
+
+biomass:
+  description: ...
+  
+waste:
+  description: ...
+
+polymers:
+  description: ...
+  

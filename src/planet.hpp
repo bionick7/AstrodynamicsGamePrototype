@@ -57,6 +57,8 @@ struct Planet {
     double GetDVFromExcessVelocity(double vel) const;
     double GetDVFromExcessVelocityPro(double vel, double parking_orbit, bool aerobreaking) const;
     Color GetColor() const;
+    bool CanProduce(RID id) const;
+
     void Conquer(int faction);
 
     void RecalcStats();
@@ -91,9 +93,6 @@ struct Planets {
 
     const PlanetNature* GetParentNature() const;
     int LoadEphemerides(const DataNode* data);
-
-    // Can batch drawcalls here
-    void Draw3D();
 };
 
 

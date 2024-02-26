@@ -3,15 +3,15 @@ focused_ship: -1
 player_faction: 0
 calendar:
   paused: y
-  time: 219545.600000
-  time_scale: 65536.000000
+  time: 1063867.733333
+  time_scale: 32768.000000
 
 camera:
   focus: -1
   fovy: 90.000000
-  position_x: 2.545041
-  position_y: 3.644291
-  position_z: -0.000115
+  position_x: 0.012069
+  position_y: 36.206123
+  position_z: 0.000000
 
 quests:
   active_quests: []
@@ -24,10 +24,6 @@ quests:
   dialogues: []
 
 factions:
-- money: 2
-
-- money: 1
-
 - money: 0
 
 planets:
@@ -38,15 +34,33 @@ planets:
   ship_production_process: 0
   trading_accessible: n
   resource_delta:
+    biomass: 0
+    carbon: 0
+    co2: 0
     electronics: 0
     food: 0
-    metal: 1
+    hydrogen: 0
+    metal: 0
+    ore: 0
+    oxygen: 0
+    polymers: 0
+    rock: 0
+    waste: 0
     water: 50
 
   resource_stock:
+    biomass: 0
+    carbon: 0
+    co2: 0
     electronics: 0
     food: 0
-    metal: 2
+    hydrogen: 0
+    metal: 0
+    ore: 0
+    oxygen: 0
+    polymers: 0
+    rock: 0
+    waste: 0
     water: 1000
 
   inventory:
@@ -100,15 +114,116 @@ planets:
   ship_production_process: 0
   trading_accessible: n
   resource_delta:
+    biomass: 0
+    carbon: 0
+    co2: 0
     electronics: 0
     food: 0
+    hydrogen: 0
     metal: 2
+    ore: 0
+    oxygen: 0
+    polymers: 0
+    rock: 0
+    waste: 0
     water: 0
 
   resource_stock:
+    biomass: 0
+    carbon: 0
+    co2: 0
     electronics: 0
     food: 0
-    metal: 4
+    hydrogen: 0
+    metal: 24
+    ore: 0
+    oxygen: 0
+    polymers: 0
+    rock: 0
+    waste: 0
+    water: 1000
+
+  inventory:
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  module_production_queue:
+  - 67108868
+  - 67108869
+  - 67108868
+  ship_production_queue: []
+
+- allegiance: 0
+  id: 16777218
+  module_production_process: 0
+  name: Tethys
+  ship_production_process: 0
+  trading_accessible: n
+  resource_delta:
+    biomass: 0
+    carbon: 0
+    co2: 0
+    electronics: 0
+    food: 0
+    hydrogen: 0
+    metal: 0
+    ore: 0
+    oxygen: 0
+    polymers: 0
+    rock: 0
+    waste: 0
+    water: 0
+
+  resource_stock:
+    biomass: 0
+    carbon: 0
+    co2: 0
+    electronics: 6
+    food: 0
+    hydrogen: 0
+    metal: 0
+    ore: 0
+    oxygen: 0
+    polymers: 0
+    rock: 0
+    waste: 0
     water: 1000
 
   inventory:
@@ -156,83 +271,39 @@ planets:
   ship_production_queue: []
 
 - allegiance: 0
-  id: 16777218
-  module_production_process: 0
-  name: Tethys
-  ship_production_process: 0
-  trading_accessible: y
-  resource_delta:
-    electronics: 1
-    food: 0
-    metal: 0
-    water: 0
-
-  resource_stock:
-    electronics: 8
-    food: 0
-    metal: 0
-    water: 909
-
-  inventory:
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  module_production_queue: []
-  ship_production_queue: []
-
-- allegiance: 1
   id: 16777219
   module_production_process: 0
   name: Rhea
   ship_production_process: 0
   trading_accessible: n
   resource_delta:
+    biomass: 0
+    carbon: 0
+    co2: 0
     electronics: 0
     food: 0
-    metal: 4
+    hydrogen: 0
+    metal: 0
+    ore: 0
+    oxygen: 0
+    polymers: 0
+    rock: 0
+    waste: 0
     water: 50
 
   resource_stock:
+    biomass: 0
+    carbon: 0
+    co2: 0
     electronics: 0
     food: 0
-    metal: 8
+    hydrogen: 0
+    metal: 0
+    ore: 0
+    oxygen: 0
+    polymers: 0
+    rock: 0
+    waste: 0
     water: 1000
 
   inventory:
@@ -279,22 +350,40 @@ planets:
   module_production_queue: []
   ship_production_queue: []
 
-- allegiance: 1
+- allegiance: 0
   id: 16777220
   module_production_process: 0
   name: Titan
   ship_production_process: 0
-  trading_accessible: y
+  trading_accessible: n
   resource_delta:
+    biomass: 0
+    carbon: 0
+    co2: 0
     electronics: 0
     food: 0
-    metal: 2
+    hydrogen: 0
+    metal: 0
+    ore: 0
+    oxygen: 0
+    polymers: 0
+    rock: 0
+    waste: 0
     water: 80
 
   resource_stock:
+    biomass: 0
+    carbon: 0
+    co2: 0
     electronics: 0
     food: 0
-    metal: 4
+    hydrogen: 0
+    metal: 0
+    ore: 0
+    oxygen: 0
+    polymers: 0
+    rock: 0
+    waste: 0
     water: 1000
 
   inventory:
@@ -341,22 +430,40 @@ planets:
   module_production_queue: []
   ship_production_queue: []
 
-- allegiance: 2
+- allegiance: 0
   id: 16777221
   module_production_process: 0
   name: Iaeptus
   ship_production_process: 0
   trading_accessible: n
   resource_delta:
+    biomass: 0
+    carbon: 0
+    co2: 0
     electronics: 1
     food: 0
+    hydrogen: 0
     metal: 1
+    ore: 0
+    oxygen: 0
+    polymers: 0
+    rock: 0
+    waste: 0
     water: 40
 
   resource_stock:
-    electronics: 2
+    biomass: 0
+    carbon: 0
+    co2: 0
+    electronics: 12
     food: 0
-    metal: 2
+    hydrogen: 0
+    metal: 1000
+    ore: 0
+    oxygen: 0
+    polymers: 0
+    rock: 0
+    waste: 0
     water: 1000
 
   inventory:
@@ -403,22 +510,40 @@ planets:
   module_production_queue: []
   ship_production_queue: []
 
-- allegiance: 2
+- allegiance: 0
   id: 16777222
   module_production_process: 0
   name: Phoebe
   ship_production_process: 0
   trading_accessible: n
   resource_delta:
+    biomass: 0
+    carbon: 0
+    co2: 0
     electronics: 0
     food: 0
+    hydrogen: 0
     metal: 0
+    ore: 0
+    oxygen: 0
+    polymers: 0
+    rock: 0
+    waste: 0
     water: 0
 
   resource_stock:
+    biomass: 0
+    carbon: 0
+    co2: 0
     electronics: 0
     food: 0
+    hydrogen: 0
     metal: 0
+    ore: 0
+    oxygen: 0
+    polymers: 0
+    rock: 0
+    waste: 0
     water: 1000
 
   inventory:
@@ -587,69 +712,10 @@ ships:
   prepared_plans: []
 
 - allegiance: 0
-  class_id: shp_light_transport
-  id: 33554436
-  name: Military ship 1
-  planet: Tethys
-  resource_id: -1
-  resource_qtt: 0
-  dammage_taken:
-  - 0
-  - 0
-  - 0
-  modules:
-  - shpmod_railgun
-  - shpmod_railgun
-  - shpmod_armor
-  - shpmod_reactor
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  prepared_plans: []
-
-- allegiance: 0
-  class_id: shp_light_transport
-  id: 33554437
-  name: Military ship 2
-  planet: Tethys
-  resource_id: -1
-  resource_qtt: 0
-  dammage_taken:
-  - 0
-  - 0
-  - 0
-  modules:
-  - shpmod_railgun
-  - shpmod_railgun
-  - shpmod_armor
-  - shpmod_reactor
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  prepared_plans: []
-
-- allegiance: 0
   class_id: shp_express
-  id: 33554438
+  id: 33554436
   name: Express
+  planet: Tethys
   resource_id: -1
   resource_qtt: 0
   dammage_taken:
@@ -673,18 +739,11 @@ ships:
   - ---
   - ---
   - ---
-  prepared_plans:
-  - arrival_planet: 16777217
-    arrival_time: 287640.367406
-    departure_planet: 16777218
-    departure_time: 202017.763368
-    resource_transfer_id: -1
-    resource_transfer_qtt: 0
-
+  prepared_plans: []
 
 - allegiance: 0
   class_id: shp_bulk_transport
-  id: 33554439
+  id: 33554437
   name: Heavy Transport 1
   planet: Encelladus
   resource_id: -1
@@ -714,7 +773,7 @@ ships:
 
 - allegiance: 0
   class_id: shp_bulk_transport
-  id: 33554440
+  id: 33554438
   name: Heavy Transport 2
   planet: Encelladus
   resource_id: -1
@@ -742,9 +801,9 @@ ships:
   - ---
   prepared_plans: []
 
-- allegiance: 1
+- allegiance: 0
   class_id: shp_light_transport
-  id: 33554441
+  id: 33554439
   name: Light transport I
   planet: Titan
   resource_id: -1
@@ -772,9 +831,9 @@ ships:
   - ---
   prepared_plans: []
 
-- allegiance: 1
+- allegiance: 0
   class_id: shp_light_transport
-  id: 33554442
+  id: 33554440
   name: Light transport II
   planet: Titan
   resource_id: -1
@@ -802,9 +861,9 @@ ships:
   - ---
   prepared_plans: []
 
-- allegiance: 1
+- allegiance: 0
   class_id: shp_light_transport
-  id: 33554443
+  id: 33554441
   name: Light transport III
   planet: Rhea
   resource_id: -1
@@ -832,9 +891,9 @@ ships:
   - ---
   prepared_plans: []
 
-- allegiance: 1
+- allegiance: 0
   class_id: shp_light_transport
-  id: 33554444
+  id: 33554442
   name: Light transport IV
   planet: Rhea
   resource_id: -1
@@ -862,9 +921,9 @@ ships:
   - ---
   prepared_plans: []
 
-- allegiance: 1
+- allegiance: 0
   class_id: shp_spacestation
-  id: 33554445
+  id: 33554443
   name: Titan Shipyard
   planet: Titan
   resource_id: -1
@@ -892,9 +951,9 @@ ships:
   - ---
   prepared_plans: []
 
-- allegiance: 1
+- allegiance: 0
   class_id: shp_spacestation
-  id: 33554446
+  id: 33554444
   name: Rhea Shipyard
   planet: Rhea
   resource_id: -1
@@ -922,69 +981,9 @@ ships:
   - ---
   prepared_plans: []
 
-- allegiance: 1
-  class_id: shp_express
-  id: 33554447
-  name: Military ship I
-  planet: Titan
-  resource_id: -1
-  resource_qtt: 0
-  dammage_taken:
-  - 0
-  - 0
-  - 0
-  modules:
-  - shpmod_missiles
-  - shpmod_missiles
-  - shpmod_light_armor
-  - shpmod_acs
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  prepared_plans: []
-
-- allegiance: 1
-  class_id: shp_express
-  id: 33554448
-  name: Military ship II
-  planet: Titan
-  resource_id: -1
-  resource_qtt: 0
-  dammage_taken:
-  - 0
-  - 0
-  - 0
-  modules:
-  - shpmod_missiles
-  - shpmod_missiles
-  - shpmod_light_armor
-  - shpmod_acs
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  prepared_plans: []
-
-- allegiance: 1
+- allegiance: 0
   class_id: shp_bulk_transport
-  id: 33554449
+  id: 33554445
   name: Heavy Transport 1
   planet: Titan
   resource_id: -1
@@ -1012,69 +1011,9 @@ ships:
   - ---
   prepared_plans: []
 
-- allegiance: 2
+- allegiance: 0
   class_id: shp_express
-  id: 33554450
-  name: Military ship 1
-  planet: Iaeptus
-  resource_id: -1
-  resource_qtt: 0
-  dammage_taken:
-  - 0
-  - 0
-  - 0
-  modules:
-  - shpmod_missiles
-  - shpmod_missiles
-  - shpmod_light_armor
-  - shpmod_acs
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  prepared_plans: []
-
-- allegiance: 2
-  class_id: shp_express
-  id: 33554451
-  name: Military ship 2
-  planet: Iaeptus
-  resource_id: -1
-  resource_qtt: 0
-  dammage_taken:
-  - 0
-  - 0
-  - 0
-  modules:
-  - shpmod_missiles
-  - shpmod_missiles
-  - shpmod_light_armor
-  - shpmod_acs
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  prepared_plans: []
-
-- allegiance: 2
-  class_id: shp_express
-  id: 33554452
+  id: 33554446
   name: Transport ship 1
   planet: Iaeptus
   resource_id: -1
@@ -1102,9 +1041,9 @@ ships:
   - ---
   prepared_plans: []
 
-- allegiance: 2
+- allegiance: 0
   class_id: shp_express
-  id: 33554453
+  id: 33554447
   name: Transport ship 2
   planet: Phoebe
   resource_id: -1
@@ -1132,9 +1071,9 @@ ships:
   - ---
   prepared_plans: []
 
-- allegiance: 2
+- allegiance: 0
   class_id: shp_spacestation
-  id: 33554454
+  id: 33554448
   name: Iaeptus Shipyard
   planet: Iaeptus
   resource_id: -1

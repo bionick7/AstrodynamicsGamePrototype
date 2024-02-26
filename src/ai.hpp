@@ -8,7 +8,7 @@ struct AbstractTransfer {
     RID departure_planet;
     RID arrival_planet;
     ResourceTransfer resource_transfer;
-    resource_count_t fuel;
+    ResourceTransfer fuel_consuption;
 };
 
 struct Ship;

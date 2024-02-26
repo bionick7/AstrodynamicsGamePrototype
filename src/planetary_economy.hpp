@@ -2,6 +2,7 @@
 #define PLANETARY_ECONOMY
 #include "basic.hpp"
 #include "datanode.hpp"
+#include "constants.hpp"
 
 const double KG_PER_COUNT = 10e3;
 
@@ -10,15 +11,43 @@ typedef int resource_count_t;
 double ResourceCountsToKG(resource_count_t counts);
 resource_count_t KGToResourceCounts(double mass);
 
+#define X_RESOURCES \
+    X(WATER,       water) \
+    X(HYDROGEN,    hydrogen) \
+    X(OXYGEN,      oxygen) \
+    X(ROCK,        rock) \
+    X(IRON_ORE,    iron_ore) \
+    X(STEEL,       steel) \
+    X(ALUMINIUM_ORE,aluminium_ore) \
+    X(ALUMINIUM,   aluminium) \
+    X(FOOD,        food) \
+    X(BIOMASS,     biomass) \
+    X(WASTE,       waste) \
+    X(CO2,         co2) \
+    X(CARBON,      carbon) \
+    X(POLYMERS,    polymers) \
+    X(ELECTRONICS, electronics)
+
+#define X(upper, lower) RESOURCE_##upper,
 enum ResourceType {
     RESOURCE_NONE = -1,
-    RESOURCE_WATER = 0,
-    RESOURCE_FOOD,
-    RESOURCE_METAL,
-    RESOURCE_ELECTRONICS,
-    //RESOURCE_ORGANICS,
+    X_RESOURCES
     RESOURCE_MAX,
 };
+#undef X
+
+#define X(upper, lower) #lower,
+static const char* resource_names[RESOURCE_MAX] = {
+    X_RESOURCES
+};
+#undef X
+
+//#define X(upper, lower) ICON_##upper "\0"
+#define X(upper, lower) ICON_##upper,
+static const char* resource_icons[RESOURCE_MAX] = {
+    X_RESOURCES
+};
+#undef X
 
 struct ResourceTransfer {
     ResourceType resource_id;
@@ -54,18 +83,12 @@ struct ResourceData {
     cost_t max_noise;        // Allowable aplitude of error
 };
 
-static const char* resource_names[RESOURCE_MAX] = {
-    "water", // RESOURCE_WATER
-    "food",  // RESOURCE_FOOD
-    "metal",  // RESOURCE_METAL
-    "electronics"  // RESOURCE_ELECTRONICS
-};
-
-
 struct PlanetaryEconomy {
     resource_count_t resource_stock[RESOURCE_MAX];
     resource_count_t resource_capacity[RESOURCE_MAX];
+    resource_count_t native_resource_delta[RESOURCE_MAX];
     resource_count_t resource_delta[RESOURCE_MAX];
+    resource_count_t writable_resource_delta[RESOURCE_MAX];
 
     cost_t resource_price[RESOURCE_MAX];
     cost_t resource_noise[RESOURCE_MAX];
@@ -78,17 +101,20 @@ struct PlanetaryEconomy {
     void Update();
     void AdvanceEconomy();
     void RecalcEconomy();
-    void UIDrawResources(const ResourceTransfer& transfer, double fuel_draw);
-    void UIDrawEconomy(const ResourceTransfer& transfer, double fuel_draw);
+    void UIDrawResources(ResourceTransfer transfer, ResourceTransfer fuel);
+    void UIDrawEconomy(ResourceTransfer transfer, ResourceTransfer fuel);
 
     ResourceTransfer DrawResource(ResourceTransfer transfer);
     ResourceTransfer GiveResource(ResourceTransfer transfer);
-    void TryPlayerTransaction(ResourceTransfer tf);
+    void AddResourceDelta(ResourceTransfer transfer);
+    void TryPlayerTransaction(ResourceTransfer transfer);
     cost_t GetPrice(ResourceType resource, resource_count_t quantity) const;
     resource_count_t GetForPrice(ResourceType resource, cost_t quantity) const;
 };
 
+int FindResource(const char* name, int default_);
 int LoadResources(const DataNode* data);
 ResourceData* GetResourceData(int resource_index);
+const char* GetResourceUIRep(int resource_index);
 
 #endif  // #ifndef PLANETARY_ECONOMY

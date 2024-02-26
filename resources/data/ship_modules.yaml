@@ -10,8 +10,8 @@ shipmodules:
   icon_index: [8, 25]
 
 - id: shpmod_droptank
-  name: Drop-tank
-  description: The ship can hold 10 extra count of fuel. Lost after use
+  name: Water Drop-tank
+  description: The ship can hold 10 extra counts of water. Lost after use
   mass: 12
   construction_resources:
     metal: 3
@@ -21,8 +21,8 @@ shipmodules:
   icon_index: [9, 25]
 
 # Production
-- id: shpmod_farm
-  name: Metal refinery
+- id: shpmod_farm_old
+  name: Farm (old)
   description: Provides + 1 count food / day
   produce: { food: 10 }
   mass: 10
@@ -42,6 +42,129 @@ shipmodules:
     metal: 10
     electronics: 1
   icon_index: [8, 24]
+
+#- id: shpmod_rock_extractor
+#  name: rock extractor
+#  description: ""
+#  produce: { rock: 10 }
+#  consume: {} 
+#  mass: 10
+#  construction_resources:
+#    metal: 10
+#  icon_index: [0, 0]
+
+- id: shpmod_ore_extractor
+  name: ore extractor
+  description: ""
+  produce: { ore: 4 }
+  consume: { rock: 200 }
+  mass: 10
+  construction_resources:
+    rock: 10
+  icon_index: [0, 0]
+
+- id: shpmod_electrolyser
+  name: electrolyser
+  description: ""
+  produce: { oxygen: 18, hydrogen: 2 }
+  consume: { water: 20 }
+  mass: 10
+  construction_resources:
+    metal: 10
+  icon_index: [0, 0]
+
+- id: shpmod_smelter
+  name: smelter
+  description: ""
+  produce: { metal: 14, water: 7 }
+  consume: { ore: 20, hydrogen: 1 }
+  mass: 10
+  construction_resources:
+    rock: 10
+  icon_index: [0, 0]
+
+- id: shpmod_fuel_cell
+  name: fuel cell
+  description: ""
+  produce: { water: 20 }
+  consume: { hydrogen: 2, oxygen: 18 }
+  mass: 10
+  construction_resources:
+    metal: 10
+  icon_index: [0, 0]
+
+- id: shpmod_habitat
+  name: Habitat
+  description: ""
+  produce: { waste: 20, co2: 10}
+  consume: { food: 10, oxygen: 10, water: 10 }
+  mass: 10
+  construction_resources:
+    metal: 10
+  icon_index: [0, 0]
+
+- id: shpmod_carbon_splitter
+  name: carbon splitter
+  description: ""
+  produce: { oxygen: 8, carbon: 3 }
+  consume: { co2: 11 }
+  mass: 10
+  construction_resources:
+    metal: 10
+  icon_index: [0, 0]
+
+- id: shpmod_waste_treatment
+  name: waste treatment
+  description: ""
+  produce: { biomass: 10, water: 10 }
+  consume: { waste: 10, oxygen: 10 }
+  mass: 10
+  construction_resources:
+    metal: 10
+  icon_index: [0, 0]
+
+- id: shpmod_farms
+  name: farms
+  description: ""
+  produce: { oxygen: 10, food: 10 }
+  consume: { biomass: 10, co2: 10 }
+  mass: 10
+  construction_resources:
+    metal: 10
+  icon_index: [0, 0]
+
+- id: shpmod_polymers
+  name: polymers factory
+  description: ""
+  produce: { polymers: 3 }
+  consume: { hydrogen: 1, oxygen: 1, carbon: 2 }
+  mass: 10
+  construction_resources:
+    metal: 10
+  icon_index: [0, 0]
+
+- id: shpmod_electronics
+  name: semiconductor laboratory
+  description: ""
+  produce: { waste: 60, electronics: 3 }
+  consume: { water: 60, rock: 30, aluminium: 3, polymers: 2 }
+  mass: 10
+  construction_resources:
+    metal: 10
+  icon_index: [0, 0]
+
+# water extractor :                                               => 1 water
+# rock extractor  :                                               => 1 rock
+# ore extractor   : 5 rock                                        => 1 ore
+# electrolyser    : 9 water                                       => 1 hydrogen + 8 oxygen
+# smelter         :20 metal ore   + 1 hydrogen                    =>14 metal   + 7 water
+# fuel cell       : 1 hydrogen    + 8 oxygen                      => 9 water
+# kitchen         : 1 food        + 1 oxygen      + 1 water       => 2 waste   + 1 co2
+# carbon splitter :11 co2                                         => 3 carbon  + 8 oxygen
+# waste treatment : 1 waste       + 1 oxygen                      => 1 biomass + 1 water
+# farms           : 1 biomass     + 1 co2                         => 1 food    + 1 oxygen
+# polymer prod    : 2 carbon      + 1 hydrogen    + 1 oxygen      => 3 polymers
+# semiconductors  : 1 metal       + 1 rock        +20 water       => 1 electronics
 
 # Shipyard
 # Build modules: workshop + storage

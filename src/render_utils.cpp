@@ -529,6 +529,7 @@ void RenderRings(DVector3 normal, double min_rad, double max_rad, Color color) {
     float render_scale = GameCamera::WorldToRender(max_rad);
     rlScalef(render_scale, render_scale, render_scale);
     rlRotatef(90, 1, 0, 0);
+    rlTranslatef(0, 0, 0.001);
 
     BeginShaderMode(rings_shader::shader);
     _RenderDoubleQuad(color);

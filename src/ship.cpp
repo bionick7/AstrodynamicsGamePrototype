@@ -99,7 +99,7 @@ void Ship::Serialize(DataNode *data) const
     data->Set("name", name);
     data->SetI("allegiance", allegiance);
     
-    data->Set("class_id", GetShipClassByIndex(ship_class)->id);
+    data->Set("class_id", GetShipClassByRID(ship_class)->id);
     data->SetI("resource_qtt", transporing.quantity);
     data->SetI("resource_id", transporing.resource_id);
     data->CreateArray("dammage_taken", ShipVariables::MAX);
@@ -175,18 +175,18 @@ double Ship::GetPayloadMass() const{
 }
 
 resource_count_t Ship::GetMaxCapacity() const {
-    return GetShipClassByIndex(ship_class)->max_capacity;
+    return GetShipClassByRID(ship_class)->max_capacity;
 }
 
 resource_count_t Ship::GetRemainingPayloadCapacity(double dv) const {
-    const ShipClass* sc = GetShipClassByIndex(ship_class);
+    const ShipClass* sc = GetShipClassByRID(ship_class);
     int drop_tanks = CountModulesOfClass(GetShipModules()->expected_modules.droptank);
     double capacity = sc->GetPayloadCapacityMass(dv, drop_tanks);
     return KGToResourceCounts(capacity - GetPayloadMass());
 }
 
 resource_count_t Ship::GetFuelRequiredFull(double dv) const {
-    const ShipClass* sc = GetShipClassByIndex(ship_class);
+    const ShipClass* sc = GetShipClassByRID(ship_class);
     int drop_tanks = CountModulesOfClass(GetShipModules()->expected_modules.droptank);
     const resource_count_t fuel_per_droptank = 10;
     double extra_fuel = fuel_per_droptank * drop_tanks;
@@ -194,12 +194,12 @@ resource_count_t Ship::GetFuelRequiredFull(double dv) const {
 }
 
 resource_count_t Ship::GetFuelRequiredEmpty(double dv) const {
-    const ShipClass* sc = GetShipClassByIndex(ship_class);
+    const ShipClass* sc = GetShipClassByRID(ship_class);
     return KGToResourceCounts((sc->oem + GetPayloadMass()) * (exp(dv/sc->v_e) - 1));
 }
 
 double Ship::GetCapableDV() const {
-    const ShipClass* sc = GetShipClassByIndex(ship_class);
+    const ShipClass* sc = GetShipClassByRID(ship_class);
     int drop_tanks = CountModulesOfClass(GetShipModules()->expected_modules.droptank);
 
     const resource_count_t fuel_per_droptank = 10;
@@ -278,7 +278,7 @@ Color Ship::GetColor() const {
 }
 
 bool Ship::IsStatic() const {
-    return GetShipClassByIndex(ship_class)->max_dv == 0;
+    return GetShipClassByRID(ship_class)->max_dv == 0;
 }
 
 bool Ship::IsParked() const {
@@ -477,7 +477,7 @@ void Ship::_UpdateModules() {
     // And robust. Dependency graph (also a way to find circular dependencies)
 
     for (int i=0; i < ShipStats::MAX; i++) {
-        stats[i] = GetShipClassByIndex(ship_class)->stats[i];
+        stats[i] = GetShipClassByRID(ship_class)->stats[i];
     }
     for (int j=0; j < SHIP_MAX_MODULES; j++) {
         if (IsIdValid(modules[j]) && !GetModule(modules[j])->HasDependencies()) {
@@ -969,17 +969,19 @@ void Ship::_OnDeparture(const TransferPlan* tp) {
     }
 
     PlanetaryEconomy* local_economy = &GetPlanet(tp->departure_planet)->economy;
+    //ResourceType fuel_type = GetShipClassByRID(ship_class)->fuel_resource;
+    ResourceType fuel_type = tp->fuel.resource_id;
 
-    ResourceTransfer fuel_tf = local_economy->DrawResource(ResourceTransfer(RESOURCE_WATER, tp->fuel_mass));
-    if (fuel_tf.quantity < tp->fuel_mass && IsPlayerControlled()) {
-        resource_count_t remaining_fuel = tp->fuel_mass - fuel_tf.quantity;
+    ResourceTransfer fuel_tf = local_economy->DrawResource(tp->fuel);
+    if (fuel_tf.quantity < tp->fuel.quantity && IsPlayerControlled()) {
+        resource_count_t remaining_fuel = tp->fuel.quantity - fuel_tf.quantity;
         if (
             local_economy->trading_accessible && 
-            local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) < GetFactions()->GetMoney(allegiance)
+            local_economy->GetPrice(fuel_type, remaining_fuel) < GetFactions()->GetMoney(allegiance)
         ) {
-            USER_INFO("Automatically purchased %d of water for M§M %d K", remaining_fuel, local_economy->GetPrice(RESOURCE_WATER, remaining_fuel) / 1e3)
-            local_economy->TryPlayerTransaction(ResourceTransfer(RESOURCE_WATER, remaining_fuel));
-            local_economy->DrawResource(ResourceTransfer(RESOURCE_WATER, remaining_fuel));
+            USER_INFO("Automatically purchased %d of water for M§M %d K", remaining_fuel, local_economy->GetPrice(fuel_type, remaining_fuel) / 1e3)
+            local_economy->TryPlayerTransaction(tp->fuel);
+            local_economy->DrawResource(tp->fuel);
         } else {
             // Abort
             USER_INFO(
@@ -1151,7 +1153,7 @@ RID Ships::AddShip(const DataNode* data) {
     if (!data->HasArray("variables")) {
         ship->Repair(1e6);
     }
-    //INFO("Spawned %s (%s-class)", ship->name, GetShipClassByIndex(ship->ship_class)->name);
+    //INFO("Spawned %s (%s-class)", ship->name, GetShipClassByRID(ship->ship_class)->name);
     return ship_entity;
 }
 
@@ -1175,6 +1177,7 @@ int Ships::LoadShipClasses(const DataNode* data) {
         sc.max_capacity = ship_data->GetI("capacity", 0);
         sc.max_dv = ship_data->GetF("dv", 0) * 1000;  // km/s -> m/s
         sc.v_e = ship_data->GetF("Isp", 0) * 1000;    // km/s -> m/s
+        sc.fuel_resource = (ResourceType) FindResource(ship_data->Get("fuel"), RESOURCE_WATER);
         sc.construction_time = ship_data->GetI("construction_time", 20);
         sc.oem = ResourceCountsToKG(sc.max_capacity) / (exp(sc.max_dv/sc.v_e) - 1);
         sc.construction_batch_size = ship_data->GetI("batch_size", 1, true);
@@ -1246,7 +1249,7 @@ void Ships::KillShip(RID uuid, bool notify_callback) {
     alloc.Erase(uuid);
 }
 
-const ShipClass* Ships::GetShipClassByIndex(RID id) const {
+const ShipClass* Ships::GetShipClassByRID(RID id) const {
     if (ship_classes == NULL) {
         ERROR("Ship Class uninitialized")
         return NULL;
@@ -1266,8 +1269,8 @@ Ship* GetShip(RID uuid) {
     return GetShips()->GetShip(uuid);
 }
 
-const ShipClass* GetShipClassByIndex(RID index) {
-    return GetShips()->GetShipClassByIndex(index);
+const ShipClass* GetShipClassByRID(RID index) {
+    return GetShips()->GetShipClassByRID(index);
 }
 
 int LoadShipClasses(const DataNode *data) {

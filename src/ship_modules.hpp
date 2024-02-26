@@ -64,6 +64,7 @@ struct ShipModuleClass {
     int delta_stats[ShipStats::MAX];
     int required_stats[ShipStats::MAX];
     resource_count_t production[RESOURCE_MAX];
+    resource_count_t consumption[RESOURCE_MAX];
     resource_count_t construction_resources[RESOURCE_MAX];
     int construction_batch_size;
 
@@ -80,6 +81,7 @@ struct ShipModuleClass {
     void UpdateStats(Ship* ship) const;
     void UpdateCustom(Ship* ship) const;
     bool HasDependencies() const;
+    int GetConstructionTime() const;
     const char* id;
 };
 

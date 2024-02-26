@@ -275,3 +275,60 @@ raid > build > grow
 Lets try 2.
 -> Different planets produce different resources
 -> Differenct planets can convert different resources (can also be done by ships)
+
+Let's introduce 10 resources:
+- water
+- hydrogen
+- oxygen
+- ore
+- metal
+- food
+- biomass
+- waste
+- co2
+- carbon
+- polymers
+- electronics
+- uranium
+- enriched U
+- energy  -> hard to store + intransferable
+
+water extractor :                                               => 1 water
+rock extractor  :                                               => 1 rock
+ore extractor   : 5 rock                                        => 1 ore
+electrolyser    : 9 water                                       => 1 hydrogen + 8 oxygen
+smelter         :20 metal ore   + 1 hydrogen                    =>14 metal   + 7 water
+fuel cell       : 1 hydrogen    + 8 oxygen                      => ? energy + 9 water
+
+kitchen         : 1 food        + 1 oxygen      + 1 water       => ? waste   + ? co2
+carbon splitter :11 co2                                         => 3 carbon  + 8 oxygen
+waste treatment : 1 waste       + 1 oxygen                      => 1 biomass + 1 water
+farms           : 1 biomass     + 1 co2                         => 1 food    + 1 oxygen
+
+// based on PET: -OC—C6H4—COO—CH2—CH2—O— => 32 O 70 C 4 H
+polymer prod    : 2 carbon      + 1 hydrogen    + 1 oxygen      => 3 polymers
+semiconductors  : 1 metal       + 1 rock        +20 water       => 1 electronics
+
+reactor         : 1 uranium                                     => ? energy
+
+
+## Status 19 Feb 24
+Hydrogen initially must come from saturn directly
+Some places have ice
+Some places have rock => Rhea, Rings
+Some places have (cheap) power => Encelladus from "geo"thermal, Titan bf heatsink
+Low orbit stations make hydrogen
+
+LSO        Hydrogen
+Rings      Rock, Water
+Mimas      Water, can make polymers
+Encelladus Water, Power
+Tethys     Faster production
+Rhea       Rock
+Titan      Water, Power, Carbon
+Iaeptus    can make Semiconductors
+Phoebe     ???
+
+There should be both an inconvenient and convenient way to make food, 
+the latter beeing dependant on a specific planet
+the fromer beeing maybe dependent on a finite resource

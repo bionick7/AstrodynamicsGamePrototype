@@ -45,10 +45,10 @@ double AIBlackboard::CalcTransferUtility(AbstractTransfer atf) const {
         return -1;
     }
     //DebugPrintText("faction %d controls %s", faction, GetPlanet(atf.arrival_planet)->name);
-    if (atf.fuel > GetPlanet(atf.departure_planet)->economy.resource_stock[RESOURCE_WATER]) {
+    if (atf.fuel_consuption.quantity > GetPlanet(atf.departure_planet)->economy.resource_stock[atf.fuel_consuption.resource_id]) {
         return -1;
     }
-    //DebugPrintText("%d <= %d", atf.fuel, GetPlanet(atf.departure_planet)->economy.resource_stock[RESOURCE_WATER]);
+    //DebugPrintText("%d <= %d", atf.fuel, GetPlanet(atf.departure_planet)->economy.resource_stock[atf.fuel_consuption.resource_id]);
     int departure_planet_tensor_lookup = IdGetIndex(atf.departure_planet);
     int arrival_planet_tensor_lookup = IdGetIndex(atf.arrival_planet);
     int planets_count = GetPlanets()->GetPlanetCount();
@@ -176,8 +176,9 @@ void AIBlackboard::_LowLevelHandleCivilianShip(Ship* ship) const {
         .departure_planet = GetInvalidId(),
         .arrival_planet = GetInvalidId(),
         .resource_transfer = ResourceTransfer(RESOURCE_NONE, 0),
-        .fuel = 0
+        .fuel_consuption = ResourceTransfer(RESOURCE_NONE, 0)
     };
+    ResourceType fuel_resource = GetShipClassByRID(ship->ship_class)->fuel_resource;
     double best_utility = -INFINITY;
     for(int i=0; i < GetPlanets()->GetPlanetCount(); i++){
         const Planet* planet = GetPlanetByIndex(i);
@@ -185,7 +186,7 @@ void AIBlackboard::_LowLevelHandleCivilianShip(Ship* ship) const {
             continue;
         }
         double dv = _GetMinDVTo(ship, planet);
-        if (dv > GetShipClassByIndex(ship->ship_class)->max_dv) {
+        if (dv > GetShipClassByRID(ship->ship_class)->max_dv) {
             continue;
         }
         resource_count_t capacity = ship->GetRemainingPayloadCapacity(dv);  // Calculates capacity for every planet
@@ -195,7 +196,7 @@ void AIBlackboard::_LowLevelHandleCivilianShip(Ship* ship) const {
                 .departure_planet  = ship->GetParentPlanet(),
                 .arrival_planet = planet->id,
                 .resource_transfer = ResourceTransfer((ResourceType) i, capacity),
-                .fuel = fuel
+                .fuel_consuption = ResourceTransfer(fuel_resource, fuel)
             };
             double utility = CalcTransferUtility(atf);
             if (utility > best_utility) {
@@ -213,7 +214,8 @@ void AIBlackboard::_LowLevelHandleCivilianShip(Ship* ship) const {
     );
     TransferPlan tp = _HohmannTransferPlan(ship, GetPlanet(best_transfer.arrival_planet));
     tp.resource_transfer = best_transfer.resource_transfer;
-    tp.fuel_mass = best_transfer.fuel;
+    tp.fuel.quantity = best_transfer.fuel_consuption.quantity;
+    tp.fuel.resource_id = fuel_resource;
 
     ship->prepared_plans_count = 1;  // Always looks 1 plan ahead
     ship->prepared_plans[0] = tp;

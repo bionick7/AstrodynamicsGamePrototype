@@ -39,11 +39,19 @@ void ShipModuleClass::UpdateCustom(Ship* ship) const {
         }
     }
     bool new_day = GetCalendar()->IsNewDay();
-    if (new_day && ship->IsParked()) {
+    if (ship->IsParked()) {
         Planet* planet = GetPlanet(ship->GetParentPlanet());
         for (int i=0; i < RESOURCE_MAX; i++) {
+            if (planet->economy.resource_stock[i] < consumption[i]) {
+                return;
+            }
+        }
+        for (int i=0; i < RESOURCE_MAX; i++) {
             if (production[i] != 0) {
-                planet->economy.GiveResource(ResourceTransfer((ResourceType) i, production[i]));
+                planet->economy.AddResourceDelta(ResourceTransfer((ResourceType) i, production[i]));
+            }
+            if (consumption[i] != 0) {
+                planet->economy.AddResourceDelta(ResourceTransfer((ResourceType) i, -consumption[i]));
             }
         }
     }
@@ -51,6 +59,10 @@ void ShipModuleClass::UpdateCustom(Ship* ship) const {
 
 bool ShipModuleClass::HasDependencies() const {
     return has_activation_requirements;
+}
+
+int ShipModuleClass::GetConstructionTime() const {
+    return construction_time / 4;
 }
 
 ShipModuleSlot::ShipModuleSlot(RID p_entity, int p_index, ShipModuleSlotType p_type) {
@@ -127,6 +139,7 @@ int ShipModules::Load(const DataNode* data) {
 
         module_data->FillBufferWithChild("construction_resources", ship_modules[i].construction_resources, RESOURCE_MAX, resource_names);
         module_data->FillBufferWithChild("produce", ship_modules[i].production, RESOURCE_MAX, resource_names);
+        module_data->FillBufferWithChild("consume", ship_modules[i].consumption, RESOURCE_MAX, resource_names);
         if (module_data->GetArrayLen("icon_index") == 2) {
             ship_modules[i].icon_index = AtlasPos(
                 module_data->GetArrayElemI("icon_index", 0),
