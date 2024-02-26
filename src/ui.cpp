@@ -84,6 +84,12 @@ TextBox::TextBox(const TextBox *parent, int x, int y, int w, int h) :
     TextBox::TextBox(x, y, w, h, parent->text_size, parent->text_color, 
                      parent->background_color, parent->z_layer) {}
 
+int TextBox::GetCharWidth() {
+    Font font = GetCustomDefaultFont();
+    const char* test_string = "abcdefghiJKLMNOP0123";
+    return MeasureTextEx(GetCustomDefaultFont(), test_string, text_size, 1).x / strlen(test_string);
+}
+
 void TextBox::_Advance(Vector2 pos, Vector2 size) {
     if (size.y > line_size_y) line_size_y = size.y;
     if (pos.x + size.x > text_start_x + x_cursor) x_cursor = pos.x + size.x - text_start_x;

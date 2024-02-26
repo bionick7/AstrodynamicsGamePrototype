@@ -85,6 +85,7 @@ struct TextBox {
 
     TextBox(int x, int y, int w, int h, int text_size, Color color, Color background_color, uint8_t z_layer);
     TextBox(const TextBox* parent, int x, int y, int w, int h);
+    int GetCharWidth();
     void LineBreak();
     void EnsureLineBreak();
     void Enclose(int inset, int corner_radius, Color background_color, Color line_color);

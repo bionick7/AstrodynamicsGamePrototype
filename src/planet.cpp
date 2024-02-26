@@ -228,8 +228,9 @@ bool Planet::HasMouseHover(double* min_distance) const {
 void Planet::Update() {
     timemath::Time now = GlobalGetNow();
     position = orbit.GetPosition(now);
-    int index = IdGetIndex(id);
-    position = orbit.FromRightAscention(-PI/2 * index);
+    //int index = IdGetIndex(id);
+    //position = orbit.FromRightAscention(-PI/2 * index);
+    position = orbit.FromRightAscention(-PI/2);
     // RecalcStats();
     economy.Update();
 }

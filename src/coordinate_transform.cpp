@@ -91,7 +91,6 @@ void GameCamera::Deserialize(const DataNode* data) {
 }
 
 void GameCamera::HandleInput() {
-    
     if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_HOME)) {
         rl_camera.target = Vector3Zero();
         rl_camera.position = { 0.001f, 3.0f, 0.0f };
@@ -113,8 +112,8 @@ void GameCamera::HandleInput() {
         dist *= scroll_ratio;
     }
 
-    // TODO: manipulate view_dir
-    if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
+    bool translating = IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT);
+    if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE) && !translating) {
         double elevation = asin(view_dir.y);
         double azimuth = atan2(view_dir.z / cos(elevation), view_dir.x / cos(elevation));
 
@@ -125,6 +124,16 @@ void GameCamera::HandleInput() {
         view_dir.x = cos(elevation) * cos(azimuth);
         view_dir.y = sin(elevation);
         view_dir.z = cos(elevation) * sin(azimuth);
+    }
+    if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE) && translating) {
+        Ray prev_pos = GetMouseRay(Vector2Subtract(GetMousePosition(), GetMouseDelta()), rl_camera);
+        Ray current_pos = GetMouseRay(GetMousePosition(), rl_camera);
+        if (fabs(prev_pos.direction.y) > 1e-3 && fabs(current_pos.direction.y) > 1e-3) {
+            Vector3 prev_impact = Vector3Add(prev_pos.position, Vector3Scale(prev_pos.direction, prev_pos.position.y / prev_pos.direction.y));
+            Vector3 current_impact = Vector3Add(current_pos.position, Vector3Scale(current_pos.direction, current_pos.position.y / current_pos.direction.y));
+            Vector3 in_plane_delta = Vector3Subtract(current_impact, prev_impact);
+            rl_camera.target = Vector3Add(rl_camera.target, in_plane_delta);
+        }
     }
 
     rl_camera.position = Vector3Subtract(rl_camera.target, Vector3Scale(view_dir, dist));

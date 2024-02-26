@@ -78,6 +78,7 @@ struct ShipModuleClass {
     AtlasPos icon_index;
 
     ShipModuleClass();
+    void MouseHintWrite() const;
     void UpdateStats(Ship* ship) const;
     void UpdateCustom(Ship* ship) const;
     bool HasDependencies() const;

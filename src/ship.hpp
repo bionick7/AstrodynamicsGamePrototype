@@ -56,6 +56,7 @@ struct ShipClass {
     double GetPayloadCapacityMass(double dv, int drop_tanks) const;
     resource_count_t GetFuelRequiredFull(double dv, int drop_tanks) const;
     resource_count_t GetFuelRequiredEmpty(double dv) const;
+    void MouseHintWrite() const;
 };
 
 struct Ship {

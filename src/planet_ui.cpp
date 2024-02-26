@@ -45,11 +45,7 @@ void Planet::_UIDrawInventory() {
 void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_array) {
     if (!IsIdValid(id)) return;
     // Assuming monospace font
-    int char_width = MeasureTextEx(
-        GetCustomDefaultFont(), 
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 
-        DEFAULT_FONT_SIZE, 1.0
-    ).x/62;
+    int char_width = ui::Current()->GetCharWidth();
     StringBuilder sb;
     const resource_count_t* construction_resources = NULL;
     int build_time = 0;
@@ -59,6 +55,9 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
             const ShipClass* ship_class = GetShipClassByRID(id);
             sb.Add(ship_class->name).Add("\n");
             sb.Add(ship_class->description);
+            sb.AutoBreak(ui::Current()->width / char_width);
+            ui::Write(sb.c_str);
+            sb.Clear();
             construction_resources = &ship_class->construction_resources[0];
             build_time = ship_class->construction_time;
             batch_size = ship_class->construction_batch_size;
@@ -66,36 +65,10 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
         }
         case EntityType::MODULE_CLASS: {
             const ShipModuleClass* module_class = GetModule(id);
-            sb.Add(module_class->name).Add("\n");
-            sb.Add(module_class->description).Add("\n");
             construction_resources = &module_class->construction_resources[0];
             build_time = module_class->GetConstructionTime();
             batch_size = module_class->construction_batch_size;
-
-            int consumptions_count = 0;
-            int production_rsc_count = 0;
-            StringBuilder sb2 = StringBuilder("    ");
-            for (int i=0; i < RESOURCE_MAX; i++) {
-                if (module_class->consumption[i] > 0) {
-                    if (consumptions_count != 0)
-                    sb2.Add(" + ");
-                    sb2.AddFormat("%3d %s", module_class->consumption[i], GetResourceUIRep(i));
-                    consumptions_count++;
-                }
-            }
-            sb2.Add("\n => ");
-            for (int i=0; i < RESOURCE_MAX; i++) {
-                if (module_class->production[i] > 0) {
-                    if (production_rsc_count != 0)
-                    sb2.Add(" + ");
-                    sb2.AddFormat("%3d %s", module_class->production[i], GetResourceUIRep(i));
-                    production_rsc_count++;
-                }
-            }
-            if (consumptions_count * production_rsc_count > 0) {
-                sb.Add(sb2.c_str);
-            }
-            
+            module_class->MouseHintWrite();
             break;
         }
         default: break;
@@ -103,8 +76,6 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
 
     if (construction_resources == NULL) return;
 
-    sb.AutoBreak(ui::Current()->width / char_width);
-    ui::Write(sb.c_str);
     if (planet_resource_array == NULL) {
         return;
     }

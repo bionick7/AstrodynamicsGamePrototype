@@ -65,6 +65,39 @@ int ShipModuleClass::GetConstructionTime() const {
     return construction_time / 4;
 }
 
+void ShipModuleClass::MouseHintWrite() const {
+    StringBuilder sb;
+    sb.Add(name).Add("\n");
+    sb.Add(description).Add("\n");
+
+    int consumptions_count = 0;
+    int production_rsc_count = 0;
+    StringBuilder sb2 = StringBuilder("    ");
+    for (int i=0; i < RESOURCE_MAX; i++) {
+        if (consumption[i] > 0) {
+            if (consumptions_count != 0)
+            sb2.Add(" + ");
+            sb2.AddFormat("%3d %s", consumption[i], GetResourceUIRep(i));
+            consumptions_count++;
+        }
+    }
+    sb2.Add("\n => ");
+    for (int i=0; i < RESOURCE_MAX; i++) {
+        if (production[i] > 0) {
+            if (production_rsc_count != 0)
+            sb2.Add(" + ");
+            sb2.AddFormat("%3d %s", production[i], GetResourceUIRep(i));
+            production_rsc_count++;
+        }
+    }
+    if (consumptions_count * production_rsc_count > 0) {
+        sb.Add(sb2.c_str);
+    }
+
+    sb.AutoBreak(ui::Current()->width / ui::Current()->GetCharWidth());
+    ui::Write(sb.c_str);
+}
+
 ShipModuleSlot::ShipModuleSlot(RID p_entity, int p_index, ShipModuleSlotType p_type) {
     entity = p_entity;
     index = p_index;
@@ -197,7 +230,10 @@ void ShipModules::DrawShipModule(RID index) const {
         ui::Enclose();
         ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
-            ui::SetMouseHint(smc->name);
+            ui::PushMouseHint(GetMousePosition(), 250, 250, 255 - MAX_TOOLTIP_RECURSIONS);
+            ui::Enclose();
+            smc->MouseHintWrite();
+            ui::Pop();
         }
         if (button_state & ButtonStateFlags::PRESSED) {
             return;
