@@ -38,4 +38,11 @@ struct AtlasPos;
 #define LOAD_SHADER_FS(shader_name) shader_name::shader = LoadShader(NULL, "resources/shaders/"#shader_name".fs");
 #define LOAD_SHADER_UNIFORM(shader_name, uniform_name) shader_name::uniform_name = GetShaderLocation(shader_name::shader, #uniform_name);
 
+namespace sdf_shader {
+    extern Shader shader;
+    extern int depth;
+    void Load();
+    void UnLoad();
+}
+
 #endif  // RENDER_UTILS_H

@@ -304,8 +304,9 @@ void Planet::DrawUI() {
     ui::Pop();  // Tab container
     ui::PushInset(0, 10000);  // Constrained by outside container
 
-    ui::Write(name);
+    ui::WriteEx(name, TextAlignment::CONFORM, false);
     ui::Fillline(1, Palette::ui_main, Palette::ui_main);
+    ui::VSpace(5);
     switch (current_tab) {
     case 0:
         economy.UIDrawResources(transfer, fuel_draw);

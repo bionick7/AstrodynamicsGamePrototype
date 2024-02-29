@@ -54,6 +54,8 @@ StringBuilder::StringBuilder(const char* str) {
     strcpy(c_str, str);
 }
 
+StringBuilder::StringBuilder(const StringBuilder &other) : StringBuilder(other.c_str) {}
+
 void StringBuilder::_ReSize(int new_length) {
     char* c_str2 = new char[new_length];
     strcpy(c_str2, c_str);
@@ -141,10 +143,12 @@ TokenList StringBuilder::ExtractTokens(const char *start_delim, const char *end_
 }
 
 StringBuilder StringBuilder::GetSubstring(int from, int to) {
-    if (to <= from || to > length) {
+    if (to <= from) {
         return StringBuilder();
     }
-    StringBuilder sb = StringBuilder(to - from + 1);
+    if(to > length) {
+        return *this;
+    }StringBuilder sb = StringBuilder(to - from + 1);
     strncpy(sb.c_str, c_str, to - from + 1);
     sb.c_str[to - from] = '\0';
     return sb;

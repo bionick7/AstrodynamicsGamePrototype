@@ -21,6 +21,7 @@ struct StringBuilder {
     StringBuilder();
     StringBuilder(int p_length);
     StringBuilder(const char* str);
+    StringBuilder(const StringBuilder& other);
     void _ReSize(int new_length);
     ~StringBuilder();
     int CountLines() const;

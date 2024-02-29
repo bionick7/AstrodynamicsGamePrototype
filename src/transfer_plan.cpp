@@ -661,7 +661,7 @@ void TransferPlanUI::DrawUI() {
     sb.Add("\nArrives in ").AddTime(plan->arrival_time - time_bounds[0]);
     //DebugPrintText("%i", sb.CountLines());
     ui::PushInset(0, (DEFAULT_FONT_SIZE) * sb.CountLines() + 1);
-    ui::Write(sb.c_str);
+    ui::WriteEx(sb.c_str, TextAlignment::CONFORM, false);
     ui::Fillline(
         fmin(timemath::Time::SecDiff(plan->arrival_time, time_bounds[0]) / timemath::Time::SecDiff(plan->hohmann_arrival_time, time_bounds[0]), 1.0), 
         Palette::ally, Palette::bg
@@ -688,7 +688,7 @@ void TransferPlanUI::DrawUI() {
     }
 
     ui::PushInset(0, (DEFAULT_FONT_SIZE) * sb.CountLines() + 1);
-    ui::Write(sb.c_str);
+    ui::WriteEx(sb.c_str, TextAlignment::CONFORM, false);
     ui::Fillline(fmax(0, capacity_ratio), capacity >= 0 ? Palette::ally : Palette::red, Palette::bg);
     ui::Pop();  // Inset
 

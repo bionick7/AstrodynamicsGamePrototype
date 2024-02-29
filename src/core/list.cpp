@@ -1,7 +1,7 @@
 #include "list.hpp"
 #include "tests.hpp"
 
-void* _current_fn = NULL;
+void* _current_fn::_current_fn = NULL;
 
 struct TestStruct {
     int m0 = 0;

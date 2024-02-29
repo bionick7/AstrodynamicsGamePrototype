@@ -618,7 +618,8 @@ void _UIDrawHeader(const Ship* ship) {
     if (!ship->IsParked() && !ship->IsLeading()) text = ICON_EMPTY " " ICON_TRANSPORT_FLEET "  ";
     if (ship->IsParked() && ship->IsLeading()) text = ICON_PLANET " " ICON_EMPTY "  ";
     if (ship->IsParked() && !ship->IsLeading()) text = ICON_PLANET " " ICON_TRANSPORT_FLEET "  ";
-    int pos = ui::Current()->TbGetCharacterIndex(GetMousePosition(), text, TextAlignment::RIGHT | TextAlignment::VCONFORM);
+    text::Layout layout = ui::Current()->GetTextLayout(text, TextAlignment::RIGHT | TextAlignment::VCONFORM);
+    int pos = layout.GetCharacterIndex(GetMousePosition());
     ui::WriteEx(text, TextAlignment::RIGHT | TextAlignment::VCONFORM, true);
     ButtonStateFlags::T planet_button_state = GetButtonState(pos >= 0 && pos < 2, false);  // Don't care about hover_in
     ButtonStateFlags::T fleet_button_state = GetButtonState(pos >= 3 && pos < 5, false);  // Don't care about hover_in
@@ -648,8 +649,9 @@ void _UIDrawStats(const Ship* ship) {
     } else {
         sb.AddFormat("\u0394V %2.2f km/s  ", ship->GetCapableDV() / 1000.f);
     }
-    ui::WriteEx(sb.c_str, TextAlignment::RIGHT | TextAlignment::VCONFORM, true);
+    ui::WriteEx(sb.c_str, TextAlignment::RIGHT | TextAlignment::VCONFORM, false);
     ui::Fillline(ship->GetPayloadMass() / ResourceCountsToKG(ship->GetMaxCapacity()), Palette::ui_main, Palette::bg);
+    ui::Write("");  // Linebreak
     ui::VSpace(15);
     ui::PushInset(0, 4 * 20-8);
     sb.Clear();

@@ -176,22 +176,22 @@ RID IDList::operator[](int index) const {
     return buffer[index];
 }
 
-static IDList::SortFn* _current_fn = NULL;
+static IDList::SortFn* _current_fn_id = NULL;
 
 int _cmp_func(const void * a, const void * b) {
-    if (_current_fn == NULL) {
+    if (_current_fn_id == NULL) {
         FAIL("May only be called inside of Sort");
     }
     //SHOW_I(*(RID*)a)
     //SHOW_I(*(RID*)b)
-    return _current_fn(*(RID*)a, *(RID*)b);
+    return _current_fn_id(*(RID*)a, *(RID*)b);
 }
 
 void IDList::Sort(SortFn *fn) {
     if (size <= 1) return;
-    _current_fn = fn;
+    _current_fn_id = fn;
     qsort(buffer, size, sizeof(RID), _cmp_func);
-    _current_fn = NULL;
+    _current_fn_id = NULL;
 }
 
 void IDList::Inspect() {

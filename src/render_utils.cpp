@@ -67,18 +67,15 @@ void _ColorToFloat4Buffer(float buffer[], Color color) {
     buffer[3] = (float)color.a / 255.0f;
 }
 
-namespace sdf_shader {
-    Shader shader;
-    int depth = -1;
+Shader sdf_shader::shader;
+int sdf_shader::depth = -1;
+void sdf_shader::Load() {
+    LOAD_SHADER_FS(sdf_shader)
+    LOAD_SHADER_UNIFORM(sdf_shader, depth)
+}
 
-    void Load() {
-        LOAD_SHADER_FS(sdf_shader)
-        LOAD_SHADER_UNIFORM(sdf_shader, depth)
-    }
-
-    void UnLoad() {
-        UnloadShader(shader);
-    }
+void sdf_shader::UnLoad() {
+    UnloadShader(shader);
 }
 
 namespace ui_shader {

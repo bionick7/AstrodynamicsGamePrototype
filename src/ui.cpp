@@ -7,7 +7,7 @@
 #include "debug_console.hpp"
 #include "debug_drawing.hpp"
 #include "render_utils.hpp"
-#include "text_utils.hpp"
+#include "text_rendering.hpp"
 
 Vector2 ApplyAlignment(Vector2 anchorpoint, Vector2 size, TextAlignment::T alignment) {
     switch(alignment & TextAlignment::HFILTER){
@@ -26,7 +26,7 @@ Rectangle DrawTextAligned(const char* text, Vector2 pos, TextAlignment::T alignm
     pos = ApplyAlignment(pos, size, alignment);
     //Vector2 bottom_left = Vector2Subtract(pos, Vector2Scale(size, 0.5));
     Rectangle rect = { pos.x, pos.y, size.x, size.y };
-    InternalDrawTextEx(GetCustomDefaultFont(), text, pos, DEFAULT_FONT_SIZE, 1, c, GetScreenRect(), z_layer);
+    text::DrawTextEx(GetCustomDefaultFont(), text, pos, DEFAULT_FONT_SIZE, 1, c, GetScreenRect(), z_layer);
     return rect;
 }
 
@@ -163,39 +163,13 @@ void TextBox::Shrink(int dx, int dy) {
 }
 
 void TextBox::WriteRaw(const char *text, TextAlignment::T align) {
-    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
-    Vector2 pos = ApplyAlignment(GetAnchorPoint(align), size, align);
-    // avoid drawing text_background is fully transparent (useless)
-    if(text_background.a != 0) {
-        BeginRenderInUIMode(z_layer);
-        DrawRectangleRec(GetCollisionRec({pos.x, pos.y, size.x, size.y}, render_rec), text_background);
-        EndRenderInUIMode();
-    }
-    InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec, z_layer);
-    if (GetSettingBool("draw_textrects", false)) {
-        BeginRenderInUIMode(z_layer);
-        DrawRectangleLinesEx({pos.x, pos.y, size.x, size.y}, 1, RED);
-        EndRenderInUIMode();
-    }
-    // Not Advance
+    text::Layout layout = GetTextLayout(text, align);
+    WriteLayout(&layout, false);
 }
 
 void TextBox::Write(const char* text, TextAlignment::T align) {
-    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
-    Vector2 pos = ApplyAlignment(GetAnchorPoint(align), size, align);
-    // avoid drawing text_background is fully transparent (useless)
-    if(text_background.a != 0) {
-        BeginRenderInUIMode(z_layer);
-        DrawRectangleRec(GetCollisionRec({ pos.x, pos.y, size.x, size.y }, render_rec), text_background);
-        EndRenderInUIMode();
-    }
-    InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec, z_layer);
-    if (GetSettingBool("draw_textrects", false)) {
-        BeginRenderInUIMode(z_layer);
-        DrawRectangleLinesEx({pos.x, pos.y, size.x, size.y}, 1, RED);
-        EndRenderInUIMode();
-    }
-    _Advance(pos, size);
+    text::Layout layout = GetTextLayout(text, align);
+    WriteLayout(&layout, true);
 }
 
 void TextBox::WriteLine(const char* text, TextAlignment::T align) {
@@ -203,7 +177,27 @@ void TextBox::WriteLine(const char* text, TextAlignment::T align) {
     LineBreak();
 }
 
-void TextBox::Decorate(const char *text, TextAlignment::T align, const TokenList* tokens) {
+void TextBox::WriteLayout(const text::Layout* layout, bool advance_cursor) {
+    Rectangle rect = layout->bounding_box;
+    if(text_background.a != 0) {
+        BeginRenderInUIMode(z_layer);
+        DrawRectangleRec(GetCollisionRec(rect, render_rec), text_background);
+        EndRenderInUIMode();
+    }
+    layout->DrawTextLayout(GetCustomDefaultFont(), text_size, text_color, render_rec, z_layer);
+    if (GetSettingBool("draw_textrects", false)) {
+        BeginRenderInUIMode(z_layer);
+        DrawRectangleLinesEx(rect, 1, RED);
+        EndRenderInUIMode();
+    }
+    if (advance_cursor) {
+        line_size_y = 20;
+        x_cursor = rect.x + rect.width - text_start_x;
+        y_cursor = rect.y + rect.height - text_start_y - 20;
+    }
+}
+
+void TextBox::Decorate(const text::Layout* layout, const TokenList* tokens) {
     /*int len = strlen(text);
     char* underline_txt = new char[len+1];
     for (int i=0; i < len; i++) {
@@ -217,14 +211,12 @@ void TextBox::Decorate(const char *text, TextAlignment::T align, const TokenList
     }
     WriteRaw(underline_txt, align);
     delete[] underline_txt;*/
-    std::vector rr = GetTextRects(
-        tokens, GetCustomDefaultFont(),
-        text, text_size, 1
-    );
+    List<Rectangle> recs;
+    layout->GetTextRects(&recs, tokens);
     BeginRenderInUIMode(z_layer);
-    for (Rectangle rec : rr) {
-        int y = text_start_y + rec.y + rec.height;
-        DrawLine(text_start_x + rec.x, y, text_start_x + rec.x + rec.width, y, text_color);
+    for (int i=0; i < recs.size; i++) {
+        int y = recs[i].y + recs[i].height;
+        DrawLine(recs[i].x, y, recs[i].x + recs[i].width, y, text_color);
     }
     EndRenderInUIMode();
 }
@@ -278,7 +270,7 @@ ButtonStateFlags::T TextBox::WriteButton(const char* text, int inset) {
     ButtonStateFlags::T res = GetButtonState(is_in_area, was_in_area);
     Color c = is_in_area ? Palette::ui_main : Palette::interactable_main;
     DrawRectangleLines(pos.x - inset, pos.y - inset, size.x, size.y, c);
-    InternalDrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec, z_layer);
+    text::DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec, z_layer);
     _Advance(pos, size);
     return res;
 }
@@ -295,7 +287,15 @@ int TextBox::GetLineHeight() const {
     return text_size + text_margin_y;
 }
 
-int TextBox::TbGetCharacterIndex(Vector2 collision_pos, const char *text, TextAlignment::T alignemnt) const {
+text::Layout TextBox::GetTextLayout(const char *text, TextAlignment::T alignemnt) {
+    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
+    Vector2 pos = ApplyAlignment(GetAnchorPoint(alignemnt), size, alignemnt);
+    text::Layout text_layout;
+    text::GetLayout(&text_layout, pos, GetCustomDefaultFont(), text, text_size, 1);
+    return text_layout;
+}
+
+/*int TextBox::TbGetCharacterIndex(Vector2 collision_pos, const char *text, TextAlignment::T alignemnt) const {
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
     Vector2 pos = ApplyAlignment(GetAnchorPoint(alignemnt), size, alignemnt);
 
@@ -313,7 +313,7 @@ Rectangle TextBox::TbGetTextRect(const char *text, TextAlignment::T alignemnt, i
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
     Vector2 pos = ApplyAlignment(GetAnchorPoint(alignemnt), size, alignemnt);
 
-    Rectangle rect = GetTextRect(
+    Rectangle rect = GetTokenRect(
         token_start, token_end, token_from,
         GetCustomDefaultFont(),
         text, text_size, 1
@@ -323,6 +323,14 @@ Rectangle TextBox::TbGetTextRect(const char *text, TextAlignment::T alignemnt, i
     rect.y += pos.y;
 
     return rect;
+}
+
+*/
+
+Rectangle TextBox::TbMeasureText(const char* text, TextAlignment::T alignemnt) const {
+    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
+    Vector2 pos = ApplyAlignment(GetAnchorPoint(alignemnt), size, alignemnt);
+    return {pos.x, pos.y, size.x, size.y};
 }
 
 Vector2 TextBox::GetAnchorPoint(TextAlignment::T align) const {
@@ -340,11 +348,6 @@ Vector2 TextBox::GetAnchorPoint(TextAlignment::T align) const {
     return res;
 }
 
-Rectangle TextBox::TbMeasureText(const char* text, TextAlignment::T alignemnt) const {
-    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
-    Vector2 pos = ApplyAlignment(GetAnchorPoint(alignemnt), size, alignemnt);
-    return {pos.x, pos.y, size.x, size.y};
-}
 
 void ui::PushTextBox(TextBox tb) {
     GetUI()->text_box_stack.push(tb);
@@ -562,8 +565,8 @@ void ui::WriteEx(const char *text, TextAlignment::T alignemnt, bool linebreak) {
     }
 }
 
-void ui::DecorateEx(const char *text, TextAlignment::T alignemnt, const TokenList* tokens) {
-    ui::Current()->Decorate(text, alignemnt, tokens);
+void ui::DecorateEx(const text::Layout* layout, const TokenList* tokens) {
+    ui::Current()->Decorate(layout, tokens);
 }
 
 Rectangle ui::MeasureTextEx(const char *text, TextAlignment::T alignemnt) {
@@ -572,7 +575,7 @@ Rectangle ui::MeasureTextEx(const char *text, TextAlignment::T alignemnt) {
 
 void ui::Fillline(double value, Color fill_color, Color background_color) {
     TextBox* tb = ui::Current();
-    int y_end = tb->text_start_y + tb->y_cursor;
+    int y_end = tb->text_start_y + tb->y_cursor + 20;
     if (y_end > tb->render_rec.y + tb->render_rec.height || y_end < tb->render_rec.y)
         return;
     
@@ -624,7 +627,7 @@ void ui::HelperText(const char* description) {
     //BeginRenderInUIMode(tb->z_layer);
     //DrawRectangleLinesEx(tb->render_rec, 1, GREEN);
     //EndRenderInUIMode();
-    InternalDrawTextEx(GetCustomDefaultFont(), "??", { button_pos.x, button_pos.y }, tb->text_size, 1, 
+    text::DrawTextEx(GetCustomDefaultFont(), "??", { button_pos.x, button_pos.y }, tb->text_size, 1, 
         Palette::interactable_main, tb->render_rec, tb->z_layer
     );
 
@@ -690,23 +693,31 @@ void UIGlobals::_HandleMouseTips() {
 
     for (int i=mousehints.count-1; i >= 0; i--) {  // Avoid overdraw
         bool top_most = i == mousehints.count-1;
+        Rectangle org_rect = mousehints.origin_button_rects[i];
+
+        // Text manipulation
         StringBuilder sb = StringBuilder(mousehints.hints[i]);
         sb.AutoBreak(100);
         TokenList tokens = sb.ExtractTokens("[[", "]]");
-        Rectangle org_rect = mousehints.origin_button_rects[i];
-        //Vector2 anchor = { org_rect.x, org_rect.y + org_rect.height };  // bottom-left
-        Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), sb.c_str, DEFAULT_FONT_SIZE, 1);
+        int trailing_newlines = 0;
+        for (;sb.c_str[sb.length - trailing_newlines - 2] == '\n'; trailing_newlines++) { }
+        StringBuilder sb_substr = sb.GetSubstring(0, sb.length - trailing_newlines - 1);
+
+        // Push Textbox
+        Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), sb_substr.c_str, DEFAULT_FONT_SIZE, 1);
         mousehints.hint_rects[i].width = text_size.x;
         mousehints.hint_rects[i].height = text_size.y;
         Vector2 anchor = { mousehints.hint_rects[i].x, mousehints.hint_rects[i].y};
         ui::PushMouseHint(anchor, text_size.x+8, text_size.y+8, 255 - MAX_TOOLTIP_RECURSIONS + i);
+
+        text::Layout layout = ui::Current()->GetTextLayout(sb_substr.c_str, TextAlignment::CONFORM);
         mousehints.hint_rects[i] = ui::Current()->render_rec;
         
         int hover_char_index = -1;
         int hover_token_index = -1;
         // Check for recursive tooltips
         if (!IsPointBlocked(GetMousePosition(), ui::Current()->z_layer)) {
-            int char_index = ui::Current()->TbGetCharacterIndex(GetMousePosition(), sb.c_str, TextAlignment::CONFORM);
+            int char_index = layout.GetCharacterIndex(GetMousePosition());
             for (int j=0; j < tokens.length; j++) {
                 if (char_index > tokens.start_positions[j] && char_index < tokens.end_positions[j]) {
                     hover_token_index = j;
@@ -717,15 +728,16 @@ void UIGlobals::_HandleMouseTips() {
         }
         // Add recursive tooltips
         if (hover_token_index >= 0) {
-            Rectangle rect = ui::Current()->TbGetTextRect(
-                sb.c_str, TextAlignment::CONFORM, tokens.start_positions[hover_token_index], 
-                tokens.end_positions[hover_token_index], hover_char_index
+            Rectangle rect = layout.GetTokenRect(
+                tokens.start_positions[hover_token_index], 
+                tokens.end_positions[hover_token_index], 
+                hover_char_index
             );
             //DrawRectangleLinesEx(rect, 1, GREEN);
 
             int substr_len =  tokens.end_positions[hover_token_index] - tokens.start_positions[hover_token_index];
             char* substr = new char[substr_len + 1];
-            strncpy(substr, &sb.c_str[tokens.start_positions[hover_token_index]], substr_len);
+            strncpy(substr, &sb_substr.c_str[tokens.start_positions[hover_token_index]], substr_len);
             substr[substr_len] = '\0';
             const char* new_hint = GetConceptDescription(substr);
             delete[] substr;
@@ -746,9 +758,10 @@ void UIGlobals::_HandleMouseTips() {
 
         // Draw 
         ui::Enclose();
-        ui::DecorateEx(sb.c_str, TextAlignment::CONFORM, &tokens);
-        ui::Write(sb.c_str);
+        ui::DecorateEx(&layout, &tokens);
+        ui::Current()->WriteLayout(&layout, true);
         if (i == mousehints.count-1) {
+            ui::VSpace(3);
             ui::Fillline(mousehints.lock_progress, Palette::ui_main, Palette::bg);
         }
         ui::Pop();

@@ -7,7 +7,9 @@
 
 // Reinventing the wheel, since I find stdlib stuff virtually impossible to debug
 
-extern void* _current_fn;
+namespace _current_fn {
+    extern void* _current_fn;
+}
 
 template <typename T>
 struct List {
@@ -77,6 +79,7 @@ struct List {
     }
 
     T Get(int index) const {
+        if (index < 0) return buffer[size + index];
         return buffer[index];
     }
 
@@ -108,20 +111,24 @@ struct List {
         return buffer[index];
     }
 
+    T operator[](int index) const {
+        return buffer[index];
+    }
+
     void Sort(SortFn *fn) {
         if (size <= 1) return;
-        _current_fn = (void*)fn;
+        _current_fn::_current_fn = (void*)fn;
         qsort(buffer, size, sizeof(T), _cmp_func);
-        _current_fn = NULL;
+        _current_fn::_current_fn = NULL;
     }
 
     static int _cmp_func(const void* a, const void* b) {
-        if (_current_fn == NULL) {
+        if (_current_fn::_current_fn == NULL) {
             FAIL("May only be called inside of Sort");
         }
         //SHOW_I(*(T*)a)
         //SHOW_I(*(T*)b)
-        return ((SortFn*)_current_fn)(*(T*)a, *(T*)b);
+        return ((SortFn*)_current_fn::_current_fn)(*(T*)a, *(T*)b);
     }
 };
 
