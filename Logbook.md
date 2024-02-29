@@ -332,3 +332,8 @@ Phoebe     ???
 There should be both an inconvenient and convenient way to make food, 
 the latter beeing dependant on a specific planet
 the fromer beeing maybe dependent on a finite resource
+
+
+## Status 26 Feb 24
+Planet-locked buildings implemented
+Idea: first build up, the cope with decline/breakup

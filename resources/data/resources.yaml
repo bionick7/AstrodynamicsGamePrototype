@@ -14,7 +14,7 @@ food:
   cost_volatility: 0.5
   max_noise: 2
 
-metal:
+steel:
   description: ...
   min_cost: 5.e+5
   max_cost: 8.e+5
@@ -44,7 +44,7 @@ co2:
 carbon:
   description: ...
 
-ore:
+iron_ore:
   description: ...
 
 aluminium_ore:

@@ -178,7 +178,7 @@ RID IDList::operator[](int index) const {
 
 static IDList::SortFn* _current_fn = NULL;
 
-int cmp_func(const void * a, const void * b) {
+int _cmp_func(const void * a, const void * b) {
     if (_current_fn == NULL) {
         FAIL("May only be called inside of Sort");
     }
@@ -190,7 +190,7 @@ int cmp_func(const void * a, const void * b) {
 void IDList::Sort(SortFn *fn) {
     if (size <= 1) return;
     _current_fn = fn;
-    qsort(buffer, size, sizeof(RID), cmp_func);
+    qsort(buffer, size, sizeof(RID), _cmp_func);
     _current_fn = NULL;
 }
 

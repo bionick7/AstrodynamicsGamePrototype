@@ -1152,7 +1152,7 @@ RID Ships::AddShip(const DataNode* data) {
     ship->Deserialize(data);
     if (data->Has("planet")) {  // not necaissary strictly, but far more human-readable
         const char* planet_name = data->Get("planet");
-        RID planet_id = GetPlanets()->GetIndexByName(planet_name);
+        RID planet_id = GetPlanets()->GetIdByName(planet_name);
         if (!IsIdValid(planet_id)) {
             FAIL("Error while initializing ship '%s': no such planet '%s'", ship->name, planet_name)
         }
@@ -1189,7 +1189,7 @@ int Ships::LoadShipClasses(const DataNode* data) {
         sc.max_capacity = ship_data->GetI("capacity", 0);
         sc.max_dv = ship_data->GetF("dv", 0) * 1000;  // km/s -> m/s
         sc.v_e = ship_data->GetF("Isp", 0) * 1000;    // km/s -> m/s
-        sc.fuel_resource = (ResourceType) FindResource(ship_data->Get("fuel"), RESOURCE_WATER);
+        sc.fuel_resource = (ResourceType) FindResource(ship_data->Get("fuel", "", true), RESOURCE_WATER);
         sc.construction_time = ship_data->GetI("construction_time", 20);
         sc.oem = ResourceCountsToKG(sc.max_capacity) / (exp(sc.max_dv/sc.v_e) - 1);
         sc.construction_batch_size = ship_data->GetI("batch_size", 1, true);
@@ -1258,7 +1258,7 @@ void Ships::KillShip(RID uuid, bool notify_callback) {
     if (notify_callback) {
         GetWrenInterface()->NotifyShipEvent(uuid, "die");
     }
-    alloc.Erase(uuid);
+    alloc.EraseAt(uuid);
 }
 
 const ShipClass* Ships::GetShipClassByRID(RID id) const {

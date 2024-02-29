@@ -71,24 +71,24 @@ void GlobalState::LoadData() {
 
     #define NUM 4
     const char* loading_paths[NUM] = {
-        "resources/data/ship_modules.yaml",
         "resources/data/ephemerides.yaml",
-        "resources/data/ship_classes.yaml",
         "resources/data/resources.yaml",
+        "resources/data/ship_modules.yaml",
+        "resources/data/ship_classes.yaml",
     };
 
     int (*load_funcs[NUM])(const DataNode*) = { 
-        LoadShipModules,
         LoadEphemerides,
-        LoadShipClasses,
         LoadResources,
+        LoadShipModules,
+        LoadShipClasses,
     };
 
     const char* declarations[NUM] {
-        "ShipModules",
         "Planets",
-        "ShipClasses",
         "Resources",
+        "ShipModules",
+        "ShipClasses",
     };
 
     int ammounts[NUM];

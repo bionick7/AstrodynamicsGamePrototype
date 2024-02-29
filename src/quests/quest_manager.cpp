@@ -36,7 +36,7 @@ void QuestManager::Make() {
 void QuestManager::Update(double dt) {
     timemath::Time now = GlobalGetNow();
 
-    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_Q)) show_ui = !show_ui;
+    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_ONE)) show_ui = !show_ui;
     
     // Remove all expired and completed quests
     for(auto it = active_quests.GetIter(); it; it++) {
@@ -47,29 +47,29 @@ void QuestManager::Update(double dt) {
                 bool is_in_transit = IsIdValid(task->ship) && !GetShip(task->ship)->IsParked();
                 if (task->pickup_expiration_time < now && !is_in_transit) {
                     bool success = active_quests[it]->CompleteTask(false);
-                    if (!success) active_quests.Erase(it.GetId());
-                    active_tasks.Erase(task_id);
+                    if (!success) active_quests.EraseAt(it.GetId());
+                    active_tasks.EraseAt(task_id);
                 }
                 else if (task->delivery_expiration_time < now) {
                     bool success = active_quests[it]->CompleteTask(false);;
-                    if (!success) active_quests.Erase(it.GetId());
-                    active_tasks.Erase(task_id);
+                    if (!success) active_quests.EraseAt(it.GetId());
+                    active_tasks.EraseAt(task_id);
                 }
                 break; }
             case Quest::WAIT: {
                 if (active_quests[it]->current.wait_until < now) {
                     bool success = active_quests[it]->TimePassed();
-                    if (!success) active_quests.Erase(it.GetId());
+                    if (!success) active_quests.EraseAt(it.GetId());
                 }
                 break;}
             case Quest::DONE:{
-                active_quests.Erase(it.GetId());
+                active_quests.EraseAt(it.GetId());
                 break;}
             case Quest::DAILOGUE:{
                 const Dialogue* dialogue = GetDialogue(active_quests[it]->current.dialogue);
                 if (dialogue->reply >= 0) {
                     bool success = active_quests[it]->AnswerDialogue(dialogue->reply);
-                    if (!success) active_quests.Erase(it.GetId());
+                    if (!success) active_quests.EraseAt(it.GetId());
                 }
                 break;}
             default: 
@@ -201,8 +201,8 @@ void QuestManager::AcceptQuest(RID quest_index) {
     q->CopyFrom(available_quests[quest_index]);
     q->id = id;
     bool success = q->StartQuest();
-    if (!success) active_quests.Erase(id);
-    available_quests.Erase(quest_index);
+    if (!success) active_quests.EraseAt(id);
+    available_quests.EraseAt(quest_index);
 }
 
 void QuestManager::ForceQuest(const WrenQuestTemplate *template_) {
@@ -211,7 +211,7 @@ void QuestManager::ForceQuest(const WrenQuestTemplate *template_) {
     q->AttachTemplate(template_);
     q->id = id;
     bool success = q->StartQuest();
-    if (!success) active_quests.Erase(id);
+    if (!success) active_quests.EraseAt(id);
 }
 
 RID QuestManager::CreateTask(RID quest_index) {
@@ -263,7 +263,7 @@ void QuestManager::CompleteTask(RID task_index) {
     Task* q = active_tasks[task_index];
     INFO("Task completed (M$M %f)", q->payout)
     active_quests[q->quest]->CompleteTask(true);
-    active_tasks.Erase(task_index);
+    active_tasks.EraseAt(task_index);
 }
 
 int QuestManager::GetAvailableQuests() const {
@@ -282,7 +282,7 @@ const Dialogue* QuestManager::GetDialogue(RID dialogue_index) const {
 }
 
 void QuestManager::EraseDialogue(RID dialogue_index) {
-    dialogues.Erase(dialogue_index);
+    dialogues.EraseAt(dialogue_index);
 }
 
 

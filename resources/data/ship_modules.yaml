@@ -5,7 +5,7 @@ shipmodules:
   description: Allows more efficient maneuvers around Titan and low Saturn orbit
   mass: 10
   construction_resources: 
-    metal: 10
+    steel: 10
   construction_time: 10
   icon_index: [8, 25]
 
@@ -14,7 +14,7 @@ shipmodules:
   description: The ship can hold 10 extra counts of water. Lost after use
   mass: 12
   construction_resources:
-    metal: 3
+    steel: 3
     water: 10
   construction_time: 2
   construction_batch_size: 1
@@ -28,7 +28,7 @@ shipmodules:
   mass: 10
   construction_time: 30
   construction_resources:
-    metal: 10
+    steel: 10
     electronics: 1
   icon_index: [31, 31]
 
@@ -39,7 +39,7 @@ shipmodules:
   mass: 10  # counts
   construction_time: 15
   construction_resources:
-    metal: 10
+    steel: 10
     electronics: 1
   icon_index: [8, 24]
 
@@ -50,18 +50,31 @@ shipmodules:
 #  consume: {} 
 #  mass: 10
 #  construction_resources:
-#    metal: 10
+#    steel: 10
 #  icon_index: [0, 0]
 
 - id: shpmod_ore_extractor
   name: ore extractor
   description: ""
-  produce: { ore: 4 }
+  produce: { iron_ore: 4, aluminium_ore: 4 }
   consume: { rock: 200 }
-  mass: 10
+  mass: 30
   construction_resources:
-    rock: 10
+    rock: 30
+    electronics: 1
   icon_index: [0, 0]
+
+- id: shpmod_carbon_extractor
+  name: carbon extractor
+  description: ""
+  produce: { carbon: 8 }
+  mass: 30
+  construction_resources:
+    rock: 30
+    electronics: 1
+  icon_index: [0, 0]
+  planets_restriction:
+  - Titan
 
 - id: shpmod_electrolyser
   name: electrolyser
@@ -70,14 +83,14 @@ shipmodules:
   consume: { water: 20 }
   mass: 10
   construction_resources:
-    metal: 10
+    steel: 10
   icon_index: [0, 0]
 
 - id: shpmod_smelter
   name: smelter
   description: ""
-  produce: { metal: 14, water: 7 }
-  consume: { ore: 20, hydrogen: 1 }
+  produce: { steel: 14, water: 7 }
+  consume: { iron_ore: 20, hydrogen: 1 }
   mass: 10
   construction_resources:
     rock: 10
@@ -90,7 +103,7 @@ shipmodules:
   consume: { hydrogen: 2, oxygen: 18 }
   mass: 10
   construction_resources:
-    metal: 10
+    steel: 10
   icon_index: [0, 0]
 
 - id: shpmod_habitat
@@ -98,9 +111,11 @@ shipmodules:
   description: ""
   produce: { waste: 20, co2: 10}
   consume: { food: 10, oxygen: 10, water: 10 }
-  mass: 10
+  mass: 80
   construction_resources:
-    metal: 10
+    steel: 50
+    electronics : 10
+    polymers : 20
   icon_index: [0, 0]
 
 - id: shpmod_carbon_splitter
@@ -110,7 +125,7 @@ shipmodules:
   consume: { co2: 11 }
   mass: 10
   construction_resources:
-    metal: 10
+    steel: 10
   icon_index: [0, 0]
 
 - id: shpmod_waste_treatment
@@ -118,9 +133,10 @@ shipmodules:
   description: ""
   produce: { biomass: 10, water: 10 }
   consume: { waste: 10, oxygen: 10 }
-  mass: 10
+  mass: 30
   construction_resources:
-    metal: 10
+    steel: 20
+    polymers: 10
   icon_index: [0, 0]
 
 - id: shpmod_farms
@@ -130,7 +146,7 @@ shipmodules:
   consume: { biomass: 10, co2: 10 }
   mass: 10
   construction_resources:
-    metal: 10
+    steel: 10
   icon_index: [0, 0]
 
 - id: shpmod_polymers
@@ -140,7 +156,9 @@ shipmodules:
   consume: { hydrogen: 1, oxygen: 1, carbon: 2 }
   mass: 10
   construction_resources:
-    metal: 10
+    steel: 10
+  planets_restriction:
+  - Mimas
   icon_index: [0, 0]
 
 - id: shpmod_electronics
@@ -148,23 +166,26 @@ shipmodules:
   description: ""
   produce: { waste: 60, electronics: 3 }
   consume: { water: 60, rock: 30, aluminium: 3, polymers: 2 }
-  mass: 10
+  mass: 30
   construction_resources:
-    metal: 10
+    steel: 10
+    polymers: 20
+  planets_restriction:
+  - Iaeptus
   icon_index: [0, 0]
 
 # water extractor :                                               => 1 water
 # rock extractor  :                                               => 1 rock
 # ore extractor   : 5 rock                                        => 1 ore
 # electrolyser    : 9 water                                       => 1 hydrogen + 8 oxygen
-# smelter         :20 metal ore   + 1 hydrogen                    =>14 metal   + 7 water
+# smelter         :20 iron ore    + 1 hydrogen                    =>14 steel   + 7 water
 # fuel cell       : 1 hydrogen    + 8 oxygen                      => 9 water
 # kitchen         : 1 food        + 1 oxygen      + 1 water       => 2 waste   + 1 co2
 # carbon splitter :11 co2                                         => 3 carbon  + 8 oxygen
 # waste treatment : 1 waste       + 1 oxygen                      => 1 biomass + 1 water
 # farms           : 1 biomass     + 1 co2                         => 1 food    + 1 oxygen
 # polymer prod    : 2 carbon      + 1 hydrogen    + 1 oxygen      => 3 polymers
-# semiconductors  : 1 metal       + 1 rock        +20 water       => 1 electronics
+# semiconductors  : 1 steel       + 1 rock        +20 water       => 1 electronics
 
 # Shipyard
 # Build modules: workshop + storage
@@ -176,7 +197,7 @@ shipmodules:
   mass: 10
   construction_time: 20
   construction_resources:
-    metal: 10
+    steel: 10
     electronics: 1
   icon_index: [8, 26]
 
@@ -186,7 +207,7 @@ shipmodules:
   mass: 20
   construction_time: 10
   construction_resources:
-    metal: 20
+    steel: 20
   icon_index: [9, 26]
 
 - id: shpmod_small_yard_3
@@ -195,7 +216,7 @@ shipmodules:
   mass: 40
   construction_time: 60
   construction_resources:
-    metal: 40
+    steel: 40
     electronics: 5
   icon_index: [10, 26]
 
@@ -205,7 +226,7 @@ shipmodules:
   mass: 20
   construction_time: 30
   construction_resources:
-    metal: 20
+    steel: 20
   icon_index: [11, 26]
 
 # Military
@@ -220,7 +241,7 @@ shipmodules:
   mass: 10
   construction_time: 10
   construction_resources:
-    metal: 20
+    steel: 20
   icon_index: [8, 27]
   
 - id: shpmod_missiles
@@ -230,7 +251,7 @@ shipmodules:
   mass: 10
   construction_time: 10
   construction_resources:
-    metal: 10
+    steel: 10
     electronics: 1
     water: 10
   icon_index: [9, 27]
@@ -244,7 +265,7 @@ shipmodules:
   mass: 10
   construction_time: 5
   construction_resources:
-    metal: 10
+    steel: 10
   icon_index: [10, 27]
 
 - id: shpmod_armor
@@ -257,7 +278,7 @@ shipmodules:
   mass: 20
   construction_time: 10
   construction_resources:
-    metal: 20
+    steel: 20
   icon_index: [11, 27]
   
 - id: shpmod_pdc
@@ -269,7 +290,7 @@ shipmodules:
   batch_size: 2
   construction_time: 10
   construction_resources:
-    metal: 5
+    steel: 5
     electronics: 1
   icon_index: [12, 27]
 
@@ -298,7 +319,7 @@ shipmodules:
   construction_time: 40
   construction_resources:
     electronics: 5
-    metal: 30
+    steel: 30
     water: 10
     uranium: 1
   icon_index: [6, 25]

@@ -3,63 +3,64 @@ focused_ship: -1
 player_faction: 0
 calendar:
   paused: y
-  time: 1063867.733333
-  time_scale: 32768.000000
+  time: 15958835.199991
+  time_scale: 16384.000000
 
 camera:
-  focus: -1
+  focus: 33554438
   fovy: 90.000000
-  position_x: 0.012069
-  position_y: 36.206123
-  position_z: 0.000000
+  position_x: 0.005694
+  position_y: 17.084011
+  position_z: -5.271415
 
 quests:
   active_quests: []
-  available_quests:
-  - active: n
-    await_type: 0
-    id: 83886080
-    template: raiders_reward
-
+  available_quests: []
   dialogues: []
 
 factions:
+- money: 0
+
 - money: 0
 
 planets:
 - allegiance: 0
   id: 16777216
   module_production_process: 0
-  name: Mimas
+  name: Low Saturn Orbit
   ship_production_process: 0
   trading_accessible: n
   resource_delta:
+    aluminium: 0
+    aluminium_ore: 0
     biomass: 0
     carbon: 0
     co2: 0
     electronics: 0
     food: 0
-    hydrogen: 0
-    metal: 0
-    ore: 0
+    hydrogen: 10
+    iron_ore: 0
     oxygen: 0
     polymers: 0
     rock: 0
+    steel: 0
     waste: 0
     water: 50
 
   resource_stock:
+    aluminium: 0
+    aluminium_ore: 0
     biomass: 0
     carbon: 0
     co2: 0
     electronics: 0
     food: 0
-    hydrogen: 0
-    metal: 0
-    ore: 0
+    hydrogen: 1000
+    iron_ore: 0
     oxygen: 0
     polymers: 0
     rock: 0
+    steel: 0
     waste: 0
     water: 1000
 
@@ -110,36 +111,40 @@ planets:
 - allegiance: 0
   id: 16777217
   module_production_process: 0
-  name: Encelladus
+  name: Rings
   ship_production_process: 0
   trading_accessible: n
   resource_delta:
+    aluminium: 0
+    aluminium_ore: 0
     biomass: 0
     carbon: 0
     co2: 0
     electronics: 0
     food: 0
     hydrogen: 0
-    metal: 2
-    ore: 0
+    iron_ore: 0
     oxygen: 0
     polymers: 0
     rock: 0
+    steel: 0
     waste: 0
-    water: 0
+    water: 50
 
   resource_stock:
+    aluminium: 0
+    aluminium_ore: 0
     biomass: 0
     carbon: 0
     co2: 0
-    electronics: 0
+    electronics: 6
     food: 0
     hydrogen: 0
-    metal: 24
-    ore: 0
+    iron_ore: 0
     oxygen: 0
     polymers: 0
     rock: 0
+    steel: 20
     waste: 0
     water: 1000
 
@@ -184,47 +189,48 @@ planets:
   - ---
   - ---
   - ---
-  module_production_queue:
-  - 67108868
-  - 67108869
-  - 67108868
+  module_production_queue: []
   ship_production_queue: []
 
 - allegiance: 0
   id: 16777218
   module_production_process: 0
-  name: Tethys
+  name: Mimas
   ship_production_process: 0
   trading_accessible: n
   resource_delta:
+    aluminium: 0
+    aluminium_ore: 0
     biomass: 0
     carbon: 0
     co2: 0
     electronics: 0
     food: 0
     hydrogen: 0
-    metal: 0
-    ore: 0
+    iron_ore: 0
     oxygen: 0
     polymers: 0
     rock: 0
+    steel: 0
     waste: 0
-    water: 0
+    water: 50
 
   resource_stock:
+    aluminium: 0
+    aluminium_ore: 0
     biomass: 0
-    carbon: 0
+    carbon: 26
     co2: 0
     electronics: 6
     food: 0
-    hydrogen: 0
-    metal: 0
-    ore: 0
-    oxygen: 0
-    polymers: 0
+    hydrogen: 21
+    iron_ore: 0
+    oxygen: 213
+    polymers: 9
     rock: 0
+    steel: 20
     waste: 0
-    water: 1000
+    water: 940
 
   inventory:
   - ---
@@ -273,41 +279,45 @@ planets:
 - allegiance: 0
   id: 16777219
   module_production_process: 0
-  name: Rhea
+  name: Encelladus
   ship_production_process: 0
   trading_accessible: n
   resource_delta:
+    aluminium: 0
+    aluminium_ore: 0
     biomass: 0
     carbon: 0
     co2: 0
     electronics: 0
     food: 0
     hydrogen: 0
-    metal: 0
-    ore: 0
+    iron_ore: 0
     oxygen: 0
     polymers: 0
     rock: 0
+    steel: 0
     waste: 0
-    water: 50
+    water: 0
 
   resource_stock:
+    aluminium: 0
+    aluminium_ore: 0
     biomass: 0
     carbon: 0
     co2: 0
-    electronics: 0
+    electronics: 6
     food: 0
     hydrogen: 0
-    metal: 0
-    ore: 0
+    iron_ore: 0
     oxygen: 0
     polymers: 0
     rock: 0
+    steel: 20
     waste: 0
-    water: 1000
+    water: 982
 
   inventory:
-  - shpmod_heatshield
+  - ---
   - ---
   - ---
   - ---
@@ -353,42 +363,46 @@ planets:
 - allegiance: 0
   id: 16777220
   module_production_process: 0
-  name: Titan
+  name: Tethys
   ship_production_process: 0
   trading_accessible: n
   resource_delta:
+    aluminium: 0
+    aluminium_ore: 0
     biomass: 0
     carbon: 0
     co2: 0
     electronics: 0
     food: 0
     hydrogen: 0
-    metal: 0
-    ore: 0
+    iron_ore: 0
     oxygen: 0
     polymers: 0
     rock: 0
+    steel: 0
     waste: 0
-    water: 80
+    water: 0
 
   resource_stock:
+    aluminium: 0
+    aluminium_ore: 0
     biomass: 0
     carbon: 0
     co2: 0
-    electronics: 0
+    electronics: 4
     food: 0
-    hydrogen: 0
-    metal: 0
-    ore: 0
-    oxygen: 0
+    hydrogen: 16
+    iron_ore: 0
+    oxygen: 342
     polymers: 0
-    rock: 0
+    rock: 5
+    steel: 69
     waste: 0
     water: 1000
 
   inventory:
-  - shpmod_droptank
-  - shpmod_droptank
+  - ---
+  - ---
   - ---
   - ---
   - ---
@@ -433,36 +447,40 @@ planets:
 - allegiance: 0
   id: 16777221
   module_production_process: 0
-  name: Iaeptus
+  name: Rhea
   ship_production_process: 0
   trading_accessible: n
   resource_delta:
+    aluminium: 0
+    aluminium_ore: 0
     biomass: 0
     carbon: 0
     co2: 0
-    electronics: 1
+    electronics: 0
     food: 0
     hydrogen: 0
-    metal: 1
-    ore: 0
+    iron_ore: 0
     oxygen: 0
     polymers: 0
-    rock: 0
+    rock: 300
+    steel: 0
     waste: 0
-    water: 40
+    water: 50
 
   resource_stock:
+    aluminium: 0
+    aluminium_ore: 656
     biomass: 0
-    carbon: 0
+    carbon: 11
     co2: 0
-    electronics: 12
+    electronics: 0
     food: 0
-    hydrogen: 0
-    metal: 1000
-    ore: 0
-    oxygen: 0
+    hydrogen: 304
+    iron_ore: 16
+    oxygen: 1000
     polymers: 0
-    rock: 0
+    rock: 1000
+    steel: 287
     waste: 0
     water: 1000
 
@@ -513,36 +531,208 @@ planets:
 - allegiance: 0
   id: 16777222
   module_production_process: 0
+  name: Titan
+  ship_production_process: 0
+  trading_accessible: n
+  resource_delta:
+    aluminium: 0
+    aluminium_ore: 0
+    biomass: 0
+    carbon: 10
+    co2: 0
+    electronics: 0
+    food: 0
+    hydrogen: 0
+    iron_ore: 0
+    oxygen: 0
+    polymers: 0
+    rock: 0
+    steel: 0
+    waste: 0
+    water: 20
+
+  resource_stock:
+    aluminium: 0
+    aluminium_ore: 0
+    biomass: 0
+    carbon: 1000
+    co2: 0
+    electronics: 6
+    food: 0
+    hydrogen: 0
+    iron_ore: 0
+    oxygen: 0
+    polymers: 0
+    rock: 70
+    steel: 12
+    waste: 0
+    water: 1000
+
+  inventory:
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  module_production_queue: []
+  ship_production_queue: []
+
+- allegiance: 0
+  id: 16777223
+  module_production_process: 0
+  name: Iaeptus
+  ship_production_process: 0
+  trading_accessible: n
+  resource_delta:
+    aluminium: 0
+    aluminium_ore: 0
+    biomass: 0
+    carbon: 0
+    co2: 0
+    electronics: 1
+    food: 0
+    hydrogen: 0
+    iron_ore: 0
+    oxygen: 0
+    polymers: 0
+    rock: 0
+    steel: 1
+    waste: 0
+    water: 40
+
+  resource_stock:
+    aluminium: 0
+    aluminium_ore: 0
+    biomass: 0
+    carbon: 0
+    co2: 0
+    electronics: 190
+    food: 0
+    hydrogen: 0
+    iron_ore: 0
+    oxygen: 0
+    polymers: 0
+    rock: 0
+    steel: 204
+    waste: 0
+    water: 1000
+
+  inventory:
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  module_production_queue: []
+  ship_production_queue: []
+
+- allegiance: 0
+  id: 16777224
+  module_production_process: 0
   name: Phoebe
   ship_production_process: 0
   trading_accessible: n
   resource_delta:
+    aluminium: 0
+    aluminium_ore: 0
     biomass: 0
     carbon: 0
     co2: 0
     electronics: 0
     food: 0
     hydrogen: 0
-    metal: 0
-    ore: 0
+    iron_ore: 0
     oxygen: 0
     polymers: 0
     rock: 0
+    steel: 0
     waste: 0
     water: 0
 
   resource_stock:
+    aluminium: 0
+    aluminium_ore: 0
     biomass: 0
     carbon: 0
     co2: 0
-    electronics: 0
+    electronics: 6
     food: 0
     hydrogen: 0
-    metal: 0
-    ore: 0
+    iron_ore: 0
     oxygen: 0
     polymers: 0
     rock: 0
+    steel: 20
     waste: 0
     water: 1000
 
@@ -603,8 +793,8 @@ ships:
   - 0
   - 0
   modules:
-  - ---
-  - ---
+  - shpmod_electrolyser
+  - shpmod_polymers
   - ---
   - ---
   - ---
@@ -655,7 +845,7 @@ ships:
   class_id: shp_light_transport
   id: 33554434
   name: Extractor
-  planet: Encelladus
+  planet: Tethys
   resource_id: -1
   resource_qtt: 0
   dammage_taken:
@@ -697,7 +887,7 @@ ships:
   - shpmod_small_yard_2
   - shpmod_small_yard_3
   - shpmod_small_yard_4
-  - ---
+  - shpmod_water_extractor
   - ---
   - ---
   - ---
@@ -715,7 +905,7 @@ ships:
   class_id: shp_express
   id: 33554436
   name: Express
-  planet: Tethys
+  planet: Titan
   resource_id: -1
   resource_qtt: 0
   dammage_taken:
@@ -742,138 +932,18 @@ ships:
   prepared_plans: []
 
 - allegiance: 0
-  class_id: shp_bulk_transport
+  class_id: shp_light_transport
   id: 33554437
-  name: Heavy Transport 1
-  planet: Encelladus
-  resource_id: -1
-  resource_qtt: 0
-  dammage_taken:
-  - 0
-  - 0
-  - 0
-  modules:
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  prepared_plans: []
-
-- allegiance: 0
-  class_id: shp_bulk_transport
-  id: 33554438
-  name: Heavy Transport 2
-  planet: Encelladus
-  resource_id: -1
-  resource_qtt: 0
-  dammage_taken:
-  - 0
-  - 0
-  - 0
-  modules:
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  prepared_plans: []
-
-- allegiance: 0
-  class_id: shp_light_transport
-  id: 33554439
-  name: Light transport I
-  planet: Titan
-  resource_id: -1
-  resource_qtt: 0
-  dammage_taken:
-  - 0
-  - 0
-  - 0
-  modules:
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  prepared_plans: []
-
-- allegiance: 0
-  class_id: shp_light_transport
-  id: 33554440
-  name: Light transport II
-  planet: Titan
-  resource_id: -1
-  resource_qtt: 0
-  dammage_taken:
-  - 0
-  - 0
-  - 0
-  modules:
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  - ---
-  prepared_plans: []
-
-- allegiance: 0
-  class_id: shp_light_transport
-  id: 33554441
   name: Light transport III
   planet: Rhea
-  resource_id: -1
-  resource_qtt: 0
+  resource_id: 12
+  resource_qtt: 11
   dammage_taken:
   - 0
   - 0
   - 0
   modules:
-  - ---
+  - shpmod_heatshield
   - ---
   - ---
   - ---
@@ -893,7 +963,7 @@ ships:
 
 - allegiance: 0
   class_id: shp_light_transport
-  id: 33554442
+  id: 33554438
   name: Light transport IV
   planet: Rhea
   resource_id: -1
@@ -923,7 +993,7 @@ ships:
 
 - allegiance: 0
   class_id: shp_spacestation
-  id: 33554443
+  id: 33554439
   name: Titan Shipyard
   planet: Titan
   resource_id: -1
@@ -933,12 +1003,12 @@ ships:
   - 0
   - 0
   modules:
-  - shpmod_small_yard_1
-  - shpmod_small_yard_2
-  - shpmod_small_yard_3
-  - shpmod_small_yard_4
-  - shpmod_pdc
-  - shpmod_pdc
+  - shpmod_carbon_extractor
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
   - ---
   - ---
   - ---
@@ -953,7 +1023,7 @@ ships:
 
 - allegiance: 0
   class_id: shp_spacestation
-  id: 33554444
+  id: 33554440
   name: Rhea Shipyard
   planet: Rhea
   resource_id: -1
@@ -967,10 +1037,10 @@ ships:
   - shpmod_small_yard_2
   - shpmod_small_yard_3
   - shpmod_small_yard_4
-  - ---
-  - ---
-  - ---
-  - ---
+  - shpmod_ore_extractor
+  - shpmod_smelter
+  - shpmod_electrolyser
+  - shpmod_electrolyser
   - ---
   - ---
   - ---
@@ -983,7 +1053,7 @@ ships:
 
 - allegiance: 0
   class_id: shp_bulk_transport
-  id: 33554445
+  id: 33554441
   name: Heavy Transport 1
   planet: Titan
   resource_id: -1
@@ -1013,7 +1083,7 @@ ships:
 
 - allegiance: 0
   class_id: shp_express
-  id: 33554446
+  id: 33554442
   name: Transport ship 1
   planet: Iaeptus
   resource_id: -1
@@ -1023,10 +1093,10 @@ ships:
   - 0
   - 0
   modules:
-  - shpmod_missiles
-  - shpmod_missiles
-  - shpmod_light_armor
-  - shpmod_acs
+  - ---
+  - ---
+  - ---
+  - ---
   - ---
   - ---
   - ---
@@ -1043,7 +1113,7 @@ ships:
 
 - allegiance: 0
   class_id: shp_express
-  id: 33554447
+  id: 33554443
   name: Transport ship 2
   planet: Phoebe
   resource_id: -1
@@ -1053,10 +1123,10 @@ ships:
   - 0
   - 0
   modules:
-  - shpmod_missiles
-  - shpmod_missiles
-  - shpmod_light_armor
-  - shpmod_acs
+  - ---
+  - ---
+  - ---
+  - ---
   - ---
   - ---
   - ---
@@ -1073,7 +1143,7 @@ ships:
 
 - allegiance: 0
   class_id: shp_spacestation
-  id: 33554448
+  id: 33554444
   name: Iaeptus Shipyard
   planet: Iaeptus
   resource_id: -1
@@ -1083,12 +1153,42 @@ ships:
   - 0
   - 0
   modules:
-  - shpmod_small_yard_1
-  - shpmod_small_yard_2
-  - shpmod_small_yard_3
-  - shpmod_small_yard_4
-  - shpmod_small_yard_3
-  - shpmod_small_yard_4
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  prepared_plans: []
+
+- allegiance: 0
+  class_id: shp_bulk_transport
+  id: 33554445
+  name: TODO: random name
+  planet: Rhea
+  resource_id: -1
+  resource_qtt: 0
+  dammage_taken:
+  - 0
+  - 0
+  - 0
+  modules:
+  - ---
+  - shpmod_water_extractor
+  - ---
+  - ---
+  - ---
+  - ---
   - ---
   - ---
   - ---

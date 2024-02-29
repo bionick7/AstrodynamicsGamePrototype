@@ -6,4 +6,3 @@ enable_player_ai: y
 sdf_text: y
 show_fps: n
 skip_postprocessing: n
-

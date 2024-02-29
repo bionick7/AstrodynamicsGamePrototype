@@ -442,6 +442,7 @@ void TransferPlanUI::Update() {
             // Is overriding tot_dv a good idea?
             plan->tot_dv = plan->dv1[plan->primary_solution];
         }
+        //DebugPrintText("%s has atmosphere ? %s", GetPlanet(plan->arrival_planet)->name, GetPlanet(plan->arrival_planet)->has_atmosphere ? "y" : "n");
         is_valid = plan->num_solutions > 0 && plan->tot_dv <= ship_instance->GetCapableDV();
         is_valid = is_valid && GlobalGetNow() < plan->departure_time;
 
@@ -669,10 +670,12 @@ void TransferPlanUI::DrawUI() {
     sb.Clear();
 
     double total_dv = plan->tot_dv;
-    sb.AddFormat("\u0394V Tot    %5.3f km/s\n", total_dv/1000.0);
+    sb.AddFormat("\u0394V Tot    %5.3f km/s", total_dv/1000.0);
     double savings = plan->dv1[plan->primary_solution] + plan->dv2[plan->primary_solution] - total_dv;
     if (savings != 0) {
-        sb.AddFormat("  Saved   %5.3f km/s\n", savings/1000.0);
+        sb.AddFormat("  [%5.3f km/s saved]\n", savings/1000.0);
+    } else {
+        sb.Add("\n");
     }
     resource_count_t capacity = ship_instance->GetRemainingPayloadCapacity(total_dv);
     resource_count_t max_capacity = ship_instance->GetRemainingPayloadCapacity(0);

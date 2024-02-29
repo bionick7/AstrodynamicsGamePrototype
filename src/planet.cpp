@@ -63,7 +63,7 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
     allegiance = data->GetI("allegiance", 0);
     ship_production_queue.DeserializeFrom(data, "ship_production_queue", true);
     module_production_queue.DeserializeFrom(data, "module_production_queue", true);
-    RID index = planets->GetIndexByName(name);
+    RID index = planets->GetIdByName(name);
     if (!IsIdValid(index)) {
         return;
     }
@@ -273,8 +273,10 @@ void Planet::AdvanceModuleProductionQueue() {
     if (module_production_queue.size == 0) return;
     if (!CanProduce(module_production_queue[0])) {
         // TODO: notify the player
+        ERROR("CANNOT PRODUCE %s on %s", GetModule(module_production_queue[0])->name, name)
         return;
     }
+    SHOW_I(module_production_process)
     module_production_process++;
     const ShipModuleClass* smc = GetModule(module_production_queue[0]);
     if (module_production_process < smc->GetConstructionTime()) return;
@@ -307,7 +309,7 @@ Planets::~Planets() {
 
 RID Planets::AddPlanet(const DataNode* data) {
     //entity_map.insert({uuid, planet_entity});
-    RID id = GetIndexByName(data->Get("name", "UNNAMED"));
+    RID id = GetIdByName(data->Get("name", "UNNAMED"));
     if (!IsIdValid(id)) return id;
     planet_array[IdGetIndex(id)].Deserialize(this, data);
     planet_array[IdGetIndex(id)].Update();
@@ -333,7 +335,7 @@ int Planets::GetPlanetCount() const {
     return planet_count;
 }
 
-RID Planets::GetIndexByName(const char* planet_name) const {
+RID Planets::GetIdByName(const char* planet_name) const {
     // Returns NULL if planet_name not found
     for(int i=0; i < planet_count; i++) {
         if (strcmp(ephemerides[i].name, planet_name) == 0) {

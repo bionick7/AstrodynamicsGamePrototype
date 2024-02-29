@@ -103,7 +103,7 @@ struct IDAllocatorList {
         return RID(free_index, E);
     }
 
-    void Erase(RID id) {
+    void EraseAt(RID id) {
         Get(id)->~T();
         uint32_t index = IdGetIndex(id);
         if (index >= capacity) {

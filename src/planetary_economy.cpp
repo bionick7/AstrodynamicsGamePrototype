@@ -119,9 +119,15 @@ void PlanetaryEconomy::RecalcEconomy() {
     }
 }
 
+int resources_scroll = 0;
 void PlanetaryEconomy::UIDrawResources(ResourceTransfer transfer, ResourceTransfer fuel) {
     if (global_resource_data[0].name[0] == 0) {
         FAIL("Resources uninititalized")
+    }
+    int total_size = (DEFAULT_FONT_SIZE+4+8) * (RESOURCE_MAX + 1);
+    int available_size = ui::Current()->height - ui::Current()->y_cursor;
+    if (total_size > available_size) {
+        ui::PushScrollInset(0, available_size, total_size, &resources_scroll);
     }
     for (int i=0; i < RESOURCE_MAX; i++) {
         char buffer[50];
@@ -154,9 +160,12 @@ void PlanetaryEconomy::UIDrawResources(ResourceTransfer transfer, ResourceTransf
             sprintf(buffer, "   %+3d", qtt);
             ui::WriteEx(buffer, TextAlignment::CONFORM, false);
         }
-        ui::Fillline(resource_stock[i] / resource_capacity[i], Palette::ui_main, Palette::bg);
+        ui::Fillline(resource_stock[i] / (double)resource_capacity[i], Palette::ui_main, Palette::bg);
         ui::Pop();  // Inset
         //TextBoxLineBreak(&tb);
+    }
+    if (total_size > available_size) {
+        ui::Pop();  // ScrollInset
     }
 }
 

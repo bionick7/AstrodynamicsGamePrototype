@@ -48,7 +48,7 @@ Near-term, realizable only
 - Show battle-log after battle (done)
 
 - Select planet when clicking on orbit (Done)
-- list ships to select next to planet
+- list ships to select next to planet (Done)
 - jump from ship to parent ship and plane (Done)
 - shift-click in inventory to switch inventory (Done)
 - ships icons (Done)
@@ -126,7 +126,7 @@ Art:
 
 UX tweaking:
 - V Select planet when clicking on orbit
--   list ships to select next to planet
+- V list ships to select next to planet
 - V jump from ship to parent ship and planet
 - V shift-click in inventory to switch inventory
 - V warn before committing to an empty transform ("empty" in red or required to choose it explicitly)

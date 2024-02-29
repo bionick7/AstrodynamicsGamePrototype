@@ -257,8 +257,16 @@ void Planet::DrawUI() {
         return;
     }
 
+
     ui::CreateNew(10, y_start, 340, height, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg);
     ui::Enclose();
+
+    if (IsKeyPressed(KEY_Q)) current_tab = 0;
+    //if (IsKeyPressed(KEY_W)) current_tab = 1;
+    if (IsKeyPressed(KEY_E)) current_tab = 2;
+    if (IsKeyPressed(KEY_A)) current_tab = 3;
+    if (IsKeyPressed(KEY_S)) current_tab = 4;
+    if (IsKeyPressed(KEY_D)) current_tab = 5;
 
     ui::PushInset(4, (DEFAULT_FONT_SIZE+4)*2);  // Tab container
     int w = ui::Current()->width;

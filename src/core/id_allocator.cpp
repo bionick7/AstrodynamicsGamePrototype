@@ -27,15 +27,15 @@ int IDAllocatorListTests() {
     }
     //INFO("%016zX", *list.verifier_array)
     TEST_ASSERT_EQUAL(list[TSTID(23)]->m0, 23);
-    list.Erase(TSTID(2));
-    list.Erase(TSTID(3));
+    list.EraseAt(TSTID(2));
+    list.EraseAt(TSTID(3));
     TEST_ASSERT_EQUAL(list.Allocate(NULL), TSTID(3))
     TEST_ASSERT_EQUAL(list.Allocate(NULL), TSTID(2))
     TEST_ASSERT_EQUAL(list.Allocate(NULL), TSTID(40))
     TEST_ASSERT_EQUAL(list[TSTID(23)]->m0, 23);
-    list.Erase(TSTID(17));
-    list.Erase(TSTID(8));
-    list.Erase(TSTID(15));
+    list.EraseAt(TSTID(17));
+    list.EraseAt(TSTID(8));
+    list.EraseAt(TSTID(15));
     list.Allocate(NULL);
 
     DataNode dn;
@@ -57,13 +57,13 @@ int IDAllocatorListTests() {
     int tot_size = list.Count();
     for(auto i = list.GetIter(); i.counter < tot_size; i++) {
         if (i.counter % 2 == 0) {
-            list.Erase(i.GetId());
+            list.EraseAt(i.GetId());
         }
     }
     tot_size = list.Count();
     for(auto i = list.GetIter(); i.counter < tot_size; i++) {
         if (i.counter % 2 == 0) {
-            list.Erase(i.GetId());
+            list.EraseAt(i.GetId());
         }
     }
     
@@ -72,7 +72,7 @@ int IDAllocatorListTests() {
     auto it = list.GetIter(); it++;
     TEST_ASSERT_EQUAL(list[it]->m0, 7.0)
     for(int i=0; i < 100; i++) {
-        list.Erase(TSTID(i));
+        list.EraseAt(TSTID(i));
     }
 
     list.AllocateAtID(TSTID(100));

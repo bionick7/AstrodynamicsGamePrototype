@@ -3,7 +3,7 @@
 #include "ui.hpp"
 #include "debug_drawing.hpp"
 #include "constants.hpp"
-
+#include "text_utils.hpp"
 
 void Calendar::Make(timemath::Time t0) {
     time_scale = 2048*8;

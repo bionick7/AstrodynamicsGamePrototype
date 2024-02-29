@@ -16,8 +16,8 @@ const char* GetCmdSetting(int argc, const char** argv, const char* find) {
 }
 
 void TestingSetup(GlobalState* app) {
-    /*RID planet_1 = GetPlanets()->GetIndexByName("Tethys");
-    RID planet_2 = GetPlanets()->GetIndexByName("Titan");
+    /*RID planet_1 = GetPlanets()->GetIdByName("Tethys");
+    RID planet_2 = GetPlanets()->GetIdByName("Titan");
     double dv1, dv2;
     HohmannTransfer(&GetPlanet(planet_1)->orbit, &GetPlanet(planet_2)->orbit, 0, NULL, NULL, &dv1, &dv2);
     INFO("dv1: %f, dv2: %f", dv1, dv2)

@@ -41,6 +41,9 @@ void ShipModuleClass::UpdateCustom(Ship* ship) const {
     bool new_day = GetCalendar()->IsNewDay();
     if (ship->IsParked()) {
         Planet* planet = GetPlanet(ship->GetParentPlanet());
+        if (((1ull << IdGetIndex(planet->id)) & planets_restriction) == 0) {
+            return;
+        }
         for (int i=0; i < RESOURCE_MAX; i++) {
             if (planet->economy.resource_stock[i] < consumption[i]) {
                 return;
@@ -62,7 +65,7 @@ bool ShipModuleClass::HasDependencies() const {
 }
 
 int ShipModuleClass::GetConstructionTime() const {
-    return construction_time / 4;
+    return construction_time;
 }
 
 void ShipModuleClass::MouseHintWrite() const {
@@ -165,6 +168,17 @@ int ShipModules::Load(const DataNode* data) {
         ship_modules[i].is_hidden = strcmp(module_data->Get("hidden", "n", true), "y") == 0;
         ship_modules[i].construction_time = module_data->GetI("construction_time", 20, !ship_modules[i].is_hidden);
         ship_modules[i].construction_batch_size = module_data->GetI("construction_batch_size", 1, true);
+        if (module_data->HasArray("planets_restriction")) {
+            int planets_restriction_size = module_data->GetArrayLen("planets_restriction");
+            ship_modules[i].planets_restriction = 0;
+            for(int j=0; j < planets_restriction_size; j++) {
+                int index = IdGetIndex(GetPlanets()->GetIdByName(module_data->GetArrayElem("planets_restriction", j)));
+                ship_modules[i].planets_restriction |= 1ull << index;
+            }
+            //INFO("%lX, %s", (long int)ship_modules[i].planets_restriction, ship_modules[i].name)
+        } else {
+            ship_modules[i].planets_restriction = UINT64_MAX;
+        }
 
         module_data->FillBufferWithChild("add", ship_modules[i].delta_stats, ShipStats::MAX, ship_stat_names);
         module_data->FillBufferWithChild("require", ship_modules[i].required_stats, ShipStats::MAX, ship_stat_names);

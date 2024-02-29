@@ -7,6 +7,7 @@
 #include "string_builder.hpp"
 #include "dialogue.hpp"
 #include "wren_interface.hpp"
+#include "list.hpp"
 
 void OnTestFail(const char* identifier) {
     // Seperated, so you can put a breakpoint in here
@@ -24,10 +25,11 @@ void OnTestFail(const char* identifier) {
 
 int UnitTests() {
     INFO("Running Tests");
-    RETURN_OR_CONTINUE(TransferPlanTests());
-    RETURN_OR_CONTINUE(DataNodeTests());
     RETURN_OR_CONTINUE(TimeTests());
     RETURN_OR_CONTINUE(IDAllocatorListTests());
+    RETURN_OR_CONTINUE(ListTests());
+    RETURN_OR_CONTINUE(DataNodeTests());
+    RETURN_OR_CONTINUE(TransferPlanTests());
     RETURN_OR_CONTINUE(StringBuilderTests());
     RETURN_OR_CONTINUE(DialogueTests());
     RETURN_OR_CONTINUE(WrenTests());

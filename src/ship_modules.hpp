@@ -67,6 +67,7 @@ struct ShipModuleClass {
     resource_count_t consumption[RESOURCE_MAX];
     resource_count_t construction_resources[RESOURCE_MAX];
     int construction_batch_size;
+    uint64_t planets_restriction;
 
     double mass;  // kg
     char name[100];

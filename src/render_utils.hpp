@@ -16,20 +16,8 @@ namespace OrbitRenderMode {
     };
 }
 
-
 bool ShaderNeedReload(Shader shader);
-
 void ReloadShaders();
-
-int GetCharacterIndex(Vector2 position, Font font, const char *text, float fontSize, float spacing);
-Rectangle GetTextRect(int token_start, int token_end, int token_from, Font font, const char *text, float fontSize, float spacing);
-std::vector<Rectangle> GetTextRects(const TokenList* tokens, Font font, const char *text, float fontSize, float spacing);
-
-void InternalDrawText(const char *text, Vector2 position, Color color);
-void InternalDrawTextEx(Font font, const char *text, Vector2 position, 
-                        float fontSize, float spacing, Color tint);
-void InternalDrawTextEx(Font font, const char *text, Vector2 position, float fontSize, 
-                        float spacing, Color tint, Rectangle render_rect, uint8_t z_layer);
 void DrawTextureSDF(Texture2D texture, Rectangle source, Rectangle dest, 
                     Vector2 origin, float rotation, Color tint, uint8_t z_layer);
 

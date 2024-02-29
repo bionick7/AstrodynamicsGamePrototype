@@ -312,7 +312,7 @@ void TimelineClose() {
 void DrawTimeline() {
 
     // Manage viewing
-    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_W)) {
+    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_TWO)) {
         show_timeline = !show_timeline;
     }
     if (!show_timeline) return;

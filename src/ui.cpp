@@ -7,6 +7,7 @@
 #include "debug_console.hpp"
 #include "debug_drawing.hpp"
 #include "render_utils.hpp"
+#include "text_utils.hpp"
 
 Vector2 ApplyAlignment(Vector2 anchorpoint, Vector2 size, TextAlignment::T alignment) {
     switch(alignment & TextAlignment::HFILTER){

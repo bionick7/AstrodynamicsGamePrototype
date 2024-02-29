@@ -66,7 +66,7 @@ void AppMetaStep() {
     }
     // TODO: recompile raylib without screenshot stuff
     if (IsKeyPressed(KEY_F2)) {  // Disable when on steam
-        DatedScreenShot();
+        //DatedScreenShot();
     }
 }
 

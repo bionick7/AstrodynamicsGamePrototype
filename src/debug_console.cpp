@@ -226,7 +226,7 @@ void GiveResource(const char* prompt) {
         return;
     }
 
-    Planet* planet = GetPlanet(GetPlanets()->GetIndexByName(planet_name));
+    Planet* planet = GetPlanet(GetPlanets()->GetIdByName(planet_name));
     if (planet == NULL) {
         PushLine("No such planet");
     }

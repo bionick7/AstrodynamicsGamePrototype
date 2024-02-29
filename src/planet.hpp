@@ -86,7 +86,7 @@ struct Planets {
     Planets();
     ~Planets();
     RID AddPlanet(const DataNode* data);
-    RID GetIndexByName(const char* planet_name) const;
+    RID GetIdByName(const char* planet_name) const;
     Planet* GetPlanet(RID id) const;
     const PlanetNature* GetPlanetNature(RID id) const;
     int GetPlanetCount() const;
