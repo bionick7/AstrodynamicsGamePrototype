@@ -276,7 +276,6 @@ void Planet::AdvanceModuleProductionQueue() {
         ERROR("CANNOT PRODUCE %s on %s", GetModule(module_production_queue[0])->name, name)
         return;
     }
-    SHOW_I(module_production_process)
     module_production_process++;
     const ShipModuleClass* smc = GetModule(module_production_queue[0]);
     if (module_production_process < smc->GetConstructionTime()) return;

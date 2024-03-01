@@ -575,16 +575,21 @@ Rectangle ui::MeasureTextEx(const char *text, TextAlignment::T alignemnt) {
 
 void ui::Fillline(double value, Color fill_color, Color background_color) {
     TextBox* tb = ui::Current();
-    int y_end = tb->text_start_y + tb->y_cursor + 20;
-    if (y_end > tb->render_rec.y + tb->render_rec.height || y_end < tb->render_rec.y)
-        return;
-    
+    int y = tb->text_start_y + tb->y_cursor + 20;    
     int x_start = ClampInt(tb->text_start_x, tb->render_rec.x, tb->render_rec.x + tb->render_rec.width);
     int x_end = ClampInt(tb->text_start_x + tb->width, tb->render_rec.x, tb->render_rec.x + tb->render_rec.width);
-    int x_mid_point = ClampInt(tb->text_start_x + tb->width * value, tb->render_rec.x, tb->render_rec.x + tb->render_rec.width);
+    ui::FilllineEx(x_start, x_end, y, value, fill_color, background_color);
+}
+
+void ui::FilllineEx(int x_start, int x_end, int y, double value, Color fill_color, Color background_color) {
+    TextBox* tb = ui::Current();
+    if (y > tb->render_rec.y + tb->render_rec.height || y < tb->render_rec.y)
+        return;
+    
+    int x_mid_point = ClampInt(x_start + (x_end - x_start) * value, tb->render_rec.x, tb->render_rec.x + tb->render_rec.width);
     BeginRenderInUIMode(tb->z_layer);
-    DrawLine(x_start, y_end, x_end, y_end, background_color);
-    DrawLine(x_start, y_end, x_mid_point, y_end, fill_color);
+    DrawLine(x_start, y, x_end, y, background_color);
+    DrawLine(x_start, y, x_mid_point, y, fill_color);
     //DrawLine(x_mid_point, y_end, x_mid_point, y_end - 4, fill_color);
     EndRenderInUIMode();
 }

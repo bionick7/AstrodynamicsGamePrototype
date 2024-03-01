@@ -32,7 +32,10 @@ struct DataNode {
 
     static void CopyTo(const DataNode* from, DataNode* to);
 
-    static int FromFile(DataNode* out, const char* filepath, FileFormat fmt = FileFormat::Auto, bool isReadonly = false, bool quiet = false);
+    static int FromMemory(DataNode* out, const char* origin, const char* text,
+                          FileFormat fmt = FileFormat::Auto, bool isReadonly = false, bool quiet = false);
+    static int FromFile(DataNode* out, const char* filepath, 
+                        FileFormat fmt = FileFormat::Auto, bool isReadonly = false, bool quiet = false);
     //static std::vector<DataNode> ManyFromFile(const char* filepath, FileFormat fmt = FileFormat::Auto);
     //void ToFile(const char* filepath, FileFormat format);
     static int FromYaml(DataNode* dn, const char* filepath, yaml_parser_t* yaml, bool isReadonly=false, int recursion_depth=0);

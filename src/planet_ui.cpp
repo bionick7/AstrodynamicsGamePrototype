@@ -102,10 +102,24 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
     ui::Write(sb.c_str);
 }
 
-void _UIDrawProduction(const Planet* planet, int option_size, IDList* queue, double progress,
-    RID id_getter(int), AtlasPos icon_getter(RID), bool include_getter(RID)
-) {
+void _UIDrawProduction(Planet* planet, EntityType type) {
     // Draw options
+    int option_size;
+    IDList* queue;
+    double progress = 0;
+    if (type == EntityType::SHIP_CLASS) {
+        option_size = GetShips()->ship_classes_count;
+        queue = &planet->ship_production_queue;
+        if (queue->size > 0) {
+            progress = planet->ship_production_process / (float)GetShipClassByRID(queue->Get(0))->construction_time;
+        }
+    } else if (type == EntityType::MODULE_CLASS) {
+        option_size = GetShipModules()->shipmodule_count;
+        queue = &planet->module_production_queue;
+        if (queue->size > 0) {
+            progress = planet->module_production_process / (float)GetModule(queue->Get(0))->construction_time;
+        }
+    }
     int margin = 3;
     int columns = ui::Current()->width / (SHIP_MODULE_WIDTH + margin);
     int rows = std::ceil(option_size / (double)columns);
@@ -113,10 +127,23 @@ void _UIDrawProduction(const Planet* planet, int option_size, IDList* queue, dou
     ui::Shrink(5, 5);
 
     RID hovered_id = GetInvalidId();
+
     for(int i=0; i < option_size; i++) {
-        RID id = id_getter(i);
-        if (!include_getter(id)) {
-            continue;
+        RID id = RID(i, type);
+        AtlasPos atlas_pos;
+        if (type == EntityType::SHIP_CLASS) {
+            const ShipClass* sc = GetShipClassByRID(id);
+            if (sc->is_hidden) {
+                continue;
+            }
+            atlas_pos = sc->icon_index;
+        }
+        if (type == EntityType::MODULE_CLASS) {
+            const ShipModuleClass* smc = GetModule(id);
+            if (smc->is_hidden) {
+                continue;
+            }
+            atlas_pos = smc->icon_index;
         }
         ui::PushGridCell(columns, rows, i % columns, i / columns);
         ui::Shrink(margin, margin);
@@ -133,8 +160,7 @@ void _UIDrawProduction(const Planet* planet, int option_size, IDList* queue, dou
         if ((button_state & ButtonStateFlags::JUST_PRESSED) && planet->CanProduce(id)) {
             queue->Append(id);
         }
-
-        ui::DrawIcon(icon_getter(id), Palette::ui_main, ui::Current()->height);
+        ui::DrawIcon(atlas_pos, Palette::ui_main, ui::Current()->height);
         //ui::Fillline(1.0, Palette::ui_main, Palette::bg);
         //ui::Write(ship_class->description);
         ui::Pop();  // GridCell
@@ -145,6 +171,15 @@ void _UIDrawProduction(const Planet* planet, int option_size, IDList* queue, dou
     bool hover_over_queue = false;
     for(int i=0; i < queue->size; i++) {
         RID id = queue->Get(i);
+        AtlasPos atlas_pos;
+        if (type == EntityType::SHIP_CLASS) {
+            const ShipClass* sc = GetShipClassByRID(id);
+            atlas_pos = sc->icon_index;
+        } else if (type == EntityType::MODULE_CLASS) {
+            const ShipModuleClass* smc = GetModule(id);
+            atlas_pos = smc->icon_index;
+        }
+
         ui::PushInset(0, SHIP_MODULE_HEIGHT + margin +2);
         ui::Shrink(margin, margin);
         ButtonStateFlags::T button_state = ui::AsButton();
@@ -157,13 +192,22 @@ void _UIDrawProduction(const Planet* planet, int option_size, IDList* queue, dou
         }
         if (button_state & ButtonStateFlags::JUST_PRESSED) {
             queue->EraseAt(i);
+
+            if (type == EntityType::SHIP_CLASS) {
+                planet->ship_production_process = 0;
+            } else if (type == EntityType::MODULE_CLASS) {
+                planet->module_production_process = 0;
+            }
             i--;
         }
-        ui::DrawIconSDF(icon_getter(id), Palette::ui_main, ui::Current()->height);
+        ui::DrawIconSDF(atlas_pos, Palette::ui_main, ui::Current()->height);
         if (i == 0) {
-            ui::Fillline(progress, Palette::ui_main, Palette::bg);
+            ui::FilllineEx(
+                ui::Current()->text_start_x,
+                ui::Current()->text_start_x + ui::Current()->width,
+                ui::Current()->text_start_y + ui::Current()->height,
+                progress, Palette::ui_main, Palette::bg);
         }
-        _ProductionQueueMouseHint(id, NULL);
         ui::Pop();  // Inset
     }
     if (IsIdValid(hovered_id)) {
@@ -176,36 +220,6 @@ void _UIDrawProduction(const Planet* planet, int option_size, IDList* queue, dou
         }
         ui::Pop();
     }
-}
-
-void Planet::_UIDrawModuleProduction() {
-    double progress = 0.0;
-    if (module_production_queue.Count() > 0) {
-        const ShipModuleClass* module_class = GetModule(module_production_queue[0]);
-        progress = Clamp(module_production_process / (float)module_class->GetConstructionTime(), 0.0f, 1.0f);
-    }
-    _UIDrawProduction(
-        this, GetShipModules()->shipmodule_count,
-        &module_production_queue, progress,
-        [](int i) { return RID(i, EntityType::MODULE_CLASS); },
-        [](RID id) { return GetModule(id)->icon_index; },
-        [](RID id) { return !GetModule(id)->is_hidden; }
-    );
-}
-
-void Planet::_UIDrawShipProduction() {
-    double progress = 0.0;
-    if (ship_production_queue.Count() > 0) {
-        const ShipClass* ship_class = GetShipClassByRID(ship_production_queue[0]);
-        progress = Clamp(ship_production_process / (float)ship_class->construction_time, 0.0f, 1.0f);
-    }
-    _UIDrawProduction(
-        this, GetShips()->ship_classes_count,
-        &ship_production_queue, progress,
-        [](int i) { return RID(i, EntityType::SHIP_CLASS); },
-        [](RID id) { return GetShipClassByRID(id)->icon_index; },
-        [](RID id) { return !GetShipClassByRID(id)->is_hidden; }
-    );
 }
 
 int current_tab = 0;  // Global variable, I suppose
@@ -321,10 +335,10 @@ void Planet::DrawUI() {
         // Quests
         break;
     case 4:
-        _UIDrawShipProduction();
+        _UIDrawProduction(this, EntityType::SHIP_CLASS);
         break;
     case 5:
-        _UIDrawModuleProduction();
+        _UIDrawProduction(this, EntityType::MODULE_CLASS);
         break;
     }
 

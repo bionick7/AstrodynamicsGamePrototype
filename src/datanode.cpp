@@ -64,6 +64,32 @@ void DataNode::CopyTo(const DataNode* from, DataNode* to) {
     to->IsReadOnly = from->IsReadOnly;
 }
 
+int _YamlParseFromText(DataNode* node, const char* origin, const char* text, bool quiet) {
+    yaml_parser_t parser;
+
+    yaml_parser_initialize(&parser);
+    yaml_parser_set_input_string(&parser, (const unsigned char*) text, strlen(text));
+
+    // consume until you reach map_start
+    int status = -1;    
+    yaml_event_t event;
+    while (true) {
+        if (!yaml_parser_parse(&parser, &event)) break;
+        if (event.type == YAML_MAPPING_START_EVENT) break;
+        if (event.type == YAML_STREAM_END_TOKEN) goto EMPTY_STREAM;
+    }
+
+    status = DataNode::FromYaml(node, origin, &parser, false, 0);
+    if (status != 0) {
+        FAIL("Error when reading '%s' (parsed from text)", origin)
+    }
+
+    EMPTY_STREAM:
+    yaml_event_delete(&event);
+    yaml_parser_delete(&parser);
+    return status;
+}
+
 int _YamlParse(DataNode* node, const char* filepath, bool quiet) {
     yaml_parser_t parser;
 
@@ -90,6 +116,36 @@ int _YamlParse(DataNode* node, const char* filepath, bool quiet) {
     yaml_parser_delete(&parser);
     fclose(file);
     return status;
+}
+
+int DataNode::FromMemory(DataNode* out, const char* origin, const char* text,
+                         FileFormat fmt, bool isReadonly, bool quiet) {
+    switch (fmt) {
+        case FileFormat::Auto: {
+            if (IsFileExtension(origin, ".json")) {
+                fmt = FileFormat::JSON;
+            } else if (IsFileExtension(origin, ".csv")) {
+                fmt = FileFormat::CSV;
+            } else if (IsFileExtension(origin, ".yaml")) {
+                fmt = FileFormat::YAML;
+            } else {
+                return 1;
+            }
+            FromMemory(out, origin, text, fmt, isReadonly);
+            out->IsReadOnly = true;
+            return 0;
+        }
+        case FileFormat::YAML: {
+            _YamlParseFromText(out, origin, text, quiet);
+            out->IsReadOnly = true;
+            return 0;
+        }
+        case FileFormat::JSON:
+        case FileFormat::CSV:
+        default: {
+            return 1;
+        }
+    }
 }
 
 int DataNode::FromFile(DataNode* out, const char* filepath, FileFormat fmt, bool isReadonly, bool quiet) {

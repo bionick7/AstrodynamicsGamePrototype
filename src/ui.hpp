@@ -187,6 +187,7 @@ namespace ui {
     void DecorateEx(const text::Layout* layout, const TokenList* tokens);
     Rectangle MeasureTextEx(const char* text, TextAlignment::T alignemnt);
     void Fillline(double value, Color fill_color, Color background_color);
+    void FilllineEx(int x_start, int x_end, int y, double value, Color fill_color, Color background_color);
     ButtonStateFlags::T DirectButton(const char* text, int inset);
     ButtonStateFlags::T ToggleButton(bool on);
     void HelperText(const char* description);

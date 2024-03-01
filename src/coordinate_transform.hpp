@@ -27,22 +27,6 @@ struct Calendar {
     timemath::Time GetFrameElapsedGameTime() const;
 };
 
-/*struct CoordinateTransform {
-    float space_scale;
-    Vector2 focus;
-
-    void Make();
-    void Serialize(DataNode* data) const;
-    void Deserialize(const DataNode* data);
-
-    Vector2 TransformV(Vector2 p) const;
-    Vector2 InvTransformV(Vector2 p) const;
-    double TransformS(double p) const;
-    double InvTransformS(double p) const;
-    void TransformBuffer(Vector2* buffer, int buffer_size) const;
-    void HandleInput(double delta_t);
-};*/
-
 struct GameCamera {
     // m per game unit
     static constexpr double space_scale = 1e8;

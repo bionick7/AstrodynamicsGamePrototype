@@ -8,6 +8,7 @@
 #include "dialogue.hpp"
 #include "wren_interface.hpp"
 #include "list.hpp"
+#include "assets.hpp"
 
 void OnTestFail(const char* identifier) {
     // Seperated, so you can put a breakpoint in here
@@ -33,6 +34,7 @@ int UnitTests() {
     RETURN_OR_CONTINUE(StringBuilderTests());
     RETURN_OR_CONTINUE(DialogueTests());
     RETURN_OR_CONTINUE(WrenTests());
+    RETURN_OR_CONTINUE(AssetTests());
     INFO("All tests Sucessfull\n");
     return 0;
 }

@@ -1174,7 +1174,7 @@ ships:
 - allegiance: 0
   class_id: shp_bulk_transport
   id: 33554445
-  name: TODO: random name
+  name: "TODO: random name"
   planet: Rhea
   resource_id: -1
   resource_qtt: 0

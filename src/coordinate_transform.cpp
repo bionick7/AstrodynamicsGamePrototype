@@ -91,21 +91,16 @@ void GameCamera::Deserialize(const DataNode* data) {
 }
 
 void GameCamera::HandleInput() {
-    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_HOME)) {
-        rl_camera.target = Vector3Zero();
-        rl_camera.position = { 0.001f, 3.0f, 0.0f };
-        focus_object = GetInvalidId();
-    }
 
     float dist = Vector3Distance(rl_camera.position, rl_camera.target);
     Vector3 view_dir = Vector3Scale(Vector3Subtract(rl_camera.target, rl_camera.position), 1/dist);
 
-    if (IsIdValidTyped(focus_object, EntityType::PLANET)) {
+    /*if (IsIdValidTyped(focus_object, EntityType::PLANET)) {
         rl_camera.target = (Vector3) (GetPlanet(focus_object)->position.cartesian / space_scale);
     }
     if (IsIdValidTyped(focus_object, EntityType::SHIP)) {
         rl_camera.target = (Vector3) (GetShip(focus_object)->position.cartesian / space_scale);
-    }
+    }*/
     
     float scroll_ratio = 1 - 0.1 * GetMouseWheelMove();
     if (scroll_ratio != 1 && !GetUI()->IsPointBlocked(GetMousePosition(), 0)) {
@@ -134,6 +129,13 @@ void GameCamera::HandleInput() {
             Vector3 in_plane_delta = Vector3Subtract(current_impact, prev_impact);
             rl_camera.target = Vector3Add(rl_camera.target, in_plane_delta);
         }
+    }
+    
+    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_HOME)) {
+        rl_camera.target = Vector3Zero();
+        rl_camera.position = Vector3Subtract(rl_camera.target, Vector3Scale(view_dir, dist));
+        //rl_camera.position = { 0.001f, 3.0f, 0.0f };
+        focus_object = GetInvalidId();
     }
 
     rl_camera.position = Vector3Subtract(rl_camera.target, Vector3Scale(view_dir, dist));
