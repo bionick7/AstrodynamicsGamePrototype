@@ -159,10 +159,9 @@ void text::Layout::DrawTextLayout(Font font, float fontSize, Color tint, Rectang
     if (font.texture.id == 0) font = GetFontDefault();  // (Raylib cmt) Security check in case of not valid font
 
     if (GetSettingBool("sdf_text", false)) {
-        RELOAD_IF_NECAISSARY(sdf_shader)
-        float z_layer_f = 1.0f - z_layer / 256.0f;
-        SetShaderValue(sdf_shader::shader, sdf_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT);
-        BeginShaderMode(sdf_shader::shader);
+        BeginRenderSDFInUIMode(z_layer);
+    } else {
+        BeginRenderInUIMode(z_layer);
     }
 
     for (int i = 0; i < size;) {
@@ -187,9 +186,7 @@ void text::Layout::DrawTextLayout(Font font, float fontSize, Color tint, Rectang
         i += codepointByteCount;   // (Raylib cmt) Move text bytes counter to next codepoint
     }
 
-    if (GetSettingBool("sdf_text", false)) {
-        EndShaderMode();
-    }
+    EndRenderInUIMode();
 }
 
 void text::DrawText(const char *text, Vector2 position, Color color) {

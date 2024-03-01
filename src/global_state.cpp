@@ -47,9 +47,7 @@ void _PauseMenu() {
     }
     if (_PauseMenuButton("Load")) {
         INFO("Load")
-        DataNode dn;
-        DataNode::FromFile(&dn, "save.yaml", FileFormat::YAML, true, false);
-        GetGlobalState()->Deserialize(&dn);
+        GetGlobalState()->LoadGame("save.yaml");
     }
     if (_PauseMenuButton("Exit")) {
         exit(0);
@@ -95,12 +93,12 @@ void GlobalState::LoadData() {
     
     for (int i=0; i < NUM; i++) {
         INFO("Loading %s", declarations[i])
-        DataNode data;
-        if (DataNode::FromFile(&data, loading_paths[i], FileFormat::YAML, true) != 0) {
-            FAIL("Could not load save %s", loading_paths[i]);
+        const DataNode* data = assets::GetData(loading_paths[i]);
+        if (data == NULL) {
+            FAIL("Could not load resource %s", loading_paths[i]);
         }
 
-        ammounts[i] = load_funcs[i](&data);
+        ammounts[i] = load_funcs[i](data);
     }
 
     for (int i=0; i < NUM; i++) {
@@ -113,15 +111,6 @@ void GlobalState::LoadData() {
     // Load static shaders
 
     #undef NUM
-}
-
-void GlobalState::LoadGame(const char* file_path) {
-    DataNode game_data = DataNode();
-    if (DataNode::FromFile(&game_data, file_path, FileFormat::YAML, true) != 0) {
-        FAIL("Could not load save %s", file_path);
-    }
-
-    Deserialize(&game_data);
 }
 
 GlobalState::FocusablesPanels _GetCurrentFocus(GlobalState* gs) {
@@ -245,8 +234,7 @@ void GlobalState::UpdateState(double delta_t) {
     camera.HandleInput();
 
     if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_F5)) {
-        ReloadShaders();
-        RenderServer::ReloadShaders();
+        assets::Reload();
     }
 
     // AI update
@@ -303,6 +291,22 @@ void GlobalState::DrawUI() {
 
 bool GlobalState::IsKeyBoardFocused() const {
     return IsInDebugConsole();
+}
+
+void GlobalState::LoadGame(const char* file_path) {
+    DataNode game_data = DataNode();
+    if (DataNode::FromFile(&game_data, file_path, FileFormat::YAML, true) != 0) {
+        FAIL("Could not load save %s", file_path);
+    }
+
+    Deserialize(&game_data);
+}
+
+void GlobalState::SaveGame(const char* file_path) const {
+    DataNode game_data = DataNode();
+
+    Serialize(&game_data);
+    game_data.WriteToFile("save.yaml", FileFormat::YAML);
 }
 
 void GlobalState::Serialize(DataNode* data) const {

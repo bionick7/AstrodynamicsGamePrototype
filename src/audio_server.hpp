@@ -13,14 +13,19 @@ enum SFX_ID {
     SFX_MAX
 };
 
+static const char* sound_paths[] = {
+    "resources/sound/SFX/Click_Standard_00.wav",    // SFX_CLICK_BUTTON
+    "resources/sound/SFX/Click_Electronic_01.wav",  // SFX_ERROR
+    "resources/sound/SFX/ClickMechanic1.wav",       // SFX_CLICK_SHORT
+    "resources/sound/SFX/Click_Electronic_14.wav",  // SFX_CANCEL
+};
+
 struct AudioServer {
-    int LoadSFX();
     void PlaySFX(SFX_ID id);
     void StartMusic();
     void Update(double delta_t);
 
     Music current_ambience;
-    Sound sound_array[SFX_MAX];
 };
 
 void PlaySFX(SFX_ID id);

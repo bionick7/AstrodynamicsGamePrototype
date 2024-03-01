@@ -37,7 +37,6 @@ void Load(int argc, const char** argv) {
     }
 
     GlobalState* app = GetGlobalState();
-    GetAudioServer()->LoadSFX();
     //GetAudioServer()->StartMusic();
 
     app->Make(1e6);

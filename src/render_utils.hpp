@@ -4,6 +4,7 @@
 #include "dvector3.hpp"
 #include "string_builder.hpp"
 #include "basic.hpp"
+#include "assets.hpp"
 
 struct OrbitSegment;
 struct Text3D;
@@ -17,10 +18,10 @@ namespace OrbitRenderMode {
 }
 
 bool ShaderNeedReload(Shader shader);
-void ReloadShaders();
 void DrawTextureSDF(Texture2D texture, Rectangle source, Rectangle dest, 
                     Vector2 origin, float rotation, Color tint, uint8_t z_layer);
 
+void BeginRenderSDFInUIMode(uint8_t z_layer);
 void BeginRenderInUIMode(uint8_t z_layer);
 void EndRenderInUIMode();
 
@@ -33,16 +34,8 @@ void RenderDeferred(RenderTexture render_target);
 
 struct AtlasPos;
 
-#define RELOAD_IF_NECAISSARY(shader_name) if (!IsShaderReady(shader_name::shader)) { shader_name::Load(); }
-#define LOAD_SHADER(shader_name) shader_name::shader = LoadShader("resources/shaders/"#shader_name".vs", "resources/shaders/"#shader_name".fs");
-#define LOAD_SHADER_FS(shader_name) shader_name::shader = LoadShader(NULL, "resources/shaders/"#shader_name".fs");
+#define RELOAD_IF_NECAISSARY(shader_name) if (!assets::IsShaderLoaded(shader_name::shader)) { shader_name::Load(); }
+#define LOAD_SHADER(shader_name) shader_name::shader = assets::GetShader("resources/shaders/"#shader_name);
 #define LOAD_SHADER_UNIFORM(shader_name, uniform_name) shader_name::uniform_name = GetShaderLocation(shader_name::shader, #uniform_name);
-
-namespace sdf_shader {
-    extern Shader shader;
-    extern int depth;
-    void Load();
-    void UnLoad();
-}
 
 #endif  // RENDER_UTILS_H

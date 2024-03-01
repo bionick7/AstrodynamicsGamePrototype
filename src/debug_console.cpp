@@ -4,6 +4,7 @@
 #include "constants.hpp"
 #include "global_state.hpp"
 #include "basic.hpp"
+#include "assets.hpp"
 
 #define SETTINGS_FILE_PATH "settings.yaml"
 
@@ -187,8 +188,7 @@ void ListSettings(const char* prompt) {
 }
 
 void ReloadShaders(const char* prompt) {
-    ReloadShaders();
-    RenderServer::ReloadShaders();
+    assets::Reload();
 }
 
 void SaveSettings(const char* prompt) {

@@ -12,13 +12,7 @@
 namespace icon_shader {
     Shader shader;
 
-    void Load() {
-        shader = LoadShader(0, "resources/shaders/icon_shader.fs");
-    }
-
-    void UnLoad() {
-        UnloadShader(shader);
-    }
+    void Load() { LOAD_SHADER(icon_shader) }
 }
 
 void Icon3D::Draw() const {
@@ -89,13 +83,9 @@ namespace text3d_shader {
     int useSdf = -1;
     
     void Load() {
-        LOAD_SHADER_FS(text3d_shader)
+        LOAD_SHADER(text3d_shader)
         LOAD_SHADER_UNIFORM(text3d_shader, ndcDepth)
         LOAD_SHADER_UNIFORM(text3d_shader, useSdf)
-    }
-
-    void UnLoad() {
-        UnloadShader(shader);
     }
 }
 
@@ -355,12 +345,4 @@ void RenderServer::Draw() {
     // Postprocessing etc.
     RenderDeferred(render_targets[0]);
     RenderDeferred(render_targets[1]);
-}
-
-void RenderServer::ReloadShaders() {
-    icon_shader::UnLoad();
-    text3d_shader::UnLoad();
-    
-    icon_shader::Load();
-    text3d_shader::Load();
 }

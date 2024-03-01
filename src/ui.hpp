@@ -143,8 +143,6 @@ struct UIGlobals {
         static int Hash(Rectangle origin_button);
     } mousehints;
 
-    DataNode concept_descriptions;
-
     void UIInit();
     void UIStart();
     void UIEnd();

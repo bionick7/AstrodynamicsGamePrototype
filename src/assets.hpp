@@ -5,13 +5,19 @@
 #include "datanode.hpp"
 
 namespace assets {
+    static uint64_t HashKey(const char* key);
+
     unsigned char* GetResourceBytes(const char* filepath, int* size);
     char* GetResourceText(const char* filepath);
 
     Texture2D GetTexture(const char* path);
-    Sound GetSound(const char* path);
+    Image GetImage(const char* path);
     Shader GetShader(const char* path);
-    DataNode* GetData(const char* path);
+    Sound GetSound(const char* path);
+    const DataNode* GetData(const char* path);
+
+    bool IsTextureLoaded(Texture2D instance);
+    bool IsShaderLoaded(Shader instance);
 
     void Reload();
 
@@ -72,6 +78,13 @@ namespace assets {
             capacity = 0;
         }
     };
+
+    template<typename T> Table<T>* GetTable();
+
+    template <typename T>
+    bool Has(const char* path) {
+        return GetTable<T>()->Find(HashKey(path)) >= 0;
+    }
 }
 
 int AssetTests();

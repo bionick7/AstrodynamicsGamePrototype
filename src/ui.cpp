@@ -838,10 +838,7 @@ bool UIGlobals::IsPointBlocked(Vector2 pos, uint8_t z_layer) const {
 }
 
 const char* UIGlobals::GetConceptDescription(const char* key) {
-    if (concept_descriptions.GetFieldCount() == 0) {
-        DataNode::FromFile(&concept_descriptions, "resources/data/concepts.yaml");
-    }
-    return concept_descriptions.Get(key, "No descritpion found", true);
+    return assets::GetData("resources/data/concepts.yaml")->Get(key, "No descritpion found", true);
 }
 
 Texture2D UIGlobals::GetIconAtlas() {

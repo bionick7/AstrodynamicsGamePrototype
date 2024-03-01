@@ -67,15 +67,14 @@ void _ColorToFloat4Buffer(float buffer[], Color color) {
     buffer[3] = (float)color.a / 255.0f;
 }
 
-Shader sdf_shader::shader;
-int sdf_shader::depth = -1;
-void sdf_shader::Load() {
-    LOAD_SHADER_FS(sdf_shader)
-    LOAD_SHADER_UNIFORM(sdf_shader, depth)
-}
+namespace sdf_shader {
+    Shader shader;
+    int depth = -1;
 
-void sdf_shader::UnLoad() {
-    UnloadShader(shader);
+    void Load() {
+        LOAD_SHADER(sdf_shader)
+        LOAD_SHADER_UNIFORM(sdf_shader, depth)
+    }
 }
 
 namespace ui_shader {
@@ -83,12 +82,8 @@ namespace ui_shader {
     int depth = -1;
 
     void Load() {
-        LOAD_SHADER_FS(ui_shader)
+        LOAD_SHADER(ui_shader)
         LOAD_SHADER_UNIFORM(ui_shader, depth)
-    }
-
-    void UnLoad() {
-        UnloadShader(shader);
     }
 }
 
@@ -100,6 +95,13 @@ void DrawTextureSDF(Texture2D texture, Rectangle source, Rectangle dest,
     SetShaderValue(sdf_shader::shader, sdf_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT);
     DrawTexturePro(texture, source, dest, origin, rotation, tint);
     EndShaderMode();
+}
+
+void BeginRenderSDFInUIMode(uint8_t z_layer) {
+    RELOAD_IF_NECAISSARY(sdf_shader)
+    BeginShaderMode(sdf_shader::shader);
+    float z_layer_f = 1.0f - z_layer / 256.0f;
+    SetShaderValue(sdf_shader::shader, sdf_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT);
 }
 
 void BeginRenderInUIMode(uint8_t z_layer) {
@@ -131,10 +133,6 @@ namespace orbit_shader {
         LOAD_SHADER_UNIFORM(orbit_shader, current_anomaly)
         LOAD_SHADER_UNIFORM(orbit_shader, render_mode)
         LOAD_SHADER_UNIFORM(orbit_shader, color)
-    }
-
-    void UnLoad() {
-        UnloadShader(shader);
     }
 }
 
@@ -214,10 +212,6 @@ namespace planet_shader {
         LOAD_SHADER_UNIFORM(planet_shader, rimColor)
         LOAD_SHADER_UNIFORM(planet_shader, fillColor)
     }
-
-    void UnLoad() {
-        UnloadShader(shader);
-    }
 }
 
 void RenderPerfectSphere(DVector3 world_position, double radius, Color color) {
@@ -293,10 +287,6 @@ namespace rings_shader {
         LOAD_SHADER_UNIFORM(rings_shader, innerRad)
         LOAD_SHADER_UNIFORM(rings_shader, bgColor)
     }
-
-    void UnLoad() {
-        UnloadShader(shader);
-    }
 }
 
 void RenderRings(DVector3 normal, double min_rad, double max_rad, Color color) {
@@ -331,7 +321,6 @@ namespace skybox_shader {
     int matCamera;
     int starMap;
 
-    Texture2D starmap;
     float palette_vec[4*4];
     
     void Load() {
@@ -342,18 +331,11 @@ namespace skybox_shader {
         LOAD_SHADER_UNIFORM(skybox_shader, matCamera)
         LOAD_SHADER_UNIFORM(skybox_shader, starMap)
 
-        skybox_shader::starmap = LoadTexture("resources/textures/starmap_4k.jpg");
-        //skybox_shader::starmap = LoadTexture("resources/textures/vsauce.png");
         
         _ColorToFloat4Buffer(&palette_vec[4*0], Palette::bg);
         _ColorToFloat4Buffer(&palette_vec[4*1], Palette::ui_dark);
         _ColorToFloat4Buffer(&palette_vec[4*3], Palette::ui_alt);
         _ColorToFloat4Buffer(&palette_vec[4*2], Palette::ui_alt);
-    }
-
-    void UnLoad() {
-        UnloadTexture(skybox_shader::starmap);
-        UnloadShader(shader);
     }
 }
 
@@ -375,10 +357,11 @@ void RenderSkyBox() {
 	SetShaderValue(skybox_shader::shader, skybox_shader::fov, &fov, SHADER_ATTRIB_FLOAT);
 	SetShaderValueV(skybox_shader::shader, skybox_shader::palette, &skybox_shader::palette_vec, SHADER_ATTRIB_VEC4, 4);
 	SetShaderValueMatrix(skybox_shader::shader, skybox_shader::matCamera, camera_matrix);
-    SetShaderValueTexture(skybox_shader::shader, skybox_shader::starMap, skybox_shader::starmap);
 
-    //skybox_shader::starmap = LoadTexture("resources/textures/vsauce.png");
-    DrawTexture(skybox_shader::starmap, INT32_MAX, INT32_MAX, WHITE);
+    Texture2D starmap = assets::GetTexture("resources/textures/starmap_4k.jpg");
+    SetShaderValueTexture(skybox_shader::shader, skybox_shader::starMap, starmap);
+
+    DrawTexture(starmap, INT32_MAX, INT32_MAX, WHITE);
     //rlDisableDepthTest();
     //rlDisableDepthMask();
     BeginShaderMode(skybox_shader::shader);
@@ -395,12 +378,8 @@ namespace postprocessing_shader {
     int depthMap = -1;
     
     void Load() {
-        shader = LoadShader(NULL, "resources/shaders/postprocessing_shader.fs");
+        LOAD_SHADER(postprocessing_shader)
         LOAD_SHADER_UNIFORM(postprocessing_shader, depthMap);
-    }
-
-    void UnLoad() {
-        UnloadShader(shader);
     }
 }
 
@@ -422,22 +401,6 @@ void RenderDeferred(RenderTexture render_target) {
 
 bool ShaderNeedReload(Shader shader) {
     return !IsShaderReady(shader);
-}
-
-void ReloadShaders() {
-    sdf_shader::UnLoad();
-    orbit_shader::UnLoad();
-    planet_shader::UnLoad();
-    rings_shader::UnLoad();
-    skybox_shader::UnLoad();
-    postprocessing_shader::UnLoad();
-    
-    sdf_shader::Load();
-    orbit_shader::Load();
-    planet_shader::Load();
-    rings_shader::Load();
-    skybox_shader::Load();
-    postprocessing_shader::Load();
 }
 
 AtlasPos::AtlasPos(int x, int y) {

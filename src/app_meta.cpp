@@ -3,6 +3,7 @@
 #include "logging.hpp"
 #include "debug_console.hpp"
 #include "global_state.hpp"
+#include "assets.hpp"
 #include <time.h>
 
 const char* WINDOW_TITLE = "Astro navigation game prototype";

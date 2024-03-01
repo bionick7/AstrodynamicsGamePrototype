@@ -40,7 +40,6 @@ struct RenderServer {
     void OnScreenResize();
 
     void Draw();
-    static void ReloadShaders();
 };
 
 #endif  // RENDER_SERVER_H

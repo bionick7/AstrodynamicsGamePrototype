@@ -50,7 +50,6 @@ struct GlobalState {
     // Lifecycle
     void Make(timemath::Time time);
     void LoadData();
-    void LoadGame(const char* file_path);
     // Update
     void UpdateState(double delta_t);
     // Draw
@@ -63,6 +62,8 @@ struct GlobalState {
     cost_t GetMoney(int faction);
 
     // Serialization
+    void LoadGame(const char* file_path);
+    void SaveGame(const char* file_path) const;
     void Serialize(DataNode* dn) const;
     void Deserialize(const DataNode* dn);
 
