@@ -661,10 +661,7 @@ void ui::SetMouseHint(const char* text) {
 }
 
 void UIGlobals::UIInit() {
-    if (IsTextureReady(default_font.texture) && IsTextureReady(default_font_sdf.texture)) return;
-    default_font = LoadFont("resources/fonts/space_mono_small.fnt");
-    default_font_sdf = LoadFont("resources/fonts/space_mono_small_sdf.fnt");
-    SetTextureFilter(default_font_sdf.texture, TEXTURE_FILTER_BILINEAR);  // Very important step
+    SetTextureFilter(assets::GetFont("resources/fonts/space_mono_small_sdf.fnt").texture, TEXTURE_FILTER_BILINEAR);  // Very important step
     SetTextLineSpacing(20);
 }
 
@@ -842,17 +839,11 @@ const char* UIGlobals::GetConceptDescription(const char* key) {
 }
 
 Texture2D UIGlobals::GetIconAtlas() {
-    if (!IsTextureReady(default_font.texture)) {
-        UIInit();
-    }
-    return default_font.texture;
+    return assets::GetFont("resources/fonts/space_mono_small.fnt").texture;
 }
 
 Texture2D UIGlobals::GetIconAtlasSDF() {
-    if (!IsTextureReady(default_font_sdf.texture)) {
-        UIInit();
-    }
-    return default_font_sdf.texture;
+    return assets::GetFont("resources/fonts/space_mono_small_sdf.fnt").texture;
 }
 
 void UIGlobals::MouseHints::AddHint(Rectangle origin_button, Vector2 anchor, const char *hint) {
@@ -885,13 +876,13 @@ int UIGlobals::MouseHints::Hash(Rectangle origin_button) {
 }
 
 Font GetCustomDefaultFont() {
-    if (!IsTextureReady(GetUI()->default_font.texture) || !IsTextureReady(GetUI()->default_font_sdf.texture)) {
-        GetUI()->UIInit();
+    Font font;
+    if (GetSettingBool("sdf_text", false)) {
+        font = assets::GetFont("resources/fonts/space_mono_small_sdf.fnt");
+    } else  {
+        font = assets::GetFont("resources/fonts/space_mono_small.fnt");
     }
-    if (GetSettingBool("sdf_text", false))
-        return GetUI()->default_font_sdf;
-    else
-        return GetUI()->default_font;
+    return font;
 }
 
 ButtonStateFlags::T DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color) {

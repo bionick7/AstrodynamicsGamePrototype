@@ -1,67 +1,79 @@
 #include "logging.hpp"
-#include "raylib.h"
-
 #include <stdio.h>
+#include <cstring>
 #include <time.h>
 
-FILE** outputs = NULL;
-int outputs_len = 0;
-bool log_to_console = true;
+// Avoid raylib functions to avoid logging recursion
+
+namespace logging {   
+    #define LOGGING_BUFFER_SIZE 1  // Force no buffer
+    char buffer[LOGGING_BUFFER_SIZE];
+    char target_file[FILENAME_MAX] = "";
+
+    long time_since_last_save = 0;
+    bool log_to_console = true;
+    int buffer_offset = 0;
+}
 
 // TODO: periodically save logs
 
 void LogSetOutput(const char* filename) {
-    LogCloseOutputs();
-    outputs_len = 1;
-    outputs = new FILE*[1];
-    outputs[0] = fopen(filename, "w");
-    fprintf(outputs[0], "Log Start");
-}
-
-void LogSetOutputs(const char* filenames[]) {
-    LogCloseOutputs();
-    outputs_len = sizeof(filenames) / sizeof(const char*);
-    if (outputs_len == 0) return;
-    outputs = new FILE*[outputs_len];
-    for (int i=0; i < outputs_len; i++){
-        outputs[i] = fopen(filenames[i], "w");
-        fprintf(outputs[i], "Log Start");
-    }
-}
-
-void LogCloseOutputs() {
-    for (int i=0; i < outputs_len; i++){
-        fclose(outputs[i]);
-    }
-    delete[] outputs;
+    strcpy(logging::target_file, filename);
 }
 
 void LogToStdout(bool value) {
-    log_to_console = value;
+    logging::log_to_console = value;
+    FILE* file = fopen(logging::target_file, "wt");
+    fprintf(file, "LOGGING START\n\n");
+    fclose(file);
 }
 
 void VLogImpl(const char* file, int line, LogType level, const char* format, va_list args) {
-    if (log_to_console) {
-        if (line > 0) {
-            printf("%s:%d :: ", file, line);
-        }
-        vprintf(format, args);
-        printf("\n");
+    if (!logging::log_to_console && !logging::target_file[0]) {
+        return;
     }
-    /*for (int i=0; i < outputs_len; i++) {
-        char timeStr[64] = { 0 };
-        time_t now = time(NULL);
-        struct tm *tm_info = localtime(&now);
-
-        strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", tm_info);
-        fprintf(outputs[i], "[%s] ", timeStr);
-
+    int print_size = 0;
+    va_list args_copy;
+    va_copy(args_copy, args);
+    if (logging::log_to_console) {
         if (line > 0) {
-            fprintf(outputs[i], "%s:%d :: ", file, line);
+            print_size += printf("%s:%d :: ", file, line);
         }
-        vfprintf(outputs[i], format, args);
-        fprintf(outputs[i], "\n");
-    }*/
+        print_size += vprintf(format, args_copy);
+        print_size += printf("\n");
+    } else {
+        // Just count the length
+        char c = '1';
+        if (line > 0) {
+            print_size += snprintf(&c, 1, "%s:%d :: ", file, line);
+        }
+        print_size += vsnprintf(&c, 1, format, args_copy);
+        print_size += 1;  // '\n'
+    }
+
+    if (logging::target_file[0]) {
+        timespec time;
+        clock_gettime(CLOCK_MONOTONIC_RAW, &time);
+        if (logging::buffer_offset + print_size > LOGGING_BUFFER_SIZE || (logging::time_since_last_save - time.tv_nsec) > 1e8) {
+            FILE* f = fopen(logging::target_file, "at");
+            fprintf(f, logging::buffer);
+            if (line > 0) {
+                fprintf(f, "%s:%d :: ", file, line);
+            }
+            vfprintf(f, format, args);
+            fprintf(f, "\n");
+            fclose(f);
+
+            logging::buffer_offset = 0;
+            logging::time_since_last_save = time.tv_nsec;
+        } else {
+            if (line > 0) {
+                logging::buffer_offset += sprintf(&logging::buffer[logging::buffer_offset], "%s:%d :: ", file, line);
+            }
+            logging::buffer_offset += vsprintf(&logging::buffer[logging::buffer_offset], format, args);
+            logging::buffer_offset += sprintf(&logging::buffer[logging::buffer_offset], "\n");
+        }
+    }
 }
 
 void LogImpl(const char* file, int line, LogType level, const char* format, ...) {

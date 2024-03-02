@@ -41,24 +41,24 @@ void DatedScreenShot() {
 }
 
 void AppMetaInit() {
-    SetConfigFlags(FLAG_MSAA_4X_HINT);
-    //SetConfigFlags(FLAG_WINDOW_UNDECORATED);
-    SetConfigFlags(FLAG_VSYNC_HINT);
-
-    InitWindow(1600, 900, WINDOW_TITLE);
-    InitAudioDevice();
-    Image img = LoadImage("resources/icons/app_icon.png");
-    SetWindowIcon(img);
-    
-    SetExitKey(KEY_NULL);
-    //SetTargetFPS(1e6);
-    SetWindowState(FLAG_WINDOW_RESIZABLE);
+    SetLoadFileDataCallback(assets::GetResourceBytes);
+    SetLoadFileTextCallback(assets::GetResourceText);
+    SetTraceLogLevel(LOG_INFO);
+    SetTraceLogCallback(CustomRaylibLog);
 
     LogSetOutput("log.txt");
     LogToStdout(true);
 
-    SetTraceLogLevel(LOG_INFO);
-    SetTraceLogCallback(&CustomRaylibLog);
+    SetConfigFlags(FLAG_MSAA_4X_HINT);
+    SetConfigFlags(FLAG_VSYNC_HINT);
+
+    InitWindow(1600, 900, WINDOW_TITLE);
+    InitAudioDevice();
+    SetWindowIcon(assets::GetImage("resources/icons/app_icon.png"));
+    
+    SetExitKey(KEY_NULL);
+    //SetTargetFPS(1e6);
+    SetWindowState(FLAG_WINDOW_RESIZABLE);
 }
 
 void AppMetaStep() {
@@ -73,5 +73,4 @@ void AppMetaStep() {
 
 void AppMetaClose() {
     CloseWindow();  // Close window and OpenGL context
-    LogCloseOutputs();
 }

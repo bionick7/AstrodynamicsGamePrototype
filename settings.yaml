@@ -1,8 +1,11 @@
+# Enable features
 allow_fullscreen: n
-draw_renderrects: n
-draw_textrects: n
 enable_ai: y
 enable_player_ai: y
 sdf_text: y
-show_fps: n
 skip_postprocessing: n
+
+# Debug info
+show_fps: n
+draw_renderrects: n
+draw_textrects: n

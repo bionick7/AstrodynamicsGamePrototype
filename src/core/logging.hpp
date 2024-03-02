@@ -72,8 +72,6 @@ enum LogType{
 #define LOG_INVALID_LINE -1
 
 void LogSetOutput(const char* filename);
-void LogSetOutputs(const char* filenames[]);
-void LogCloseOutputs();
 void LogToStdout(bool value);
 
 void VLogImpl(const char* file, int line, LogType level, const char* format, va_list args);

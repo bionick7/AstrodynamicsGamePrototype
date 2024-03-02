@@ -3,6 +3,7 @@
 #include "global_state.hpp"
 #include "string_builder.hpp"
 #include "ship.hpp"
+#include "assets.hpp"
 
 static const char* WREN_TYPENAMES[] = {
 	"Bool",  // WREN_TYPE_BOOL
@@ -533,8 +534,8 @@ WrenLoadModuleResult LoadModule(WrenVM* vm, const char* path) {
     sb.Add("resources/wren/");
     sb.Add(path);
     sb.Add(".wren");
-	if (FileExists(sb.c_str)) {
-        res.source = LoadFileText(sb.c_str);
+	if (assets::HasTextResource(sb.c_str)) {
+        res.source = assets::GetResourceText(sb.c_str);
 	} else {
 		ERROR("No such module %s (looking for file '%s')", path, sb.c_str)
 	}
@@ -607,8 +608,8 @@ int WrenInterface::LoadWrenQuests() {
 
 	// Testing
 	const char* tests_path = "resources/wren/testing.wren";
-	if (FileExists(tests_path)) {
-		WrenInterpretResult res = wrenInterpret(vm, "testing", LoadFileText(tests_path));
+	if (assets::HasTextResource(tests_path)) {
+		WrenInterpretResult res = wrenInterpret(vm, "testing", assets::GetResourceText(tests_path));
 		if (wrenHasModule(vm, "testing") && wrenHasVariable(vm, "testing", "Tests")) {
 			wrenEnsureSlots(vm, 1);
 			wrenGetVariable(vm, "testing", "Tests", 0);

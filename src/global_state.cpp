@@ -294,12 +294,12 @@ bool GlobalState::IsKeyBoardFocused() const {
 }
 
 void GlobalState::LoadGame(const char* file_path) {
-    DataNode game_data = DataNode();
-    if (DataNode::FromFile(&game_data, file_path, FileFormat::YAML, true) != 0) {
+    const DataNode* game_data = assets::GetData(file_path);
+    if (game_data == NULL) {
         FAIL("Could not load save %s", file_path);
     }
 
-    Deserialize(&game_data);
+    Deserialize(game_data);
 }
 
 void GlobalState::SaveGame(const char* file_path) const {

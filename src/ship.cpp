@@ -310,6 +310,7 @@ bool Ship::IsParked() const {
     case EntityType::SHIP: return GetShip(parent_obj)->IsParked();
     default: NOT_REACHABLE
     }
+    return false;  // To satisfy warning
 }
 
 bool Ship::IsLeading() const {
@@ -323,6 +324,7 @@ RID Ship::GetParentPlanet() const {
     case EntityType::SHIP: return GetShip(parent_obj)->GetParentPlanet();
     default: NOT_REACHABLE
     }
+    return GetInvalidId();  // To satisfy warning
 }
 
 int Ship::CountModulesOfClass(RID module_class) const {

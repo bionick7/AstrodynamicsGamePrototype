@@ -2,6 +2,7 @@
 #include "time.hpp"
 #include "logging.hpp"
 #include "string_builder.hpp"
+#include "assets.hpp"
 
 const DataNode DataNode::Empty = DataNode();
 
@@ -91,31 +92,15 @@ int _YamlParseFromText(DataNode* node, const char* origin, const char* text, boo
 }
 
 int _YamlParse(DataNode* node, const char* filepath, bool quiet) {
-    yaml_parser_t parser;
-
-    yaml_parser_initialize(&parser);
-    FILE *file = fopen(filepath, "rb");
-    if (file == NULL) {
+    if (!assets::HasTextResource(filepath)) {
         if (!quiet) { ERROR("No such file: %s\n", filepath) }
         return 1;
     }
-    yaml_parser_set_input_file(&parser, file);
 
-    // consume until you reach map_start
-    yaml_event_t event;
-    while (true) {
-        if (!yaml_parser_parse(&parser, &event)) break;
-        if (event.type == YAML_MAPPING_START_EVENT) break;
-    }
-    yaml_event_delete(&event);
-    int status = DataNode::FromYaml(node, filepath, &parser, false, 0);
-    if (status != 0) {
-        FAIL("Error when reading '%s'", filepath)
-    }
-
-    yaml_parser_delete(&parser);
-    fclose(file);
-    return status;
+    char* text = assets::GetResourceText(filepath);
+    int result = _YamlParseFromText(node, filepath, text, quiet);
+    free(text);
+    return result;
 }
 
 int DataNode::FromMemory(DataNode* out, const char* origin, const char* text,
@@ -176,34 +161,6 @@ int DataNode::FromFile(DataNode* out, const char* filepath, FileFormat fmt, bool
         }
     }
 }
-
-/*std::vector<DataNode> DataNode::ManyFromFile(const char* filepath, FileFormat fmt) {
-    std::vector<DataNode> result;
-
-    //if (fmt == FileFormat::Auto) {
-    //    if (hasEnding(filepath, ".json")) {
-    //        fmt = FileFormat::JSON;
-    //    } else if (hasEnding(filepath, ".csv")) {
-    //        fmt = FileFormat::CSV;
-    //    } else {
-    //        fmt = FileFormat::YAML;
-    //    }
-    //}
-
-    switch (fmt) {
-        case FileFormat::YAML: {
-            break;
-        }
-        case FileFormat::CSV: {
-            // Implementation for reading CSV files goes here
-            break;
-        }
-        default:
-            break;
-    }
-
-    return result;
-}*/
 
 enum DataNodeParseState {
     DN_PARESE_EXPECT_KEY,
@@ -418,10 +375,6 @@ void DataNode::WriteYAML(StringBuilder* sb, int indentLevel, bool ignore_first_i
 }
 
 void DataNode::WriteToFile(const char* filepath, FileFormat fmt) const {
-    /*if (!FileExists(filepath)) {
-        ERROR("Could not find file '%s'", filepath)
-        return;
-    }*/
     StringBuilder sb;
     switch (fmt) {
     case FileFormat::JSON:

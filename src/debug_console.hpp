@@ -24,8 +24,8 @@ struct Setting {
 };
 
 Setting* GetSetting(const char* key);
-const char* GetSettingStr(const char* key, const char* default_);
-bool GetSettingBool(const char* key, bool default_);
-double GetSettingNum(const char* key, double default_);
+const char* GetSettingStr(const char* key, const char* default_="");
+bool GetSettingBool(const char* key, bool default_=false);
+double GetSettingNum(const char* key, double default_=0);
 
 #endif  // DEBUG_CONSOLE_H

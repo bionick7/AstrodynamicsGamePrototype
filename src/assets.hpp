@@ -5,13 +5,24 @@
 #include "datanode.hpp"
 
 namespace assets {
-    static uint64_t HashKey(const char* key);
+    struct BakedResource {
+        uint64_t path_hash;
+        bool is_text;
+        size_t offset;
+        size_t size;
+    };
+    uint64_t HashKey(const char* key);
+    uint64_t HashPath(const char* path);
+
+    bool HasTextResource(const char* path);
+    bool HasDataResource(const char* path);
 
     unsigned char* GetResourceBytes(const char* filepath, int* size);
     char* GetResourceText(const char* filepath);
 
     Texture2D GetTexture(const char* path);
     Image GetImage(const char* path);
+    Font GetFont(const char* path);
     Shader GetShader(const char* path);
     Sound GetSound(const char* path);
     const DataNode* GetData(const char* path);
@@ -21,20 +32,31 @@ namespace assets {
 
     void Reload();
 
+    // Used in dev mode to write header files that include all resource files
+    void BakeAllResources();
+    // Used on user end to unpack user folder for modding/troubleshooting purposes
+    void UnBakeAllResources();
+
     template<typename T>
     struct Table { 
         uint64_t* hashes = NULL;
         T* data = NULL;
+
         int size = 0;
         int capacity = 0;
 
-        Table() {}
+        Table() {
+            size = 0;
+            capacity = 10;
+            hashes = new uint64_t[capacity];
+            data = new T[capacity];
+        }
+
         ~Table() {
             Clear();
         }
 
         int Find(uint64_t hash) const {
-            if (hashes == NULL) return -1;
             for (int i=0; i < size; i++) {
                 if (hash == hashes[i]) {
                     return i;
@@ -44,12 +66,6 @@ namespace assets {
         }
 
         int Insert(uint64_t hash, T value) {
-            if (hashes == NULL) {
-                size = 0;
-                capacity = 10;
-                hashes = new uint64_t[capacity];
-                data = new T[capacity];
-            }
             size++;
             if (size > capacity) {
                 capacity += 10;

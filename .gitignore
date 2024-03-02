@@ -7,6 +7,7 @@ dependencies/raylib_corrupted/*
 dependencies/glfw/*
 screenshots/*
 dev_output/*
+src/baked_data.hpp
 
 app
 app.exe

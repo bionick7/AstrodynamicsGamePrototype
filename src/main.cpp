@@ -15,6 +15,15 @@ const char* GetCmdSetting(int argc, const char** argv, const char* find) {
     return NULL;
 }
 
+bool GetCmdSettingBool(int argc, const char** argv, const char* find) {
+    for (int i=0; i < argc; i++) {
+        if (strcmp(argv[i], find) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void TestingSetup(GlobalState* app) {
     /*RID planet_1 = GetPlanets()->GetIdByName("Tethys");
     RID planet_2 = GetPlanets()->GetIdByName("Titan");
@@ -32,8 +41,14 @@ void TestingSetup(GlobalState* app) {
 
 void Load(int argc, const char** argv) {
     INFO("Init from working directory: '%s'", GetWorkingDirectory());
-    if (!GetCmdSetting(argc, argv, "-randseed")) {
+    if (GetCmdSettingBool(argc, argv, "-randseed")) {
         SetRandomSeed(0);  // For consistency
+    }
+    if (GetCmdSettingBool(argc, argv, "-bake")) {
+        assets::BakeAllResources();
+    }
+    if (GetCmdSettingBool(argc, argv, "-unbake")) {
+        assets::UnBakeAllResources();
     }
 
     GlobalState* app = GetGlobalState();

@@ -124,8 +124,6 @@ struct AtlasPos {
 struct UIGlobals {
     std::stack<TextBox> text_box_stack = std::stack<TextBox>();
     char mouseover_text[1024] = "";
-    Font default_font;
-    Font default_font_sdf;
     struct BlockingRect {Rectangle rec; uint8_t z;};
     BlockingRect acc_blocking_rects[MAX_BLOCKING_RECTS];
     BlockingRect blocking_rects[MAX_BLOCKING_RECTS];
