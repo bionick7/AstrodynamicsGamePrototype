@@ -47,7 +47,7 @@ Ship::Ship() {
 }
 
 Ship::~Ship() {
-    
+    GetRenderServer()->icons.EraseAt(icon3d);
 }
 
 bool Ship::HasMouseHover(double* min_distance) const {
@@ -609,7 +609,7 @@ void Ship::DrawTrajectories() const {
         OrbitSegment tf_orbit = OrbitSegment(&plan->transfer_orbit[plan->primary_solution], to_departure, to_arrival);
         //RenderOrbit(&tf_orbit, 256, i == plan_edit_index ? Palette::ui_main : GetColor());
         //OrbitSegment tf_orbit = OrbitSegment(&plan->transfer_orbit[plan->primary_solution]);
-        RenderOrbit(&tf_orbit, 256, OrbitRenderMode::Solid, GetColor());
+        RenderOrbit(&tf_orbit, 256, OrbitRenderMode::Solid, color);
     }
 }
 
@@ -669,37 +669,6 @@ void _UIDrawStats(const Ship* ship) {
     ui::Write(sb.c_str);
     ui::HelperText(GetUI()->GetConceptDescription("stat"));
     ui::Pop();  // Inset
-}
-
-int ship_selecting_module_index = -1;
-void _UIDrawInventory(Ship* ship) {
-    const int MARGIN = 3;
-
-    ShipModules* sms = GetShipModules();
-    int columns = ui::Current()->width / (SHIP_MODULE_WIDTH + MARGIN);
-    int rows = std::ceil(SHIP_MAX_MODULES / (double)columns);
-
-    ui::PushInset(0, rows * (SHIP_MODULE_HEIGHT + MARGIN));
-    ui::Current()->width = columns * (SHIP_MODULE_WIDTH + MARGIN);
-    for (int i=0; i < SHIP_MAX_MODULES; i++) {
-        ui::PushGridCell(columns, rows, i % columns, i / columns);
-        ui::Shrink(MARGIN, MARGIN);
-        ButtonStateFlags::T button_state = ui::AsButton();
-        if (button_state & ButtonStateFlags::HOVER) {
-            ship->current_slot = ShipModuleSlot(ship->id, i, ShipModuleSlot::DRAGGING_FROM_SHIP);
-        }
-        if (button_state & ButtonStateFlags::JUST_PRESSED) {
-            if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) {
-                sms->DirectSwap(ship->current_slot);
-            } else {
-                sms->InitDragging(ship->current_slot, ui::Current()->render_rec);
-            }
-        }
-        sms->DrawShipModule(ship->modules[i]);
-        ui::Pop(); // GridCell
-    }
-    ui::HelperText(GetUI()->GetConceptDescription("module"));
-    ui::Pop(); // Inset
 }
 
 void _UIDrawTransferplans(Ship* ship) {
@@ -905,7 +874,7 @@ void Ship::DrawUI() {
     //    ui::Pop();  // ScrollInset
     //    return;
     //}
-    _UIDrawInventory(this);
+    GetShipClassByRID(ship_class)->module_config.Draw(this);
     if (!IsStatic()) {
         _UIDrawTransferplans(this);
         _UIDrawFleet(this);
@@ -942,13 +911,14 @@ void Ship::Repair(int hp) {
     dammage_taken[ShipVariables::CREW] -= crew_repair;
 }
 
-ShipModuleSlot Ship::GetFreeModuleSlot() const {
-    for (int index = 0; index < SHIP_MAX_MODULES; index++) {
-        if(!IsIdValid(modules[index])) {
-            return ShipModuleSlot(id, index, ShipModuleSlot::DRAGGING_FROM_SHIP);
+ShipModuleSlot Ship::GetFreeModuleSlot(ModuleType::T least) const {
+    const ModuleConfiguration* module_Config = &GetShipClassByRID(ship_class)->module_config;
+    for (int index = 0; index < module_Config->module_count; index++) {
+        if(!IsIdValid(modules[index]) && ModuleType::IsCompatible(least, module_Config->types[index])) {
+            return ShipModuleSlot(id, index, ShipModuleSlot::DRAGGING_FROM_SHIP, module_Config->types[index]);
         }
     }
-    return ShipModuleSlot(id, -1, ShipModuleSlot::DRAGGING_FROM_SHIP);
+    return ShipModuleSlot(id, -1, ShipModuleSlot::DRAGGING_FROM_SHIP, ModuleType::INVALID);
 }
 
 void Ship::AttachTo(RID parent_ship) {
@@ -1199,6 +1169,7 @@ int Ships::LoadShipClasses(const DataNode* data) {
         sc.construction_batch_size = ship_data->GetI("batch_size", 1, true);
         sc.is_hidden = strcmp(ship_data->Get("hidden", "n", true), "y") == 0;
         sc.icon_index = AtlasPos(0, 16);
+        sc.module_config.Load(ship_data);
 
         ship_data->FillBufferWithChild("construction_resources", sc.construction_resources, RESOURCE_MAX, resource_names);
         ship_data->FillBufferWithChild("stats", sc.stats, ShipStats::MAX, ship_stat_names);

@@ -92,7 +92,7 @@ char* _LoadTextFromBaked(assets::BakedResource rsc, int* byte_size) {
 }
 #endif  // INCLUDE_BAKED
 
-const bool always_use_embedded_resources = true;
+const bool always_use_embedded_resources = false;  // Debugging setting (cannot make it a 'setting' to avoid recursivity)
 bool _HasResource(const char* filepath, bool _is_text) {
     #ifdef INCLUDE_BAKED
     if (FileExists(filepath) && !always_use_embedded_resources) {
@@ -286,11 +286,8 @@ const DataNode* assets::GetData(const char* path) {
     if (find >= 0) {
         return &data_table.data[find];
     } else {
-        unsigned int data_size = 0;
-        char *file_data = GetResourceText(path);
         int index = data_table.Insert(path_hash, DataNode());
-        DataNode::FromMemory(&data_table.data[index], path, file_data);
-        free(file_data);
+        DataNode::FromFile(&data_table.data[index], path);
         return &data_table.data[index];
     }
 }

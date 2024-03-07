@@ -3,6 +3,11 @@
 #include "ship.hpp"
 #include "ui.hpp"
 #include "constants.hpp"
+#include "utils.hpp"
+
+bool ModuleConfiguration::IsAdjacent(ShipModuleSlot lhs, ShipModuleSlot rhs) const {
+    return false;
+}
 
 ShipModuleClass::ShipModuleClass() {
     mass = 0.0;
@@ -101,24 +106,25 @@ void ShipModuleClass::MouseHintWrite() const {
     ui::Write(sb.c_str);
 }
 
-ShipModuleSlot::ShipModuleSlot(RID p_entity, int p_index, ShipModuleSlotType p_type) {
+ShipModuleSlot::ShipModuleSlot(RID p_entity, int p_index, ShipModuleSlotType p_origin_type, ModuleType::T p_module_type) {
     entity = p_entity;
     index = p_index;
-    type = p_type;
+    origin_type = p_origin_type;
+    module_type = p_module_type;
 }
 
 void ShipModuleSlot::SetSlot(RID module_) const {
-    if (type == ShipModuleSlot::DRAGGING_FROM_PLANET) {
+    if (origin_type == ShipModuleSlot::DRAGGING_FROM_PLANET) {
         GetPlanet(entity)->ship_module_inventory[index] = module_;
-    } else if (type == ShipModuleSlot::DRAGGING_FROM_SHIP) {
+    } else if (origin_type == ShipModuleSlot::DRAGGING_FROM_SHIP) {
         GetShip(entity)->modules[index] = module_;
     }
 }
 
 RID ShipModuleSlot::GetSlot() const {
-    if (type == ShipModuleSlot::DRAGGING_FROM_PLANET) {
+    if (origin_type == ShipModuleSlot::DRAGGING_FROM_PLANET) {
         return GetPlanet(entity)->ship_module_inventory[index];
-    } else if (type == ShipModuleSlot::DRAGGING_FROM_SHIP) {
+    } else if (origin_type == ShipModuleSlot::DRAGGING_FROM_SHIP) {
         return GetShip(entity)->modules[index];
     }
     return GetInvalidId();
@@ -138,22 +144,177 @@ bool ShipModuleSlot::IsReachable(ShipModuleSlot other) const {
     if (!IsValid() || !other.IsValid()) return false;
     RID own_planet = GetInvalidId();
     RID other_planet = GetInvalidId();
-    if (type == ShipModuleSlot::DRAGGING_FROM_PLANET) {
+    if (origin_type == ShipModuleSlot::DRAGGING_FROM_PLANET) {
         own_planet = entity;
-    } else if (type == ShipModuleSlot::DRAGGING_FROM_SHIP) {
+    } else if (origin_type == ShipModuleSlot::DRAGGING_FROM_SHIP) {
         own_planet = GetShip(entity)->GetParentPlanet();  // Might be invalid
         if (!GetShip(entity)->CanDragModule(index)) {
             return false;
         }
     }
     
-    if (other.type == ShipModuleSlot::DRAGGING_FROM_PLANET) {
+    if (other.origin_type == ShipModuleSlot::DRAGGING_FROM_PLANET) {
         other_planet = other.entity;
-    } else if (other.type == ShipModuleSlot::DRAGGING_FROM_SHIP) {
+    } else if (other.origin_type == ShipModuleSlot::DRAGGING_FROM_SHIP) {
         other_planet = GetShip(other.entity)->GetParentPlanet();  // Might be invalid
     }
 
-    return own_planet == other_planet;
+    return own_planet == other_planet && ModuleType::IsCompatible(module_type, other.module_type);
+}
+
+ModuleType::T ModuleType::FromString(const char *name) {
+    for(int i=0; i < MAX; i++) {
+        if (strcmp(names[i], name) == 0) {
+            return (ModuleType::T) i;
+        }
+    }
+    return INVALID;
+}
+
+bool ModuleType::IsCompatible(ModuleType::T from, ModuleType::T to) {
+    switch (from) {
+        case LARGE:    return to == LARGE || to == MEDIUM || to == SMALL;
+        case MEDIUM:   return to == MEDIUM || to == SMALL;
+        case SMALL:    return to == SMALL;
+        case FREE:     return to == FREE;
+        case ARMOR:    return to == LARGE;
+        case DROPTANK: return to == LARGE;
+        case ANY:      return to != INVALID;
+        default: case INVALID: return false;
+    }
+    
+    return false;
+}
+
+void ModuleConfiguration::Load(const DataNode *data) {
+    module_count = data->GetChildArrayLen("module_config");
+    if (module_count > SHIP_MAX_MODULES) module_count = SHIP_MAX_MODULES;
+
+    // To measure draw size
+    Vector2 min_extend = Vector2Zero();
+    Vector2 max_extend = Vector2Zero();
+
+    for(int i=0; i < module_count; i++) {
+        const DataNode* child = data->GetChildArrayElem("module_config", i);
+        types[i] = ModuleType::FromString(child->Get("type"));
+        for(int j=0; j < MODULE_CONFIG_MAX_NEIGHBOURS; j++) {
+            int neighbour = child->GetArrayElemI("neighbours", j, -1, true);
+            if (neighbour >= module_count) {
+                WARNING("Neighbour count exceeds module configuration size")
+            } else {
+                neighbours[i*MODULE_CONFIG_MAX_NEIGHBOURS + j] = neighbour;
+            }
+        }
+        draw_offset[i].x = child->GetArrayElemF("offset", 0, 0.0);
+        draw_offset[i].y = child->GetArrayElemF("offset", 1, 0.0);
+
+        int pos_x = draw_offset[i].x * (SHIP_MODULE_WIDTH + 5);
+        int pos_y = draw_offset[i].y * (SHIP_MODULE_HEIGHT + 5);
+        if (pos_x < min_extend.x) min_extend.x = pos_x;
+        if (pos_y < min_extend.y) min_extend.y = pos_y;
+        if (pos_x > max_extend.x) max_extend.x = pos_x;
+        if (pos_y > max_extend.y) max_extend.y = pos_y;
+    }
+    draw_space = {
+        min_extend.x - SHIP_MODULE_WIDTH/2, min_extend.y - SHIP_MODULE_HEIGHT/2,
+        max_extend.x - min_extend.x + SHIP_MODULE_WIDTH, max_extend.y - min_extend.y + SHIP_MODULE_HEIGHT,
+    };
+}
+
+void ModuleConfiguration::Draw(Ship* ship) const {
+    const int MARGIN = 3;
+    ShipModules* sms = GetShipModules();
+
+    int width = ui::Current()->width;
+    int height = MinInt(width, draw_space.height) + 20;
+
+    ui::PushInset(0, height);
+    Rectangle bounding = ui::Current()->GetRect();
+    Rectangle adjusted_draw_space = draw_space;
+
+    Vector2 center = {
+        bounding.x + bounding.width/2,
+        bounding.y + bounding.height/2,
+    };
+
+    adjusted_draw_space.x += center.x;
+    adjusted_draw_space.y += center.y;
+    bool fits_naturally = CheckEnclosingRecs(bounding, adjusted_draw_space);
+    bool show_popup = !fits_naturally && CheckCollisionPointRec(GetMousePosition(), bounding);
+    if (show_popup) {
+        adjusted_draw_space.width += 20;
+        adjusted_draw_space.height += 20;
+        if (adjusted_draw_space.x > GetScreenWidth() - adjusted_draw_space.width - 20)
+            adjusted_draw_space.x = GetScreenWidth() - adjusted_draw_space.width - 20;
+        if (adjusted_draw_space.y > GetScreenHeight() - adjusted_draw_space.height - 20)
+            adjusted_draw_space.y = GetScreenHeight() - adjusted_draw_space.height - 20;
+        ui::PushGlobal(
+            adjusted_draw_space.x, adjusted_draw_space.y,
+            adjusted_draw_space.width, adjusted_draw_space.height,
+            16, Palette::ui_main, Palette::bg, ui::Current()->z_layer + 10
+        );
+        center = {
+            adjusted_draw_space.x + adjusted_draw_space.width/2,
+            adjusted_draw_space.y + adjusted_draw_space.height/2,
+        };
+
+        ui::Enclose();
+    }
+
+    BeginRenderInUIMode(ui::Current()->z_layer);
+    //DrawRectangleLinesEx(bounding, 1, WHITE);
+    //DrawRectangleLinesEx(adjusted_draw_space, 1, fits_naturally ? GREEN : RED);
+    bool use_scissor = !CheckEnclosingRecs(ui::Current()->render_rec, bounding);
+    if (use_scissor) {
+        BeginScissorMode(ui::Current()->render_rec.x, ui::Current()->render_rec.y, ui::Current()->render_rec.width, ui::Current()->render_rec.height);
+    }
+    static Rectangle rectangles[SHIP_MAX_MODULES];
+    for (int i=0; i < module_count; i++) {
+        int center_x = center.x + draw_offset[i].x * (SHIP_MODULE_WIDTH + 5);
+        int center_y = center.y + draw_offset[i].y * (SHIP_MODULE_HEIGHT + 5);
+        for(int j=0; j < MODULE_CONFIG_MAX_NEIGHBOURS; j++) {
+            if (neighbours[i*MODULE_CONFIG_MAX_NEIGHBOURS + j] >= 0) {
+                int neighbour = neighbours[i*MODULE_CONFIG_MAX_NEIGHBOURS + j];
+                int other_center_x = center.x + draw_offset[neighbour].x * (SHIP_MODULE_WIDTH + 8);
+                int other_center_y = center.y + draw_offset[neighbour].y * (SHIP_MODULE_HEIGHT + 8);
+                //INFO("%d(%d, %d) => %d(%d, %d)", i, center_x, center_y, neighbour, other_center_x, other_center_y)
+                DrawLine(center_x, center_y, other_center_x, other_center_y, Palette::ui_alt);
+            }
+        }
+        Rectangle module_rect = { center_x - SHIP_MODULE_WIDTH/2, center_y - SHIP_MODULE_HEIGHT/2, SHIP_MODULE_WIDTH, SHIP_MODULE_HEIGHT };
+        //if (types[i] == ModuleType::SMALL) {
+        //    module_rect = { (float)center_x - 30/2, (float)center_y - 30/2, 30, 30 };
+        //}
+        rectangles[i] = module_rect;
+        DrawRectangleLinesEx(module_rect, 1, ModuleType::colors[types[i]]);
+
+        ButtonStateFlags::T button_state = GetButtonStateRec(module_rect);
+        if (button_state & ButtonStateFlags::HOVER) {
+            ship->current_slot = ShipModuleSlot(ship->id, i, ShipModuleSlot::DRAGGING_FROM_SHIP, types[i]);
+        }
+        if (button_state & ButtonStateFlags::JUST_PRESSED) {
+            if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) {
+                sms->DirectSwap(ship->current_slot);
+            } else {
+                sms->InitDragging(ship->current_slot, module_rect);
+            }
+        }
+    }
+    if (use_scissor) {
+        EndScissorMode();
+    }
+    EndRenderInUIMode();
+    for (int i=0; i < module_count; i++) {
+        //ui::PushFree(rectangles[i].x, rectangles[i].y, rectangles[i].width, rectangles[i].height);
+        //sms->DrawShipModule(ship->modules[i]);
+        //ui::Pop();
+    }
+    if (show_popup) {
+        ui::Pop();
+    }
+
+    ui::HelperText(GetUI()->GetConceptDescription("module"));
+    ui::Pop(); // Inset
 }
 
 int ShipModules::Load(const DataNode* data) {
@@ -183,6 +344,7 @@ int ShipModules::Load(const DataNode* data) {
         module_data->FillBufferWithChild("add", ship_modules[i].delta_stats, ShipStats::MAX, ship_stat_names);
         module_data->FillBufferWithChild("require", ship_modules[i].required_stats, ShipStats::MAX, ship_stat_names);
         ship_modules[i].has_activation_requirements = module_data->HasChild("require");
+        ship_modules[i].type = ModuleType::FromString(module_data->Get("type"));
 
         module_data->FillBufferWithChild("construction_resources", ship_modules[i].construction_resources, RESOURCE_MAX, resource_names);
         module_data->FillBufferWithChild("produce", ship_modules[i].production, RESOURCE_MAX, resource_names);
@@ -268,17 +430,17 @@ void ShipModules::InitDragging(ShipModuleSlot slot, Rectangle current_draw_rect)
 
 void ShipModules::DirectSwap(ShipModuleSlot slot) {
     ShipModuleSlot available = ShipModuleSlot();
-    if (slot.type == ShipModuleSlot::DRAGGING_FROM_SHIP
+    if (slot.origin_type == ShipModuleSlot::DRAGGING_FROM_SHIP
         && IsIdValidTyped(GetGlobalState()->focused_planet, EntityType::PLANET)
     ) {
         const Planet* planet = GetPlanet(GetGlobalState()->focused_planet);
         available = planet->GetFreeModuleSlot();
     }
-    if (slot.type == ShipModuleSlot::DRAGGING_FROM_PLANET
+    if (slot.origin_type == ShipModuleSlot::DRAGGING_FROM_PLANET
         && IsIdValidTyped(GetGlobalState()->focused_ship, EntityType::SHIP)
     ) {
         const Ship* ship = GetShip(GetGlobalState()->focused_ship);
-        available = ship->GetFreeModuleSlot();
+        available = ship->GetFreeModuleSlot(slot.module_type);
     }
     if (!available.IsValid()) {
         return;

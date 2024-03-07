@@ -32,8 +32,6 @@ namespace Palette {
 #define ICON_ROCK            "\u0324"
 #define ICON_IRON_ORE        "\u0323"
 #define ICON_STEEL           "\u0325"
-#define ICON_ALUMINIUM_ORE   ICON_EMPTY
-#define ICON_ALUMINIUM       ICON_EMPTY
 #define ICON_FOOD            "\u0326"
 #define ICON_BIOMASS         "\u0327"
 #define ICON_WASTE           "\u0328"
@@ -41,6 +39,8 @@ namespace Palette {
 #define ICON_CARBON          "\u032A"
 #define ICON_POLYMERS        "\u032B"
 #define ICON_ELECTRONICS     "\u032C"
+#define ICON_ALUMINIUM_ORE   "\u032D"
+#define ICON_ALUMINIUM       "\u032E"
 
 #define ICON_HEART           "\u0400"
 #define ICON_HEART_ORDNANCE  "\u0401"

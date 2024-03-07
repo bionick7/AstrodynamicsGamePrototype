@@ -9,7 +9,6 @@
 #include "ship_modules.hpp"
 
 #define SHIP_MAX_PREPARED_PLANS 10
-#define SHIP_MAX_MODULES 16
 
 #define SHIPCLASS_NAME_MAX_SIZE 64
 #define SHIPCLASS_DESCRIPTION_MAX_SIZE 1024
@@ -43,11 +42,16 @@ struct ShipClass {
     double v_e;     // m/s
     ResourceType fuel_resource;
     resource_count_t max_capacity;  // counts
+
+    ModuleConfiguration module_config;
     int stats[ShipStats::MAX] = {0};
+
     int construction_time;
     resource_count_t construction_resources[RESOURCE_MAX] = {0};
     int construction_batch_size;
     bool is_hidden;
+    
+    // Visuals
     AtlasPos icon_index;
 
     // Ease-of-use variables
@@ -117,8 +121,8 @@ struct Ship {
     void DrawTrajectories() const;
     void DrawUI();
     void Inspect();
-
-    ShipModuleSlot GetFreeModuleSlot() const;
+    
+    ShipModuleSlot GetFreeModuleSlot(ModuleType::T least) const;
     void RemoveShipModuleAt(int index);
     void Repair(int hp);
     void AttachTo(RID parent_ship);

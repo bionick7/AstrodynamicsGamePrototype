@@ -40,6 +40,7 @@ double _Lambert(double x, double K, int solution) {
     case 5: return (sinh(α) - α + sinh(β) - β) / (x*x*x);
     }
     FAIL("Solution provided to lambert solver must be 0, 1, 2, 3, 4 or 5")
+    return 0;
 }
 
 double _LambertDerivative(double x, double K, int solution) {
@@ -54,6 +55,7 @@ double _LambertDerivative(double x, double K, int solution) {
     case 5: return (cosh(α)*dαdx - dαdx + cosh(β)*dβdx - dβdx) / (x*x*x) - (sinh(α) - α + sinh(β) - β) * 3 / (x*x*x*x);
     }
     FAIL("Derivative only implemented for cases 4 and 5")
+    return 0;
 }
 
 double _SolveLambertBetweenBounds(double y, double K, double xl, double xr, int solution) {
@@ -170,6 +172,7 @@ void TransferPlanSolveInputImpl(TransferPlan* tp, const Orbit* from_orbit, const
         //SHOW_V2(OrbitGetVelocity(&tp->from->orbit, pos1))
         tp->departure_dvs[i] = (tp->transfer_orbit[i].GetVelocity(pos1_tf) - from_orbit->GetVelocity(pos1));
         tp->arrival_dvs[i] = (to_orbit->GetVelocity(pos2) - tp->transfer_orbit[i].GetVelocity(pos2_tf));
+
 
         //DEBUG_SHOW_F(pos2_tf.r / pos2.r)
 
@@ -487,15 +490,15 @@ void _TransferPlanInitialize(TransferPlan* tp, timemath::Time t0) {
 }
 
 void _DrawSweep(const Orbit* orbit, timemath::Time from, timemath::Time to, Color color) {
-    OrbitPos from_pos = orbit->GetPosition(from);
-    OrbitPos to_pos = orbit->GetPosition(to);
 
     int full_orbits = floor(timemath::Time::SecDiff(to, from) / orbit->GetPeriod().Seconds());
     double offset_per_pixel = 0;//GetCoordinateTransform()->InvTransformS(1);
     for (int i=1; i <= full_orbits; i++) {
         orbit->DrawWithOffset(offset_per_pixel * -3 * i, color);
     }
-    OrbitSegment segment = OrbitSegment(orbit, from_pos, to_pos);
+    //OrbitPos from_pos = orbit->GetPosition(from);
+    //OrbitPos to_pos = orbit->GetPosition(to);
+    //OrbitSegment segment = OrbitSegment(orbit, from_pos, to_pos);
     //RenderOrbit(&segment, 256, OrbitRenderMode::Solid, color);  // TODO: re-introduce offset
 }
 

@@ -337,3 +337,23 @@ the fromer beeing maybe dependent on a finite resource
 ## Status 26 Feb 24
 Planet-locked buildings implemented
 Idea: first build up, the cope with decline/breakup
+
+## Status  3 Mar 24
+Adding (complicated) multipliers on ships as mods is good
+Also game lacks choice
+
+## Status  4 Mar 24
+Idea: have independance be a planetwide stat that runns out
+Modules make mitigation techniques.
+Also position dependant multipliers:
+
+housing can help one adjacent module to ignore planet boni
+??? reduces independance per adjacent housing
+??? reduces independance per adjacent industrial building
+??? reduces independance per adjacent weapon
+??? cannot have adjacency
+claw that produces rock when on a mobile ship in rings
+
+Also consider not having independant planet inventories
+
+Implementing variable size modules

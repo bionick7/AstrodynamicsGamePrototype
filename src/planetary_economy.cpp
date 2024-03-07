@@ -147,7 +147,13 @@ void PlanetaryEconomy::UIDrawResources(ResourceTransfer transfer, ResourceTransf
                     GetTransferPlanUI()->SetResourceType((ResourceType) i);
             }
         }
+        Vector2 cursor_pos = ui::Current()->GetTextCursor();
+        Rectangle button_rect = {cursor_pos.x, cursor_pos.y, 16, 16};
         ui::WriteEx(buffer, TextAlignment::CONFORM, false);
+        if (CheckCollisionPointRec(GetMousePosition(), button_rect)) {
+            //ui::SetMouseHint(GetUI()->GetConceptDescription(resource_names[i]));
+            ui::SetMouseHint(resource_names[i]);
+        }
 
         resource_count_t qtt = 0;
         if (transfer.resource_id == i) {

@@ -16,7 +16,6 @@ namespace icon_shader {
 }
 
 void Icon3D::Draw() const {
-    Vector3 render_pos = GameCamera::WorldToRender(world_pos);
     Vector2 draw_pos = GetCamera()->GetScreenPos(world_pos);
     draw_pos = Vector2Add(draw_pos, offset);
     
@@ -24,11 +23,9 @@ void Icon3D::Draw() const {
         return;
     }
 
-    //Vector3 cam_z = Vector3Subtract(render_pos, GetCamera()->rl_camera.position);
     Vector3 cam_z = Vector3Subtract(GetCamera()->rl_camera.target, GetCamera()->rl_camera.position);
     Vector3 cam_y = { 0.0f, 1.0f, 0.0f };
     Vector3OrthoNormalize(&cam_z, &cam_y);
-    Vector3 cam_x = Vector3CrossProduct(cam_z, cam_y);
 
     Vector3 offset_render_pos = GetFinalRenderPos();
     float render_scale = GetFinalRenderScale();

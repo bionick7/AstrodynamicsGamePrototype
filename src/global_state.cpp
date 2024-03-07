@@ -294,9 +294,14 @@ bool GlobalState::IsKeyBoardFocused() const {
 }
 
 void GlobalState::LoadGame(const char* file_path) {
+    if (!assets::HasTextResource(file_path)) {
+        ERROR("Could not load save %s", file_path);
+        return;
+    }
     const DataNode* game_data = assets::GetData(file_path);
-    if (game_data == NULL) {
-        FAIL("Could not load save %s", file_path);
+    if (game_data->GetChildArrayCount() == 0) {
+        ERROR("Could not load save %s", file_path);
+        return;
     }
 
     Deserialize(game_data);

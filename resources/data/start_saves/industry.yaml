@@ -84,9 +84,7 @@ planets:
       steel: 20
       electronics: 6
     resource_delta:
-      electronics: 1
-      steel: 1
-      water: 40
+      water: 20
   - name: Phoebe
     trading_accessible: n
     allegiance: 0

@@ -9,6 +9,7 @@
 
 struct Ship;
 
+#define SHIP_MAX_MODULES 16
 #define SHIP_MODULE_WIDTH 50
 #define SHIP_MODULE_HEIGHT 50
 
@@ -24,6 +25,7 @@ struct Ship;
     X(KINETIC_DEFENSE, kinetic_defense)\
     X(ORDNANCE_DEFENSE, ordnance_defense)\
     X(BOARDING_DEFENSE, boarding_defense)
+
 
 struct ShipStats {  // Better enum class, since you can treat the enum as integer
     enum {
@@ -60,6 +62,48 @@ static const char* ship_variable_names[] = {
 
 static_assert(ShipVariables::MAX == sizeof(ship_variable_names) / sizeof(ship_variable_names[0]));
 
+
+namespace ModuleType {
+    static const char* names[] = {
+        "large",
+        "medium",
+        "small",
+        "free",
+        "armor",
+        "droptank",
+        "any",
+    };
+
+    static Color colors[] = {
+        Palette::ui_main,
+        Palette::ui_alt,
+        Palette::ui_dark,
+        Palette::bg,
+        Palette::interactable_main,
+        Palette::interactable_alt,
+        Palette::green,
+    };
+
+    enum T {
+        INVALID = -1,
+        LARGE = 0,
+        MEDIUM,
+        SMALL,
+        FREE,
+        ARMOR,
+        DROPTANK,
+        ANY,
+
+        MAX,
+    };
+    static_assert(sizeof(names) / sizeof(char*) == MAX);
+
+    ModuleType::T FromString(const char* name);
+    bool IsCompatible(ModuleType::T from, ModuleType::T to);
+};
+
+#define MODULE_CONFIG_MAX_NEIGHBOURS 4
+
 struct ShipModuleClass {
     int delta_stats[ShipStats::MAX];
     int required_stats[ShipStats::MAX];
@@ -75,6 +119,7 @@ struct ShipModuleClass {
     bool has_activation_requirements;
     int construction_time;
     bool is_hidden;
+    ModuleType::T type;
 
     AtlasPos icon_index;
 
@@ -91,16 +136,29 @@ struct ShipModuleSlot {
     enum ShipModuleSlotType { DRAGGING_FROM_SHIP, DRAGGING_FROM_PLANET };
     RID entity = GetInvalidId();
     int index = -1;
-    ShipModuleSlotType type;
+    ShipModuleSlotType origin_type;
+    ModuleType::T module_type;
 
     ShipModuleSlot() = default;
-    ShipModuleSlot(RID p_entity, int p_index, ShipModuleSlotType p_type);
+    ShipModuleSlot(RID p_entity, int p_index, ShipModuleSlotType p_origin_type, ModuleType::T p_module_type);
 
     void SetSlot(RID module) const;
     RID GetSlot() const;
     void AssignIfValid(ShipModuleSlot other);
     bool IsValid() const;
     bool IsReachable(ShipModuleSlot other) const;
+};
+
+struct ModuleConfiguration {
+    int module_count = 0;
+    ModuleType::T types[SHIP_MAX_MODULES];
+    int neighbours[SHIP_MAX_MODULES*MODULE_CONFIG_MAX_NEIGHBOURS];
+    Vector2 draw_offset[SHIP_MAX_MODULES];
+    Rectangle draw_space;
+
+    void Load(const DataNode* data);
+    void Draw(Ship* ship) const;
+    bool IsAdjacent(ShipModuleSlot lhs, ShipModuleSlot rhs) const;
 };
 
 struct ShipModules {

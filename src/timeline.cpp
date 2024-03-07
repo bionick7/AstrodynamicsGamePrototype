@@ -36,7 +36,7 @@ void _DrawHohmanTFs(const TimeLineCoordinateData* tcd, RID from, RID to) {
     Orbit from_orbit = GetPlanet(from)->orbit;
     Orbit to_orbit = GetPlanet(to)->orbit;
     timemath::Time t0 = GlobalGetNow();
-    timemath::Time t1 = t0 + timemath::Time::Day() * (tcd->h / pixels_per_day_vscale);
+    //timemath::Time t1 = t0 + timemath::Time::Day() * (tcd->h / pixels_per_day_vscale);
     //while (t0 < t1) {
     if (true) {
         timemath::Time departure_t;

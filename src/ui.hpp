@@ -57,6 +57,7 @@ namespace Direction {
 }
 
 ButtonStateFlags::T GetButtonState(bool is_in_area, bool was_in_area);
+ButtonStateFlags::T GetButtonStateRec(Rectangle rec);
 
 struct TextBox {
     // Rect
@@ -100,6 +101,8 @@ struct TextBox {
     void DrawTexture(Texture2D texture, Rectangle source, int height, Color tint, bool sdf);
     ButtonStateFlags::T WriteButton(const char* text, int inset);
     ButtonStateFlags::T AsButton() const;
+    Vector2 GetTextCursor() const;
+    Rectangle GetRect() const;
 
     Vector2 GetAnchorPoint(TextAlignment::T align) const;
     int GetLineHeight() const;
@@ -164,6 +167,7 @@ namespace ui {
 
     int PushInset(int margin, int h);
     int PushScrollInset(int margin, int h, int allocated_height, int* scroll);
+    void PushFree(int x, int y, int w, int h);
     void PushInline(int width, int height);
     void PushAligned(int width, int height, TextAlignment::T align);
     void PushHSplit(int x_start, int x_end);

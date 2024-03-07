@@ -27,7 +27,7 @@ void Planet::_UIDrawInventory() {
         ui::Shrink(MARGIN, MARGIN);
         ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
-            current_slot = ShipModuleSlot(id, i, ShipModuleSlot::DRAGGING_FROM_PLANET);
+            current_slot = ShipModuleSlot(id, i, ShipModuleSlot::DRAGGING_FROM_PLANET, ModuleType::ANY);
         }
         if (button_state & ButtonStateFlags::JUST_PRESSED) {
             if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) {
@@ -128,6 +128,7 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
 
     RID hovered_id = GetInvalidId();
 
+    int draw_index = 0;
     for(int i=0; i < option_size; i++) {
         RID id = RID(i, type);
         AtlasPos atlas_pos;
@@ -145,7 +146,7 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
             }
             atlas_pos = smc->icon_index;
         }
-        ui::PushGridCell(columns, rows, i % columns, i / columns);
+        ui::PushGridCell(columns, rows, draw_index % columns, draw_index / columns);
         ui::Shrink(margin, margin);
         
         // Possible since Shipclasses get loaded once in continuous mempry
@@ -164,6 +165,7 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
         //ui::Fillline(1.0, Palette::ui_main, Palette::bg);
         //ui::Write(ship_class->description);
         ui::Pop();  // GridCell
+        draw_index++;
     }
     ui::Pop();  // Inset
 

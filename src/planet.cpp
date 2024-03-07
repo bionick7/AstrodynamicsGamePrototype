@@ -118,7 +118,7 @@ double Planet::ScreenRadius() const {
 }
 
 double Planet::GetDVFromExcessVelocity(DVector3 vel) const {
-    if (mu == 0) return vel.LengthSquared();
+    if (mu == 0) return vel.Length();
     return sqrt(2*mu / radius + vel.LengthSquared()) - sqrt(mu / radius);
 }
 
@@ -184,10 +184,10 @@ void Planet::RecalcStats() {
 ShipModuleSlot Planet::GetFreeModuleSlot() const {
     for (int index = 0; index < MAX_PLANET_INVENTORY; index++) {
         if(!IsIdValid(ship_module_inventory[index])) {
-            return ShipModuleSlot(id, index, ShipModuleSlot::DRAGGING_FROM_PLANET);
+            return ShipModuleSlot(id, index, ShipModuleSlot::DRAGGING_FROM_PLANET, ModuleType::ANY);
         }
     }
-    return ShipModuleSlot(id, -1, ShipModuleSlot::DRAGGING_FROM_PLANET);
+    return ShipModuleSlot(id, -1, ShipModuleSlot::DRAGGING_FROM_PLANET, ModuleType::ANY);
 }
 
 void Planet::RemoveShipModuleInInventory(int index) {

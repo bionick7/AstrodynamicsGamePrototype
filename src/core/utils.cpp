@@ -95,12 +95,21 @@ float Smoothstep(float a, float b, float t) {
     return x*x*(3 - 2*x);
 }
 
+// Generates smallest possible rectange that includes a and b
 Rectangle EncapsulationRectangle(Rectangle a, Rectangle b) {
     if (b.x < a.x) a.x = b.x;
     if (b.x < a.x) a.x = b.x;
     if (b.x + b.width > a.x + a.width) a.width = b.x + b.width - a.x;
     if (b.y + b.height > a.y + a.height) a.height = b.y + b.height - a.y;
     return a;
+}
+
+// Returns true if 'outside' fully encloses 'inside'
+bool CheckEnclosingRecs(Rectangle outside, Rectangle inside) {
+    return
+        outside.x < inside.x && outside.x + outside.width  > inside.x + inside.width &&
+        outside.y < inside.y && outside.y + outside.height > inside.y + inside.height
+    ;
 }
 
 Matrix MatrixFromColumns(Vector3 col_x, Vector3 col_y, Vector3 col_z) {

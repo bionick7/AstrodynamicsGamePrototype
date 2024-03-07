@@ -8,6 +8,7 @@ shipmodules:
     steel: 10
   construction_time: 10
   icon_index: [8, 25]
+  type: armor
 
 - id: shpmod_droptank
   name: Water Drop-tank
@@ -19,6 +20,7 @@ shipmodules:
   construction_time: 2
   construction_batch_size: 1
   icon_index: [9, 25]
+  type: droptank
 
 # Production
 - id: shpmod_farm_old
@@ -31,6 +33,8 @@ shipmodules:
     steel: 10
     electronics: 1
   icon_index: [31, 31]
+  hidden: y
+  type: large
 
 - id: shpmod_water_extractor
   name: Water extractor
@@ -42,6 +46,7 @@ shipmodules:
     steel: 10
     electronics: 1
   icon_index: [8, 24]
+  type: medium
 
 #- id: shpmod_rock_extractor
 #  name: rock extractor
@@ -62,7 +67,8 @@ shipmodules:
   construction_resources:
     rock: 30
     electronics: 1
-  icon_index: [0, 0]
+  icon_index: [11, 24]
+  type: large
 
 - id: shpmod_carbon_extractor
   name: carbon extractor
@@ -72,9 +78,10 @@ shipmodules:
   construction_resources:
     rock: 30
     electronics: 1
-  icon_index: [0, 0]
+  icon_index: [10, 24]
   planets_restriction:
   - Titan
+  type: large
 
 - id: shpmod_electrolyser
   name: electrolyser
@@ -84,17 +91,19 @@ shipmodules:
   mass: 10
   construction_resources:
     steel: 10
-  icon_index: [0, 0]
+  icon_index: [12, 24]
+  type: medium
 
-- id: shpmod_smelter
-  name: smelter
+- id: shpmod_steel_smelter
+  name: steel smelter
   description: ""
   produce: { steel: 14, water: 7 }
   consume: { iron_ore: 20, hydrogen: 1 }
   mass: 10
   construction_resources:
     rock: 10
-  icon_index: [0, 0]
+  icon_index: [14, 24]
+  type: large
 
 - id: shpmod_fuel_cell
   name: fuel cell
@@ -104,7 +113,8 @@ shipmodules:
   mass: 10
   construction_resources:
     steel: 10
-  icon_index: [0, 0]
+  icon_index: [13, 24]
+  type: medium
 
 - id: shpmod_habitat
   name: Habitat
@@ -116,7 +126,8 @@ shipmodules:
     steel: 50
     electronics : 10
     polymers : 20
-  icon_index: [0, 0]
+  icon_index: [8, 23]
+  type: large
 
 - id: shpmod_carbon_splitter
   name: carbon splitter
@@ -126,7 +137,8 @@ shipmodules:
   mass: 10
   construction_resources:
     steel: 10
-  icon_index: [0, 0]
+  icon_index: [31, 31]
+  type: small
 
 - id: shpmod_waste_treatment
   name: waste treatment
@@ -137,7 +149,8 @@ shipmodules:
   construction_resources:
     steel: 20
     polymers: 10
-  icon_index: [0, 0]
+  icon_index: [12, 23]
+  type: medium
 
 - id: shpmod_farms
   name: farms
@@ -147,7 +160,8 @@ shipmodules:
   mass: 10
   construction_resources:
     steel: 10
-  icon_index: [0, 0]
+  icon_index: [9, 23]
+  type: medium
 
 - id: shpmod_polymers
   name: polymers factory
@@ -159,7 +173,8 @@ shipmodules:
     steel: 10
   planets_restriction:
   - Mimas
-  icon_index: [0, 0]
+  icon_index: [11, 23]
+  type: large
 
 - id: shpmod_electronics
   name: semiconductor laboratory
@@ -172,7 +187,8 @@ shipmodules:
     polymers: 20
   planets_restriction:
   - Iaeptus
-  icon_index: [0, 0]
+  icon_index: [10, 23]
+  type: large
 
 # water extractor :                                               => 1 water
 # rock extractor  :                                               => 1 rock
@@ -200,6 +216,7 @@ shipmodules:
     steel: 10
     electronics: 1
   icon_index: [8, 26]
+  type: medium
 
 - id: shpmod_small_yard_2
   name: Shipyard storage facility
@@ -209,6 +226,7 @@ shipmodules:
   construction_resources:
     steel: 20
   icon_index: [9, 26]
+  type: large
 
 - id: shpmod_small_yard_3
   name: Small shipyard workshop
@@ -219,6 +237,7 @@ shipmodules:
     steel: 40
     electronics: 5
   icon_index: [10, 26]
+  type: large
 
 - id: shpmod_small_yard_4
   name: Small shipyard scaffolding
@@ -228,6 +247,7 @@ shipmodules:
   construction_resources:
     steel: 20
   icon_index: [11, 26]
+  type: large
 
 # Military
 - id: shpmod_railgun
@@ -243,6 +263,7 @@ shipmodules:
   construction_resources:
     steel: 20
   icon_index: [8, 27]
+  type: small
   
 - id: shpmod_missiles
   name: Missiles
@@ -255,6 +276,7 @@ shipmodules:
     electronics: 1
     water: 10
   icon_index: [9, 27]
+  type: small
 
 - id: shpmod_light_armor
   name: Light armor
@@ -267,6 +289,7 @@ shipmodules:
   construction_resources:
     steel: 10
   icon_index: [10, 27]
+  type: armor
 
 - id: shpmod_armor
   name: Armor
@@ -280,6 +303,7 @@ shipmodules:
   construction_resources:
     steel: 20
   icon_index: [11, 27]
+  type: armor
   
 - id: shpmod_pdc
   name: Point-defence cannons
@@ -293,6 +317,7 @@ shipmodules:
     steel: 5
     electronics: 1
   icon_index: [12, 27]
+  type: small
 
 - id: shpmod_acs
   name: High-fi Attitude Control System
@@ -305,6 +330,7 @@ shipmodules:
     mass: 5
     electronics: 2
   icon_index: [14, 27]
+  type: small
 
 # Support
 - id: shpmod_reactor
@@ -323,6 +349,7 @@ shipmodules:
     water: 10
     uranium: 1
   icon_index: [6, 25]
+  type: small
 
 # Boarding
 - id: shpmod_exp_brigade
@@ -336,6 +363,7 @@ shipmodules:
   mass: 5
   hidden: y
   icon_index: [31, 31]
+  type: free
   
 - id: shpmod_armory
   name: Armory
@@ -346,6 +374,7 @@ shipmodules:
   mass: 1
   hidden: y
   icon_index: [31, 31]
+  type: free
 
 # Developer
 - id: shpmod_boost_init
@@ -356,6 +385,7 @@ shipmodules:
   mass: 0
   hidden: y
   icon_index: [31, 31]
+  type: free
 
 # ... Weapons, time extenders
 # e.g. loadout for gunship:

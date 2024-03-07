@@ -45,11 +45,37 @@ struct IDAllocatorList {
     void Init() {
         alloc_count = 0;
         capacity = 32;
-        array = (T*)malloc(sizeof(T) * capacity);
-        free_index_array = (uint32_t*)malloc(sizeof(uint32_t) * capacity);
-        verifier_array = (uint64_t*)malloc(sizeof(uint64_t) * ceil(capacity / 64.));
+        array = new T[capacity];
+        free_index_array = new uint32_t[capacity];
+        verifier_array =  new uint64_t[(size_t)ceil(capacity / 64.)];
         for(int i = 0; i < capacity; i++) free_index_array[i] = i;
         for(int i = 0; i < ceil(capacity / 64.); i++) verifier_array[i] = 0;
+    }
+
+    void Realloc(uint32_t new_capacity) {
+        T* new_array = new T[new_capacity];
+        uint32_t* new_free_index_array = new uint32_t[new_capacity];
+        uint64_t* new_verifier_array = new uint64_t[(size_t)ceil(new_capacity / 64.)];
+
+        for(int i=0; i < capacity; i++) {
+            new_array[i] = array[i];
+            new_free_index_array[i] = free_index_array[i];
+        }
+        for(int i=0; i < ceil(capacity / 64.); i++) {
+            new_verifier_array[i] = verifier_array[i];
+        }
+        //memcpy(new_array, array, capacity * sizeof(T));
+        //memcpy(new_free_index_array, free_index_array, capacity * sizeof(uint32_t));
+        //memcpy(new_verifier_array, verifier_array, capacity * sizeof(uint64_t) * (size_t)ceil(capacity / 64.));
+
+        delete[] array;
+        delete[] free_index_array;
+        delete[] verifier_array;
+
+        capacity = new_capacity;
+        array = new_array;
+        free_index_array = new_free_index_array;
+        verifier_array = new_verifier_array;
     }
 
     bool AllocateAtID(RID id, T** ret_ptr=NULL) {
@@ -64,10 +90,7 @@ struct IDAllocatorList {
             WARNING("Forcing the allocation of an RID will excessively extend (>128) the IDallocator. Index is %d, capacity is %d", index, capacity)
         }
         while (index >= capacity) {
-            capacity += 32;
-            array = (T*)realloc(array, sizeof(T) * capacity);
-            free_index_array = (uint32_t*)realloc(free_index_array, sizeof(uint32_t) * capacity);
-            verifier_array = (uint64_t*)realloc(verifier_array, sizeof(uint64_t) * ceil(capacity / 64.));
+            Realloc(capacity + 32);
             for(uint32_t i = capacity-32; i < capacity; i++) {
                 free_index_array[i] = i;
                 verifier_array[i/64] &= ~(UNIT64 << (i % 64));
@@ -84,10 +107,7 @@ struct IDAllocatorList {
 
     RID Allocate(T** ret_ptr=NULL) {
         if (alloc_count >= capacity) {
-            capacity += 32;
-            array = (T*)realloc(array, sizeof(T) * capacity);
-            free_index_array = (uint32_t*)realloc(free_index_array, sizeof(uint32_t) * capacity);
-            verifier_array = (uint64_t*)realloc(verifier_array, sizeof(uint64_t) * ceil(capacity / 64.));
+            Realloc(capacity + 32);
             for(uint32_t i = capacity-32; i < capacity; i++) {
                 free_index_array[i] = i;
                 verifier_array[i/64] &= ~(UNIT64 << (i % 64));
@@ -165,9 +185,9 @@ struct IDAllocatorList {
     }
 
     void _Destroy() {
-        free(array);
-        free(free_index_array);
-        free(verifier_array);
+        delete[] array;
+        delete[] free_index_array;
+        delete[] verifier_array;
     }
 
     typedef void SerializationFn(DataNode*, const T*);

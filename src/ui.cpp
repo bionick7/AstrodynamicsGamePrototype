@@ -45,6 +45,13 @@ ButtonStateFlags::T GetButtonState(bool is_in_area, bool was_in_area) {
     return res;
 }
 
+ButtonStateFlags::T GetButtonStateRec(Rectangle rec) {
+    return GetButtonState(
+        CheckCollisionPointRec(GetMousePosition(), rec), 
+        CheckCollisionPointRec(Vector2Subtract(GetMousePosition(), GetMouseDelta()), rec)
+    );
+}
+
 void HandleButtonSound(ButtonStateFlags::T state) {
     if (state & ButtonStateFlags::JUST_PRESSED) {
         PlaySFX(SFX_CLICK_BUTTON);
@@ -88,7 +95,7 @@ TextBox::TextBox(const TextBox *parent, int x, int y, int w, int h) :
 int TextBox::GetCharWidth() {
     Font font = GetCustomDefaultFont();
     const char* test_string = "abcdefghiJKLMNOP0123";
-    return MeasureTextEx(GetCustomDefaultFont(), test_string, text_size, 1).x / strlen(test_string);
+    return MeasureTextEx(font, test_string, text_size, 1).x / strlen(test_string);
 }
 
 void TextBox::_Advance(Vector2 pos, Vector2 size) {
@@ -226,9 +233,7 @@ void TextBox::DrawTexture(Texture2D texture, Rectangle source, int texture_heigh
     int texture_width = texture_height * source.width / source.height;
     Rectangle destination = { pos.x, pos.y, (float)texture_width, (float)texture_height };
     bool outside_render_rect = !CheckCollisionRecs(render_rec, destination);
-    bool inside_render_rect = 
-        render_rec.x > destination.x && render_rec.x + render_rec.width  < destination.x + destination.width &&
-        render_rec.y > destination.y && render_rec.y + render_rec.height < destination.y + destination.height;
+    bool inside_render_rect = CheckEnclosingRecs(render_rec, destination);
     if (outside_render_rect) {
         return;
     }
@@ -276,12 +281,23 @@ ButtonStateFlags::T TextBox::WriteButton(const char* text, int inset) {
 }
 
 ButtonStateFlags::T TextBox::AsButton() const {
-    return GetButtonState(
-        CheckCollisionPointRec(GetMousePosition(), {(float)text_start_x, (float)text_start_y, (float)width, (float)height}),
-        CheckCollisionPointRec(Vector2Subtract(GetMousePosition(), GetMouseDelta()), {(float)text_start_x, (float)text_start_y, (float)width, (float)height})
-    );
+    return GetButtonStateRec( {(float)text_start_x, (float)text_start_y, (float)width, (float)height} );
 }
 
+Vector2 TextBox::GetTextCursor() const {
+    return (Vector2) {
+        text_start_x + x_cursor,
+        text_start_y + y_cursor
+    };
+}
+
+Rectangle TextBox::GetRect() const {
+    // Different from render_rec e.g. in case of ScrollInset
+    return {
+        text_start_x, text_start_y,
+        width, height
+    };
+}
 
 int TextBox::GetLineHeight() const {
     return text_size + text_margin_y;
@@ -377,6 +393,13 @@ void ui::PushMouseHint(Vector2 mousepos, int width, int height, uint8_t z_layer)
     int x_pos = ClampInt(mousepos.x, border_margin, GetScreenWidth() - width - border_margin);
     int y_pos = ClampInt(mousepos.y, border_margin, GetScreenHeight() - height - border_margin);
     ui::PushGlobal(x_pos, y_pos, width, height, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, z_layer);
+}
+
+void ui::PushFree(int x, int y, int w, int h) {
+    TextBox* tb = ui::Current();
+    TextBox new_text_box = TextBox(tb, x, y, w, h);
+    new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb->render_rec);
+    ui::PushTextBox(new_text_box);
 }
 
 int ui::PushInset(int margin, int h) {
@@ -695,7 +718,6 @@ void UIGlobals::_HandleMouseTips() {
 
     for (int i=mousehints.count-1; i >= 0; i--) {  // Avoid overdraw
         bool top_most = i == mousehints.count-1;
-        Rectangle org_rect = mousehints.origin_button_rects[i];
 
         // Text manipulation
         StringBuilder sb = StringBuilder(mousehints.hints[i]);
