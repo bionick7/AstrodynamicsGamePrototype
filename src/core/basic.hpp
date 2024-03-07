@@ -12,9 +12,9 @@
 #include <vector>
 
 #if __WORDSIZE == 64
-    #define LONG_STRID "ld"
+    #define LONG_STRID "l"
 #else
-    #define LONG_STRID "lld"
+    #define LONG_STRID "ll"
 #endif
 
 #endif // BASIC_H

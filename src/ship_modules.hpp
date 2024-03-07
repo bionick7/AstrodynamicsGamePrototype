@@ -74,14 +74,14 @@ namespace ModuleType {
         "any",
     };
 
-    static Color colors[] = {
-        Palette::ui_main,
-        Palette::ui_alt,
-        Palette::ui_dark,
-        Palette::bg,
-        Palette::interactable_main,
-        Palette::interactable_alt,
-        Palette::green,
+    static AtlasPos icons[] = {
+        {  8, 23},
+        {  8, 24},
+        { 12, 27},
+        { 31, 31},
+        { 11, 27},
+        {  9, 25},
+        { 31, 31},
     };
 
     enum T {
@@ -97,6 +97,7 @@ namespace ModuleType {
         MAX,
     };
     static_assert(sizeof(names) / sizeof(char*) == MAX);
+    static_assert(sizeof(icons) / sizeof(AtlasPos) == MAX);
 
     ModuleType::T FromString(const char* name);
     bool IsCompatible(ModuleType::T from, ModuleType::T to);
@@ -147,6 +148,9 @@ struct ShipModuleSlot {
     void AssignIfValid(ShipModuleSlot other);
     bool IsValid() const;
     bool IsReachable(ShipModuleSlot other) const;
+    bool IsSlotFitting(RID module) const;
+
+    void Draw() const;
 };
 
 struct ModuleConfiguration {
@@ -156,7 +160,7 @@ struct ModuleConfiguration {
     Vector2 draw_offset[SHIP_MAX_MODULES];
     Rectangle draw_space;
 
-    void Load(const DataNode* data);
+    void Load(const DataNode* data, const char* ship_id);
     void Draw(Ship* ship) const;
     bool IsAdjacent(ShipModuleSlot lhs, ShipModuleSlot rhs) const;
 };

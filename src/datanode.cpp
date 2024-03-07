@@ -77,7 +77,7 @@ int _YamlParseFromText(DataNode* node, const char* origin, const char* text, boo
     while (true) {
         if (!yaml_parser_parse(&parser, &event)) break;
         if (event.type == YAML_MAPPING_START_EVENT) break;
-        if (event.type == YAML_STREAM_END_TOKEN) goto EMPTY_STREAM;
+        if (event.type == YAML_STREAM_END_EVENT) goto EMPTY_STREAM;
     }
 
     status = DataNode::FromYaml(node, origin, &parser, false, 0);

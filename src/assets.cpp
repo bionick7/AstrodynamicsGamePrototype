@@ -3,7 +3,7 @@
 #include "string_builder.hpp"
 #include "debug_console.hpp"
 
-#define INCLUDE_BAKED  // Comment out to bootstrap baked_data.hpp
+//#define INCLUDE_BAKED  // Comment out to bootstrap baked_data.hpp
 #ifdef INCLUDE_BAKED
 #include "baked_data.hpp"
 #endif
@@ -15,6 +15,7 @@ namespace assets {
     Table<Texture2D> texture_table;
     Table<Image> image_table;
     Table<Font> font_table;
+    Table<WireframeMesh> mesh_table;
     Table<Shader> shader_table;
     Table<Sound> sound_table;
     Table<DataNode> data_table;
@@ -179,12 +180,13 @@ char* assets::GetResourceText(const char *filepath) {
     #endif // INCLUDE_BAKED
 }
 
-template<> assets::Table<Texture2D>* assets::GetTable<Texture2D>() { return &assets::texture_table; }
-template<> assets::Table<Image>*     assets::GetTable<Image>()     { return &assets::image_table;   }
-template<> assets::Table<Font>*      assets::GetTable<Font>()      { return &assets::font_table;    }
-template<> assets::Table<Shader>*    assets::GetTable<Shader>()    { return &assets::shader_table;  }
-template<> assets::Table<Sound>*     assets::GetTable<Sound>()     { return &assets::sound_table;   }
-template<> assets::Table<DataNode>*  assets::GetTable<DataNode>()  { return &assets::data_table;    }
+template<> assets::Table<Texture2D>*     assets::GetTable<Texture2D>()     { return &assets::texture_table; }
+template<> assets::Table<Image>*         assets::GetTable<Image>()         { return &assets::image_table;   }
+template<> assets::Table<Font>*          assets::GetTable<Font>()          { return &assets::font_table;    }
+template<> assets::Table<WireframeMesh>* assets::GetTable<WireframeMesh>() { return &assets::mesh_table;    }
+template<> assets::Table<Shader>*        assets::GetTable<Shader>()        { return &assets::shader_table;  }
+template<> assets::Table<Sound>*         assets::GetTable<Sound>()         { return &assets::sound_table;   }
+template<> assets::Table<DataNode>*      assets::GetTable<DataNode>()      { return &assets::data_table;    }
 
 Texture2D assets::GetTexture(const char *path) {
     if (!IsWindowReady()) {
@@ -199,6 +201,18 @@ Texture2D assets::GetTexture(const char *path) {
         Texture2D texture = LoadTexture(path);
         texture_table.Insert(path_hash, texture);
         return texture;
+    }
+}
+
+WireframeMesh assets::GetWirframe(const char *path) {
+    uint64_t path_hash = HashPath(path);
+    int find = mesh_table.Find(path_hash);
+    if (find >= 0) {
+        return mesh_table.data[find];
+    } else {
+        WireframeMesh mesh = LoadWireframeMesh(path);
+        mesh_table.Insert(path_hash, mesh);
+        return mesh;
     }
 }
 
@@ -317,17 +331,27 @@ void assets::Reload() {
     for(int i=0; i < image_table.size; i++) {
         UnloadImage(image_table.data[i]);
     }
+    for(int i=0; i < font_table.size; i++) {
+        UnloadFont(font_table.data[i]);
+    }
+    for(int i=0; i < mesh_table.size; i++) {
+        UnLoadWireframeMesh(mesh_table.data[i]);
+    }
     for(int i=0; i < shader_table.size; i++) {
         UnloadShader(shader_table.data[i]);
     }
     for(int i=0; i < sound_table.size; i++) {
         UnloadSound(sound_table.data[i]);
     }
-    texture_table.Clear();
-    image_table.Clear();
-    shader_table.Clear();
-    sound_table.Clear();
-    data_table.Clear();
+
+    texture_table.Reset();
+    image_table.Reset();
+    font_table.Reset();
+    mesh_table.Reset();
+    shader_table.Reset();
+    sound_table.Reset();
+
+    data_table.Reset();
 }
 
 bool _IsDataFile(const char* path) {
@@ -341,7 +365,8 @@ bool _IsTextFile(const char* path) {
         || IsFileExtension(path, ".wren")
         || IsFileExtension(path, ".fnt")
         || IsFileExtension(path, ".vs")
-        || IsFileExtension(path, ".fs");
+        || IsFileExtension(path, ".fs")
+        || IsFileExtension(path, ".obj");
 }
 
 void assets::BakeAllResources() {
@@ -425,7 +450,7 @@ void assets::BakeAllResources() {
     fprintf(out_file, "#define BAKED_RESOURCE_COUNT %d\n\n", resource_count);
     fprintf(out_file, "assets::BakedResource resources[] = {\n");
     for(int i=0; i < resource_count; i++) {
-        fprintf(out_file, "    { 0x%016llX, %d, %10lu, %10lu }, // %s\n", 
+        fprintf(out_file, "    { 0x%016" LONG_STRID "X, %d, %10lu, %10lu }, // %s\n", 
             resources[i].path_hash, 
             resources[i].is_text,
             resources[i].offset,
@@ -444,11 +469,26 @@ void assets::BakeAllResources() {
     fprintf(out_file, "\n    };\n\n");
     fprintf(out_file, "\n");
     fprintf(out_file, "const char text[] = {");
+
     for (int i=0; i < text_size; i++) {
         if (i % BYTES_PER_LINE == 0) {
             fprintf(out_file, "\n");
         }
-        fprintf(out_file, "0x%02X,", text_buffer[i]);
+        /*if (text_buffer[i] < 0) {
+            int resource_index = -1;
+            for(int j=0; j < resource_count; j++) {
+                if(resources[j].offset < i && resources[j].offset + resources[j].size > i && resources[j].is_text) 
+                    resource_index = j;
+            }
+            FAIL("text at %d (%s, char %d) has a negative char ('%c' - %d)", i, 
+                rsc_filepaths[resource_index], 
+                i - resources[resource_index].offset,
+                text_buffer[i], 
+                text_buffer[i]
+            )
+        }*/
+        
+        int count = fprintf(out_file, "%2d,", text_buffer[i]);
     }
     fprintf(out_file, "\n    };\n\n");
     fprintf(out_file, "static_assert(sizeof(data) == BAKED_DATA_SIZE);\n");
@@ -467,7 +507,6 @@ void assets::BakeAllResources() {
 
 void assets::UnBakeAllResources() {
     INFO("Unbake Resources")
-
 }
 
 int AssetTests() {

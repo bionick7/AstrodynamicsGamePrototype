@@ -115,6 +115,114 @@ void EndRenderInUIMode() {
     EndShaderMode();
 }
 
+namespace wireframe_shader {
+    Shader shader;
+
+    int color = -1;
+    int render_mode = -1;
+    int mvp = -1;
+    int time = -1;
+
+    void Load() {
+        LOAD_SHADER(wireframe_shader)
+        LOAD_SHADER_UNIFORM(wireframe_shader, render_mode)
+        LOAD_SHADER_UNIFORM(wireframe_shader, color)
+        LOAD_SHADER_UNIFORM(wireframe_shader, mvp)
+        LOAD_SHADER_UNIFORM(wireframe_shader, time)
+    }
+}
+
+void RenderWirframeMesh(WireframeMesh mesh, Matrix transform, Color color) {
+    RELOAD_IF_NECAISSARY(wireframe_shader)
+
+    float color4[4];
+    _ColorToFloat4Buffer(color4, color);
+    SetShaderValue(wireframe_shader::shader, wireframe_shader::color, color4, SHADER_UNIFORM_VEC4);
+    int render_mode = 0;
+    SetShaderValue(wireframe_shader::shader, wireframe_shader::render_mode, &render_mode, SHADER_UNIFORM_INT);
+    float time = GetRenderServer()->screen_time;
+    SetShaderValue(wireframe_shader::shader, wireframe_shader::time, &time, SHADER_UNIFORM_FLOAT);
+    //SetShaderValueMatrix(wireframe_shader::shader, wireframe_shader::mvp2, MVP);
+    BeginShaderMode(wireframe_shader::shader);
+
+#ifdef WIREFRAME_USE_NATIVE_BUFFERS
+    Matrix matModel = MatrixIdentity();
+    Matrix matView = rlGetMatrixModelview();
+    Matrix matModelView = MatrixIdentity();
+    Matrix matProjection = rlGetMatrixProjection();
+    //matModel = MatrixMultiply(transform, rlGetMatrixTransform());
+    matModel = transform;
+    //matModelView = MatrixMultiply(matModel, matView);
+    //Matrix MVP = MatrixMultiply(matModelView, matProjection);
+    matModelView = MatrixMultiply(matView, matModel);
+    Matrix MVP = MatrixMultiply(matProjection, matModelView);
+    rlSetUniformMatrix(wireframe_shader::shader.locs[SHADER_LOC_MATRIX_MVP], MVP);
+    
+    rlEnableVertexArray(mesh.vao);
+    rlEnableVertexBuffer(mesh.vbo_vertecies);
+    rlSetVertexAttribute(wireframe_shader::vertexPosition, 3, RL_FLOAT, 0, 0, 0);
+    rlEnableVertexAttribute(wireframe_shader::vertexPosition);
+    rlEnableVertexBufferElement(mesh.vbo_lines);
+
+    rlDrawVertexLineArray(0, mesh.vertex_count * 3);
+    //rlDrawVertexArray(0, mesh.vertex_count * 3);
+    DEBUG_SHOW_I(mesh.vertex_count)
+    rlDisableVertexArray();
+#else
+    rlPushMatrix();
+    rlMultMatrixf(MatrixToFloat(transform));
+    rlBegin(RL_LINES);
+    //int max_j = fmod(GetRenderServer()->screen_time * 0.3, 1.0) * mesh.line_count;
+    int max_j = mesh.line_count;
+    for (int j=0; j < max_j; j++) {
+        int v1 = mesh.lines[j*2];
+        int v2 = mesh.lines[j*2+1];
+        rlColor4f(0, 0, 0, mesh.vertex_distances[j]);
+        rlColor4f(0, 0, 0, mesh.vertex_distances[j]);
+        rlVertex3f(mesh.vertecies[v1*3], mesh.vertecies[v1*3+1], mesh.vertecies[v1*3+2]);
+        rlVertex3f(mesh.vertecies[v2*3], mesh.vertecies[v2*3+1], mesh.vertecies[v2*3+2]);
+    }
+    rlEnd();
+
+    rlPopMatrix();
+
+#endif  // WIREFRAME_USE_NATIVE_BUFFERS
+
+    EndShaderMode();
+
+    //rlPushMatrix();
+    //rlMultMatrixf(MatrixToFloat(transform));
+    //DrawBoundingBox(mesh.bounding_box, color);
+    //rlPopMatrix();
+}
+
+void RenderWirframeMesh2D(WireframeMesh mesh, Rectangle box, Color color, uint8_t z_layer) {
+    RELOAD_IF_NECAISSARY(ui_shader)
+
+    float color4[4];
+    _ColorToFloat4Buffer(color4, color);
+    //SetShaderValue(ui_shader::shader, ui_shader::color, color4, SHADER_UNIFORM_VEC4);
+    //SetShaderValueMatrix(wireframe_shader::shader, wireframe_shader::mvp2, MVP);
+    BeginShaderMode(wireframe_shader::shader);
+
+    rlPushMatrix();
+    
+    rlBegin(RL_LINES);
+    int max_j = fmod(GetRenderServer()->screen_time * 0.3, 1.0) * mesh.line_count;
+    max_j = mesh.line_count;
+    for (int j=0; j < max_j; j++) {
+        int v1 = mesh.lines[j*2];
+        int v2 = mesh.lines[j*2+1];
+        rlVertex3f(mesh.vertecies[v1*3], mesh.vertecies[v1*3+1], mesh.vertecies[v1*3+2]);
+        rlVertex3f(mesh.vertecies[v2*3], mesh.vertecies[v2*3+1], mesh.vertecies[v2*3+2]);
+    }
+    rlEnd();
+
+    rlPopMatrix();
+
+    EndShaderMode();
+}
+
 namespace orbit_shader {
     Shader shader;
     int semi_latus_rectum = -1;

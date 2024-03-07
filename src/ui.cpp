@@ -229,7 +229,7 @@ void TextBox::Decorate(const text::Layout* layout, const TokenList* tokens) {
 }
 
 void TextBox::DrawTexture(Texture2D texture, Rectangle source, int texture_height, Color tint, bool sdf) {
-    Vector2 pos = {text_start_x + x_cursor, text_start_y + y_cursor + text_margin_y};
+    Vector2 pos = {text_start_x + x_cursor, text_start_y + y_cursor};
     int texture_width = texture_height * source.width / source.height;
     Rectangle destination = { pos.x, pos.y, (float)texture_width, (float)texture_height };
     bool outside_render_rect = !CheckCollisionRecs(render_rec, destination);
@@ -281,7 +281,7 @@ ButtonStateFlags::T TextBox::WriteButton(const char* text, int inset) {
 }
 
 ButtonStateFlags::T TextBox::AsButton() const {
-    return GetButtonStateRec( {(float)text_start_x, (float)text_start_y, (float)width, (float)height} );
+    return GetButtonStateRec(GetRect());
 }
 
 Vector2 TextBox::GetTextCursor() const {

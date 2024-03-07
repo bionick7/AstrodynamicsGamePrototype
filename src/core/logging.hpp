@@ -34,6 +34,7 @@
 #define SHOW_F(var) LogImpl(__FILE__, __LINE__, LOGTYPE_INFO, "%s = %f", #var, var);
 #define SHOW_I(var) LogImpl(__FILE__, __LINE__, LOGTYPE_INFO, "%s = %d", #var, var);
 #define SHOW_V2(var) LogImpl(__FILE__, __LINE__, LOGTYPE_INFO, "%s = (%f, %f)", #var, (var).x, (var).y);
+#define SHOW_REC(var) LogImpl(__FILE__, __LINE__, LOGTYPE_INFO, "%s = (%f, %f) : (%f, %f)", #var, (var).x, (var).y, (var).width, (var).height);
 
 //#define CRASH exit(1);
 #define CRASH *((int*)(0)) += 1;

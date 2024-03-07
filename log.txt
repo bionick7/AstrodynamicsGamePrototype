@@ -66,8 +66,8 @@ src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
 src/datanode.cpp:404 :: Key 'construction_time' not found
 src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
 src/global_state.cpp:95 :: Loading ShipClasses
+src/datanode.cpp:505 :: Key 'shp_express' not found
 FILEIO: [DVTable.txt] Text file saved successfully
-WAVE: Data loaded successfully (96000 Hz, 16 bit, 2 channels)
 TEXTURE: [ID 4] Texture loaded successfully (1600x900 | R8G8B8A8 | 1 mipmaps)
 TEXTURE: Depth texture loaded successfully
 TEXTURE: [ID 6] Texture loaded successfully (1600x900 | R8G8B8A8 | 1 mipmaps)
@@ -80,23 +80,48 @@ TEXTURE: [ID 8] Texture loaded successfully (4096x2048 | R8G8B8 | 1 mipmaps)
 SHADER: [ID 4] Vertex shader compiled successfully
 SHADER: [ID 5] Fragment shader compiled successfully
 SHADER: [ID 7] Program shader loaded successfully
-SHADER: [ID 4] Vertex shader compiled successfully
-SHADER: [ID 5] Fragment shader compiled successfully
-SHADER: [ID 8] Program shader loaded successfully
-SHADER: [ID 4] Vertex shader compiled successfully
-SHADER: [ID 5] Fragment shader compiled successfully
-SHADER: [ID 9] Program shader loaded successfully
 SHADER: [ID 4] Fragment shader compiled successfully
 SHADER: [ID 5] Program shader loaded successfully
+SHADER: [ID 4] Fragment shader compiled successfully
+SHADER: [ID 8] Program shader loaded successfully
+SHADER: [ID 4] Fragment shader compiled successfully
+SHADER: [ID 9] Program shader loaded successfully
 SHADER: [ID 4] Fragment shader compiled successfully
 SHADER: [ID 10] Program shader loaded successfully
 SHADER: [ID 4] Fragment shader compiled successfully
 SHADER: [ID 11] Program shader loaded successfully
+TEXTURE: [ID 8] Unloaded texture data from VRAM (GPU)
+TEXTURE: [ID 3] Unloaded texture data from VRAM (GPU)
+SHADER: [ID 6] Unloaded shader program data from VRAM (GPU)
+SHADER: [ID 7] Unloaded shader program data from VRAM (GPU)
+SHADER: [ID 5] Unloaded shader program data from VRAM (GPU)
+SHADER: [ID 8] Unloaded shader program data from VRAM (GPU)
+SHADER: [ID 9] Unloaded shader program data from VRAM (GPU)
+SHADER: [ID 10] Unloaded shader program data from VRAM (GPU)
+SHADER: [ID 11] Unloaded shader program data from VRAM (GPU)
+SHADER: [ID 4] Vertex shader compiled successfully
+SHADER: [ID 5] Fragment shader compiled successfully
+SHADER: [ID 6] Program shader loaded successfully
+IMAGE: Data loaded successfully (4096x2048 | R8G8B8 | 1 mipmaps)
+TEXTURE: [ID 3] Texture loaded successfully (4096x2048 | R8G8B8 | 1 mipmaps)
+SHADER: [ID 4] Vertex shader compiled successfully
+SHADER: [ID 5] Fragment shader compiled successfully
+SHADER: [ID 7] Program shader loaded successfully
 SHADER: [ID 4] Fragment shader compiled successfully
-SHADER: [ID 12] Program shader loaded successfully
+SHADER: [ID 5] Program shader loaded successfully
 SHADER: [ID 4] Fragment shader compiled successfully
-SHADER: [ID 13] Program shader loaded successfully
-WAVE: Data loaded successfully (48000 Hz, 16 bit, 2 channels)
+SHADER: [ID 8] Program shader loaded successfully
+IMAGE: Data loaded successfully (1280x1280 | GRAYSCALE | 1 mipmaps)
+TEXTURE: [ID 8] Texture loaded successfully (1280x1280 | GRAY_ALPHA | 1 mipmaps)
+FONT: [resources/fonts/space_mono_small_sdf.fnt] Font loaded successfully (710 glyphs)
+FONT: Data loaded successfully (32 pixel size | 95 glyphs)
+SHADER: [ID 4] Fragment shader compiled successfully
+SHADER: [ID 9] Program shader loaded successfully
+SHADER: [ID 4] Fragment shader compiled successfully
+SHADER: [ID 10] Program shader loaded successfully
+SHADER: [ID 4] Fragment shader compiled successfully
+SHADER: [ID 11] Program shader loaded successfully
+WAVE: Data loaded successfully (96000 Hz, 16 bit, 2 channels)
 TEXTURE: [ID 2] Unloaded texture data from VRAM (GPU)
 SHADER: [ID 3] Default shader unloaded successfully
 TEXTURE: [ID 1] Default texture unloaded successfully

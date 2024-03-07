@@ -11,45 +11,6 @@ ship_classes:
     kinetic_hp: 1
     energy_hp: 1
     crew: 10
-  module_config:
-  - type: small  # 0
-    neighbours: [1, 4]
-    offset: [-1.5, -1]
-  - type: medium  # 1
-    neighbours: [0, 2, 5]
-    offset: [-.5, -1]
-  - type: medium  # 2
-    neighbours: [1, 3, 6]
-    offset: [.5, -1]
-  - type: small  # 3
-    neighbours: [2, 7]
-    offset: [1.5, -1]
-
-  - type: small  # 4
-    neighbours: [5, 0, 8]
-    offset: [-1.5, 0]
-  - type: medium  # 5
-    neighbours: [4, 6, 1, 9]
-    offset: [-.5, 0]
-  - type: medium  # 6
-    neighbours: [5, 7, 2, 10]
-    offset: [.5, 0]
-  - type: small  # 7
-    neighbours: [6, 3, 11]
-    offset: [1.5, 0]
-
-  - type: small  # 8
-    neighbours: [9, 4]
-    offset: [-1.5, 1]
-  - type: medium  # 9
-    neighbours: [8, 10, 5]
-    offset: [-.5, 1]
-  - type: medium  # 10
-    neighbours: [9, 11, 6]
-    offset: [.5, 1]
-  - type: small  # 11
-    neighbours: [10, 7]
-    offset: [1.5, 1]
   construction_time: 45
   construction_resources:
     steel: 90
@@ -72,21 +33,6 @@ ship_classes:
     kinetic_hp: 3
     energy_hp: 3
     crew: 17
-
-  module_config:
-  - type: small  # 0
-    neighbours: [1]
-    offset: [-1.5, 0]
-  - type: medium  # 1
-    neighbours: [0, 2]
-    offset: [-.5, 0]
-  - type: medium  # 2
-    neighbours: [1, 3]
-    offset: [.5, 0]
-  - type: small  # 3
-    neighbours: [2]
-    offset: [1.5, 0]
-
   construction_time: 15
   construction_resources:
     steel: 30
@@ -108,51 +54,6 @@ ship_classes:
     energy_hp: 10
     crew: 200
     boarding_defense: 5
-  module_config:
-  - type: large  # 0
-    neighbours: [1, 4]
-    offset: [0, 0]
-
-  - type: large  # 1
-    neighbours: [0,2]
-    offset: [-1, 0]
-  - type: large  # 2
-    neighbours: [1,3]
-    offset: [-2, 0]
-  - type: large  # 3
-    neighbours: [2,4]
-    offset: [-3, 0]
-
-  - type: large  # 4
-    neighbours: [0,5]
-    offset: [1, 0]
-  - type: large  # 5
-    neighbours: [4,6]
-    offset: [2, 0]
-  - type: large  # 6
-    neighbours: [5]
-    offset: [3, 0]
-
-  - type: large  # 7
-    neighbours: [0,8]
-    offset: [0, -1]
-  - type: large  # 8
-    neighbours: [7,9]
-    offset: [0, -2]
-  - type: large  # 9
-    neighbours: [8]
-    offset: [0, -3]
-
-  - type: large  # 10
-    neighbours: [0,11]
-    offset: [0, 1]
-  - type: large  # 11
-    neighbours: [10,12]
-    offset: [0, 2]
-  - type: large  # 12
-    neighbours: [11]
-    offset: [0, 3]
-
   construction_time: 50
   construction_resources:
     steel: 200
@@ -170,23 +71,184 @@ ship_classes:
     kinetic_hp: 2
     energy_hp: 2
     crew: 20
-
-  module_config:
-  - type: small  # 0
-    neighbours: [1]
-    offset: [-1.5, 0]
-  - type: medium  # 1
-    neighbours: [0, 2]
-    offset: [-.5, 0]
-  - type: medium  # 2
-    neighbours: [1, 3]
-    offset: [.5, 0]
-  - type: small  # 3
-    neighbours: [2]
-    offset: [1.5, 0]
-
   construction_time: 40
   construction_resources:
     steel: 30
     electronics: 12
     uranium: 4
+
+ # MODULE CONFIGURATIONS AUTO-GENERATED
+module_configurations:
+  shp_bulk_transport:
+  - neighbours: []
+    offset:
+    - -120.0
+    - 8.3
+    type: medium
+  - neighbours: []
+    offset:
+    - -60.0
+    - 8.3
+    type: medium
+  - neighbours: []
+    offset:
+    - 0.0
+    - 8.3
+    type: medium
+  - neighbours: []
+    offset:
+    - 170.0
+    - 18.3
+    type: medium
+  - neighbours: []
+    offset:
+    - 229.99999999999997
+    - 18.3
+    type: medium
+  - neighbours: []
+    offset:
+    - -90.0
+    - -101.69999999999999
+    type: drop_tank
+  - neighbours: []
+    offset:
+    - -30.0
+    - -101.69999999999999
+    type: drop_tank
+  - neighbours: []
+    offset:
+    - 30.0
+    - -101.69999999999999
+    type: drop_tank
+  - neighbours: []
+    offset:
+    - 90.0
+    - -101.69999999999999
+    type: drop_tank
+  - neighbours: []
+    offset:
+    - -120.0
+    - 70.0
+    type: large
+  - neighbours: []
+    offset:
+    - -180.0
+    - 70.0
+    type: large
+  shp_light_transport:
+  - neighbours: []
+    offset:
+    - 150.0
+    - 70.0
+    type: drop_tank
+  - neighbours: []
+    offset:
+    - 150.0
+    - -70.0
+    type: drop_tank
+  - neighbours: []
+    offset:
+    - 90.0
+    - 0.0
+    type: medium
+  - neighbours: []
+    offset:
+    - 30.0
+    - 0.0
+    type: medium
+  - neighbours: []
+    offset:
+    - -30.0
+    - 0.0
+    type: medium
+  - neighbours: []
+    offset:
+    - -120.0
+    - 0.0
+    type: small
+  - neighbours: []
+    offset:
+    - -190.0
+    - 0.0
+    type: armor
+  shp_spacestation:
+  - neighbours: []
+    offset:
+    - 0.0
+    - 120.0
+    type: large
+  - neighbours: []
+    offset:
+    - -60.0
+    - 110.00000000000001
+    type: large
+  - neighbours: []
+    offset:
+    - -110.00000000000001
+    - 60.0
+    type: large
+  - neighbours: []
+    offset:
+    - 120.0
+    - 0.0
+    type: large
+  - neighbours: []
+    offset:
+    - 110.00000000000001
+    - 60.0
+    type: large
+  - neighbours: []
+    offset:
+    - 60.0
+    - 110.00000000000001
+    type: large
+  - neighbours: []
+    offset:
+    - -0.0
+    - -120.0
+    type: large
+  - neighbours: []
+    offset:
+    - 60.0
+    - -110.00000000000001
+    type: large
+  - neighbours: []
+    offset:
+    - 110.00000000000001
+    - -60.0
+    type: large
+  - neighbours: []
+    offset:
+    - -120.0
+    - 0.0
+    type: large
+  - neighbours: []
+    offset:
+    - -110.00000000000001
+    - -60.0
+    type: large
+  - neighbours: []
+    offset:
+    - -60.0
+    - -110.00000000000001
+    type: large
+  - neighbours: []
+    offset:
+    - -60.0
+    - 0.0
+    type: large
+  - neighbours: []
+    offset:
+    - 60.0
+    - 0.0
+    type: large
+  - neighbours: []
+    offset:
+    - 0.0
+    - 60.0
+    type: large
+  - neighbours: []
+    offset:
+    - 0.0
+    - -60.0
+    type: large

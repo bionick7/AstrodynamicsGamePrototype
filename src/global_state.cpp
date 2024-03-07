@@ -249,7 +249,7 @@ void GlobalState::DrawUI() {
     
     // Money counter
     char capital_str[21];
-    sprintf(capital_str, "M§M %6" LONG_STRID ".%3" LONG_STRID " .mil", 
+    sprintf(capital_str, "M§M %6" LONG_STRID "d.%3" LONG_STRID "d .mil", 
         factions.GetMoney(factions.player_faction) / (int)1e6, 
         factions.GetMoney(factions.player_faction) % 1000000 / 1000
     );

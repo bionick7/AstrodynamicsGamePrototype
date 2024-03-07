@@ -144,11 +144,16 @@ void Ship::Deserialize(const DataNode* data) {
     int modules_count = data->GetArrayLen("modules", true);
     if (modules_count > SHIP_MAX_MODULES) modules_count = SHIP_MAX_MODULES;
     const ShipModules* sms = GetShipModules();
-    for(int i=0; i < modules_count; i++) {
-        modules[i] = sms->GetModuleRIDFromStringId(data->GetArrayElem("modules", i));
-    }
-    for(int i=modules_count; i < SHIP_MAX_MODULES; i++) {
+    for(int i=0; i < SHIP_MAX_MODULES; i++) {
         modules[i] = GetInvalidId();
+    }
+    for(int i=0; i < modules_count; i++) {
+        RID module_rid = sms->GetModuleRIDFromStringId(data->GetArrayElem("modules", i));
+        if (!IsIdValidTyped(module_rid, EntityType::MODULE_CLASS)) continue;
+        ModuleType::T module_type = sms->GetModuleByRID(module_rid)->type;
+        int proper_index = GetFreeModuleSlot(module_type).index;
+        if (proper_index < 0) continue;
+        modules[proper_index] = module_rid;
     }
 
     prepared_plans_count = data->GetChildArrayLen("prepared_plans", true);
@@ -1152,6 +1157,7 @@ int Ships::LoadShipClasses(const DataNode* data) {
         WARNING("No ship classes loaded")
         return 0;
     }
+    const DataNode* module_configurations = data->GetChild("module_configurations");
     ship_classes = new ShipClass[ship_classes_count];
     for (int index=0; index < ship_classes_count; index++) {
         const DataNode* ship_data = data->GetChildArrayElem("ship_classes", index);
@@ -1159,6 +1165,7 @@ int Ships::LoadShipClasses(const DataNode* data) {
 
         strncpy(sc.name, ship_data->Get("name", "[NAME MISSING]"), SHIPCLASS_NAME_MAX_SIZE);
         strncpy(sc.description, ship_data->Get("description", "[DESCRITION MISSING]"), SHIPCLASS_DESCRIPTION_MAX_SIZE);
+        const char* ship_id = ship_data->Get("id", "_");
 
         sc.max_capacity = ship_data->GetI("capacity", 0);
         sc.max_dv = ship_data->GetF("dv", 0) * 1000;  // km/s -> m/s
@@ -1169,7 +1176,7 @@ int Ships::LoadShipClasses(const DataNode* data) {
         sc.construction_batch_size = ship_data->GetI("batch_size", 1, true);
         sc.is_hidden = strcmp(ship_data->Get("hidden", "n", true), "y") == 0;
         sc.icon_index = AtlasPos(0, 16);
-        sc.module_config.Load(ship_data);
+        sc.module_config.Load(module_configurations, ship_id);
 
         ship_data->FillBufferWithChild("construction_resources", sc.construction_resources, RESOURCE_MAX, resource_names);
         ship_data->FillBufferWithChild("stats", sc.stats, ShipStats::MAX, ship_stat_names);
@@ -1178,7 +1185,7 @@ int Ships::LoadShipClasses(const DataNode* data) {
 
         ship_classes[index] = sc;
         RID rid = RID(index, EntityType::SHIP_CLASS);
-        auto pair = ship_classes_ids.insert_or_assign(ship_data->Get("id", "_"), rid);
+        auto pair = ship_classes_ids.insert_or_assign(ship_id, rid);
         ship_classes[index].id = pair.first->first.c_str();  // points to string in dictionary
     }
     return ship_classes_count;

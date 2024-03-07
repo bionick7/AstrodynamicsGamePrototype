@@ -25,6 +25,8 @@ void BeginRenderSDFInUIMode(uint8_t z_layer);
 void BeginRenderInUIMode(uint8_t z_layer);
 void EndRenderInUIMode();
 
+void RenderWirframeMesh(WireframeMesh mesh, Matrix transform, Color color);
+void RenderWirframeMesh2D(WireframeMesh mesh, Rectangle box, Color color, uint8_t z_layer);
 void RenderOrbit(const OrbitSegment* orbit, int point_count, 
                  OrbitRenderMode::T render_mode, Color color);
 void RenderPerfectSphere(DVector3 pos, double radius, Color color);
@@ -37,5 +39,6 @@ struct AtlasPos;
 #define RELOAD_IF_NECAISSARY(shader_name) if (!assets::IsShaderLoaded(shader_name::shader)) { shader_name::Load(); }
 #define LOAD_SHADER(shader_name) shader_name::shader = assets::GetShader("resources/shaders/"#shader_name);
 #define LOAD_SHADER_UNIFORM(shader_name, uniform_name) shader_name::uniform_name = GetShaderLocation(shader_name::shader, #uniform_name);
+#define LOAD_SHADER_ATTRIB(shader_name, uniform_name) shader_name::uniform_name = GetShaderLocationAttrib(shader_name::shader, #uniform_name);
 
 #endif  // RENDER_UTILS_H

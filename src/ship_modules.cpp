@@ -140,8 +140,8 @@ bool ShipModuleSlot::IsValid() const {
     return IsIdValid(entity) && index >= 0;
 }
 
-bool ShipModuleSlot::IsReachable(ShipModuleSlot other) const {
-    if (!IsValid() || !other.IsValid()) return false;
+bool ShipModuleSlot::IsReachable(ShipModuleSlot target) const {
+    if (!IsValid() || !target.IsValid()) return false;
     RID own_planet = GetInvalidId();
     RID other_planet = GetInvalidId();
     if (origin_type == ShipModuleSlot::DRAGGING_FROM_PLANET) {
@@ -153,13 +153,31 @@ bool ShipModuleSlot::IsReachable(ShipModuleSlot other) const {
         }
     }
     
-    if (other.origin_type == ShipModuleSlot::DRAGGING_FROM_PLANET) {
-        other_planet = other.entity;
-    } else if (other.origin_type == ShipModuleSlot::DRAGGING_FROM_SHIP) {
-        other_planet = GetShip(other.entity)->GetParentPlanet();  // Might be invalid
+    if (target.origin_type == ShipModuleSlot::DRAGGING_FROM_PLANET) {
+        other_planet = target.entity;
+    } else if (target.origin_type == ShipModuleSlot::DRAGGING_FROM_SHIP) {
+        other_planet = GetShip(target.entity)->GetParentPlanet();  // Might be invalid
     }
 
-    return own_planet == other_planet && ModuleType::IsCompatible(module_type, other.module_type);
+    return own_planet == other_planet;
+}
+
+bool ShipModuleSlot::IsSlotFitting(RID module) const {
+    if (!IsIdValidTyped(module, EntityType::MODULE_CLASS)) {
+        return false;
+    }
+    const ShipModuleClass* smc = GetModule(module);
+    //INFO("Fits %s => %s ? %s", ModuleType::names[smc->type], ModuleType::names[module_type], ModuleType::IsCompatible(smc->type, module_type) ? "y":"n")
+    return ModuleType::IsCompatible(smc->type, module_type);
+}
+
+void ShipModuleSlot::Draw() const {
+    int x_cursor = ui::Current()->x_cursor;
+    int y_cursor = ui::Current()->y_cursor;
+    ui::DrawIconSDF(ModuleType::icons[module_type], Palette::ui_dark, 40);
+    // Res
+    ui::Current()->x_cursor = x_cursor;
+    ui::Current()->y_cursor = y_cursor;
 }
 
 ModuleType::T ModuleType::FromString(const char *name) {
@@ -172,22 +190,22 @@ ModuleType::T ModuleType::FromString(const char *name) {
 }
 
 bool ModuleType::IsCompatible(ModuleType::T from, ModuleType::T to) {
-    switch (from) {
-        case LARGE:    return to == LARGE || to == MEDIUM || to == SMALL;
-        case MEDIUM:   return to == MEDIUM || to == SMALL;
-        case SMALL:    return to == SMALL;
-        case FREE:     return to == FREE;
-        case ARMOR:    return to == LARGE;
-        case DROPTANK: return to == LARGE;
-        case ANY:      return to != INVALID;
+    switch (to) {
+        case LARGE:    return from == LARGE || from == MEDIUM || from == SMALL;
+        case MEDIUM:   return from == MEDIUM || from == SMALL;
+        case SMALL:    return from == SMALL;
+        case FREE:     return from == FREE;
+        case ARMOR:    return from == LARGE;
+        case DROPTANK: return from == LARGE;
+        case ANY:      return from != INVALID;
         default: case INVALID: return false;
     }
     
     return false;
 }
 
-void ModuleConfiguration::Load(const DataNode *data) {
-    module_count = data->GetChildArrayLen("module_config");
+void ModuleConfiguration::Load(const DataNode *data, const char* ship_id) {
+    module_count = data->GetChildArrayLen(ship_id);
     if (module_count > SHIP_MAX_MODULES) module_count = SHIP_MAX_MODULES;
 
     // To measure draw size
@@ -195,7 +213,7 @@ void ModuleConfiguration::Load(const DataNode *data) {
     Vector2 max_extend = Vector2Zero();
 
     for(int i=0; i < module_count; i++) {
-        const DataNode* child = data->GetChildArrayElem("module_config", i);
+        const DataNode* child = data->GetChildArrayElem(ship_id, i);
         types[i] = ModuleType::FromString(child->Get("type"));
         for(int j=0; j < MODULE_CONFIG_MAX_NEIGHBOURS; j++) {
             int neighbour = child->GetArrayElemI("neighbours", j, -1, true);
@@ -208,19 +226,20 @@ void ModuleConfiguration::Load(const DataNode *data) {
         draw_offset[i].x = child->GetArrayElemF("offset", 0, 0.0);
         draw_offset[i].y = child->GetArrayElemF("offset", 1, 0.0);
 
-        int pos_x = draw_offset[i].x * (SHIP_MODULE_WIDTH + 5);
-        int pos_y = draw_offset[i].y * (SHIP_MODULE_HEIGHT + 5);
+        int pos_x = draw_offset[i].x;
+        int pos_y = draw_offset[i].y;
         if (pos_x < min_extend.x) min_extend.x = pos_x;
         if (pos_y < min_extend.y) min_extend.y = pos_y;
         if (pos_x > max_extend.x) max_extend.x = pos_x;
         if (pos_y > max_extend.y) max_extend.y = pos_y;
     }
     draw_space = {
-        min_extend.x - SHIP_MODULE_WIDTH/2, min_extend.y - SHIP_MODULE_HEIGHT/2,
-        max_extend.x - min_extend.x + SHIP_MODULE_WIDTH, max_extend.y - min_extend.y + SHIP_MODULE_HEIGHT,
+        min_extend.x - SHIP_MODULE_WIDTH, min_extend.y - SHIP_MODULE_HEIGHT,
+        max_extend.x - min_extend.x + SHIP_MODULE_WIDTH*2, max_extend.y - min_extend.y + SHIP_MODULE_HEIGHT*2,
     };
 }
 
+Rectangle module_config_popup_rect = {0};
 void ModuleConfiguration::Draw(Ship* ship) const {
     const int MARGIN = 3;
     ShipModules* sms = GetShipModules();
@@ -240,7 +259,9 @@ void ModuleConfiguration::Draw(Ship* ship) const {
     adjusted_draw_space.x += center.x;
     adjusted_draw_space.y += center.y;
     bool fits_naturally = CheckEnclosingRecs(bounding, adjusted_draw_space);
-    bool show_popup = !fits_naturally && CheckCollisionPointRec(GetMousePosition(), bounding);
+    bool show_popup = !fits_naturally && 
+        (CheckCollisionPointRec(GetMousePosition(), bounding) || 
+        CheckCollisionPointRec(GetMousePosition(), module_config_popup_rect));
     if (show_popup) {
         adjusted_draw_space.width += 20;
         adjusted_draw_space.height += 20;
@@ -257,8 +278,11 @@ void ModuleConfiguration::Draw(Ship* ship) const {
             adjusted_draw_space.x + adjusted_draw_space.width/2,
             adjusted_draw_space.y + adjusted_draw_space.height/2,
         };
+        module_config_popup_rect = adjusted_draw_space;
 
         ui::Enclose();
+    } else {
+        module_config_popup_rect = {0};
     }
 
     BeginRenderInUIMode(ui::Current()->z_layer);
@@ -270,13 +294,13 @@ void ModuleConfiguration::Draw(Ship* ship) const {
     }
     static Rectangle rectangles[SHIP_MAX_MODULES];
     for (int i=0; i < module_count; i++) {
-        int center_x = center.x + draw_offset[i].x * (SHIP_MODULE_WIDTH + 5);
-        int center_y = center.y + draw_offset[i].y * (SHIP_MODULE_HEIGHT + 5);
+        int center_x = center.x + draw_offset[i].x;
+        int center_y = center.y + draw_offset[i].y;
         for(int j=0; j < MODULE_CONFIG_MAX_NEIGHBOURS; j++) {
             if (neighbours[i*MODULE_CONFIG_MAX_NEIGHBOURS + j] >= 0) {
                 int neighbour = neighbours[i*MODULE_CONFIG_MAX_NEIGHBOURS + j];
-                int other_center_x = center.x + draw_offset[neighbour].x * (SHIP_MODULE_WIDTH + 8);
-                int other_center_y = center.y + draw_offset[neighbour].y * (SHIP_MODULE_HEIGHT + 8);
+                int other_center_x = center.x + draw_offset[neighbour].x;
+                int other_center_y = center.y + draw_offset[neighbour].y;
                 //INFO("%d(%d, %d) => %d(%d, %d)", i, center_x, center_y, neighbour, other_center_x, other_center_y)
                 DrawLine(center_x, center_y, other_center_x, other_center_y, Palette::ui_alt);
             }
@@ -286,7 +310,8 @@ void ModuleConfiguration::Draw(Ship* ship) const {
         //    module_rect = { (float)center_x - 30/2, (float)center_y - 30/2, 30, 30 };
         //}
         rectangles[i] = module_rect;
-        DrawRectangleLinesEx(module_rect, 1, ModuleType::colors[types[i]]);
+        
+        DrawRectangleLinesEx(module_rect, 1, Palette::ui_alt);
 
         ButtonStateFlags::T button_state = GetButtonStateRec(module_rect);
         if (button_state & ButtonStateFlags::HOVER) {
@@ -305,9 +330,10 @@ void ModuleConfiguration::Draw(Ship* ship) const {
     }
     EndRenderInUIMode();
     for (int i=0; i < module_count; i++) {
-        //ui::PushFree(rectangles[i].x, rectangles[i].y, rectangles[i].width, rectangles[i].height);
-        //sms->DrawShipModule(ship->modules[i]);
-        //ui::Pop();
+        ui::PushFree(rectangles[i].x, rectangles[i].y, rectangles[i].width, rectangles[i].height);
+        ShipModuleSlot(ship->id, i, ShipModuleSlot::DRAGGING_FROM_SHIP, types[i]).Draw();
+        sms->DrawShipModule(ship->modules[i]);
+        ui::Pop();
     }
     if (show_popup) {
         ui::Pop();
@@ -400,7 +426,8 @@ const ShipModuleClass* ShipModules::GetModuleByRID(RID index) const {
 
 void ShipModules::DrawShipModule(RID index) const {
     if(!IsIdValid(index)) {  // empty
-        ui::EncloseEx(4, Palette::bg, Palette::ui_dark, 4);
+        return;
+        //ui::EncloseEx(4, Palette::bg, Palette::ui_dark, 4);
     } else {  // filled
         const ShipModuleClass* smc = GetModuleByRID(index);
         ui::Enclose();
@@ -411,9 +438,9 @@ void ShipModules::DrawShipModule(RID index) const {
             smc->MouseHintWrite();
             ui::Pop();
         }
-        if (button_state & ButtonStateFlags::PRESSED) {
+        /*if (button_state & ButtonStateFlags::PRESSED) {
             return;
-        }
+        }*/
         ui::DrawIconSDF(smc->icon_index, Palette::ui_main, 40);
         //ui::Write(smc->name);
     }
@@ -440,12 +467,13 @@ void ShipModules::DirectSwap(ShipModuleSlot slot) {
         && IsIdValidTyped(GetGlobalState()->focused_ship, EntityType::SHIP)
     ) {
         const Ship* ship = GetShip(GetGlobalState()->focused_ship);
-        available = ship->GetFreeModuleSlot(slot.module_type);
+        ModuleType::T search_type = GetModule(slot.GetSlot())->type;
+        available = ship->GetFreeModuleSlot(search_type);
     }
     if (!available.IsValid()) {
         return;
     }
-    if (!slot.IsReachable(available)) {
+    if (!slot.IsReachable(available) || !available.IsSlotFitting(slot.GetSlot())) {
         return;
     }
     available.SetSlot(slot.GetSlot());
@@ -474,7 +502,7 @@ void ShipModules::UpdateDragging() {
         release_slot.AssignIfValid(GetShip(it.GetId())->current_slot);
     }
 
-    if (!_dragging_origin.IsReachable(release_slot)) {
+    if (!_dragging_origin.IsReachable(release_slot) || !release_slot.IsSlotFitting(_dragging)) {
         release_slot = _dragging_origin;
     }
 

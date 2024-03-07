@@ -3,6 +3,7 @@
 
 #include "basic.hpp"
 #include "datanode.hpp"
+#include "wireframe_mesh.hpp"
 
 namespace assets {
     struct BakedResource {
@@ -21,6 +22,7 @@ namespace assets {
     char* GetResourceText(const char* filepath);
 
     Texture2D GetTexture(const char* path);
+    WireframeMesh GetWirframe(const char* path);
     Image GetImage(const char* path);
     Font GetFont(const char* path);
     Shader GetShader(const char* path);
@@ -46,10 +48,7 @@ namespace assets {
         int capacity = 0;
 
         Table() {
-            size = 0;
-            capacity = 10;
-            hashes = new uint64_t[capacity];
-            data = new T[capacity];
+            Init();
         }
 
         ~Table() {
@@ -92,6 +91,18 @@ namespace assets {
             data = NULL;
             size = 0;
             capacity = 0;
+        }
+
+        void Init() {
+            size = 0;
+            capacity = 10;
+            hashes = new uint64_t[capacity];
+            data = new T[capacity];
+        }
+
+        void Reset() {
+            Clear();
+            Init();
         }
     };
 
