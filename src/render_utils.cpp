@@ -178,8 +178,8 @@ void RenderWirframeMesh(WireframeMesh mesh, Matrix transform, Color color) {
         int v1 = mesh.lines[j*2];
         int v2 = mesh.lines[j*2+1];
         rlColor4f(0, 0, 0, mesh.vertex_distances[j]);
-        rlColor4f(0, 0, 0, mesh.vertex_distances[j]);
         rlVertex3f(mesh.vertecies[v1*3], mesh.vertecies[v1*3+1], mesh.vertecies[v1*3+2]);
+        rlColor4f(0, 0, 0, mesh.vertex_distances[j]);
         rlVertex3f(mesh.vertecies[v2*3], mesh.vertecies[v2*3+1], mesh.vertecies[v2*3+2]);
     }
     rlEnd();
@@ -197,29 +197,35 @@ void RenderWirframeMesh(WireframeMesh mesh, Matrix transform, Color color) {
 }
 
 void RenderWirframeMesh2D(WireframeMesh mesh, Rectangle box, Color color, uint8_t z_layer) {
+    float scale = fmin(
+        box.width / (mesh.bounding_box.max.x - mesh.bounding_box.min.x),
+        box.height / (mesh.bounding_box.max.z - mesh.bounding_box.min.z)
+    );
+    float offset_x = box.x - mesh.bounding_box.min.x * scale;
+    float offset_y = box.y - mesh.bounding_box.min.z * scale;
+    RenderWirframeMesh2DEx(mesh, { offset_x, offset_y }, scale, color, z_layer);
+}
+
+void RenderWirframeMesh2DEx(WireframeMesh mesh, Vector2 origin, float scale, Color color, uint8_t z_layer) {
     RELOAD_IF_NECAISSARY(ui_shader)
 
     float color4[4];
     _ColorToFloat4Buffer(color4, color);
-    //SetShaderValue(ui_shader::shader, ui_shader::color, color4, SHADER_UNIFORM_VEC4);
-    //SetShaderValueMatrix(wireframe_shader::shader, wireframe_shader::mvp2, MVP);
-    BeginShaderMode(wireframe_shader::shader);
+    float z_layer_f = 1.0f - z_layer / 256.0f;
+    SetShaderValue(ui_shader::shader, ui_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT);
 
-    rlPushMatrix();
-    
+    BeginShaderMode(ui_shader::shader);
     rlBegin(RL_LINES);
     int max_j = fmod(GetRenderServer()->screen_time * 0.3, 1.0) * mesh.line_count;
     max_j = mesh.line_count;
     for (int j=0; j < max_j; j++) {
         int v1 = mesh.lines[j*2];
         int v2 = mesh.lines[j*2+1];
-        rlVertex3f(mesh.vertecies[v1*3], mesh.vertecies[v1*3+1], mesh.vertecies[v1*3+2]);
-        rlVertex3f(mesh.vertecies[v2*3], mesh.vertecies[v2*3+1], mesh.vertecies[v2*3+2]);
+        rlColor4ub(color.r, color.g, color.b, color.a);
+        rlVertex2f(origin.x + mesh.vertecies[v1*3] * scale, origin.y + mesh.vertecies[v1*3+2] * scale);
+        rlVertex2f(origin.x + mesh.vertecies[v2*3] * scale, origin.y + mesh.vertecies[v2*3+2] * scale);
     }
     rlEnd();
-
-    rlPopMatrix();
-
     EndShaderMode();
 }
 

@@ -3,7 +3,7 @@
 #include "string_builder.hpp"
 #include "debug_console.hpp"
 
-//#define INCLUDE_BAKED  // Comment out to bootstrap baked_data.hpp
+#define INCLUDE_BAKED  // Comment out to bootstrap baked_data.hpp
 #ifdef INCLUDE_BAKED
 #include "baked_data.hpp"
 #endif
@@ -25,6 +25,7 @@ namespace assets {
 // https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function
 uint64_t assets::HashKey(const char* key) {
     uint64_t hash = assets::FNV_OFFSET;
+    ASSERT(strlen(key) < ASSET_PATH_MAX_LENGTH)  // Excluded in final build
     for (const char* p = key; *p; p++) {
         hash ^= (uint64_t)(unsigned char)(*p);
         hash *= assets::FNV_PRIME;

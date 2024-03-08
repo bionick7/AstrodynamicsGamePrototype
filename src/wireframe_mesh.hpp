@@ -24,5 +24,6 @@ struct WireframeMesh {
 
 WireframeMesh LoadWireframeMesh(const char* filepath);
 void UnLoadWireframeMesh(WireframeMesh wireframe_mesh);
+bool IsWireframeReady(WireframeMesh wireframe_mesh);
 
 #endif  // WIREFRAME_MESH_H

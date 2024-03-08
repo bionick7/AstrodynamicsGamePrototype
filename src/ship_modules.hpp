@@ -6,6 +6,7 @@
 #include "id_system.hpp"
 #include "planetary_economy.hpp"
 #include "ui.hpp"
+#include "assets.hpp"
 
 struct Ship;
 
@@ -154,11 +155,15 @@ struct ShipModuleSlot {
 };
 
 struct ModuleConfiguration {
+    // Essential data
     int module_count = 0;
     ModuleType::T types[SHIP_MAX_MODULES];
     int neighbours[SHIP_MAX_MODULES*MODULE_CONFIG_MAX_NEIGHBOURS];
     Vector2 draw_offset[SHIP_MAX_MODULES];
-    Rectangle draw_space;
+
+    // Rendering cahced
+    Rectangle mesh_draw_space;
+    char mesh_resource_path[ASSET_PATH_MAX_LENGTH];
 
     void Load(const DataNode* data, const char* ship_id);
     void Draw(Ship* ship) const;

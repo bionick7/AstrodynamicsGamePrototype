@@ -27,6 +27,7 @@ void EndRenderInUIMode();
 
 void RenderWirframeMesh(WireframeMesh mesh, Matrix transform, Color color);
 void RenderWirframeMesh2D(WireframeMesh mesh, Rectangle box, Color color, uint8_t z_layer);
+void RenderWirframeMesh2DEx(WireframeMesh mesh, Vector2 mid_pos, float scale, Color color, uint8_t z_layer);
 void RenderOrbit(const OrbitSegment* orbit, int point_count, 
                  OrbitRenderMode::T render_mode, Color color);
 void RenderPerfectSphere(DVector3 pos, double radius, Color color);

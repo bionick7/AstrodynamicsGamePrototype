@@ -7,7 +7,7 @@ uniform float time;
 
 // Output fragment color
 out vec4 finalColor;
-in float path;
+smooth in vec4 path;
 
 // NOTE: Add here your custom variables
 
@@ -20,7 +20,6 @@ const int RENDER_MODE_DASHED = 2;
 void main() {
     finalColor.rgb = color.rgb;
     finalColor.a = 1.0;
-    finalColor.r = fract(path*100.);
     //float anim_time = fract(time*.01);
-    //if (path > anim_time) discard;
+    //finalColor.a = sin(path.a*100.0 - time*0.1) * .5 + .5;
 }

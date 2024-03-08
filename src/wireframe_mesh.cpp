@@ -16,9 +16,12 @@ static bool _GetNextLine(const char *origin, int *cursor) {
 }
 
 WireframeMesh LoadWireframeMesh(const char* filepath) {
-    WireframeMesh mesh;
+    WireframeMesh mesh = {0};
 
     char* text = LoadFileText(filepath);
+    if (text == NULL) {
+        return mesh;
+    }
     int text_size = strlen(text);
     int text_cursor = 0;
 
@@ -120,6 +123,14 @@ WireframeMesh LoadWireframeMesh(const char* filepath) {
     return mesh;
 }
 
+bool IsWireframeReady(WireframeMesh wireframe_mesh) {
+    int res = (
+        wireframe_mesh.vertex_count * wireframe_mesh.line_count * 
+        (size_t)wireframe_mesh.vertecies * (size_t)wireframe_mesh.vertex_distances * 
+        (size_t)wireframe_mesh.lines
+    );  // >;)
+    return res;
+}
 
 void UnLoadWireframeMesh(WireframeMesh wireframe_mesh) {
 #ifdef WIREFRAME_USE_NATIVE_BUFFERS

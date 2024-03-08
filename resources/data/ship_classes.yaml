@@ -135,6 +135,98 @@ module_configurations:
     - -180.0
     - 70.0
     type: large
+  shp_cruiser:
+  - neighbours: []
+    offset:
+    - 90.0
+    - 0.0
+    type: small
+  - neighbours: []
+    offset:
+    - 30.0
+    - 0.0
+    type: small
+  - neighbours: []
+    offset:
+    - -30.0
+    - 0.0
+    type: small
+  - neighbours: []
+    offset:
+    - -90.0
+    - 0.0
+    type: small
+  - neighbours: []
+    offset:
+    - -220.00000000000003
+    - 0.0
+    type: small
+  - neighbours: []
+    offset:
+    - -160.0
+    - 0.0
+    type: medium
+  - neighbours: []
+    offset:
+    - -350.0
+    - 0.0
+    type: armor
+  - neighbours: []
+    offset:
+    - -290.0
+    - 0.0
+    type: armor
+  - neighbours: []
+    offset:
+    - -90.0
+    - 70.0
+    type: drop_tank
+  - neighbours: []
+    offset:
+    - -30.0
+    - 70.0
+    type: drop_tank
+  - neighbours: []
+    offset:
+    - -90.0
+    - -70.0
+    type: drop_tank
+  - neighbours: []
+    offset:
+    - -30.0
+    - -70.0
+    type: drop_tank
+  shp_express:
+  - neighbours: []
+    offset:
+    - 0.0
+    - 0.0
+    type: medium
+  - neighbours: []
+    offset:
+    - -60.0
+    - 0.0
+    type: medium
+  - neighbours: []
+    offset:
+    - -120.0
+    - 0.0
+    type: medium
+  - neighbours: []
+    offset:
+    - -200.0
+    - 0.0
+    type: armor
+  - neighbours: []
+    offset:
+    - 160.0
+    - 65.0
+    type: drop_tank
+  - neighbours: []
+    offset:
+    - 160.0
+    - -65.0
+    type: drop_tank
   shp_light_transport:
   - neighbours: []
     offset:

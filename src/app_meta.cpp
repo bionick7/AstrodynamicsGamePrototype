@@ -41,6 +41,7 @@ void DatedScreenShot() {
 }
 
 void AppMetaInit() {
+    // Setup logging system first
     SetLoadFileDataCallback(assets::GetResourceBytes);
     SetLoadFileTextCallback(assets::GetResourceText);
     SetTraceLogLevel(LOG_INFO);
@@ -49,16 +50,18 @@ void AppMetaInit() {
     LogSetOutput("log.txt");
     LogToStdout(true);
 
+    // ConfigFlags are called before window creation
     SetConfigFlags(FLAG_MSAA_4X_HINT);
     SetConfigFlags(FLAG_VSYNC_HINT);
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 
     InitWindow(1600, 900, WINDOW_TITLE);
     InitAudioDevice();
+
     SetWindowIcon(assets::GetImage("resources/icons/app_icon.png"));
     
     SetExitKey(KEY_NULL);
     //SetTargetFPS(1e6);
-    SetWindowState(FLAG_WINDOW_RESIZABLE);
 }
 
 void AppMetaStep() {

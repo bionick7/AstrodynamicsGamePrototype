@@ -25,15 +25,6 @@ bool GetCmdSettingBool(int argc, const char** argv, const char* find) {
 }
 
 void TestingSetup(GlobalState* app) {
-    /*RID planet_1 = GetPlanets()->GetIdByName("Tethys");
-    RID planet_2 = GetPlanets()->GetIdByName("Titan");
-    double dv1, dv2;
-    HohmannTransfer(&GetPlanet(planet_1)->orbit, &GetPlanet(planet_2)->orbit, 0, NULL, NULL, &dv1, &dv2);
-    INFO("dv1: %f, dv2: %f", dv1, dv2)
-    double dv1_true = GetPlanet(planet_1)->GetDVFromExcessVelocity({0, dv1});
-    double dv2_true = GetPlanet(planet_2)->GetDVFromExcessVelocity({0, dv2});
-    INFO("dv1': %f, dv2': %f", dv1_true, dv2_true)*/
-
     StringBuilder sb;
     GetDVTable(&sb, true);
     sb.WriteToFile("DVTable.txt");
@@ -64,7 +55,7 @@ void Load(int argc, const char** argv) {
 }
 
 void MainLoopStep(GlobalState* app) {
-    app->UpdateState(1./60.);
+    app->UpdateState(GetFrameTime());
 
     BeginDrawing();
     app->render_server.Draw();
@@ -76,13 +67,10 @@ int main(int argc, const char** argv) {
         return UnitTests();
     }
 
-    // Initializing
     AppMetaInit();
     Load(argc, argv);
 
     GlobalState* app = GetGlobalState();
-
-    // Main loop
     while (!WindowShouldClose()) {
         AppMetaStep();
         MainLoopStep(app);

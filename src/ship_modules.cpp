@@ -4,6 +4,7 @@
 #include "ui.hpp"
 #include "constants.hpp"
 #include "utils.hpp"
+#include "debug_drawing.hpp"
 
 bool ModuleConfiguration::IsAdjacent(ShipModuleSlot lhs, ShipModuleSlot rhs) const {
     return false;
@@ -172,10 +173,13 @@ bool ShipModuleSlot::IsSlotFitting(RID module) const {
 }
 
 void ShipModuleSlot::Draw() const {
+    ui::EncloseEx(0, Palette::bg, Palette::bg, 5);
     int x_cursor = ui::Current()->x_cursor;
     int y_cursor = ui::Current()->y_cursor;
+    // Center
+    ui::Current()->x_cursor = (ui::Current()->width - 40) / 2;
+    ui::Current()->y_cursor = (ui::Current()->height - 40) / 2;
     ui::DrawIconSDF(ModuleType::icons[module_type], Palette::ui_dark, 40);
-    // Res
     ui::Current()->x_cursor = x_cursor;
     ui::Current()->y_cursor = y_cursor;
 }
@@ -233,23 +237,45 @@ void ModuleConfiguration::Load(const DataNode *data, const char* ship_id) {
         if (pos_x > max_extend.x) max_extend.x = pos_x;
         if (pos_y > max_extend.y) max_extend.y = pos_y;
     }
-    draw_space = {
-        min_extend.x - SHIP_MODULE_WIDTH, min_extend.y - SHIP_MODULE_HEIGHT,
-        max_extend.x - min_extend.x + SHIP_MODULE_WIDTH*2, max_extend.y - min_extend.y + SHIP_MODULE_HEIGHT*2,
-    };
+
+    StringBuilder sb;
+    sb.Add("resources/meshes/ships/").Add(ship_id).Add(".obj");
+    strcpy(mesh_resource_path, sb.c_str);
+    WireframeMesh mesh = assets::GetWirframe(mesh_resource_path);
+    if (IsWireframeReady(mesh)) {
+        mesh_draw_space = {
+            mesh.bounding_box.min.x * 100, mesh.bounding_box.min.z * 100,
+            (mesh.bounding_box.max.x - mesh.bounding_box.min.x) * 100,
+            (mesh.bounding_box.max.z - mesh.bounding_box.min.z) * 100,
+        };
+    } else {
+        mesh_draw_space = {
+            min_extend.x - SHIP_MODULE_WIDTH/2, min_extend.y - SHIP_MODULE_HEIGHT/2,
+            max_extend.x - min_extend.x + SHIP_MODULE_WIDTH, max_extend.y - min_extend.y + SHIP_MODULE_HEIGHT,
+        };
+    }
 }
 
 Rectangle module_config_popup_rect = {0};
 void ModuleConfiguration::Draw(Ship* ship) const {
-    const int MARGIN = 3;
+    const int ADJUST_MARGIN = 10;
+
     ShipModules* sms = GetShipModules();
 
     int width = ui::Current()->width;
-    int height = MinInt(width, draw_space.height) + 20;
+    int height = MinInt(width, mesh_draw_space.height) + 20;
 
     ui::PushInset(0, height);
     Rectangle bounding = ui::Current()->GetRect();
-    Rectangle adjusted_draw_space = draw_space;
+    Rectangle adjusted_draw_space = mesh_draw_space;
+
+    WireframeMesh mesh = assets::GetWirframe(mesh_resource_path);
+    float size_x = mesh.bounding_box.max.x - mesh.bounding_box.min.x;
+    float size_y = mesh.bounding_box.max.z - mesh.bounding_box.min.z;
+    Rectangle draw_rect = {
+        mesh.bounding_box.min.x, mesh.bounding_box.min.z,
+        size_x, size_y
+    };
 
     Vector2 center = {
         bounding.x + bounding.width/2,
@@ -263,12 +289,12 @@ void ModuleConfiguration::Draw(Ship* ship) const {
         (CheckCollisionPointRec(GetMousePosition(), bounding) || 
         CheckCollisionPointRec(GetMousePosition(), module_config_popup_rect));
     if (show_popup) {
-        adjusted_draw_space.width += 20;
-        adjusted_draw_space.height += 20;
-        if (adjusted_draw_space.x > GetScreenWidth() - adjusted_draw_space.width - 20)
-            adjusted_draw_space.x = GetScreenWidth() - adjusted_draw_space.width - 20;
-        if (adjusted_draw_space.y > GetScreenHeight() - adjusted_draw_space.height - 20)
-            adjusted_draw_space.y = GetScreenHeight() - adjusted_draw_space.height - 20;
+        adjusted_draw_space.width += ADJUST_MARGIN * 2;
+        adjusted_draw_space.height += ADJUST_MARGIN * 2;
+        if (adjusted_draw_space.x > GetScreenWidth() - adjusted_draw_space.width - ADJUST_MARGIN * 2)
+            adjusted_draw_space.x = GetScreenWidth() - adjusted_draw_space.width - ADJUST_MARGIN * 2;
+        if (adjusted_draw_space.y > GetScreenHeight() - adjusted_draw_space.height - ADJUST_MARGIN * 2)
+            adjusted_draw_space.y = GetScreenHeight() - adjusted_draw_space.height - ADJUST_MARGIN * 2;
         ui::PushGlobal(
             adjusted_draw_space.x, adjusted_draw_space.y,
             adjusted_draw_space.width, adjusted_draw_space.height,
@@ -285,33 +311,47 @@ void ModuleConfiguration::Draw(Ship* ship) const {
         module_config_popup_rect = {0};
     }
 
-    BeginRenderInUIMode(ui::Current()->z_layer);
     //DrawRectangleLinesEx(bounding, 1, WHITE);
-    //DrawRectangleLinesEx(adjusted_draw_space, 1, fits_naturally ? GREEN : RED);
+    BeginRenderInUIMode(ui::Current()->z_layer + 10);
+    EndRenderInUIMode();
     bool use_scissor = !CheckEnclosingRecs(ui::Current()->render_rec, bounding);
     if (use_scissor) {
         BeginScissorMode(ui::Current()->render_rec.x, ui::Current()->render_rec.y, ui::Current()->render_rec.width, ui::Current()->render_rec.height);
     }
+
+    if (IsWireframeReady(mesh)) {
+        Rectangle wf_draw_rect = adjusted_draw_space;
+        if (show_popup) {
+            wf_draw_rect.x += ADJUST_MARGIN;
+            wf_draw_rect.y += ADJUST_MARGIN;
+            wf_draw_rect.width -= ADJUST_MARGIN * 2;
+            wf_draw_rect.height -= ADJUST_MARGIN * 2;
+        }
+        RenderWirframeMesh2DEx(mesh, center, 100, Palette::ui_main, ui::Current()->z_layer);
+    }
+    BeginRenderInUIMode(ui::Current()->z_layer);
+    //DrawRectangle(center.x + 5, center.y-25, 50, 50, WHITE);
+    //DrawLine(center.x - 100, center.y +   0, center.x + 100, center.y +   0, WHITE);
+    //DrawLine(center.x +   0, center.y - 100, center.x +   0, center.y + 100, WHITE);
     static Rectangle rectangles[SHIP_MAX_MODULES];
     for (int i=0; i < module_count; i++) {
         int center_x = center.x + draw_offset[i].x;
-        int center_y = center.y + draw_offset[i].y;
+        int center_y = center.y - draw_offset[i].y;
+        //DEBUG_SHOW_I(center_x)
+        //DEBUG_SHOW_I(center_y)
         for(int j=0; j < MODULE_CONFIG_MAX_NEIGHBOURS; j++) {
             if (neighbours[i*MODULE_CONFIG_MAX_NEIGHBOURS + j] >= 0) {
                 int neighbour = neighbours[i*MODULE_CONFIG_MAX_NEIGHBOURS + j];
                 int other_center_x = center.x + draw_offset[neighbour].x;
                 int other_center_y = center.y + draw_offset[neighbour].y;
                 //INFO("%d(%d, %d) => %d(%d, %d)", i, center_x, center_y, neighbour, other_center_x, other_center_y)
-                DrawLine(center_x, center_y, other_center_x, other_center_y, Palette::ui_alt);
+                //DrawLine(center_x, center_y, other_center_x, other_center_y, Palette::ui_alt);
             }
         }
         Rectangle module_rect = { center_x - SHIP_MODULE_WIDTH/2, center_y - SHIP_MODULE_HEIGHT/2, SHIP_MODULE_WIDTH, SHIP_MODULE_HEIGHT };
-        //if (types[i] == ModuleType::SMALL) {
-        //    module_rect = { (float)center_x - 30/2, (float)center_y - 30/2, 30, 30 };
-        //}
         rectangles[i] = module_rect;
-        
-        DrawRectangleLinesEx(module_rect, 1, Palette::ui_alt);
+        //DrawRectangleRec(rectangles[i], WHITE);
+        //DrawRectangleLinesEx(module_rect, 1, Palette::ui_alt);
 
         ButtonStateFlags::T button_state = GetButtonStateRec(module_rect);
         if (button_state & ButtonStateFlags::HOVER) {
@@ -330,7 +370,9 @@ void ModuleConfiguration::Draw(Ship* ship) const {
     }
     EndRenderInUIMode();
     for (int i=0; i < module_count; i++) {
+        // leave margin, so the rect boundaries from the mesh remain visible
         ui::PushFree(rectangles[i].x, rectangles[i].y, rectangles[i].width, rectangles[i].height);
+        ui::Shrink(3, 3);
         ShipModuleSlot(ship->id, i, ShipModuleSlot::DRAGGING_FROM_SHIP, types[i]).Draw();
         sms->DrawShipModule(ship->modules[i]);
         ui::Pop();
@@ -441,6 +483,8 @@ void ShipModules::DrawShipModule(RID index) const {
         /*if (button_state & ButtonStateFlags::PRESSED) {
             return;
         }*/
+        ui::VSpace((ui::Current()->height - 40) / 2);
+        ui::HSpace((ui::Current()->width - 40) / 2);
         ui::DrawIconSDF(smc->icon_index, Palette::ui_main, 40);
         //ui::Write(smc->name);
     }

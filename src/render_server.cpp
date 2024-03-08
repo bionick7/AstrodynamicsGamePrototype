@@ -288,7 +288,6 @@ void RenderServer::Draw() {
     BeginMode3D(GetCamera()->rl_camera);
     RenderSkyBox();
  
-    /*
     // Draw Saturn
     RenderPerfectSphere(DVector3::Zero(), GetPlanets()->GetParentNature()->radius, Palette::ui_main);
 
@@ -310,14 +309,6 @@ void RenderServer::Draw() {
 
     _DrawTrajectories();
     _UpdateShipIcons();
-    */
-
-    //WireframeMesh mesh = assets::GetWirframe("resources/meshes/ships/shp_spacestation.obj");
-    WireframeMesh mesh = assets::GetWirframe("resources/meshes/ships/shp_bulk_transport.obj");
-    for(int i=0; i < 10; i++) {
-        RenderWirframeMesh(mesh, MatrixTranslate(0, 0.1*i, 0), Palette::red);
-    }
-    //RenderWirframeMesh(mesh, MatrixRotateXYZ({565145,65654,574}));
 
     // Draw icons
     RELOAD_IF_NECAISSARY(icon_shader)
@@ -345,6 +336,7 @@ void RenderServer::Draw() {
     // All UI shenanigans
     rlEnableDepthTest(); 
     GetGlobalState()->DrawUI();
+
     rlDisableDepthTest();
     EndTextureMode();
 

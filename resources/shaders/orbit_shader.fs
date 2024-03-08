@@ -1,7 +1,7 @@
 #version 330
 
 // Input vertex attributes (from vertex shader)
-in float anomaly;
+smooth in float anomaly;
 
 // Input uniform values
 uniform int render_mode;

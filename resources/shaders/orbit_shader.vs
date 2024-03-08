@@ -1,7 +1,7 @@
 #version 330
 
 in float vertexPosition;
-out float anomaly;
+smooth out float anomaly;
 
 uniform mat4 orbit_transform;
 uniform float semi_latus_rectum;

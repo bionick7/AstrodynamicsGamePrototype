@@ -22,7 +22,8 @@ void QuestManager::Serialize(DataNode* data) const {
 }
 
 void QuestManager::Deserialize(const DataNode* data) {
-    // Order matters!
+    if (data == NULL) return;
+    // Order matters
     active_tasks.Clear();
     dialogues.DeserializeFrom(data, "dialogues", [](const DataNode* dn, Dialogue* d){ d->Deserialize(dn); });
     available_quests.DeserializeFrom(data, "available_quests", [](const DataNode* dn, Quest* q){ q->Deserialize(dn); });

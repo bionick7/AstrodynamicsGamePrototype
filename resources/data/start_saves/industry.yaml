@@ -170,3 +170,17 @@ ships:
   planet: Iaeptus
   tf_plans: []
   modules: []
+  
+- name: Preview BULK
+  class_id: shp_bulk_transport
+  allegiance: 1
+  planet: Mimas
+  tf_plans: []
+  modules: []
+
+- name: Preview EXPRESS
+  class_id: shp_express
+  allegiance: 1
+  planet: Mimas
+  tf_plans: []
+  modules: []

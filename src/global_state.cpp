@@ -381,11 +381,13 @@ void GlobalState::Deserialize(const DataNode* data) {
 
     for (int i=0; i < data->GetChildArrayLen("planets"); i++) {
         DataNode* planet_data = data->GetChildArrayElem("planets", i);
-        planets.AddPlanet(planet_data);
+        if (planet_data != NULL)
+            planets.AddPlanet(planet_data);
     }
     for (int i=0; i < data->GetChildArrayLen("ships"); i++) {
         DataNode* ship_data = data->GetChildArrayElem("ships", i);
-        ships.AddShip(ship_data);
+        if (ship_data != NULL)
+            ships.AddShip(ship_data);
     }
 
     // Dependency on planets

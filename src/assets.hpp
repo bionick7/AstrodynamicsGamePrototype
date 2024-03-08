@@ -5,15 +5,19 @@
 #include "datanode.hpp"
 #include "wireframe_mesh.hpp"
 
+#define ASSET_PATH_MAX_LENGTH 256
+
+typedef uint64_t PathHash;
+
 namespace assets {
     struct BakedResource {
-        uint64_t path_hash;
+        PathHash path_hash;
         bool is_text;
         size_t offset;
         size_t size;
     };
-    uint64_t HashKey(const char* key);
-    uint64_t HashPath(const char* path);
+    PathHash HashKey(const char* key);
+    PathHash HashPath(const char* path);
 
     bool HasTextResource(const char* path);
     bool HasDataResource(const char* path);
@@ -34,28 +38,23 @@ namespace assets {
 
     void Reload();
 
-    // Used in dev mode to write header files that include all resource files
+    // Used by dev to write header files that include all resource files
     void BakeAllResources();
-    // Used on user end to unpack user folder for modding/troubleshooting purposes
+    // Used by user to unpack user folder for modding/troubleshooting purposes
     void UnBakeAllResources();
 
     template<typename T>
     struct Table { 
-        uint64_t* hashes = NULL;
+        PathHash* hashes = NULL;
         T* data = NULL;
 
         int size = 0;
         int capacity = 0;
 
-        Table() {
-            Init();
-        }
+        Table() { Init(); }
+        ~Table() { Clear(); }
 
-        ~Table() {
-            Clear();
-        }
-
-        int Find(uint64_t hash) const {
+        int Find(PathHash hash) const {
             for (int i=0; i < size; i++) {
                 if (hash == hashes[i]) {
                     return i;
@@ -64,7 +63,7 @@ namespace assets {
             return -1;
         }
 
-        int Insert(uint64_t hash, T value) {
+        int Insert(PathHash hash, T value) {
             size++;
             if (size > capacity) {
                 capacity += 10;
@@ -96,7 +95,7 @@ namespace assets {
         void Init() {
             size = 0;
             capacity = 10;
-            hashes = new uint64_t[capacity];
+            hashes = new PathHash[capacity];
             data = new T[capacity];
         }
 
