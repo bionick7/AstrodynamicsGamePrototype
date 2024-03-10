@@ -113,7 +113,8 @@ TransferPlan::TransferPlan() {
     arrival_planet = GetInvalidId();
     num_solutions = 0;
     primary_solution = 0;
-    resource_transfer = ResourceTransfer();
+    for(int i=0; i < resources::MAX; i++) resource_transfer[i] = 0;
+    fuel = 0;
 }
 
 void TransferPlanSolveInputImpl(TransferPlan* tp, const Orbit* from_orbit, const Orbit* to_orbit) {
@@ -304,8 +305,7 @@ void TransferPlanSoonest(TransferPlan* tp, double dv_limit) {
 }
 
 void TransferPlan::Serialize(DataNode* data) const {
-    data->SetI("resource_transfer_id", resource_transfer.resource_id);
-    data->SetI("resource_transfer_qtt", resource_transfer.quantity);
+    data->SerializeBuffer("resource_transfer", resource_transfer, resources::names, resources::MAX);
     //data->SetI("fuel_mass", fuel_mass);
     data->SetI("departure_planet", departure_planet.AsInt());
     data->SetI("arrival_planet", arrival_planet.AsInt());
@@ -315,8 +315,7 @@ void TransferPlan::Serialize(DataNode* data) const {
 }
 
 void TransferPlan::Deserialize(const DataNode* data) {
-    resource_transfer.resource_id = (ResourceType) data->GetI("resource_transfer_id", resource_transfer.resource_id);
-    resource_transfer.quantity = data->GetI("resource_transfer_qtt", resource_transfer.quantity);
+    data->DeserializeBuffer("resource_transfer", resource_transfer, resources::names, resources::MAX);
     //fuel_mass = data->GetI("fuel_mass", fuel_mass);
     departure_planet = RID(data->GetI("departure_planet", departure_planet.AsInt()));
     arrival_planet = RID(data->GetI("arrival_planet", arrival_planet.AsInt()));
@@ -332,6 +331,14 @@ void TransferPlan::Deserialize(const DataNode* data) {
         NULL, NULL
     );
     TransferPlanSolve(this);
+}
+
+resource_count_t TransferPlan::GetPayloadMass() const{
+    resource_count_t total_payload = 0;
+    for(int i=0; i < resources::MAX; i++) {
+        total_payload += resource_transfer[i];
+    }
+    return total_payload;
 }
 
 int TransferPlanTests() {
@@ -452,15 +459,16 @@ void TransferPlanUI::Update() {
         redraw_queued = false;
     }
 
+    // Update Fuel
     if (is_valid) {
-        if (plan->resource_transfer.resource_id == RESOURCE_NONE) {
-            SetLogistics(0, ship_instance->GetFuelRequiredEmpty(plan->tot_dv));
-        } else {
-            resource_count_t payload = ship_instance->GetRemainingPayloadCapacity(plan->tot_dv);
-            SetLogistics(payload, ship_instance->GetRemainingPayloadCapacity(0) - payload);
-        }
+        resource_count_t total_payload = plan->GetPayloadMass();
+        resource_count_t capacity = ship_instance->GetRemainingPayloadCapacity(plan->tot_dv);
+        if (total_payload > capacity) total_payload = capacity;
+        SetLogistics(ship_instance->GetFuelRequired(plan->tot_dv, total_payload));
+        DebugPrintText("%d fuel (%d payload)", ship_instance->GetFuelRequired(plan->tot_dv, total_payload), total_payload);
+
     } else {
-        SetLogistics(0, 0);
+        SetLogistics(0);
     }
 
     if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_ENTER) && is_valid) {
@@ -714,7 +722,8 @@ void TransferPlanUI::DrawUI() {
         ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
             ui::EncloseEx(0, Palette::bg, Palette::ui_main, 4);
-            if (plan->resource_transfer.resource_id == RESOURCE_NONE && GetShip(ship)->GetShipType() == ShipType::TRANSPORT) {
+            resource_count_t tot_payload = plan->GetPayloadMass();
+            if (tot_payload == 0 && GetShip(ship)->GetShipType() == ShipType::TRANSPORT) {
                 ui::SetMouseHint("WARNING: Transferring with a transport ship\nwithout resources");
             }
         }
@@ -751,7 +760,7 @@ void TransferPlanUI::SetPlan(TransferPlan* pplan, RID pship, timemath::Time pmin
     if (plan == NULL) {
         return;
     }
-    plan->fuel.resource_id = GetShipClassByRID(GetShip(ship)->ship_class)->fuel_resource;
+    plan->fuel_type = GetShipClassByRID(GetShip(ship)->ship_class)->fuel_resource;
     /*Ship& ship_comp = GetShip(ship);
     if (ship_comp.confirmed_plans_count > 0) {
         time_bounds[0] = ship_comp.prepared_plans[ship_comp.confirmed_plans_count - 1].arrival_time;
@@ -768,15 +777,9 @@ void TransferPlanUI::SetPlan(TransferPlan* pplan, RID pship, timemath::Time pmin
     }
 }
 
-void TransferPlanUI::SetResourceType(ResourceType resource_type) {
+ void TransferPlanUI::SetLogistics(resource_count_t fuel_mass) {
     if (plan == NULL) return;
-    plan->resource_transfer.resource_id = resource_type;
-}
-
- void TransferPlanUI::SetLogistics(resource_count_t payload_mass, resource_count_t fuel_mass) {
-    if (plan == NULL) return;
-    plan->resource_transfer.quantity = payload_mass;
-    plan->fuel.quantity = fuel_mass;
+    plan->fuel = fuel_mass;
 }
 
  void TransferPlanUI::SetDestination(RID planet) {

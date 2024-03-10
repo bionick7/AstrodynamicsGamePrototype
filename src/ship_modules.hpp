@@ -109,9 +109,9 @@ namespace ModuleType {
 struct ShipModuleClass {
     int delta_stats[ShipStats::MAX];
     int required_stats[ShipStats::MAX];
-    resource_count_t production[RESOURCE_MAX];
-    resource_count_t consumption[RESOURCE_MAX];
-    resource_count_t construction_resources[RESOURCE_MAX];
+    resource_count_t production[resources::MAX];
+    resource_count_t consumption[resources::MAX];
+    resource_count_t construction_resources[resources::MAX];
     int construction_batch_size;
     uint64_t planets_restriction;
 

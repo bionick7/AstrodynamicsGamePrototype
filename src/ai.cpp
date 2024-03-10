@@ -2,6 +2,7 @@
 #include "global_state.hpp"
 #include "debug_drawing.hpp"
 
+/*
 double _GetMinDVTo(const Ship* ship, const Planet* to) {
     double dv1, dv2;
     const Planet* from = GetPlanet(ship->GetParentPlanet());
@@ -52,8 +53,8 @@ double AIBlackboard::CalcTransferUtility(AbstractTransfer atf) const {
     int departure_planet_tensor_lookup = IdGetIndex(atf.departure_planet);
     int arrival_planet_tensor_lookup = IdGetIndex(atf.arrival_planet);
     int planets_count = GetPlanets()->GetPlanetCount();
-    int tensor_index = departure_planet_tensor_lookup*planets_count*RESOURCE_MAX
-      + arrival_planet_tensor_lookup*RESOURCE_MAX
+    int tensor_index = departure_planet_tensor_lookup*planets_count*resources::MAX
+      + arrival_planet_tensor_lookup*resources::MAX
       + atf.resource_transfer.resource_id;
     double utility_per_count = resource_transfer_tensor[tensor_index];
     return utility_per_count * atf.resource_transfer.quantity;
@@ -75,7 +76,7 @@ void AIBlackboard::HighLevelFactionAI() {
     int planets_count = GetPlanets()->GetPlanetCount();
     if (resource_transfer_tensor == NULL) {
         // Assuming the ammount of planets is invariant
-        resource_transfer_tensor = new double [planets_count*planets_count*RESOURCE_MAX];
+        resource_transfer_tensor = new double [planets_count*planets_count*resources::MAX];
     }
 
     // Tightening the triple loop
@@ -88,8 +89,8 @@ void AIBlackboard::HighLevelFactionAI() {
     }
     // Precomputing the worth of different resources
     // Worth(resource, planet) = MaxStock(resource) - Stock(resource, planet)
-    double* resource_worth = new double[owned_planets.size*RESOURCE_MAX];
-    for(int j=0; j < RESOURCE_MAX; j++) {
+    double* resource_worth = new double[owned_planets.size*resources::MAX];
+    for(int j=0; j < resources::MAX; j++) {
         resource_count_t max_amount = 0;
         for(int i=0; i < owned_planets.size; i++) {
             Planet* planet = GetPlanet(owned_planets[i]);
@@ -100,10 +101,10 @@ void AIBlackboard::HighLevelFactionAI() {
         for(int i=0; i < owned_planets.size; i++) {
             Planet* planet = GetPlanet(owned_planets[i]);
             if (max_amount == 0) {
-                resource_worth[i*RESOURCE_MAX + j] = 0;    
+                resource_worth[i*resources::MAX + j] = 0;    
             } else {
                 double t = planet->economy.resource_stock[j] / (double)max_amount;
-                resource_worth[i*RESOURCE_MAX + j] = Lerp(1/(t+.333), 1-t, t);
+                resource_worth[i*resources::MAX + j] = Lerp(1/(t+.333), 1-t, t);
             }
         }
     }
@@ -113,9 +114,9 @@ void AIBlackboard::HighLevelFactionAI() {
         Planet* planet = GetPlanet(owned_planets[i]);
         StringBuilder sb;
         sb.Add(planet->name).Add(": (");
-        for(int j=0; j < RESOURCE_MAX; j++) {
-            sb.Add(resource_names[j]).Add(" = ").AddF(resource_worth[i*RESOURCE_MAX + j]);
-            if (j < RESOURCE_MAX-1) sb.Add(", ");
+        for(int j=0; j < resources::MAX; j++) {
+            sb.Add(resources::names[j]).Add(" = ").AddF(resource_worth[i*resources::MAX + j]);
+            if (j < resources::MAX-1) sb.Add(", ");
         }
         sb.Add(")");
         //INFO(sb.c_str)
@@ -123,15 +124,15 @@ void AIBlackboard::HighLevelFactionAI() {
 
     // Iterate over each possibility
     for(int i=0; i < owned_planets.size; i++) {
-        int departure_planet_tensor_lookup = IdGetIndex(owned_planets[i])*planets_count*RESOURCE_MAX;
+        int departure_planet_tensor_lookup = IdGetIndex(owned_planets[i])*planets_count*resources::MAX;
         const Planet* departure_planet = GetPlanet(owned_planets[i]);
         for(int j=0; j < owned_planets.size; j++) {
-            int arrival_planet_tensor_lookup = IdGetIndex(owned_planets[j])*RESOURCE_MAX;
+            int arrival_planet_tensor_lookup = IdGetIndex(owned_planets[j])*resources::MAX;
             const Planet* arrival_planet = GetPlanet(owned_planets[j]);
-            for(int k=0; k < RESOURCE_MAX; k++) {
+            for(int k=0; k < resources::MAX; k++) {
                 int tensor_index = departure_planet_tensor_lookup + arrival_planet_tensor_lookup + k;
-                //double utility_per_count = GetUtilityOfTransfer(departure_planet, arrival_planet, (ResourceType) k);
-                double utility_per_count = resource_worth[j*RESOURCE_MAX + k] - resource_worth[i*RESOURCE_MAX + k];
+                //double utility_per_count = GetUtilityOfTransfer(departure_planet, arrival_planet, (resources::T) k);
+                double utility_per_count = resource_worth[j*resources::MAX + k] - resource_worth[i*resources::MAX + k];
                 resource_transfer_tensor[tensor_index] = utility_per_count;
             }
         }
@@ -175,10 +176,10 @@ void AIBlackboard::_LowLevelHandleCivilianShip(Ship* ship) const {
     AbstractTransfer best_transfer = {
         .departure_planet = GetInvalidId(),
         .arrival_planet = GetInvalidId(),
-        .resource_transfer = ResourceTransfer(RESOURCE_NONE, 0),
-        .fuel_consuption = ResourceTransfer(RESOURCE_NONE, 0)
+        //.resource_transfer = ResourceTransfer(resources::NONE, 0),
+        //.fuel_consuption = ResourceTransfer(resources::NONE, 0)
     };
-    ResourceType fuel_resource = GetShipClassByRID(ship->ship_class)->fuel_resource;
+    //resources::T fuel_resource = GetShipClassByRID(ship->ship_class)->fuel_resource;
     double best_utility = -INFINITY;
     for(int i=0; i < GetPlanets()->GetPlanetCount(); i++){
         const Planet* planet = GetPlanetByIndex(i);
@@ -191,12 +192,12 @@ void AIBlackboard::_LowLevelHandleCivilianShip(Ship* ship) const {
         }
         resource_count_t capacity = ship->GetRemainingPayloadCapacity(dv);  // Calculates capacity for every planet
         resource_count_t fuel = ship->GetFuelRequiredFull(dv);
-        for(int i=0; i < RESOURCE_MAX; i++) {
+        for(int i=0; i < resources::MAX; i++) {
             AbstractTransfer atf = {
                 .departure_planet  = ship->GetParentPlanet(),
                 .arrival_planet = planet->id,
-                .resource_transfer = ResourceTransfer((ResourceType) i, capacity),
-                .fuel_consuption = ResourceTransfer(fuel_resource, fuel)
+                //.resource_transfer = ResourceTransfer((resources::T) i, capacity),
+                //.fuel_consuption = ResourceTransfer(fuel_resource, fuel)
             };
             double utility = CalcTransferUtility(atf);
             if (utility > best_utility) {
@@ -213,9 +214,9 @@ void AIBlackboard::_LowLevelHandleCivilianShip(Ship* ship) const {
         GetPlanet(best_transfer.arrival_planet)->name
     );
     TransferPlan tp = _HohmannTransferPlan(ship, GetPlanet(best_transfer.arrival_planet));
-    tp.resource_transfer = best_transfer.resource_transfer;
+    //tp.resource_transfer = best_transfer.resource_transfer;
     tp.fuel.quantity = best_transfer.fuel_consuption.quantity;
-    tp.fuel.resource_id = fuel_resource;
+    //tp.fuel.resource_id = fuel_resource;
 
     ship->prepared_plans_count = 1;  // Always looks 1 plan ahead
     ship->prepared_plans[0] = tp;
@@ -259,3 +260,4 @@ void AIBlackboard::LowLevelFactionAI() const {
         _LowLevelHandlePlanet(planet);
     }
 }
+*/

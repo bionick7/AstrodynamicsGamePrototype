@@ -2,9 +2,9 @@
 #include "global_state.hpp"
 
 void Factions::InitializeAI() {
-    for (int i=0; i < faction_count; i++) {
-        ai_information[i].HighLevelFactionAI();
-    }
+    //for (int i=0; i < faction_count; i++) {
+    //    ai_information[i].HighLevelFactionAI();
+    //}
 }
 
 void Factions::Serialize(DataNode *data) const {
@@ -38,14 +38,14 @@ cost_t Factions::GetMoney(int faction) {
 
 void Factions::Update() {
     return;
-    if (GetCalendar()->IsNewDay()) {
-        for (int i=0; i < faction_count; i++) {
-            ai_information[i].HighLevelFactionAI();
-        }
-    }
-    for (int i=0; i < faction_count; i++) {
-        ai_information[i].LowLevelFactionAI();
-    }
+    //if (GetCalendar()->IsNewDay()) {
+    //    for (int i=0; i < faction_count; i++) {
+    //        ai_information[i].HighLevelFactionAI();
+    //    }
+    //}
+    //for (int i=0; i < faction_count; i++) {
+    //    ai_information[i].LowLevelFactionAI();
+    //}
 }
 
 bool Factions::DoesControlPlanet(int faction, RID planet_id) const {

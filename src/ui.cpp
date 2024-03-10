@@ -351,7 +351,6 @@ Vector2 TextBox::GetAnchorPoint(TextAlignment::T align) const {
     return res;
 }
 
-
 void ui::PushTextBox(TextBox tb) {
     GetUI()->text_box_stack.push(tb);
     if (GetSettingBool("draw_renderrects", false)) {
@@ -631,6 +630,44 @@ ButtonStateFlags::T ui::ToggleButton(bool on) {
     ButtonStateFlags::T res = ui::DirectButton(on ? " X " : "   ", -2);
     ui::WriteEx(" ", TextAlignment::CONFORM, false);
     return res;
+}
+
+int ui::DrawLimitedSlider(int current, int min, int max, int limit, Color fg, Color bg) {
+    TextBox* tb = ui::Current();
+    //DebugPrintText("%d - (%d - %d), %d", current, min, max, limit);
+
+    double val = (current - min) / (double) (max - min);
+    if (val < 0) val = 0;
+    if (val > 1) val = 1;
+    
+    Rectangle primary = { tb->x_cursor + tb->text_start_x, tb->y_cursor + tb->text_start_y, 120, 20 };
+    Rectangle fill = primary;
+    fill.width *= val;
+
+    if (current > limit) current = limit;
+
+    ui::BeginDirectDraw();
+    //DebugPrintText("%f %f %f %f", primary.x, primary.y, primary.width, primary.height);
+    DrawRectangleLinesEx(primary, 1, fg);
+    DrawRectangleRec(fill, bg);
+    int x_limit = primary.x + primary.width * (limit - min) / (double) (max - min);
+    DrawLine(x_limit, primary.y - 3, x_limit, primary.y + primary.height + 3, fg);
+    ui::EndDirectDraw();
+    Rectangle collision_rec = primary;
+    collision_rec.x -= 5;
+    collision_rec.width += 10;
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), collision_rec)) {
+        double new_val = (GetMousePosition().x - primary.x) / primary.width;
+        if (new_val < 0) new_val = 0;
+        if (new_val > 1) new_val = 1;
+        int new_current = min + new_val * (max - min);
+        if (new_current > limit) new_current = limit;
+        if (new_current < min) new_current = min;
+        if (new_current > max) new_current = max;
+        return new_current;
+    }
+
+    return current;
 }
 
 void ui::HelperText(const char* description) {

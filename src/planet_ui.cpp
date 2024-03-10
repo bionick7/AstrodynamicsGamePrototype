@@ -88,7 +88,7 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
         return;
     }
     ui::VSpace(10);
-    for (int i=0; i < RESOURCE_MAX; i++) {
+    for (int i=0; i < resources::MAX; i++) {
         if (construction_resources[i] == 0) {
             continue;
         }
@@ -108,6 +108,9 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
         sb.AddFormat(" (x%d)", batch_size);
     }
     ui::Write(sb.c_str);
+    //if (IsIdValidTyped(id, EntityType::SHIP_CLASS)) {
+    //    WireframeMesh wf = assets::GetWirframe(GetShipClassByRID(id)->module_config.mesh_resource_path);
+    //}
 }
 
 void _UIDrawProduction(Planet* planet, EntityType type) {
@@ -257,8 +260,6 @@ void Planet::DrawUI() {
 
     int y_start = -1;
     int height = -1;
-    ResourceTransfer transfer = ResourceTransfer();
-    ResourceTransfer fuel_draw = ResourceTransfer();
 
     const TransferPlan* tp = GetTransferPlanUI()->plan;
 
@@ -266,12 +267,12 @@ void Planet::DrawUI() {
         if (tp->departure_planet == id) {
             y_start = 10;
             height = GetScreenHeight() / 2 - 20;
-            transfer = tp->resource_transfer.Inverted();
-            fuel_draw = tp->fuel;
+            //transfer = tp->resource_transfer.Inverted();
+            //fuel_draw = tp->fuel;
         } else if (tp->arrival_planet == id) {
             y_start = GetScreenHeight() / 2 + 10;
             height = GetScreenHeight() / 2 - 20;
-            transfer = tp->resource_transfer;
+            //transfer = tp->resource_transfer;
         } else {
             return;
         }
@@ -280,8 +281,6 @@ void Planet::DrawUI() {
     ) {
         y_start = 10;
         height = GetScreenHeight() - 20;
-        transfer = ResourceTransfer();
-        fuel_draw = ResourceTransfer();
     } else {
         return;
     }
@@ -338,10 +337,10 @@ void Planet::DrawUI() {
     ui::VSpace(5);
     switch (current_tab) {
     case 0:
-        economy.UIDrawResources(transfer, fuel_draw);
+        economy.UIDrawResources(id);
         break;
     case 1:
-        economy.UIDrawEconomy(transfer, fuel_draw);
+        economy.UIDrawEconomy(id);
         break;
     case 2:
         _UIDrawInventory();

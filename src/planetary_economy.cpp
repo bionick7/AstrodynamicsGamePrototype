@@ -6,7 +6,7 @@
 #include "constants.hpp"
 #include "string_builder.hpp"
 
-static ResourceData global_resource_data[RESOURCE_MAX] = {{""}};
+static ResourceData global_resource_data[resources::MAX] = {{""}};
 
 double ResourceCountsToKG(resource_count_t counts) {
     return counts * KG_PER_COUNT;
@@ -16,12 +16,8 @@ resource_count_t KGToResourceCounts(double mass) {
     return mass / KG_PER_COUNT;
 }
 
-ResourceTransfer ResourceTransfer::Inverted() const {
-    return ResourceTransfer(resource_id, -quantity);
-}
-
 PlanetaryEconomy::PlanetaryEconomy(){
-    for (int i=0; i < RESOURCE_MAX; i++) {
+    for (int i=0; i < resources::MAX; i++) {
         resource_stock[i] = 0;
         resource_delta[i] = 0;
         native_resource_delta[i] = 0;
@@ -29,44 +25,44 @@ PlanetaryEconomy::PlanetaryEconomy(){
         resource_capacity[i] = 1000;
         resource_price[i] = GetResourceData(i)->default_cost;
     }
-    for (int i=0; i < RESOURCE_MAX*PRICE_TREND_SIZE; i++) {
-        price_history[i] = resource_price[i % RESOURCE_MAX];
+    for (int i=0; i < resources::MAX*PRICE_TREND_SIZE; i++) {
+        price_history[i] = resource_price[i % resources::MAX];
     }
 }
 
-ResourceTransfer PlanetaryEconomy::DrawResource(ResourceTransfer request) {
+resource_count_t PlanetaryEconomy::TakeResource(resources::T resource_id, resource_count_t quantity) {
     // Returns how much of the resource the planet was able to give
-    if (request.resource_id < 0 || request.resource_id >= RESOURCE_MAX) {
-        return ResourceTransfer();
+    if (resource_id < 0 || resource_id >= resources::MAX) {
+        return 0;
     }
     
-    resource_count_t transferred_resources = ClampInt(request.quantity, 0, resource_stock[request.resource_id]);
-    resource_stock[request.resource_id] -= transferred_resources;
+    resource_count_t transferred_resources = ClampInt(quantity, 0, resource_stock[resource_id]);
+    resource_stock[resource_id] -= transferred_resources;
 
-    return ResourceTransfer(request.resource_id, transferred_resources);
+    return transferred_resources;
 }
 
-ResourceTransfer PlanetaryEconomy::GiveResource(ResourceTransfer request) {
+resource_count_t PlanetaryEconomy::GiveResource(resources::T resource_id, resource_count_t quantity) {
     // Returns how much of the resource the planet was able to take
-    if (request.resource_id < 0 || request.resource_id >= RESOURCE_MAX) {
-        return ResourceTransfer();
+    if (resource_id < 0 || resource_id >= resources::MAX) {
+        return 0;
     }
 
-    resource_count_t transferred_resources = ClampInt(request.quantity, 0, resource_capacity[request.resource_id] - resource_stock[request.resource_id]);
-    resource_stock[request.resource_id] += transferred_resources;
+    resource_count_t transferred_resources = ClampInt(quantity, 0, resource_capacity[resource_id] - resource_stock[resource_id]);
+    resource_stock[resource_id] += transferred_resources;
 
-    return ResourceTransfer(request.resource_id, transferred_resources);
+    return transferred_resources;
 }
 
-void PlanetaryEconomy::AddResourceDelta(ResourceTransfer transfer) {
-    writable_resource_delta[transfer.resource_id] += transfer.quantity;
+void PlanetaryEconomy::AddResourceDelta(resources::T resource_id, resource_count_t quantity) {
+    writable_resource_delta[resource_id] += quantity;
 }
 
-cost_t PlanetaryEconomy::GetPrice(ResourceType resource, resource_count_t quantity) const {
+cost_t PlanetaryEconomy::GetPrice(resources::T resource, resource_count_t quantity) const {
     return quantity * resource_price[resource];
 }
 
-resource_count_t PlanetaryEconomy::GetForPrice(ResourceType resource, cost_t price) const {
+resource_count_t PlanetaryEconomy::GetForPrice(resources::T resource, cost_t price) const {
     return price / resource_price[resource];
 }
 
@@ -74,12 +70,12 @@ void PlanetaryEconomy::Update() {
     if (*global_resource_data[0].name == '\n') {
         FAIL("Resources uninititalized")
     }
-    for (int i=0; i < RESOURCE_MAX; i++) {
+    for (int i=0; i < resources::MAX; i++) {
         resource_delta[i] = writable_resource_delta[i] + native_resource_delta[i];
         writable_resource_delta[i] = 0;
     }
     if (GetCalendar()->IsNewDay()) {
-        for (int i=0; i < RESOURCE_MAX; i++) {
+        for (int i=0; i < resources::MAX; i++) {
             resource_stock[i] = Clamp(resource_stock[i] + resource_delta[i], 0, resource_capacity[i]);
         }
         AdvanceEconomy();
@@ -88,7 +84,7 @@ void PlanetaryEconomy::Update() {
 
 void PlanetaryEconomy::AdvanceEconomy() {
     // Call every day
-    for (int i = 0; i < RESOURCE_MAX; i++){
+    for (int i=0; i < resources::MAX; i++){
         // 1. calculate 'natural state' according to supply and demand
         // 2. update noise (independant of natural state)
         // 3. update final
@@ -98,8 +94,8 @@ void PlanetaryEconomy::AdvanceEconomy() {
             GetResourceData(i)->max_noise * 0.5
         );
     }
-    for(int i = 0; i < RESOURCE_MAX * (PRICE_TREND_SIZE - 1); i++) {
-        price_history[i] = price_history[i + RESOURCE_MAX];
+    for(int i = 0; i < resources::MAX * (PRICE_TREND_SIZE - 1); i++) {
+        price_history[i] = price_history[i + resources::MAX];
     }
     RecalcEconomy();
 }
@@ -108,63 +104,86 @@ void PlanetaryEconomy::RecalcEconomy() {
     if (global_resource_data[0].name[0] == 0) {
         FAIL("Resources uninititalized")
     }
-    for (int i = 0; i < RESOURCE_MAX; i++){
+    for (int i = 0; i < resources::MAX; i++){
         cost_t natural_cost = GetResourceData(i)->default_cost;  // TBD
         resource_price[i] = Clamp(
             resource_noise[i] + natural_cost,
             GetResourceData(i)->min_cost,
             GetResourceData(i)->max_cost
         );
-        price_history[RESOURCE_MAX*(PRICE_TREND_SIZE-1) + i] = resource_price[i];
+        price_history[resources::MAX*(PRICE_TREND_SIZE-1) + i] = resource_price[i];
     }
 }
 
 int resources_scroll = 0;
-void PlanetaryEconomy::UIDrawResources(ResourceTransfer transfer, ResourceTransfer fuel) {
+void PlanetaryEconomy::UIDrawResources(RID planet) {
     if (global_resource_data[0].name[0] == 0) {
         FAIL("Resources uninititalized")
     }
-    int total_size = (DEFAULT_FONT_SIZE+4+8) * (RESOURCE_MAX + 1);
+    int total_size = (DEFAULT_FONT_SIZE + 4 + 8) * (resources::MAX + 1);
     int available_size = ui::Current()->height - ui::Current()->y_cursor;
     if (total_size > available_size) {
         ui::PushScrollInset(0, available_size, total_size, &resources_scroll);
     }
-    for (int i=0; i < RESOURCE_MAX; i++) {
+    TransferPlan* plan = NULL;
+    bool take_input = false;
+    resource_count_t absolute_max = 0;
+    if (GetTransferPlanUI()->IsActive()) {
+        plan = GetTransferPlanUI()->plan;
+        take_input = GetTransferPlanUI()->IsActive() && (plan->departure_planet == planet || plan->arrival_planet == planet);
+        const Ship* ship = GetShip(GetTransferPlanUI()->ship);
+        absolute_max = ship->GetRemainingPayloadCapacity(plan->tot_dv);
+    }
+    for (int i=0; i < resources::MAX; i++) {
         char buffer[50];
         //sprintf(buffer, "%-10s %5d/%5d (%+3d)", GetResourceData(i)->name, qtt, cap, delta);
+        ui::DrawLimitedSlider(resource_stock[i], 0, resource_capacity[i], INT32_MIN, Palette::ui_alt, Palette::ui_dark);
         if (resource_delta[i] == 0) {
-            sprintf(buffer, "%-10s %3d", GetResourceUIRep(i), resource_stock[i]);
+            sprintf(buffer, "%2s %3d       ", GetResourceUIRep(i), resource_stock[i]);
         } else {
-            sprintf(buffer, "%-10s %3d : %+2d /d", GetResourceUIRep(i), resource_stock[i], resource_delta[i]);
-        }
-        ui::PushInset(0, DEFAULT_FONT_SIZE+4);
-        if (GetTransferPlanUI()->IsActive()) {
-            // Button
-            if (ui::ToggleButton(transfer.resource_id == i) & ButtonStateFlags::JUST_PRESSED) {
-                if (transfer.resource_id == i) 
-                    GetTransferPlanUI()->SetResourceType(ResourceType::RESOURCE_NONE);
-                else
-                    GetTransferPlanUI()->SetResourceType((ResourceType) i);
-            }
-        }
+            sprintf(buffer, "%2s %3d : %+2d ", GetResourceUIRep(i), resource_stock[i], resource_delta[i]);
+        }        
+
+        ui::PushInset(0, DEFAULT_FONT_SIZE + 4);
         Vector2 cursor_pos = ui::Current()->GetTextCursor();
         Rectangle button_rect = {cursor_pos.x, cursor_pos.y, 16, 16};
         ui::WriteEx(buffer, TextAlignment::CONFORM, false);
         if (CheckCollisionPointRec(GetMousePosition(), button_rect)) {
-            //ui::SetMouseHint(GetUI()->GetConceptDescription(resource_names[i]));
-            ui::SetMouseHint(resource_names[i]);
+            //ui::SetMouseHint(GetUI()->GetConceptDescription(resources::names[i]));
+            ui::SetMouseHint(resources::names[i]);
+        }
+        if (take_input) {
+            // Slider
+            ui::Current()->x_cursor = 140;
+            if (i == plan->fuel_type && plan->departure_planet == planet) {
+                const Ship* ship = GetShip(GetTransferPlanUI()->ship);
+                resource_count_t current = plan->resource_transfer[i] + plan->fuel;
+                resource_count_t absolute_max_fuel = ship->GetRemainingPayloadCapacity(0);
+                resource_count_t relative_max = absolute_max - plan->GetPayloadMass() + plan->resource_transfer[i] + plan->fuel;
+                resource_count_t new_current = ui::DrawLimitedSlider(current, 0, absolute_max_fuel, relative_max, Palette::interactable_main, Palette::interactable_alt);
+                if (new_current < plan->fuel) new_current = plan->fuel;
+                plan->resource_transfer[i] = new_current - plan->fuel;
+            } else {
+                resource_count_t relative_max = absolute_max - plan->GetPayloadMass() + plan->resource_transfer[i];
+                if (relative_max < 0) relative_max = 0;
+                if (i == plan->fuel_type) {
+                    plan->resource_transfer[i] = ui::DrawLimitedSlider(plan->resource_transfer[i], 0, absolute_max, relative_max, Palette::interactable_main, Palette::interactable_alt);
+                } else {
+                    plan->resource_transfer[i] = ui::DrawLimitedSlider(plan->resource_transfer[i], 0, absolute_max, relative_max, Palette::ui_main, Palette::ui_alt);
+                }
+            }
         }
 
-        resource_count_t qtt = 0;
-        if (transfer.resource_id == i) {
-            qtt += transfer.quantity;
-        }
-        if (fuel.quantity > 0 && i == fuel.resource_id) {
-            qtt -= fuel.quantity;
-        }
-        if (qtt != 0) {
-            sprintf(buffer, "   %+3d", qtt);
-            ui::WriteEx(buffer, TextAlignment::CONFORM, false);
+        if (plan != NULL) {
+            resource_count_t qtt = plan->resource_transfer[i];
+            if (i == plan->fuel_type && plan->departure_planet == planet) {
+                qtt += plan->fuel;
+            }
+            if (plan->departure_planet == planet) qtt *= -1;
+            if (qtt != 0) {
+                sprintf(buffer, "   %+3d", qtt);
+                ui::WriteEx(buffer, TextAlignment::CONFORM, false);
+            }
         }
         ui::Fillline(resource_stock[i] / (double)resource_capacity[i], Palette::ui_main, Palette::bg);
         ui::Pop();  // Inset
@@ -186,7 +205,7 @@ void _UIDrawResourceGrpah(const cost_t price_history[], int resource_index) {
     int current_draw_y = box->text_start_y + box->height - current_graph_y * box->height / graph_height;
     for (int i=1; i < PRICE_TREND_SIZE; i++){
         current_graph_x = i;
-        current_graph_y = price_history[i * RESOURCE_MAX + resource_index] - r_data.min_cost;
+        current_graph_y = price_history[i * resources::MAX + resource_index] - r_data.min_cost;
         int next_draw_x = box->text_start_x + current_graph_x * box->width / PRICE_TREND_SIZE;
         int next_draw_y = box->text_start_y + box->height - current_graph_y * box->height / graph_height;
         DrawLine(current_draw_x, current_draw_y, next_draw_x, next_draw_y, Palette::ui_main);
@@ -196,32 +215,32 @@ void _UIDrawResourceGrpah(const cost_t price_history[], int resource_index) {
     DrawLine(current_draw_x, current_draw_y, box->text_start_x, current_draw_y, Palette::interactable_main);
 }
 
-void PlanetaryEconomy::TryPlayerTransaction(ResourceTransfer rt) {
+void PlanetaryEconomy::TryPlayerTransaction(resources::T resource_id, resource_count_t quantity) {
     int faction = GetFactions()->player_faction;
-    if (rt.quantity < 0) {  // Sell
-        ResourceTransfer actual = DrawResource(rt.Inverted());
-        GetFactions()->CompleteTransaction(faction, GetPrice(actual.resource_id, actual.quantity));
+    if (quantity < 0) {  // Sell
+        resource_count_t actual = -quantity;
+        GetFactions()->CompleteTransaction(faction, GetPrice(resource_id, quantity));
     }
-    else if (rt.quantity > 0) {  // Buy
-        rt.quantity = fmin(GetForPrice(rt.resource_id, GetFactions()->GetMoney(faction)), rt.quantity);
-        ResourceTransfer actual = GiveResource(rt);
-        GetFactions()->CompleteTransaction(faction, -GetPrice(actual.resource_id, actual.quantity));
+    else if (quantity > 0) {  // Buy
+        quantity = fmin(GetForPrice(resource_id, GetFactions()->GetMoney(faction)), quantity);
+        resource_count_t actual = GiveResource(resource_id, quantity);
+        GetFactions()->CompleteTransaction(faction, -GetPrice(resource_id, actual));
     }
 }
 
-void PlanetaryEconomy::UIDrawEconomy(ResourceTransfer transfer, ResourceTransfer fuel) {
-    for (int i=0; i < RESOURCE_MAX; i++) {
+void PlanetaryEconomy::UIDrawEconomy(RID planet) {
+    for (int i=0; i < resources::MAX; i++) {
         //char buffer[50];
         //sprintf(buffer, "%-10s %5d/%5d (%+3d)", GetResourceData(i)->name, qtt, cap, delta);
         ui::PushInset(0, DEFAULT_FONT_SIZE+4);
-        ResourceType resource = (ResourceType) i;
+        resources::T resource = (resources::T) i;
 
-        if (GetTransferPlanUI()->IsActive()) {
+        /*if (GetTransferPlanUI()->IsActive()) {
             // Button
             if (ui::ToggleButton(transfer.resource_id == i) & ButtonStateFlags::JUST_PRESSED) {
-                GetTransferPlanUI()->SetResourceType(resource);
+                GetTransferPlanUI()->Setresources::T(resource);
             }
-        }
+        }*/
 
         StringBuilder sb = StringBuilder();
         sb.AddFormat("%-10s", GetResourceData(i)->name).AddCost(resource_price[i]);
@@ -229,12 +248,12 @@ void PlanetaryEconomy::UIDrawEconomy(ResourceTransfer transfer, ResourceTransfer
         ui::WriteEx(sb.c_str, TextAlignment::CONFORM, false);
 
         resource_count_t qtt = 0;
-        if (transfer.resource_id == i) {
+        /*if (transfer.resource_id == i) {
             qtt += transfer.quantity;
         }
         if (fuel.quantity > 0 && i == fuel.resource_id) {
             qtt -= fuel.quantity;
-        }
+        }*/
         if (qtt != 0) {
             sb.Clear();
             sb.AddI(qtt).Add("(").AddCost(GetPrice(resource, qtt)).Add(")");
@@ -248,7 +267,7 @@ void PlanetaryEconomy::UIDrawEconomy(ResourceTransfer transfer, ResourceTransfer
         if (ui::DirectButton("- 10", 0) & ButtonStateFlags::JUST_PRESSED) trade_ammount = -10;
 
         if (trade_ammount != 0) {
-            TryPlayerTransaction({resource, trade_ammount});
+            TryPlayerTransaction(resource, trade_ammount);
         }
             
         ui::Pop();  // Inset
@@ -260,10 +279,10 @@ void PlanetaryEconomy::UIDrawEconomy(ResourceTransfer transfer, ResourceTransfer
 }
 
 int LoadResources(const DataNode* data) {
-    for (int i=0; i < RESOURCE_MAX; i++) {
-        strcpy(GetResourceData(i)->name, resource_names[i]);
+    for (int i=0; i < resources::MAX; i++) {
+        strcpy(GetResourceData(i)->name, resources::names[i]);
     }
-    for (int i=0; i < RESOURCE_MAX; i++) {
+    for (int i=0; i < resources::MAX; i++) {
         const DataNode* dn = data->GetChild(GetResourceData(i)->name);
         if (dn == NULL) {
             continue;
@@ -275,7 +294,7 @@ int LoadResources(const DataNode* data) {
         GetResourceData(i)->cost_volatility = dn->GetF("cost_volatility", GetResourceData(i)->default_cost - GetResourceData(i)->min_cost, true);
         GetResourceData(i)->max_noise = dn->GetF("max_noise", 0, true);
     }
-    return RESOURCE_MAX;
+    return resources::MAX;
 }
 
 ResourceData* GetResourceData(int resource_index) {
@@ -283,8 +302,8 @@ ResourceData* GetResourceData(int resource_index) {
 }
 
 int FindResource(const char* name, int default_) {
-    for(int i=0; i < RESOURCE_MAX; i++) {
-        if (strcmp(resource_names[i], name) == 0) {
+    for(int i=0; i < resources::MAX; i++) {
+        if (strcmp(resources::names[i], name) == 0) {
             return i;
         }
     }
@@ -292,7 +311,7 @@ int FindResource(const char* name, int default_) {
 }
 
 const char* GetResourceUIRep(int resource_index) {
-    //return resource_icons + 3*resource_index;
-    return resource_icons[resource_index];
-    //return resource_names[resource_index];
+    //return resources::icons + 3*resource_index;
+    return resources::icons[resource_index];
+    //return resources::names[resource_index];
 }

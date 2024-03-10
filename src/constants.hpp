@@ -39,8 +39,8 @@ namespace Palette {
 #define ICON_CARBON          "\u032A"
 #define ICON_POLYMERS        "\u032B"
 #define ICON_ELECTRONICS     "\u032C"
-#define ICON_ALUMINIUM_ORE   "\u032D"
-#define ICON_ALUMINIUM       "\u032E"
+#define ICON_ALUMINIUM       "\u032D"
+#define ICON_ALUMINIUM_ORE   "\u032E"
 
 #define ICON_HEART           "\u0400"
 #define ICON_HEART_ORDNANCE  "\u0401"
@@ -105,7 +105,7 @@ namespace Palette {
 #define ICON_PDC             "\u046C"
 #define ICON_ACS             "\u046E"
 
-#define ICON_X "X"
+#define ICON_X "X "
 #define ICON_LINK ICON_EMPTY
 
 const double G = 6.6743015e-11;  // m³/(s²kg)

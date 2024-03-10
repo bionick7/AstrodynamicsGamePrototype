@@ -34,12 +34,8 @@ void Planet::Serialize(DataNode* data) const {
     //data->SetF("mass", mu / G);
     //data->SetF("radius", radius);
 
-    DataNode* resource_node = data->SetChild("resource_stock");
-    DataNode* resource_delta_node = data->SetChild("resource_delta");
-    for (int resource_index=0; resource_index < RESOURCE_MAX; resource_index++) {
-        resource_node->SetI(GetResourceData(resource_index)->name, economy.resource_stock[resource_index]);
-        resource_delta_node->SetI(GetResourceData(resource_index)->name, economy.native_resource_delta[resource_index]);
-    }
+    data->SerializeBuffer("resource_stock", economy.resource_stock, resources::names, resources::MAX);
+    data->SerializeBuffer("resource_delta", economy.native_resource_delta, resources::names, resources::MAX);
     
     // modules
     data->CreateArray("inventory", MAX_PLANET_INVENTORY);
@@ -75,8 +71,8 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
     orbit = nature->orbit;
     economy.trading_accessible = strcmp(data->Get("trading_accessible", economy.trading_accessible ? "y" : "n", true), "y") == 0;
 
-    data->FillBufferWithChild("resource_stock", economy.resource_stock, RESOURCE_MAX, resource_names);
-    data->FillBufferWithChild("resource_delta", economy.native_resource_delta, RESOURCE_MAX, resource_names);
+    data->DeserializeBuffer("resource_stock", economy.resource_stock, resources::names, resources::MAX);
+    data->DeserializeBuffer("resource_delta", economy.native_resource_delta, resources::names, resources::MAX);
     
     if (data->HasArray("inventory")) {
         int ship_module_inventory_count = data->GetArrayLen("inventory", true);
@@ -159,7 +155,7 @@ bool Planet::CanProduce(RID id) const {
     }
 
     if (construction_resources == NULL) return false;
-    for (int i=0; i < RESOURCE_MAX; i++) {
+    for (int i=0; i < resources::MAX; i++) {
         if (construction_resources[i] > economy.resource_stock[i]) {
             return false;
         }
@@ -176,7 +172,7 @@ void Planet::RecalcStats() {
     // Just call this every frame tbh
 
     // Not used atm
-    for (int i = 0; i < RESOURCE_MAX; i++){
+    for (int i = 0; i < resources::MAX; i++){
         economy.resource_delta[i] = 0;
     }
 }
@@ -259,9 +255,9 @@ void Planet::AdvanceShipProductionQueue() {
     ship_data.CreateArray("modules", 0);
     GetShips()->AddShip(&ship_data);
 
-    for (int i=0; i < RESOURCE_MAX; i++) {
+    for (int i=0; i < resources::MAX; i++) {
         if (sc->construction_resources[i] != 0) {
-            economy.DrawResource(ResourceTransfer((ResourceType) i, sc->construction_resources[i]));
+            economy.TakeResource((resources::T) i, sc->construction_resources[i]);
         }
     }
 
@@ -285,9 +281,9 @@ void Planet::AdvanceModuleProductionQueue() {
         free_slot.SetSlot(module_production_queue[0]);
     }
 
-    for (int i=0; i < RESOURCE_MAX; i++) {
+    for (int i=0; i < resources::MAX; i++) {
         if (smc->construction_resources[i] != 0) {
-            economy.DrawResource(ResourceTransfer((ResourceType) i, smc->construction_resources[i]));
+            economy.TakeResource((resources::T) i, smc->construction_resources[i]);
         }
     }
 

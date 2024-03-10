@@ -4,11 +4,12 @@
 #include "id_system.hpp"
 #include "planetary_economy.hpp"
 
+/*
 struct AbstractTransfer {
     RID departure_planet;
     RID arrival_planet;
-    ResourceTransfer resource_transfer;
-    ResourceTransfer fuel_consuption;
+    //ResourceTransfer resource_transfer;
+    //ResourceTransfer fuel_consuption;
 };
 
 struct Ship;
@@ -33,6 +34,6 @@ struct AIBlackboard {
     void _LowLevelHandleCivilianShip(Ship* ship) const;
     void _LowLevelHandlePlanet(Planet* planet) const;
     void LowLevelFactionAI() const;
-};
+};*/
 
 #endif  // AI_H

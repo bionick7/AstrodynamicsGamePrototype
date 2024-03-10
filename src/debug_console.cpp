@@ -216,10 +216,10 @@ void GiveResource(const char* prompt) {
     }
     prompt = FetchArg(resource_value, prompt);
     
-    ResourceType rsc_index = RESOURCE_NONE;
-    for (int i=0; i < RESOURCE_MAX; i++) {
-        if (strcmp(resource_name, resource_names[i]) == 0)
-            rsc_index = (ResourceType)i;
+    resources::T rsc_index = resources::NONE;
+    for (int i=0; i < resources::MAX; i++) {
+        if (strcmp(resource_name, resources::names[i]) == 0)
+            rsc_index = (resources::T)i;
     }
     if (rsc_index < 0) {
         PushLine("Invalid resource name");
@@ -231,7 +231,8 @@ void GiveResource(const char* prompt) {
         PushLine("No such planet");
     }
     int val = TextToInteger(resource_value);
-    planet->economy.GiveResource(ResourceTransfer(rsc_index, val));
+    //planet->economy.GiveResource(rsc_index, val);
+    planet->economy.GiveResource(rsc_index, val);
 }
 
 void InterpreteResult(const char* prompt) {

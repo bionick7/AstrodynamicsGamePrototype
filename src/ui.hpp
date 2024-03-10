@@ -192,6 +192,7 @@ namespace ui {
     void FilllineEx(int x_start, int x_end, int y, double value, Color fill_color, Color background_color);
     ButtonStateFlags::T DirectButton(const char* text, int inset);
     ButtonStateFlags::T ToggleButton(bool on);
+    int DrawLimitedSlider(int current, int min, int max, int limit, Color fg, Color bg);
     void HelperText(const char* description);
 
     void BeginDirectDraw();

@@ -6,8 +6,9 @@
 #include "time.hpp"
 
 struct TransferPlan {
-    ResourceTransfer resource_transfer;
-    ResourceTransfer fuel;
+    resource_count_t resource_transfer[resources::MAX];
+    resources::T fuel_type;
+    resource_count_t fuel;
 
     // Inputs
     RID departure_planet;
@@ -35,6 +36,8 @@ struct TransferPlan {
 
     void Serialize(DataNode* data) const;
     void Deserialize(const DataNode* data);
+
+    resource_count_t GetPayloadMass() const;
 };
 
 void TransferPlanSolve(TransferPlan* tp);
@@ -66,8 +69,7 @@ struct TransferPlanUI {
     void Draw3DGizmos();
     void DrawUI();
     void SetPlan(TransferPlan* plan, RID ship, timemath::Time min_time, timemath::Time pos_time);
-    void SetResourceType(ResourceType resource_type);
-    void SetLogistics(resource_count_t payload_mass, resource_count_t fuel_mass);
+    void SetLogistics(resource_count_t fuel_mass);
     void SetDestination(RID planet);
 
     bool IsSelectingDestination();

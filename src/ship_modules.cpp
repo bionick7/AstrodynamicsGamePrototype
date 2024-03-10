@@ -21,7 +21,7 @@ ShipModuleClass::ShipModuleClass() {
         required_stats[i] = 0;
     }
 
-    for (int i=0; i < (int) RESOURCE_MAX; i++) {
+    for (int i=0; i < (int) resources::MAX; i++) {
         production[i] = 0;
         construction_resources[i] = 0;
     }
@@ -50,17 +50,17 @@ void ShipModuleClass::UpdateCustom(Ship* ship) const {
         if (((1ull << IdGetIndex(planet->id)) & planets_restriction) == 0) {
             return;
         }
-        for (int i=0; i < RESOURCE_MAX; i++) {
+        for (int i=0; i < resources::MAX; i++) {
             if (planet->economy.resource_stock[i] < consumption[i]) {
                 return;
             }
         }
-        for (int i=0; i < RESOURCE_MAX; i++) {
+        for (int i=0; i < resources::MAX; i++) {
             if (production[i] != 0) {
-                planet->economy.AddResourceDelta(ResourceTransfer((ResourceType) i, production[i]));
+                planet->economy.AddResourceDelta((resources::T) i, production[i]);
             }
             if (consumption[i] != 0) {
-                planet->economy.AddResourceDelta(ResourceTransfer((ResourceType) i, -consumption[i]));
+                planet->economy.AddResourceDelta((resources::T) i, -consumption[i]);
             }
         }
     }
@@ -81,7 +81,7 @@ void ShipModuleClass::MouseHintWrite(StringBuilder* sb) const {
     int consumptions_count = 0;
     int production_rsc_count = 0;
     StringBuilder sb2 = StringBuilder("    ");
-    for (int i=0; i < RESOURCE_MAX; i++) {
+    for (int i=0; i < resources::MAX; i++) {
         if (consumption[i] > 0) {
             if (consumptions_count != 0)
             sb2.Add(" + ");
@@ -90,7 +90,7 @@ void ShipModuleClass::MouseHintWrite(StringBuilder* sb) const {
         }
     }
     sb2.Add("\n => ");
-    for (int i=0; i < RESOURCE_MAX; i++) {
+    for (int i=0; i < resources::MAX; i++) {
         if (production[i] > 0) {
             if (production_rsc_count != 0)
             sb2.Add(" + ");
@@ -423,14 +423,14 @@ int ShipModules::Load(const DataNode* data) {
             ship_modules[i].planets_restriction = UINT64_MAX;
         }
 
-        module_data->FillBufferWithChild("add", ship_modules[i].delta_stats, ShipStats::MAX, ship_stat_names);
-        module_data->FillBufferWithChild("require", ship_modules[i].required_stats, ShipStats::MAX, ship_stat_names);
+        module_data->DeserializeBuffer("add", ship_modules[i].delta_stats, ship_stat_names, ShipStats::MAX);
+        module_data->DeserializeBuffer("require", ship_modules[i].required_stats, ship_stat_names, ShipStats::MAX);
         ship_modules[i].has_activation_requirements = module_data->HasChild("require");
         ship_modules[i].type = ModuleType::FromString(module_data->Get("type"));
 
-        module_data->FillBufferWithChild("construction_resources", ship_modules[i].construction_resources, RESOURCE_MAX, resource_names);
-        module_data->FillBufferWithChild("produce", ship_modules[i].production, RESOURCE_MAX, resource_names);
-        module_data->FillBufferWithChild("consume", ship_modules[i].consumption, RESOURCE_MAX, resource_names);
+        module_data->DeserializeBuffer("construction_resources", ship_modules[i].construction_resources, resources::names, resources::MAX);
+        module_data->DeserializeBuffer("produce", ship_modules[i].production, resources::names, resources::MAX);
+        module_data->DeserializeBuffer("consume", ship_modules[i].consumption, resources::names, resources::MAX);
         if (module_data->GetArrayLen("icon_index") == 2) {
             ship_modules[i].icon_index = AtlasPos(
                 module_data->GetArrayElemI("icon_index", 0),

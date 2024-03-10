@@ -40,14 +40,14 @@ struct ShipClass {
 
     double max_dv;  // m/s
     double v_e;     // m/s
-    ResourceType fuel_resource;
+    resources::T fuel_resource;
     resource_count_t max_capacity;  // counts
 
     ModuleConfiguration module_config;
     int stats[ShipStats::MAX] = {0};
 
     int construction_time;
-    resource_count_t construction_resources[RESOURCE_MAX] = {0};
+    resource_count_t construction_resources[resources::MAX] = {0};
     int construction_batch_size;
     bool is_hidden;
     
@@ -104,7 +104,7 @@ struct Ship {
     RID id;
 
     // Payload
-    ResourceTransfer transporing;
+    resource_count_t transporting[resources::MAX];
     ShipModuleSlot current_slot;
 
     Ship();
@@ -128,11 +128,11 @@ struct Ship {
     void AttachTo(RID parent_ship);
     void Detach();
 
-    double GetPayloadMass() const;
+    double GetOperationalMass() const;
     resource_count_t GetMaxCapacity() const;
     resource_count_t GetRemainingPayloadCapacity(double dv) const;
     resource_count_t GetFuelRequiredFull(double dv) const;
-    resource_count_t GetFuelRequiredEmpty(double dv) const;
+    resource_count_t GetFuelRequired(double dv, resource_count_t payload) const;
     double GetCapableDV() const;
     bool IsPlayerControlled() const;
     IntelLevel::T GetIntelLevel() const;

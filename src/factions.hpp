@@ -22,7 +22,7 @@ struct Factions {
     DiplomaticStatus::T diplomacy_matrix[MAX_FACTIONS*MAX_FACTIONS];
 
     cost_t money[MAX_FACTIONS];
-    AIBlackboard ai_information[MAX_FACTIONS];
+    //AIBlackboard ai_information[MAX_FACTIONS];
 
     constexpr static uint32_t GetAllegianceFlags(int faction) { return 1U << faction; }
 

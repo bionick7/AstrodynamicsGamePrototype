@@ -3,6 +3,7 @@
 #include "basic.hpp"
 #include "datanode.hpp"
 #include "constants.hpp"
+#include "id_system.hpp"
 
 const double KG_PER_COUNT = 10e3;
 
@@ -28,43 +29,22 @@ resource_count_t KGToResourceCounts(double mass);
     X(POLYMERS,    polymers) \
     X(ELECTRONICS, electronics)
 
-#define X(upper, lower) RESOURCE_##upper,
-enum ResourceType {
-    RESOURCE_NONE = -1,
-    X_RESOURCES
-    RESOURCE_MAX,
-};
-#undef X
 
+namespace resources {
+#define X(upper, lower) upper,
+    enum T {
+        NONE = -1,
+        X_RESOURCES
+        MAX,
+    };
+#undef X
 #define X(upper, lower) #lower,
-static const char* resource_names[RESOURCE_MAX] = {
-    X_RESOURCES
-};
+    static const char* names[resources::MAX] = { X_RESOURCES };
 #undef X
-
-//#define X(upper, lower) ICON_##upper "\0"
 #define X(upper, lower) ICON_##upper,
-static const char* resource_icons[RESOURCE_MAX] = {
-    X_RESOURCES
-};
+    static const char* icons[resources::MAX] = { X_RESOURCES };
 #undef X
-
-struct ResourceTransfer {
-    ResourceType resource_id;
-    resource_count_t quantity;
-
-    ResourceTransfer() {
-        resource_id = ResourceType::RESOURCE_NONE; 
-        quantity = 0;
-    }
-
-    ResourceTransfer(ResourceType p_resource_id, resource_count_t p_quantity) { 
-        resource_id = p_resource_id; 
-        quantity = p_quantity; 
-    }
-
-    ResourceTransfer Inverted() const;
-};
+}
 
 #define RESOURCE_NAME_MAX_SIZE 30
 #define RESOURCE_DESCRIPTION_MAX_SIZE 1000
@@ -84,16 +64,16 @@ struct ResourceData {
 };
 
 struct PlanetaryEconomy {
-    resource_count_t resource_stock[RESOURCE_MAX];
-    resource_count_t resource_capacity[RESOURCE_MAX];
-    resource_count_t native_resource_delta[RESOURCE_MAX];
-    resource_count_t resource_delta[RESOURCE_MAX];
-    resource_count_t writable_resource_delta[RESOURCE_MAX];
+    resource_count_t resource_stock[resources::MAX];
+    resource_count_t resource_capacity[resources::MAX];
+    resource_count_t native_resource_delta[resources::MAX];
+    resource_count_t resource_delta[resources::MAX];
+    resource_count_t writable_resource_delta[resources::MAX];
 
-    cost_t resource_price[RESOURCE_MAX];
-    cost_t resource_noise[RESOURCE_MAX];
+    cost_t resource_price[resources::MAX];
+    cost_t resource_noise[resources::MAX];
 
-    cost_t price_history[RESOURCE_MAX*PRICE_TREND_SIZE];
+    cost_t price_history[resources::MAX*PRICE_TREND_SIZE];
     bool trading_accessible;
 
     PlanetaryEconomy();
@@ -101,15 +81,15 @@ struct PlanetaryEconomy {
     void Update();
     void AdvanceEconomy();
     void RecalcEconomy();
-    void UIDrawResources(ResourceTransfer transfer, ResourceTransfer fuel);
-    void UIDrawEconomy(ResourceTransfer transfer, ResourceTransfer fuel);
+    void UIDrawResources(RID planet);
+    void UIDrawEconomy(RID planet);
 
-    ResourceTransfer DrawResource(ResourceTransfer transfer);
-    ResourceTransfer GiveResource(ResourceTransfer transfer);
-    void AddResourceDelta(ResourceTransfer transfer);
-    void TryPlayerTransaction(ResourceTransfer transfer);
-    cost_t GetPrice(ResourceType resource, resource_count_t quantity) const;
-    resource_count_t GetForPrice(ResourceType resource, cost_t quantity) const;
+    resource_count_t TakeResource(resources::T resource_id, resource_count_t quantity);
+    resource_count_t GiveResource(resources::T resource_id, resource_count_t quantity);
+    void AddResourceDelta(resources::T resource_id, resource_count_t quantity);
+    void TryPlayerTransaction(resources::T resource_id, resource_count_t quantity);
+    cost_t GetPrice(resources::T resource_id, resource_count_t quantity) const;
+    resource_count_t GetForPrice(resources::T resource_id, cost_t quantity) const;
 };
 
 int FindResource(const char* name, int default_);
