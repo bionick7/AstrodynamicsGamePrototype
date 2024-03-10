@@ -283,10 +283,10 @@ OrbitPos Orbit::FromFocal(double focal) const {
     res.θ = focal;
 
     if (ecc < 1) {
-        res.M = _True2Mean(res.M, ecc);
+        res.M = _True2Mean(res.θ, ecc);
         res.time = epoch + res.M / GetMeanMotion();
     } else {
-        res.M = _True2MeanHyp(res.M, ecc);
+        res.M = _True2MeanHyp(res.θ, ecc);
         res.time = epoch + res.M / GetMeanMotion();
     }
     double p = sma * (1 - ecc*ecc);

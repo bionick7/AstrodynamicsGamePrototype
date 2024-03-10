@@ -14,10 +14,12 @@ namespace text {
         
         ~Layout();
 
+        void Offset(int x, int y);
+
         int GetCharacterIndex(Vector2 position) const;
         Rectangle GetTokenRect(int token_start, int token_end, int token_from) const;
         void GetTextRects(List<Rectangle>* buffer, const TokenList *tokens) const;
-        void DrawTextLayout(Font font, float fontSize, Color tint, Rectangle render_rect, uint8_t z_layer) const;
+        void DrawTextLayout(Font font, float fontSize, Color tint, Color background, Rectangle render_rect, uint8_t z_layer) const;
     };
 
     void GetLayout(Layout* layout, Vector2 start, Font font, const char *text, float fontSize, float spacing);

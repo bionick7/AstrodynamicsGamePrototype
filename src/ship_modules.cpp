@@ -74,10 +74,9 @@ int ShipModuleClass::GetConstructionTime() const {
     return construction_time;
 }
 
-void ShipModuleClass::MouseHintWrite() const {
-    StringBuilder sb;
-    sb.Add(name).Add("\n");
-    sb.Add(description).Add("\n");
+void ShipModuleClass::MouseHintWrite(StringBuilder* sb) const {
+    sb->Add(name).Add("\n");
+    sb->Add(description).Add("\n");
 
     int consumptions_count = 0;
     int production_rsc_count = 0;
@@ -100,11 +99,8 @@ void ShipModuleClass::MouseHintWrite() const {
         }
     }
     if (consumptions_count * production_rsc_count > 0) {
-        sb.Add(sb2.c_str);
+        sb->Add(sb2.c_str);
     }
-
-    sb.AutoBreak(ui::Current()->width / ui::Current()->GetCharWidth());
-    ui::Write(sb.c_str);
 }
 
 ShipModuleSlot::ShipModuleSlot(RID p_entity, int p_index, ShipModuleSlotType p_origin_type, ModuleType::T p_module_type) {
@@ -173,6 +169,10 @@ bool ShipModuleSlot::IsSlotFitting(RID module) const {
 }
 
 void ShipModuleSlot::Draw() const {
+    //if (IsSlotFitting(GetShipModules()->_dragging)) {
+    //    int enclose_dist = sin(GetRenderServer()->screen_time*5.) > 0 ? 4 : 7;
+    //    ui::EncloseEx(-enclose_dist, BLANK, Palette::interactable_main, 5);
+    //}
     ui::EncloseEx(0, Palette::bg, Palette::bg, 5);
     int x_cursor = ui::Current()->x_cursor;
     int y_cursor = ui::Current()->y_cursor;
@@ -182,6 +182,18 @@ void ShipModuleSlot::Draw() const {
     ui::DrawIconSDF(ModuleType::icons[module_type], Palette::ui_dark, 40);
     ui::Current()->x_cursor = x_cursor;
     ui::Current()->y_cursor = y_cursor;
+
+    RID dragging_object = GetShipModules()->_dragging;
+    if (IsIdValid(dragging_object) && 
+        (!IsSlotFitting(dragging_object) || !IsReachable(GetShipModules()->_dragging_origin))
+    ){
+        int center_x = ui::Current()->text_start_x + ui::Current()->width/2;
+        int center_y = ui::Current()->text_start_y + ui::Current()->height/2;
+        ui::BeginDirectDraw();
+        DrawLine(center_x - 20, center_y - 20, center_x + 20, center_y + 20, Palette::red);
+        DrawLine(center_x - 20, center_y + 20, center_x + 20, center_y - 20, Palette::red);
+        ui::EndDirectDraw();
+    }
 }
 
 ModuleType::T ModuleType::FromString(const char *name) {
@@ -199,8 +211,8 @@ bool ModuleType::IsCompatible(ModuleType::T from, ModuleType::T to) {
         case MEDIUM:   return from == MEDIUM || from == SMALL;
         case SMALL:    return from == SMALL;
         case FREE:     return from == FREE;
-        case ARMOR:    return from == LARGE;
-        case DROPTANK: return from == LARGE;
+        case ARMOR:    return from == ARMOR;
+        case DROPTANK: return from == DROPTANK;
         case ANY:      return from != INVALID;
         default: case INVALID: return false;
     }
@@ -298,7 +310,7 @@ void ModuleConfiguration::Draw(Ship* ship) const {
         ui::PushGlobal(
             adjusted_draw_space.x, adjusted_draw_space.y,
             adjusted_draw_space.width, adjusted_draw_space.height,
-            16, Palette::ui_main, Palette::bg, ui::Current()->z_layer + 10
+            DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, ui::Current()->z_layer + 10
         );
         center = {
             adjusted_draw_space.x + adjusted_draw_space.width/2,
@@ -310,10 +322,9 @@ void ModuleConfiguration::Draw(Ship* ship) const {
     } else {
         module_config_popup_rect = {0};
     }
+    ui::WriteEx(GetShipClassByRID(ship->ship_class)->name, TextAlignment::HCENTER | TextAlignment::TOP, false);
 
     //DrawRectangleLinesEx(bounding, 1, WHITE);
-    BeginRenderInUIMode(ui::Current()->z_layer + 10);
-    EndRenderInUIMode();
     bool use_scissor = !CheckEnclosingRecs(ui::Current()->render_rec, bounding);
     if (use_scissor) {
         BeginScissorMode(ui::Current()->render_rec.x, ui::Current()->render_rec.y, ui::Current()->render_rec.width, ui::Current()->render_rec.height);
@@ -327,9 +338,12 @@ void ModuleConfiguration::Draw(Ship* ship) const {
             wf_draw_rect.width -= ADJUST_MARGIN * 2;
             wf_draw_rect.height -= ADJUST_MARGIN * 2;
         }
+        // Make the mesh fit (and adjust to keep the modules aligned)
+        center.x -= (mesh.bounding_box.min.x + mesh.bounding_box.max.x) * 50;
+        center.y += (mesh.bounding_box.min.z + mesh.bounding_box.max.z) * 50;
         RenderWirframeMesh2DEx(mesh, center, 100, Palette::ui_main, ui::Current()->z_layer);
     }
-    BeginRenderInUIMode(ui::Current()->z_layer);
+    BeginRenderInUILayer(ui::Current()->z_layer);
     //DrawRectangle(center.x + 5, center.y-25, 50, 50, WHITE);
     //DrawLine(center.x - 100, center.y +   0, center.x + 100, center.y +   0, WHITE);
     //DrawLine(center.x +   0, center.y - 100, center.x +   0, center.y + 100, WHITE);
@@ -368,7 +382,7 @@ void ModuleConfiguration::Draw(Ship* ship) const {
     if (use_scissor) {
         EndScissorMode();
     }
-    EndRenderInUIMode();
+    EndRenderInUILayer();
     for (int i=0; i < module_count; i++) {
         // leave margin, so the rect boundaries from the mesh remain visible
         ui::PushFree(rectangles[i].x, rectangles[i].y, rectangles[i].width, rectangles[i].height);
@@ -472,13 +486,13 @@ void ShipModules::DrawShipModule(RID index) const {
         //ui::EncloseEx(4, Palette::bg, Palette::ui_dark, 4);
     } else {  // filled
         const ShipModuleClass* smc = GetModuleByRID(index);
-        ui::Enclose();
+        //ui::Enclose();
         ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
-            ui::PushMouseHint(GetMousePosition(), 250, 250, 255 - MAX_TOOLTIP_RECURSIONS);
-            ui::Enclose();
-            smc->MouseHintWrite();
-            ui::Pop();
+            StringBuilder sb;
+            smc->MouseHintWrite(&sb);
+            sb.AutoBreak(150);
+            ui::SetMouseHint(sb.c_str);
         }
         /*if (button_state & ButtonStateFlags::PRESSED) {
             return;

@@ -6,7 +6,7 @@ in vec4 fragColor;
 
 // Input uniform values
 uniform sampler2D texture0;
-uniform vec4 colDiffuse;
+uniform vec4 background_color;
 uniform float depth;
 //uniform float dSDFsFrag;
 
@@ -16,13 +16,14 @@ out vec4 finalColor;
 // NOTE: Add here your custom variables
 
 void main() {
-    finalColor.rgb = fragColor.rgb;
 
     float sdf = (texture(texture0, fragTexCoord).a - 0.5) * 2.0;
     float d_dist_d_frag = length(vec2(dFdx(sdf), dFdy(sdf)));
     float alpha = smoothstep(d_dist_d_frag, -d_dist_d_frag, sdf);
     //alpha *= smoothstep(d_dist_d_frag*2.0, d_dist_d_frag*1.0, -sdf);
-    finalColor.a = fragColor.a * alpha;
+    finalColor = mix(background_color, fragColor, alpha);
+    //finalColor.rgb = fragColor.rgb;
+    //finalColor.a = alpha;
     gl_FragDepth = depth;
 
     //finalColor.a = 1.0;

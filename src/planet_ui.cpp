@@ -38,9 +38,10 @@ void Planet::_UIDrawInventory() {
             }
         }
         this_slot.Draw();
-        BeginRenderInUIMode(ui::Current()->z_layer);
-        DrawRectangleLinesEx(ui::Current()->GetRect(), 1, Palette::ui_alt);
-        EndRenderInUIMode();
+        ui::EncloseEx(0, BLANK, Palette::ui_alt, 3);
+        //ui::BeginDirectDraw();
+        //DrawRectangleLinesEx(ui::Current()->GetRect(), 1, Palette::ui_alt);
+        //ui::EndDirectDraw();
         sms->DrawShipModule(ship_module_inventory[i]);
         ui::Pop();  // GridCell
     }
@@ -73,7 +74,9 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
             construction_resources = &module_class->construction_resources[0];
             build_time = module_class->GetConstructionTime();
             batch_size = module_class->construction_batch_size;
-            module_class->MouseHintWrite();
+            module_class->MouseHintWrite(&sb);
+            ui::Write(sb.c_str);
+            sb.Clear();
             break;
         }
         default: break;
@@ -108,7 +111,7 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
 }
 
 void _UIDrawProduction(Planet* planet, EntityType type) {
-    // Draw options
+    // Set variables for planet/ship
     int option_size;
     IDList* queue;
     double progress = 0;
@@ -132,6 +135,8 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
     ui::Shrink(5, 5);
 
     RID hovered_id = GetInvalidId();
+
+    // Draw options
 
     int draw_index = 0;
     for(int i=0; i < option_size; i++) {
@@ -157,7 +162,7 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
         // Possible since Shipclasses get loaded once in continuous mempry
         ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
-            ui::EncloseEx(4, Palette::bg, Palette::interactable_main, 4);
+            ui::EncloseEx(0, Palette::bg, Palette::interactable_main, 4);
             hovered_id = id;
         } else {
             ui::Enclose();
@@ -175,6 +180,7 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
     ui::Pop();  // Inset
 
     // Draw queue
+
     bool hover_over_queue = false;
     for(int i=0; i < queue->size; i++) {
         RID id = queue->Get(i);
@@ -219,12 +225,14 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
     }
     if (IsIdValid(hovered_id)) {
         ui::PushMouseHint(GetMousePosition(), 400, 400, 255 - MAX_TOOLTIP_RECURSIONS);
-        ui::Enclose();
+        ui::Current()->text_background = Palette::bg;
+        ui::Current()->flexible = true;
         if (hover_over_queue) {
             _ProductionQueueMouseHint(hovered_id, NULL);
         } else {
             _ProductionQueueMouseHint(hovered_id, planet->economy.resource_stock);
         }
+        ui::EncloseDynamic(5, Palette::bg, Palette::ui_main, 4);
         ui::Pop();
     }
 }

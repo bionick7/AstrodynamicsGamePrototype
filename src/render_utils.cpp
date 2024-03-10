@@ -70,10 +70,12 @@ void _ColorToFloat4Buffer(float buffer[], Color color) {
 namespace sdf_shader {
     Shader shader;
     int depth = -1;
+    int background_color = -1;
 
     void Load() {
         LOAD_SHADER(sdf_shader)
         LOAD_SHADER_UNIFORM(sdf_shader, depth)
+        LOAD_SHADER_UNIFORM(sdf_shader, background_color)
     }
 }
 
@@ -92,26 +94,32 @@ void DrawTextureSDF(Texture2D texture, Rectangle source, Rectangle dest,
     RELOAD_IF_NECAISSARY(sdf_shader)
     BeginShaderMode(sdf_shader::shader);
     float z_layer_f = 1.0f - z_layer / 256.0f;
+    float bg_color_4[4];
+    _ColorToFloat4Buffer(bg_color_4, Palette::bg);
+    SetShaderValue(sdf_shader::shader, sdf_shader::background_color, bg_color_4, SHADER_UNIFORM_VEC4);
     SetShaderValue(sdf_shader::shader, sdf_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT);
     DrawTexturePro(texture, source, dest, origin, rotation, tint);
     EndShaderMode();
 }
 
-void BeginRenderSDFInUIMode(uint8_t z_layer) {
+void BeginRenderSDFInUIMode(uint8_t z_layer, Color background) {
     RELOAD_IF_NECAISSARY(sdf_shader)
     BeginShaderMode(sdf_shader::shader);
     float z_layer_f = 1.0f - z_layer / 256.0f;
+    float bg_color_4[4];
+    _ColorToFloat4Buffer(bg_color_4, background);
+    SetShaderValue(sdf_shader::shader, sdf_shader::background_color, bg_color_4, SHADER_UNIFORM_VEC4);
     SetShaderValue(sdf_shader::shader, sdf_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT);
 }
 
-void BeginRenderInUIMode(uint8_t z_layer) {
+void BeginRenderInUILayer(uint8_t z_layer) {
     RELOAD_IF_NECAISSARY(ui_shader)
     BeginShaderMode(ui_shader::shader);
     float z_layer_f = 1.0f - z_layer / 256.0f;
     SetShaderValue(ui_shader::shader, ui_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT);
 }
 
-void EndRenderInUIMode() {
+void EndRenderInUILayer() {
     EndShaderMode();
 }
 

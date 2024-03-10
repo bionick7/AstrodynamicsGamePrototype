@@ -45,7 +45,7 @@ AUDIO: Device initialized successfully
     > Format:        32-bit IEEE Floating Point -> 16-bit Signed Integer
     > Channels:      2 -> 2
     > Sample rate:   44100 -> 44100
-    > Periods size:  3306
+    > Periods size:  3304
 IMAGE: Data loaded successfully (134x131 | R8G8B8A8 | 1 mipmaps)
 src/main.cpp:34 :: Init from working directory: '/media/nick/Data/Games/astrodyn_concept_3/standalone'
 IMAGE: Data loaded successfully (1280x1280 | GRAYSCALE | 1 mipmaps)
@@ -97,6 +97,11 @@ SHADER: [ID 4] Fragment shader compiled successfully
 SHADER: [ID 13] Program shader loaded successfully
 WAVE: Data loaded successfully (96000 Hz, 16 bit, 2 channels)
 WAVE: Data loaded successfully (48000 Hz, 16 bit, 2 channels)
+WAVE: Data loaded successfully (48000 Hz, 16 bit, 2 channels)
+IMAGE: Data loaded successfully (1280x1280 | GRAYSCALE | 1 mipmaps)
+TEXTURE: [ID 9] Texture loaded successfully (1280x1280 | GRAY_ALPHA | 1 mipmaps)
+FONT: [resources/fonts/space_mono_small.fnt] Font loaded successfully (710 glyphs)
+FONT: Data loaded successfully (32 pixel size | 95 glyphs)
 TEXTURE: [ID 2] Unloaded texture data from VRAM (GPU)
 SHADER: [ID 3] Default shader unloaded successfully
 TEXTURE: [ID 1] Default texture unloaded successfully

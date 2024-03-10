@@ -348,7 +348,7 @@ void DrawDebugConsole() {
     sb.Add(" $ ").Add(current_prompt);
     ui::Write(sb.c_str);
     int x_offset = ui::Current()->text_start_x + MeasureTextEx(GetCustomDefaultFont(), TextSubtext(sb.c_str, 0, cursor + 3), DEFAULT_FONT_SIZE, 1).x;
-    BeginRenderInUIMode(ui::Current()->z_layer);
+    ui::BeginDirectDraw();
     DrawLine(x_offset, ui::Current()->y_cursor, x_offset, ui::Current()->y_cursor - line_height, WHITE);
-    EndRenderInUIMode();
+    ui::EndDirectDraw();
 }

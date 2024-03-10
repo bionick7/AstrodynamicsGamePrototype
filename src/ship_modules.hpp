@@ -71,7 +71,7 @@ namespace ModuleType {
         "small",
         "free",
         "armor",
-        "droptank",
+        "drop_tank",
         "any",
     };
 
@@ -126,7 +126,7 @@ struct ShipModuleClass {
     AtlasPos icon_index;
 
     ShipModuleClass();
-    void MouseHintWrite() const;
+    void MouseHintWrite(StringBuilder* sb) const;
     void UpdateStats(Ship* ship) const;
     void UpdateCustom(Ship* ship) const;
     bool HasDependencies() const;

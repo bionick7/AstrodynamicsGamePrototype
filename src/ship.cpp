@@ -32,12 +32,11 @@ resource_count_t ShipClass::GetFuelRequiredEmpty(double dv) const {
     return KGToResourceCounts(oem * (exp(dv/v_e) - 1));
 }
 
-void ShipClass::MouseHintWrite() const {
-    StringBuilder sb;
-    sb.Add(name).Add("\n");
-    sb.Add(description).Add("\n");
-    sb.AutoBreak(ui::Current()->width / ui::Current()->GetCharWidth());
-    ui::Write(sb.c_str);
+void ShipClass::MouseHintWrite(StringBuilder* sb) const {
+    sb->Add(name).Add("\n");
+    sb->Add(description).Add("\n");
+    //sb.AutoBreak(ui::Current()->width / ui::Current()->GetCharWidth());
+    //ui::Write(sb.c_str);
 }
 
 Ship::Ship() {

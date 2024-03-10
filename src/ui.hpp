@@ -68,6 +68,8 @@ struct TextBox {
 
     // Render Rect
     Rectangle render_rec;
+    bool flexible;
+    int z_layer;
 
     // Layout
     int text_margin_x;
@@ -80,10 +82,9 @@ struct TextBox {
     // Variables
     int x_cursor;
     int y_cursor;
-    int line_size_x;
     int line_size_y;
-    int text_counter;
-    int z_layer;
+    int text_max_x;
+    int text_max_y;
 
     TextBox(int x, int y, int w, int h, int text_size, Color color, Color background_color, uint8_t z_layer);
     TextBox(const TextBox* parent, int x, int y, int w, int h);
@@ -92,6 +93,7 @@ struct TextBox {
     void EnsureLineBreak();
     void Enclose(int inset, int corner_radius, Color background_color, Color line_color);
     void EnclosePartial(int inset, Color background_color, Color line_color, Direction::T directions);
+    void EncloseDynamic(int inset, int corner_radius, Color background_color, Color line_color);
     void Shrink(int dx, int dy);
     void WriteRaw(const char* text, TextAlignment::T align);
     void Write(const char* text, TextAlignment::T align);
@@ -126,7 +128,6 @@ struct AtlasPos {
 
 struct UIGlobals {
     std::stack<TextBox> text_box_stack = std::stack<TextBox>();
-    char mouseover_text[1024] = "";
     struct BlockingRect {Rectangle rec; uint8_t z;};
     BlockingRect acc_blocking_rects[MAX_BLOCKING_RECTS];
     BlockingRect blocking_rects[MAX_BLOCKING_RECTS];
@@ -178,6 +179,7 @@ namespace ui {
     void Enclose();
     void EncloseEx(int shrink, Color background_color, Color line_color, int corner_radius);
     void EnclosePartial(int inset, Color background_color, Color line_color, Direction::T directions);
+    void EncloseDynamic(int shrink, Color background_color, Color line_color, int corner_radius);
     void Shrink(int dx, int dy);
 
     void DrawIcon(AtlasPos atlas_index, Color tint, int height);
@@ -191,6 +193,9 @@ namespace ui {
     ButtonStateFlags::T DirectButton(const char* text, int inset);
     ButtonStateFlags::T ToggleButton(bool on);
     void HelperText(const char* description);
+
+    void BeginDirectDraw();
+    void EndDirectDraw();
 
     void HSpace(int pixels);
     void VSpace(int pixels);

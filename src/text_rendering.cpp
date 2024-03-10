@@ -50,8 +50,16 @@ text::Layout::~Layout() {
     delete[] rects;
 }
 
-int text::Layout::GetCharacterIndex(Vector2 position) const
-{
+void text::Layout::Offset(int x, int y) {
+    bounding_box.x += x;
+    bounding_box.y += y;
+    for (int i = 0; i < size; i++) {
+        rects[i].x += x;
+        rects[i].y += y;
+    }
+}
+
+int text::Layout::GetCharacterIndex(Vector2 position) const {
     // Returns byte offset into the char array, rather than glyph position
     // Returns -1 if position is outside text region
 
@@ -155,13 +163,13 @@ void text::Layout::GetTextRects(List<Rectangle>* buffer, const TokenList *tokens
     }
 }
 
-void text::Layout::DrawTextLayout(Font font, float fontSize, Color tint, Rectangle render_rect, uint8_t z_layer) const {
+void text::Layout::DrawTextLayout(Font font, float fontSize, Color tint, Color background, Rectangle render_rect, uint8_t z_layer) const {
     if (font.texture.id == 0) font = GetFontDefault();  // (Raylib cmt) Security check in case of not valid font
 
     if (GetSettingBool("sdf_text", false)) {
-        BeginRenderSDFInUIMode(z_layer);
+        BeginRenderSDFInUIMode(z_layer, background);
     } else {
-        BeginRenderInUIMode(z_layer);
+        BeginRenderInUILayer(z_layer);
     }
 
     for (int i = 0; i < size;) {
@@ -186,7 +194,7 @@ void text::Layout::DrawTextLayout(Font font, float fontSize, Color tint, Rectang
         i += codepointByteCount;   // (Raylib cmt) Move text bytes counter to next codepoint
     }
 
-    EndRenderInUIMode();
+    EndRenderInUILayer();
 }
 
 void text::DrawText(const char *text, Vector2 position, Color color) {
@@ -201,5 +209,5 @@ void text::DrawTextEx(Font font, const char *text, Vector2 position, float fontS
                         Color tint, Rectangle render_rect, uint8_t z_layer) {
     Layout layout;
     text::GetLayout(&layout, position, font, text, fontSize, spacing);
-    layout.DrawTextLayout(font, fontSize, tint, render_rect, z_layer);
+    layout.DrawTextLayout(font, fontSize, tint, BLANK, render_rect, z_layer);
 }
