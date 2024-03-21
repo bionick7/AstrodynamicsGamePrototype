@@ -16,7 +16,7 @@ ShipModuleClass::ShipModuleClass() {
     description[0] = '\0';
     has_activation_requirements = false;
 
-    for (int i=0; i < (int) ShipStats::MAX; i++) {
+    for (int i=0; i < (int) ship_stats::MAX; i++) {
         delta_stats[i] = 0;
         required_stats[i] = 0;
     }
@@ -28,18 +28,18 @@ ShipModuleClass::ShipModuleClass() {
 }
 
 void ShipModuleClass::UpdateStats(Ship* ship) const {
-    for (int i=0; i < (int) ShipStats::MAX; i++) {
+    for (int i=0; i < (int) ship_stats::MAX; i++) {
         if (ship->stats[i] < required_stats[i]) {
             return;
         }
     }
-    for (int i=0; i < (int) ShipStats::MAX; i++) {
+    for (int i=0; i < (int) ship_stats::MAX; i++) {
         ship->stats[i] += delta_stats[i];
     }
 }
 
 void ShipModuleClass::UpdateCustom(Ship* ship) const {
-    for (int i=0; i < (int) ShipStats::MAX; i++) {
+    for (int i=0; i < (int) ship_stats::MAX; i++) {
         if (ship->stats[i] < required_stats[i]) {
             return;
         }
@@ -63,6 +63,8 @@ void ShipModuleClass::UpdateCustom(Ship* ship) const {
                 planet->economy.AddResourceDelta((resources::T) i, -consumption[i]);
             }
         }
+        planet->module_opinion_delta += opinion_delta;
+        planet->module_independance_delta += independance_delta;
     }
 }
 
@@ -93,17 +95,45 @@ void ShipModuleClass::MouseHintWrite(StringBuilder* sb) const {
     for (int i=0; i < resources::MAX; i++) {
         if (production[i] > 0) {
             if (production_rsc_count != 0)
-            sb2.Add(" + ");
+                sb2.Add(" + ");
             sb2.AddFormat("%3d %s", production[i], GetResourceUIRep(i));
             production_rsc_count++;
         }
     }
     if (consumptions_count * production_rsc_count > 0) {
-        sb->Add(sb2.c_str);
+        sb->Add(sb2.c_str).Add("\n");
+    }
+
+    sb2.Clear();
+    int delta_stats_num = 0;
+    for (int i=0; i < ship_stats::MAX; i++) {
+        if (delta_stats[i] != 0) {
+            sb2.AddFormat("%s %+3d  ", ship_stats::icons[i], delta_stats[i]);
+            delta_stats_num++;
+        }
+    }
+    if (delta_stats_num > 0) {
+        sb->Add(" Adds ").Add(sb2.c_str).Add("\n");
+    }
+    if (independance_delta != 0) 
+        sb->AddFormat("Independance %+3d\n", independance_delta);
+    if (opinion_delta != 0)
+        sb->AddFormat("Opinion %+3d\n", opinion_delta);
+
+    sb2.Clear();
+    int req_stats_num = 0;
+    for (int i=0; i < ship_stats::MAX; i++) {
+        if (required_stats[i] != 0) {
+            sb2.AddFormat("%s %3d  ", ship_stats::icons[i], required_stats[i]);
+            req_stats_num++;
+        }
+    }
+    if (req_stats_num > 0) {
+        sb->Add(" Needs ").Add(sb2.c_str).Add("\n");
     }
 }
 
-ShipModuleSlot::ShipModuleSlot(RID p_entity, int p_index, ShipModuleSlotType p_origin_type, ModuleType::T p_module_type) {
+ShipModuleSlot::ShipModuleSlot(RID p_entity, int p_index, ShipModuleSlotType p_origin_type, module_types::T p_module_type) {
     entity = p_entity;
     index = p_index;
     origin_type = p_origin_type;
@@ -164,8 +194,8 @@ bool ShipModuleSlot::IsSlotFitting(RID module) const {
         return false;
     }
     const ShipModuleClass* smc = GetModule(module);
-    //INFO("Fits %s => %s ? %s", ModuleType::names[smc->type], ModuleType::names[module_type], ModuleType::IsCompatible(smc->type, module_type) ? "y":"n")
-    return ModuleType::IsCompatible(smc->type, module_type);
+    //INFO("Fits %s => %s ? %s", module_types::names[smc->type], module_types::names[module_type], module_types::IsCompatible(smc->type, module_type) ? "y":"n")
+    return module_types::IsCompatible(smc->type, module_type);
 }
 
 void ShipModuleSlot::Draw() const {
@@ -179,7 +209,7 @@ void ShipModuleSlot::Draw() const {
     // Center
     ui::Current()->x_cursor = (ui::Current()->width - 40) / 2;
     ui::Current()->y_cursor = (ui::Current()->height - 40) / 2;
-    ui::DrawIconSDF(ModuleType::icons[module_type], Palette::ui_dark, 40);
+    ui::DrawIconSDF(module_types::icons[module_type], Palette::ui_dark, 40);
     ui::Current()->x_cursor = x_cursor;
     ui::Current()->y_cursor = y_cursor;
 
@@ -196,16 +226,16 @@ void ShipModuleSlot::Draw() const {
     }
 }
 
-ModuleType::T ModuleType::FromString(const char *name) {
+module_types::T module_types::FromString(const char *name) {
     for(int i=0; i < MAX; i++) {
         if (strcmp(names[i], name) == 0) {
-            return (ModuleType::T) i;
+            return (module_types::T) i;
         }
     }
     return INVALID;
 }
 
-bool ModuleType::IsCompatible(ModuleType::T from, ModuleType::T to) {
+bool module_types::IsCompatible(module_types::T from, module_types::T to) {
     switch (to) {
         case LARGE:    return from == LARGE || from == MEDIUM || from == SMALL;
         case MEDIUM:   return from == MEDIUM || from == SMALL;
@@ -230,7 +260,7 @@ void ModuleConfiguration::Load(const DataNode *data, const char* ship_id) {
 
     for(int i=0; i < module_count; i++) {
         const DataNode* child = data->GetChildArrayElem(ship_id, i);
-        types[i] = ModuleType::FromString(child->Get("type"));
+        types[i] = module_types::FromString(child->Get("type"));
         for(int j=0; j < MODULE_CONFIG_MAX_NEIGHBOURS; j++) {
             int neighbour = child->GetArrayElemI("neighbours", j, -1, true);
             if (neighbour >= module_count) {
@@ -340,7 +370,7 @@ void ModuleConfiguration::Draw(Ship* ship) const {
         }
         // Make the mesh fit (and adjust to keep the modules aligned)
         center.x -= (mesh.bounding_box.min.x + mesh.bounding_box.max.x) * 50;
-        center.y += (mesh.bounding_box.min.z + mesh.bounding_box.max.z) * 50;
+        center.y -= (mesh.bounding_box.min.z + mesh.bounding_box.max.z) * 50;
         RenderWirframeMesh2DEx(mesh, center, 100, Palette::ui_main, ui::Current()->z_layer);
     }
     BeginRenderInUILayer(ui::Current()->z_layer);
@@ -423,10 +453,17 @@ int ShipModules::Load(const DataNode* data) {
             ship_modules[i].planets_restriction = UINT64_MAX;
         }
 
-        module_data->DeserializeBuffer("add", ship_modules[i].delta_stats, ship_stat_names, ShipStats::MAX);
-        module_data->DeserializeBuffer("require", ship_modules[i].required_stats, ship_stat_names, ShipStats::MAX);
+        module_data->DeserializeBuffer("add", ship_modules[i].delta_stats, ship_stats::names, ship_stats::MAX);
+        module_data->DeserializeBuffer("require", ship_modules[i].required_stats, ship_stats::names, ship_stats::MAX);
+        if (module_data->HasChild("add")) {
+            ship_modules[i].independance_delta = module_data->GetChild("add")->GetI("independance", 0, true);
+            ship_modules[i].opinion_delta = module_data->GetChild("add")->GetI("opinion", 0, true);
+        } else {
+            ship_modules[i].independance_delta = 0;
+            ship_modules[i].opinion_delta = 0;
+        }
         ship_modules[i].has_activation_requirements = module_data->HasChild("require");
-        ship_modules[i].type = ModuleType::FromString(module_data->Get("type"));
+        ship_modules[i].type = module_types::FromString(module_data->Get("type"));
 
         module_data->DeserializeBuffer("construction_resources", ship_modules[i].construction_resources, resources::names, resources::MAX);
         module_data->DeserializeBuffer("produce", ship_modules[i].production, resources::names, resources::MAX);
@@ -525,7 +562,7 @@ void ShipModules::DirectSwap(ShipModuleSlot slot) {
         && IsIdValidTyped(GetGlobalState()->focused_ship, EntityType::SHIP)
     ) {
         const Ship* ship = GetShip(GetGlobalState()->focused_ship);
-        ModuleType::T search_type = GetModule(slot.GetSlot())->type;
+        module_types::T search_type = GetModule(slot.GetSlot())->type;
         available = ship->GetFreeModuleSlot(search_type);
     }
     if (!available.IsValid()) {

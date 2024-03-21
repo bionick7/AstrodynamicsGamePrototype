@@ -68,7 +68,6 @@ void AppMetaStep() {
     if (IsKeyPressed(KEY_F11)) {
         InternalToggleFullScreen();
     }
-    // TODO: recompile raylib without screenshot stuff
     if (IsKeyPressed(KEY_F2)) {  // Disable when on steam
         //DatedScreenShot();
     }

@@ -65,7 +65,7 @@ ship_classes:
 - id: shp_express
   name: Express
   description: >
-    High-end ship
+    TBD
   dv: 12
   Isp: 10
   fuel: hydrogen
@@ -81,53 +81,68 @@ ship_classes:
     electronics: 12
     uranium: 4
 
+- id: shp_cruiser
+  name: Cruiser
+  description: >
+    TBD
+  dv: 12
+  Isp: 10
+  fuel: hydrogen
+  capacity: 40
+  icon_index: [6, 25]
+  stats:
+    kinetic_hp: 2
+    energy_hp: 2
+    crew: 20
+  construction_time: 40
+  construction_resources:
+    steel: 30
+    electronics: 12
+    uranium: 4
+
+
  # MODULE CONFIGURATIONS AUTO-GENERATED
 module_configurations:
   shp_bulk_transport:
   - neighbours: []
     offset:
-    - -120.0
-    - 8.3
-    type: medium
-  - neighbours: []
-    offset:
     - -60.0
-    - 8.3
+    - 68.30000000000001
     type: medium
   - neighbours: []
     offset:
     - 0.0
-    - 8.3
+    - 68.30000000000001
     type: medium
   - neighbours: []
     offset:
-    - 170.0
+    - 150.0
     - 18.3
     type: medium
   - neighbours: []
     offset:
-    - 229.99999999999997
+    - 210.0
     - 18.3
     type: medium
   - neighbours: []
     offset:
-    - -90.0
-    - -101.69999999999999
+    - -160.0
+    - -15.9
     type: drop_tank
   - neighbours: []
     offset:
-    - -30.0
-    - -101.69999999999999
+    - -100.0
+    - -15.9
     type: drop_tank
   - neighbours: []
     offset:
-    - 30.0
-    - -101.69999999999999
+    - -40.0
+    - -15.9
     type: drop_tank
   - neighbours: []
     offset:
-    - 90.0
-    - -101.69999999999999
+    - 20.0
+    - -15.9
     type: drop_tank
   - neighbours: []
     offset:
@@ -183,22 +198,22 @@ module_configurations:
   - neighbours: []
     offset:
     - -90.0
-    - 70.0
+    - 61.6
     type: drop_tank
   - neighbours: []
     offset:
     - -30.0
-    - 70.0
+    - 61.6
     type: drop_tank
   - neighbours: []
     offset:
     - -90.0
-    - -70.0
+    - -61.1
     type: drop_tank
   - neighbours: []
     offset:
     - -30.0
-    - -70.0
+    - -61.1
     type: drop_tank
   shp_express:
   - neighbours: []
@@ -234,39 +249,44 @@ module_configurations:
   shp_light_transport:
   - neighbours: []
     offset:
-    - 150.0
-    - 70.0
+    - 110.00000000000001
+    - 65.8
     type: drop_tank
   - neighbours: []
     offset:
-    - 150.0
+    - 110.00000000000001
+    - -66.9
+    type: drop_tank
+  - neighbours: []
+    offset:
+    - -170.0
+    - 0.0
+    type: medium
+  - neighbours: []
+    offset:
+    - -60.0
+    - 60.0
+    type: medium
+  - neighbours: []
+    offset:
     - -70.0
-    type: drop_tank
-  - neighbours: []
-    offset:
-    - 90.0
-    - 0.0
-    type: medium
-  - neighbours: []
-    offset:
-    - 30.0
-    - 0.0
-    type: medium
-  - neighbours: []
-    offset:
-    - -30.0
-    - 0.0
+    - -60.0
     type: medium
   - neighbours: []
     offset:
     - -120.0
-    - 0.0
+    - 60.0
     type: small
   - neighbours: []
     offset:
-    - -190.0
+    - -229.99999999999997
     - 0.0
     type: armor
+  - neighbours: []
+    offset:
+    - -130.0
+    - -60.0
+    type: small
   shp_spacestation:
   - neighbours: []
     offset:
@@ -276,27 +296,22 @@ module_configurations:
   - neighbours: []
     offset:
     - -60.0
-    - 110.00000000000001
+    - 120.0
     type: large
   - neighbours: []
     offset:
-    - -110.00000000000001
-    - 60.0
+    - -120.0
+    - 30.0
     type: large
   - neighbours: []
     offset:
     - 120.0
-    - 0.0
-    type: large
-  - neighbours: []
-    offset:
-    - 110.00000000000001
-    - 60.0
+    - 30.0
     type: large
   - neighbours: []
     offset:
     - 60.0
-    - 110.00000000000001
+    - 120.0
     type: large
   - neighbours: []
     offset:
@@ -306,27 +321,22 @@ module_configurations:
   - neighbours: []
     offset:
     - 60.0
-    - -110.00000000000001
+    - -120.0
     type: large
   - neighbours: []
     offset:
-    - 110.00000000000001
-    - -60.0
+    - 120.0
+    - -30.0
     type: large
   - neighbours: []
     offset:
     - -120.0
-    - 0.0
-    type: large
-  - neighbours: []
-    offset:
-    - -110.00000000000001
-    - -60.0
+    - -30.0
     type: large
   - neighbours: []
     offset:
     - -60.0
-    - -110.00000000000001
+    - -120.0
     type: large
   - neighbours: []
     offset:
@@ -347,4 +357,9 @@ module_configurations:
     offset:
     - 0.0
     - -60.0
+    type: large
+  - neighbours: []
+    offset:
+    - 0.0
+    - 0.0
     type: large

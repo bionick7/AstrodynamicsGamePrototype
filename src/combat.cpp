@@ -30,7 +30,7 @@ bool ShipBattle(const IDList* ships_aggressor, const IDList* ships_defender, dou
     IDList ships_defs_strength = IDList(*ships_defender);
 
     /*turn_order.Sort([](RID ship1, RID ship2) {
-        return GetShip(ship2)->stats[ShipStats::INITIATIVE] - GetShip(ship1)->stats[ShipStats::INITIATIVE];
+        return GetShip(ship2)->stats[ship_stats::INITIATIVE] - GetShip(ship1)->stats[ship_stats::INITIATIVE];
     });*/
 
     ships_aggr_strength.Sort([](RID ship1, RID ship2){
@@ -86,13 +86,13 @@ bool ShipBattle(const IDList* ships_aggressor, const IDList* ships_defender, dou
             int ordonance_dammage = actor_ship->ordnance_offense() - actor_ship->ordnance_defense();
             if (ordonance_dammage < 0) ordonance_dammage = 0;
 
-            target_ship->dammage_taken[ShipVariables::KINETIC_ARMOR] += kinetic_dammage;
-            target_ship->dammage_taken[ShipVariables::ENERGY_ARMOR] += ordonance_dammage;
+            target_ship->dammage_taken[ship_variables::KINETIC_ARMOR] += kinetic_dammage;
+            target_ship->dammage_taken[ship_variables::ENERGY_ARMOR] += ordonance_dammage;
 
             output_log->AppendAttackLog(turn_nr, actor_ship, target_ship, is_agressor);
             if(
-                target_ship->dammage_taken[ShipVariables::KINETIC_ARMOR] > target_ship->stats[ShipStats::KINETIC_HP]
-                || target_ship->dammage_taken[ShipVariables::ENERGY_ARMOR] > target_ship->stats[ShipStats::ENERGY_HP]
+                target_ship->dammage_taken[ship_variables::KINETIC_ARMOR] > target_ship->stats[ship_stats::KINETIC_HP]
+                || target_ship->dammage_taken[ship_variables::ENERGY_ARMOR] > target_ship->stats[ship_stats::ENERGY_HP]
             ) {
                 output_log->AppendKillLog(turn_nr, actor_ship, target_ship, is_agressor);
                 killed.Append(target_id);
@@ -106,8 +106,8 @@ bool ShipBattle(const IDList* ships_aggressor, const IDList* ships_defender, dou
 void BattleLog::AppendAttackLog(int turn, const Ship* attacker, const Ship* target, bool aggressor_is_attacking) {
     //INFO("Turn %d: %s vs %s", turn, attacker->name, target_ship->name)
     //INFO("    >> %d - %d", 
-    //        target_ship->dammage_taken[ShipVariables::KINETIC_ARMOR], 
-    //        target_ship->dammage_taken[ShipVariables::ENERGY_ARMOR]
+    //        target_ship->dammage_taken[ship_variables::KINETIC_ARMOR], 
+    //        target_ship->dammage_taken[ship_variables::ENERGY_ARMOR]
     //    )
     // '%s (00K, 00E)'
     log.AddFormat("%d: ", turn);

@@ -123,11 +123,14 @@ void GameCamera::HandleInput() {
     if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE) && translating) {
         Ray prev_pos = GetMouseRay(Vector2Subtract(GetMousePosition(), GetMouseDelta()), rl_camera);
         Ray current_pos = GetMouseRay(GetMousePosition(), rl_camera);
-        if (fabs(prev_pos.direction.y) > 1e-3 && fabs(current_pos.direction.y) > 1e-3) {
-            Vector3 prev_impact = Vector3Add(prev_pos.position, Vector3Scale(prev_pos.direction, prev_pos.position.y / prev_pos.direction.y));
-            Vector3 current_impact = Vector3Add(current_pos.position, Vector3Scale(current_pos.direction, current_pos.position.y / current_pos.direction.y));
-            Vector3 in_plane_delta = Vector3Subtract(current_impact, prev_impact);
-            rl_camera.target = Vector3Add(rl_camera.target, in_plane_delta);
+        if (current_pos.position.y * current_pos.direction.y < 0) {
+            if (fabs(prev_pos.direction.y) > 1e-3 && fabs(current_pos.direction.y) > 1e-3) {
+                Vector3 prev_impact = Vector3Add(prev_pos.position, Vector3Scale(prev_pos.direction, prev_pos.position.y / prev_pos.direction.y));
+                Vector3 current_impact = Vector3Add(current_pos.position, Vector3Scale(current_pos.direction, current_pos.position.y / current_pos.direction.y));
+                Vector3 in_plane_delta = Vector3Subtract(current_impact, prev_impact);
+                in_plane_delta = Vector3ClampValue(in_plane_delta, 0, 10 * GetFrameTime() * dist);
+                rl_camera.target = Vector3Add(rl_camera.target, in_plane_delta);
+            }
         }
     }
     

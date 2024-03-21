@@ -19,7 +19,7 @@ void main() {
 
     float sdf = (texture(texture0, fragTexCoord).a - 0.5) * 2.0;
     float d_dist_d_frag = length(vec2(dFdx(sdf), dFdy(sdf)));
-    float alpha = smoothstep(d_dist_d_frag, -d_dist_d_frag, sdf);
+    float alpha = smoothstep(d_dist_d_frag*.5, -d_dist_d_frag*.5, sdf);
     //alpha *= smoothstep(d_dist_d_frag*2.0, d_dist_d_frag*1.0, -sdf);
     finalColor = mix(background_color, fragColor, alpha);
     //finalColor.rgb = fragColor.rgb;

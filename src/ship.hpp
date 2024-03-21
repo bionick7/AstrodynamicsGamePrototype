@@ -44,7 +44,7 @@ struct ShipClass {
     resource_count_t max_capacity;  // counts
 
     ModuleConfiguration module_config;
-    int stats[ShipStats::MAX] = {0};
+    int stats[ship_stats::MAX] = {0};
 
     int construction_time;
     resource_count_t construction_resources[resources::MAX] = {0};
@@ -79,13 +79,13 @@ struct Ship {
     TransferPlan prepared_plans[SHIP_MAX_PREPARED_PLANS];
     RID modules[SHIP_MAX_MODULES];
     // stats are more or less constat for the same ammount of modules
-    int stats[ShipStats::MAX];
+    int stats[ship_stats::MAX];
     // variables vary
-    int dammage_taken[ShipVariables::MAX];
+    int dammage_taken[ship_variables::MAX];
 
     // Allows to refer to all the stats as variables.
     // Still needs to be declared
-    #define X(upper, lower) int lower() const { return stats[ShipStats::upper]; };
+    #define X(upper, lower) int lower() const { return stats[ship_stats::upper]; };
     X_SHIP_STATS
     #undef X
     
@@ -122,7 +122,7 @@ struct Ship {
     void DrawUI();
     void Inspect();
     
-    ShipModuleSlot GetFreeModuleSlot(ModuleType::T least) const;
+    ShipModuleSlot GetFreeModuleSlot(module_types::T least) const;
     void RemoveShipModuleAt(int index);
     void Repair(int hp);
     void AttachTo(RID parent_ship);

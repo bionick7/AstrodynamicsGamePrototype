@@ -27,44 +27,46 @@ struct Ship;
     X(ORDNANCE_DEFENSE, ordnance_defense)\
     X(BOARDING_DEFENSE, boarding_defense)
 
-
-struct ShipStats {  // Better enum class, since you can treat the enum as integer
-    enum {
+namespace ship_stats {  // Better enum class, since you can treat the enum as integer
+    enum T {
         #define X(upper, lower) upper,
         X_SHIP_STATS
         #undef X
         MAX,
     };
+
+    static const char* names[] = {
+        #define X(upper, lower) #lower,
+        X_SHIP_STATS
+        #undef X
+    };
+
+    static const char* icons[] = {
+        #define X(upper, lower) ICON_##upper,
+        X_SHIP_STATS
+        #undef X
+    };
 };
 
-static const char* ship_stat_names[] = {
-    #define X(upper, lower) #lower,
-    X_SHIP_STATS
-    #undef X
-};
-
-static_assert(ShipStats::MAX == sizeof(ship_stat_names) / sizeof(ship_stat_names[0]));
-
-struct ShipVariables {
-    enum {
+namespace ship_variables {
+    enum T {
         KINETIC_ARMOR,
         ENERGY_ARMOR,
         CREW,
 
         MAX,
     };
+    static const char* names[] = {
+        "kinetic_armor",
+        "energy_armor",
+        "crew",
+    };
 };
 
-static const char* ship_variable_names[] = {
-    "kinetic_armor",
-    "energy_armor",
-    "crew",
-};
+static_assert(ship_stats::MAX == sizeof(ship_stats::names) / sizeof(ship_stats::names[0]));
+static_assert(ship_variables::MAX == sizeof(ship_variables::names) / sizeof(ship_variables::names[0]));
 
-static_assert(ShipVariables::MAX == sizeof(ship_variable_names) / sizeof(ship_variable_names[0]));
-
-
-namespace ModuleType {
+namespace module_types {
     static const char* names[] = {
         "large",
         "medium",
@@ -100,18 +102,20 @@ namespace ModuleType {
     static_assert(sizeof(names) / sizeof(char*) == MAX);
     static_assert(sizeof(icons) / sizeof(AtlasPos) == MAX);
 
-    ModuleType::T FromString(const char* name);
-    bool IsCompatible(ModuleType::T from, ModuleType::T to);
+    module_types::T FromString(const char* name);
+    bool IsCompatible(module_types::T from, module_types::T to);
 };
 
 #define MODULE_CONFIG_MAX_NEIGHBOURS 4
 
 struct ShipModuleClass {
-    int delta_stats[ShipStats::MAX];
-    int required_stats[ShipStats::MAX];
+    int delta_stats[ship_stats::MAX];
+    int required_stats[ship_stats::MAX];
     resource_count_t production[resources::MAX];
     resource_count_t consumption[resources::MAX];
     resource_count_t construction_resources[resources::MAX];
+    int independance_delta;
+    int opinion_delta;
     int construction_batch_size;
     uint64_t planets_restriction;
 
@@ -121,7 +125,7 @@ struct ShipModuleClass {
     bool has_activation_requirements;
     int construction_time;
     bool is_hidden;
-    ModuleType::T type;
+    module_types::T type;
 
     AtlasPos icon_index;
 
@@ -139,10 +143,10 @@ struct ShipModuleSlot {
     RID entity = GetInvalidId();
     int index = -1;
     ShipModuleSlotType origin_type;
-    ModuleType::T module_type;
+    module_types::T module_type;
 
     ShipModuleSlot() = default;
-    ShipModuleSlot(RID p_entity, int p_index, ShipModuleSlotType p_origin_type, ModuleType::T p_module_type);
+    ShipModuleSlot(RID p_entity, int p_index, ShipModuleSlotType p_origin_type, module_types::T p_module_type);
 
     void SetSlot(RID module) const;
     RID GetSlot() const;
@@ -157,7 +161,7 @@ struct ShipModuleSlot {
 struct ModuleConfiguration {
     // Essential data
     int module_count = 0;
-    ModuleType::T types[SHIP_MAX_MODULES];
+    module_types::T types[SHIP_MAX_MODULES];
     int neighbours[SHIP_MAX_MODULES*MODULE_CONFIG_MAX_NEIGHBOURS];
     Vector2 draw_offset[SHIP_MAX_MODULES];
 

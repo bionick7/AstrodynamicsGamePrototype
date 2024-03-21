@@ -632,7 +632,7 @@ ButtonStateFlags::T ui::ToggleButton(bool on) {
     return res;
 }
 
-int ui::DrawLimitedSlider(int current, int min, int max, int limit, Color fg, Color bg) {
+int ui::DrawLimitedSlider(int current, int min, int max, int limit, int width, int height, Color fg, Color bg) {
     TextBox* tb = ui::Current();
     //DebugPrintText("%d - (%d - %d), %d", current, min, max, limit);
 
@@ -640,7 +640,7 @@ int ui::DrawLimitedSlider(int current, int min, int max, int limit, Color fg, Co
     if (val < 0) val = 0;
     if (val > 1) val = 1;
     
-    Rectangle primary = { tb->x_cursor + tb->text_start_x, tb->y_cursor + tb->text_start_y, 120, 20 };
+    Rectangle primary = { tb->x_cursor + tb->text_start_x, tb->y_cursor + tb->text_start_y, width, height };
     Rectangle fill = primary;
     fill.width *= val;
 
@@ -648,8 +648,8 @@ int ui::DrawLimitedSlider(int current, int min, int max, int limit, Color fg, Co
 
     ui::BeginDirectDraw();
     //DebugPrintText("%f %f %f %f", primary.x, primary.y, primary.width, primary.height);
-    DrawRectangleLinesEx(primary, 1, fg);
     DrawRectangleRec(fill, bg);
+    DrawRectangleLinesEx(primary, 1, fg);
     int x_limit = primary.x + primary.width * (limit - min) / (double) (max - min);
     DrawLine(x_limit, primary.y - 3, x_limit, primary.y + primary.height + 3, fg);
     ui::EndDirectDraw();

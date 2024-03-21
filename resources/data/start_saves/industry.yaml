@@ -1,6 +1,6 @@
 player_faction: 0
 factions:
-- money: 0
+- money: 0  # Player
 - money: 0
 
 planets:
@@ -12,6 +12,7 @@ planets:
     resource_delta:
       hydrogen: 10
       water: 50
+    base_independance_delta: 0
 
   - name: Rings 
     trading_accessible: n
@@ -23,6 +24,7 @@ planets:
     resource_delta:
       water: 50
       rocks: 50
+    base_independance_delta: 0
 
   - name: Mimas
     trading_accessible: n
@@ -33,6 +35,8 @@ planets:
       electronics: 6
     resource_delta:
       water: 50
+    base_independance_delta: 0
+
   - name: Encelladus
     trading_accessible: n
     allegiance: 0
@@ -40,6 +44,8 @@ planets:
       water: 1000
       steel: 20
       electronics: 6
+    base_independance_delta: 0
+
   - name: Tethys
     trading_accessible: n
     allegiance: 0
@@ -50,6 +56,8 @@ planets:
     resource_delta: {}
     inventory:
     - shpmod_electrolyser
+    base_independance_delta: -10
+
   - name: Rhea
     trading_accessible: n
     allegiance: 0
@@ -63,6 +71,8 @@ planets:
       rock: 300
     inventory:
     - shpmod_heatshield
+    base_independance_delta: 5
+
   - name: Titan
     trading_accessible: n
     allegiance: 0
@@ -76,6 +86,8 @@ planets:
     inventory:
     - shpmod_droptank
     - shpmod_droptank
+    base_independance_delta: 8
+
   - name: Iaeptus
     trading_accessible: n
     allegiance: 0
@@ -85,6 +97,8 @@ planets:
       electronics: 6
     resource_delta:
       water: 20
+    base_independance_delta: 20
+
   - name: Phoebe
     trading_accessible: n
     allegiance: 0
@@ -92,6 +106,7 @@ planets:
       water: 1000
       steel: 20
       electronics: 6
+    base_independance_delta: 3
 
 ships:
 - name: Mimas station
@@ -151,7 +166,7 @@ ships:
   allegiance: 0
   planet: Titan
   tf_plans: []
-  modules: []
+  modules: [shpmod_aircraft]
 
 - name: Rhea Shipyard
   class_id: shp_spacestation
@@ -168,19 +183,5 @@ ships:
   class_id: shp_spacestation
   allegiance: 0
   planet: Iaeptus
-  tf_plans: []
-  modules: []
-  
-- name: Preview BULK
-  class_id: shp_bulk_transport
-  allegiance: 1
-  planet: Mimas
-  tf_plans: []
-  modules: []
-
-- name: Preview EXPRESS
-  class_id: shp_express
-  allegiance: 1
-  planet: Mimas
   tf_plans: []
   modules: []

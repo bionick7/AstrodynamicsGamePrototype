@@ -238,7 +238,7 @@ void ShipSetStat(WrenVM* vm) {
 	int stat_value = wrenGetSlotDouble(vm, 2);
 	RID ship = GetWrenInterface()->GetShipFormWrenObject();
 	if (!IsIdValid(ship)) return;
-	if (stat_index < 0 || stat_index >= ShipStats::MAX) {
+	if (stat_index < 0 || stat_index >= ship_stats::MAX) {
 		wrenEnsureSlots(vm, 1);
 		wrenSetSlotString(vm, 0, "invalid stat index");
 		wrenAbortFiber(vm, 0);
@@ -253,7 +253,7 @@ void ShipGetStat(WrenVM* vm) {
 	RID ship = GetWrenInterface()->GetShipFormWrenObject();
 	if (!IsIdValid(ship)) return;
 	wrenEnsureSlots(vm, 1);
-	if (stat_index < 0 || stat_index >= ShipStats::MAX) {
+	if (stat_index < 0 || stat_index >= ship_stats::MAX) {
 		wrenSetSlotString(vm, 0, "invalid stat index");
 		wrenAbortFiber(vm, 0);
 		return;

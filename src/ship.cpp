@@ -35,8 +35,18 @@ resource_count_t ShipClass::GetFuelRequiredEmpty(double dv) const {
 void ShipClass::MouseHintWrite(StringBuilder* sb) const {
     sb->Add(name).Add("\n");
     sb->Add(description).Add("\n");
-    //sb.AutoBreak(ui::Current()->width / ui::Current()->GetCharWidth());
-    //ui::Write(sb.c_str);
+
+    StringBuilder sb2;
+    int stat_num = 0;
+    for (int i=0; i < ship_stats::MAX; i++) {
+        if (stats[i] > 0) {
+            sb2.AddFormat("%s %3d  ", ship_stats::icons[i], stats[i]);
+            stat_num++;
+        }
+    }
+    if (stat_num > 0) {
+        sb->Add("Base: ").Add(sb2.c_str).Add("\n");
+    }
 }
 
 Ship::Ship() {
@@ -101,17 +111,13 @@ void Ship::_OnNewPlanClicked() {
     prepared_plans_count++;
 }
 
-void Ship::Serialize(DataNode *data) const
-{
+void Ship::Serialize(DataNode *data) const {
     data->Set("name", name);
     data->SetI("allegiance", allegiance);
     
     data->Set("class_id", GetShipClassByRID(ship_class)->id);
     data->SerializeBuffer("transporting", transporting, resources::names, resources::MAX);
-    data->CreateArray("dammage_taken", ShipVariables::MAX);
-    for(int i=0; i < ShipVariables::MAX; i++) {
-        data->InsertIntoArrayI("dammage_taken", i, dammage_taken[i]);
-    }
+    data->SerializeBuffer("dammage_taken", dammage_taken, ship_variables::names, ship_variables::MAX);
 
     data->CreateArray("modules", SHIP_MAX_MODULES);
     for(int i=0; i < SHIP_MAX_MODULES; i++) {
@@ -147,7 +153,7 @@ void Ship::Deserialize(const DataNode* data) {
     for(int i=0; i < modules_count; i++) {
         RID module_rid = sms->GetModuleRIDFromStringId(data->GetArrayElem("modules", i));
         if (!IsIdValidTyped(module_rid, EntityType::MODULE_CLASS)) continue;
-        ModuleType::T module_type = sms->GetModuleByRID(module_rid)->type;
+        module_types::T module_type = sms->GetModuleByRID(module_rid)->type;
         int proper_index = GetFreeModuleSlot(module_type).index;
         if (proper_index < 0) continue;
         modules[proper_index] = module_rid;
@@ -160,9 +166,7 @@ void Ship::Deserialize(const DataNode* data) {
         prepared_plans[i].Deserialize(data->GetChildArrayElem("prepared_plans", i, true));
     }
 
-    dammage_taken[ShipVariables::KINETIC_ARMOR] = data->GetArrayElemI("dammage_taken", ShipVariables::KINETIC_ARMOR, stats[ShipStats::KINETIC_HP], true);
-    dammage_taken[ShipVariables::ENERGY_ARMOR] = data->GetArrayElemI("dammage_taken", ShipVariables::ENERGY_ARMOR, stats[ShipStats::ENERGY_HP], true);
-    dammage_taken[ShipVariables::CREW] = data->GetArrayElemI("dammage_taken", ShipVariables::CREW, stats[ShipStats::CREW], true);
+    data->DeserializeBuffer("dammage_taken", dammage_taken, ship_variables::names, ship_variables::MAX);
 }
 
 double Ship::GetOperationalMass() const {  // Without resources
@@ -258,17 +262,17 @@ int Ship::GetCombatStrength() const {
 }
 
 int Ship::GetMissingHealth() const {
-    //SHOW_I(stats[ShipStats::KINETIC_HP])
-    //SHOW_I(stats[ShipStats::ENERGY_HP])
-    //SHOW_I(stats[ShipStats::CREW])
-    //SHOW_I(variables[ShipVariables::KINETIC_ARMOR])
-    //SHOW_I(variables[ShipVariables::ENERGY_ARMOR])
-    //SHOW_I(variables[ShipVariables::CREW])
+    //SHOW_I(stats[ship_stats::KINETIC_HP])
+    //SHOW_I(stats[ship_stats::ENERGY_HP])
+    //SHOW_I(stats[ship_stats::CREW])
+    //SHOW_I(variables[ship_variables::KINETIC_ARMOR])
+    //SHOW_I(variables[ship_variables::ENERGY_ARMOR])
+    //SHOW_I(variables[ship_variables::CREW])
     
     return
-          dammage_taken[ShipVariables::KINETIC_ARMOR]
-        + dammage_taken[ShipVariables::ENERGY_ARMOR]
-        + dammage_taken[ShipVariables::CREW]
+          dammage_taken[ship_variables::KINETIC_ARMOR]
+        + dammage_taken[ship_variables::ENERGY_ARMOR]
+        + dammage_taken[ship_variables::CREW]
     ;
 }
 
@@ -289,13 +293,13 @@ const char *Ship::GetTypeIcon() const {
 bool Ship::CanDragModule(int index) const {
     if (!IsIdValid(modules[index]))
         return true;
-    if (GetModule(modules[index])->delta_stats[ShipStats::KINETIC_HP] > kinetic_hp() - dammage_taken[ShipVariables::KINETIC_ARMOR]) {
+    if (GetModule(modules[index])->delta_stats[ship_stats::KINETIC_HP] > kinetic_hp() - dammage_taken[ship_variables::KINETIC_ARMOR]) {
         return false;
     }
-    if (GetModule(modules[index])->delta_stats[ShipStats::ENERGY_HP] > energy_hp() - dammage_taken[ShipVariables::ENERGY_ARMOR]) {
+    if (GetModule(modules[index])->delta_stats[ship_stats::ENERGY_HP] > energy_hp() - dammage_taken[ship_variables::ENERGY_ARMOR]) {
         return false;
     }
-    if (GetModule(modules[index])->delta_stats[ShipStats::CREW] > crew() - dammage_taken[ShipVariables::CREW]) {
+    if (GetModule(modules[index])->delta_stats[ship_stats::CREW] > crew() - dammage_taken[ship_variables::CREW]) {
         return false;
     }
     return true;
@@ -506,7 +510,7 @@ void Ship::_UpdateModules() {
     // Gotta exist a more efficient way
     // And robust. Dependency graph (also a way to find circular dependencies)
 
-    for (int i=0; i < ShipStats::MAX; i++) {
+    for (int i=0; i < ship_stats::MAX; i++) {
         stats[i] = GetShipClassByRID(ship_class)->stats[i];
     }
     for (int j=0; j < SHIP_MAX_MODULES; j++) {
@@ -665,9 +669,9 @@ void _UIDrawStats(const Ship* ship) {
     sb.Clear();
     sb.AddFormat(ICON_POWER "%2d" ICON_ACS "%2d\n", ship->power(), ship->initiative());
     sb.AddFormat(" %2d/%2d" ICON_HEART_KINETIC "  %2d/%2d" ICON_HEART_ENERGY "  %3d/%3d" ICON_HEART_BOARDING "\n", 
-        ship->kinetic_hp() - ship->dammage_taken[ShipVariables::KINETIC_ARMOR], ship->kinetic_hp(),
-        ship->energy_hp() - ship->dammage_taken[ShipVariables::ENERGY_ARMOR], ship->energy_hp(),
-        ship->crew() - ship->dammage_taken[ShipVariables::CREW], ship->crew()
+        ship->kinetic_hp() - ship->dammage_taken[ship_variables::KINETIC_ARMOR], ship->kinetic_hp(),
+        ship->energy_hp() - ship->dammage_taken[ship_variables::ENERGY_ARMOR], ship->energy_hp(),
+        ship->crew() - ship->dammage_taken[ship_variables::CREW], ship->crew()
     );
     sb.AddFormat("   %2d " ICON_ATTACK_KINETIC "    %2d " ICON_ATTACK_ORDNANCE "     %3d " ICON_ATTACK_BOARDING "\n", ship->kinetic_offense(), ship->ordnance_offense(), ship->boarding_offense());
     sb.AddFormat("   %2d " ICON_SHIELD_KINETIC "    %2d " ICON_SHIELD_ORDNANCE "     %3d " ICON_SHIELD_BOARDING "\n", ship->kinetic_defense(), ship->ordnance_defense(), ship->boarding_defense());
@@ -906,31 +910,31 @@ void Ship::RemoveShipModuleAt(int index) {
 }
 
 void Ship::Repair(int hp) {
-    if (hp > stats[ShipStats::KINETIC_HP] + stats[ShipStats::ENERGY_HP] + stats[ShipStats::CREW]){
+    if (hp > stats[ship_stats::KINETIC_HP] + stats[ship_stats::ENERGY_HP] + stats[ship_stats::CREW]){
         // for initializetion
-        dammage_taken[ShipVariables::KINETIC_ARMOR] = 0;
-        dammage_taken[ShipVariables::ENERGY_ARMOR] = 0;
-        dammage_taken[ShipVariables::CREW] = 0;
+        dammage_taken[ship_variables::KINETIC_ARMOR] = 0;
+        dammage_taken[ship_variables::ENERGY_ARMOR] = 0;
+        dammage_taken[ship_variables::CREW] = 0;
         return;
     }
-    int kinetic_repair = MinInt(hp, dammage_taken[ShipVariables::KINETIC_ARMOR]);
+    int kinetic_repair = MinInt(hp, dammage_taken[ship_variables::KINETIC_ARMOR]);
     hp -= kinetic_repair;
-    int energy_repair = MinInt(hp, dammage_taken[ShipVariables::ENERGY_ARMOR]);
+    int energy_repair = MinInt(hp, dammage_taken[ship_variables::ENERGY_ARMOR]);
     hp -= energy_repair;
-    int crew_repair = MinInt(hp, dammage_taken[ShipVariables::CREW]);
-    dammage_taken[ShipVariables::KINETIC_ARMOR] -= kinetic_repair;
-    dammage_taken[ShipVariables::ENERGY_ARMOR] -= energy_repair;
-    dammage_taken[ShipVariables::CREW] -= crew_repair;
+    int crew_repair = MinInt(hp, dammage_taken[ship_variables::CREW]);
+    dammage_taken[ship_variables::KINETIC_ARMOR] -= kinetic_repair;
+    dammage_taken[ship_variables::ENERGY_ARMOR] -= energy_repair;
+    dammage_taken[ship_variables::CREW] -= crew_repair;
 }
 
-ShipModuleSlot Ship::GetFreeModuleSlot(ModuleType::T least) const {
+ShipModuleSlot Ship::GetFreeModuleSlot(module_types::T least) const {
     const ModuleConfiguration* module_Config = &GetShipClassByRID(ship_class)->module_config;
     for (int index = 0; index < module_Config->module_count; index++) {
-        if(!IsIdValid(modules[index]) && ModuleType::IsCompatible(least, module_Config->types[index])) {
+        if(!IsIdValid(modules[index]) && module_types::IsCompatible(least, module_Config->types[index])) {
             return ShipModuleSlot(id, index, ShipModuleSlot::DRAGGING_FROM_SHIP, module_Config->types[index]);
         }
     }
-    return ShipModuleSlot(id, -1, ShipModuleSlot::DRAGGING_FROM_SHIP, ModuleType::INVALID);
+    return ShipModuleSlot(id, -1, ShipModuleSlot::DRAGGING_FROM_SHIP, module_types::INVALID);
 }
 
 void Ship::AttachTo(RID parent_ship) {
@@ -1037,7 +1041,7 @@ void _OnFleetArrival(Ship* leading_ship, const TransferPlan* tp) {
             for(int i=0; i < conquered.size; i++) {
                 GetShip(conquered[i])->allegiance = leading_ship->allegiance;
             }
-            GetPlanet(tp->arrival_planet)->Conquer(leading_ship->allegiance);
+            GetPlanet(tp->arrival_planet)->Conquer(leading_ship->allegiance, false);
         }
         for (int i=0; i < allied_ships.size; i++) {
             if (IsIdValid(allied_ships[i])) {
@@ -1054,7 +1058,7 @@ void _OnFleetArrival(Ship* leading_ship, const TransferPlan* tp) {
         for (int i=0; i < allied_ships.size; i++) {
             GetShip(allied_ships[i])->is_detected = false;
         }
-        GetPlanet(tp->arrival_planet)->Conquer(leading_ship->allegiance);
+        GetPlanet(tp->arrival_planet)->Conquer(leading_ship->allegiance, false);
     }
 }
 
@@ -1073,8 +1077,10 @@ void Ship::_OnArrival(const TransferPlan* tp) {
         }
     }
 
+    int total_resources = 0;
     for (int i=0; i < resources::MAX; i++) {
         GetPlanet(tp->arrival_planet)->economy.GiveResource((resources::T) i, transporting[i]);
+        total_resources += transporting[i];
     }
     position = GetPlanet(GetParentPlanet())->position;
 
@@ -1091,6 +1097,7 @@ void Ship::_OnArrival(const TransferPlan* tp) {
             RemoveShipModuleAt(i);
         }
     }
+
 
     RemoveTransferPlan(0);
     Update();
@@ -1192,7 +1199,7 @@ int Ships::LoadShipClasses(const DataNode* data) {
         sc.module_config.Load(module_configurations, ship_id);
 
         sc_data->DeserializeBuffer("construction_resources", sc.construction_resources, resources::names, resources::MAX);
-        sc_data->DeserializeBuffer("stats", sc.stats, ship_stat_names, ShipStats::MAX);
+        sc_data->DeserializeBuffer("stats", sc.stats, ship_stats::names, ship_stats::MAX);
 
         //ASSERT_ALOMST_EQUAL_FLOAT(sc.v_e * log((ResourceCountsToKG(sc.max_capacity) + sc.oem) / sc.oem), sc.max_dv)   // Remove when we're sure thisworks
 

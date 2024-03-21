@@ -256,6 +256,8 @@ shipmodules:
   add: 
     kinetic_offense: 1
     power: -2
+    independance: -1
+    opinion: -1
   require:
     power: 2
   mass: 10
@@ -268,7 +270,10 @@ shipmodules:
 - id: shpmod_missiles
   name: Missiles
   description: Ordonance Attk. +1
-  add: { ordnance_offense: 2 }
+  add: 
+    ordnance_offense: 2
+    independance: -1
+    opinion: -1
   mass: 10
   construction_time: 10
   construction_resources:
@@ -357,14 +362,56 @@ shipmodules:
   description: >
     TODO
   add:
-    boarding_offense: 3
-    boarding_defense: 2
+    boarding_offense: 8
+    boarding_defense: 5
+    independance: -3
+    opinion: -5
     crew: 16
-  mass: 5
+  # if over Iaeptus:
+  #add:
+  #  independance: -10
+  #  opinion: 10
+
+  mass: 2
   hidden: y
   icon_index: [31, 31]
   type: free
+
+- id: shpmod_invasion_equipment
+  name: Invasion Equipment
+  description: >
+    small arms, APCs, supplies, even tanks ... Everything to arm local forces to fight a full-on war.
+  add:
+    boarding_defense: 2
+    independance: -10
+    opinion: -10
+  mass: 30
+  construction_resources:
+    electronics: 6
+    polymers: 10
+    steel: 6
+    aluminium: 8
+  icon_index: [31, 31]
+  type: large
   
+- id: shpmod_aircraft
+  name: Aircraft
+  description: >
+    Very effective fighting force uniquely suited for atmospheric planetary bodies (Titan)
+  add:
+    independance: -15
+    opinion: -10
+  mass: 30
+  construction_resources:
+    electronics: 8
+    polymers: 5
+    steel: 1
+    aluminium: 16
+  planets_restriction:
+  - Titan
+  icon_index: [31, 31]
+  type: large
+
 - id: shpmod_armory
   name: Armory
   description: >
@@ -375,6 +422,20 @@ shipmodules:
   hidden: y
   icon_index: [31, 31]
   type: free
+
+- id: shpmod_embassy
+  name: Embassy
+  description: >
+    TODO
+  add:
+    independance: -5
+    opinion: +10
+  mass: 20
+  construction_resources:
+    polymers: 10
+    steel: 10
+  icon_index: [31, 31]
+  type: large
 
 # Developer
 - id: shpmod_boost_init

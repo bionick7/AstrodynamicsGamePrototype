@@ -357,3 +357,19 @@ claw that produces rock when on a mobile ship in rings
 Also consider not having independant planet inventories
 
 Implementing variable size modules
+
+
+## Status 21 Mar 24
+Planets have 2 seperate stats:
+- opignion
+- independance
+
+Independence is influenced by 
+    ammount of trade
+    number of military ships on the planet (when not independant)
+    ship modules
+
+Opinion is influenced by
+    ammount of trade
+    number of military ships on the planet (when at high independance)
+    ship modules

@@ -22,7 +22,7 @@ void Planet::_UIDrawInventory() {
     
     ShipModules* sms = GetShipModules();
     for (int i = 0; i < i_max; i++) {
-        ShipModuleSlot this_slot = ShipModuleSlot(id, i, ShipModuleSlot::DRAGGING_FROM_PLANET, ModuleType::ANY);
+        ShipModuleSlot this_slot = ShipModuleSlot(id, i, ShipModuleSlot::DRAGGING_FROM_PLANET, module_types::ANY);
         //if (!IsIdValid(ship_module_inventory[i])) continue;
         ui::PushGridCell(columns, rows, i % columns, i / columns);
         ui::Shrink(MARGIN, MARGIN);
@@ -59,8 +59,7 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
     switch (IdGetType(id)) {
         case EntityType::SHIP_CLASS: {
             const ShipClass* ship_class = GetShipClassByRID(id);
-            sb.Add(ship_class->name).Add("\n");
-            sb.Add(ship_class->description);
+            ship_class->MouseHintWrite(&sb);
             sb.AutoBreak(ui::Current()->width / char_width);
             ui::Write(sb.c_str);
             sb.Clear();
@@ -71,37 +70,41 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
         }
         case EntityType::MODULE_CLASS: {
             const ShipModuleClass* module_class = GetModule(id);
+            //sb.Add(module_class->name).Add("\n");
+            //sb.Add(module_class->description);
+            module_class->MouseHintWrite(&sb);
+            sb.AutoBreak(ui::Current()->width / char_width);
+            ui::Write(sb.c_str);
+            sb.Clear();
             construction_resources = &module_class->construction_resources[0];
             build_time = module_class->GetConstructionTime();
             batch_size = module_class->construction_batch_size;
-            module_class->MouseHintWrite(&sb);
-            ui::Write(sb.c_str);
-            sb.Clear();
             break;
         }
         default: break;
     }
 
     if (construction_resources == NULL) return;
-
     if (planet_resource_array == NULL) {
         return;
     }
+
     ui::VSpace(10);
     for (int i=0; i < resources::MAX; i++) {
         if (construction_resources[i] == 0) {
             continue;
         }
         sb.Clear();
-        sb.AddFormat("%s: %d", GetResourceUIRep(i), construction_resources[i]);
+        sb.AddFormat("%s: %d  ", GetResourceUIRep(i), construction_resources[i]);
         if (construction_resources[i] <= planet_resource_array[i]) {
-            ui::Write(sb.c_str);
+            ui::WriteEx(sb.c_str, TextAlignment::CONFORM, false);
         } else {
             ui::Current()->text_color = Palette::red;
-            ui::Write(sb.c_str);
+            ui::WriteEx(sb.c_str, TextAlignment::CONFORM, false);
             ui::Current()->text_color = Palette::ui_main;
         }
     }
+    ui::Current()->EnsureLineBreak();
     sb.Clear();
     sb.AddI(build_time).Add("D");
     if(batch_size > 1) {
@@ -196,7 +199,7 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
             atlas_pos = smc->icon_index;
         }
 
-        ui::PushInset(0, SHIP_MODULE_HEIGHT + margin +2);
+        ui::PushInset(0, SHIP_MODULE_HEIGHT + margin + 2);
         ui::Shrink(margin, margin);
         ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::HOVER) {
@@ -204,7 +207,8 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
             hovered_id = id;
             hover_over_queue = true;
         } else {
-            ui::EncloseEx(4, Palette::bg, Palette::interactable_main, 4);
+            ui::EncloseEx(0, Palette::bg, Palette::interactable_main, 4);
+            ui::Shrink(4, 4);
         }
         if (button_state & ButtonStateFlags::JUST_PRESSED) {
             queue->EraseAt(i);
@@ -285,7 +289,6 @@ void Planet::DrawUI() {
         return;
     }
 
-
     ui::CreateNew(10, y_start, 340, height, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg);
     ui::Enclose();
 
@@ -332,9 +335,55 @@ void Planet::DrawUI() {
     ui::Pop();  // Tab container
     ui::PushInset(0, 10000);  // Constrained by outside container
 
-    ui::WriteEx(name, TextAlignment::CONFORM, false);
+    ui::WriteEx(name, TextAlignment::CONFORM, true);
+
+    // Independance slider
+    ui::PushInset(0, 30);
+    Vector2 cursor_pos = ui::Current()->GetTextCursor();
+    Rectangle slider_rect = {cursor_pos.x, cursor_pos.y, 300, 20};
+    ui::HelperText(GetUI()->GetConceptDescription("independance"));
+    if (GetButtonStateRec(slider_rect) & ButtonStateFlags::HOVER) {
+        ui::SetMouseHint(independance_delta_log.c_str);
+    }
+    if (independance > 100) {
+        ui::DrawLimitedSlider(independance, 0, 150, 100, 
+            300, 20, Palette::red, Palette::ui_alt
+        );
+    } else {
+        ui::DrawLimitedSlider(independance, 0, 150, 100, 
+            300, 20, Palette::ui_main, Palette::ui_alt
+        );
+    }
+    StringBuilder sb;
+    sb.AddFormat("%3d/%d (%+2d)", independance, 150, independance_delta);
+    ui::WriteEx(sb.c_str, TextAlignment::CONFORM, true);
+    ui::Pop();
+
+    // Opinion slider
+    ui::PushInset(0, 30);
+    cursor_pos = ui::Current()->GetTextCursor();
+    slider_rect = {cursor_pos.x, cursor_pos.y, 300, 20};
+    ui::HelperText(GetUI()->GetConceptDescription("opinion"));
+    if (GetButtonStateRec(slider_rect) & ButtonStateFlags::HOVER) {
+        ui::SetMouseHint(opinion_delta_log.c_str);
+    }
+    if (opinion >= 0) {
+        ui::DrawLimitedSlider(opinion, -100, 100, 0, 
+            300, 20, Palette::red, Palette::ui_alt
+        );
+    } else {
+        ui::DrawLimitedSlider(opinion, -100, 100, 0, 
+            300, 20, Palette::ui_main, Palette::ui_alt
+        );
+    }
+    sb.Clear();
+    sb.AddFormat("%3d (%+2d)", opinion, opinion_delta);
+    ui::WriteEx(sb.c_str, TextAlignment::CONFORM, false);
     ui::Fillline(1, Palette::ui_main, Palette::ui_main);
-    ui::VSpace(5);
+    ui::Pop();
+
+    ui::Current()->EnsureLineBreak();
+    ui::VSpace(10);
     switch (current_tab) {
     case 0:
         economy.UIDrawResources(id);

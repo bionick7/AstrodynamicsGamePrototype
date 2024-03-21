@@ -77,3 +77,11 @@ transfer: >
   is hydrogen consuming, the ship will use a certain ammount of [[water]] as fuel. More exotic [[ship_class]]
   may use different materials a fuel. The fuel will be lost from the departuring [[planet]]. If the planet cannot 
   provide enough fuel, the trnasfer cannot take place.
+
+independance: >
+  'Independance' is a property of a [[planet]] that indicates its level of autonomy. If independance exceeds 100,
+  you loose control over the place. The planet will gain autonomy and become either friendly or hostile depending
+  on their [[opinion]]. Independance can be lowered by the placement military ships in orbit 
+opinion: >
+  'Independance' is a property of a [[planet]] that indicates its relationship to the to the player. It can be raised
+  by large stockpiles / industry on the planet and lowered by military presence and certain buildings

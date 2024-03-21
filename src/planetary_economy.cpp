@@ -27,6 +27,7 @@ PlanetaryEconomy::PlanetaryEconomy(){
     }
     for (int i=0; i < resources::MAX*PRICE_TREND_SIZE; i++) {
         price_history[i] = resource_price[i % resources::MAX];
+        delivered_resources_today[i] = 0;
     }
 }
 
@@ -50,6 +51,7 @@ resource_count_t PlanetaryEconomy::GiveResource(resources::T resource_id, resour
 
     resource_count_t transferred_resources = ClampInt(quantity, 0, resource_capacity[resource_id] - resource_stock[resource_id]);
     resource_stock[resource_id] += transferred_resources;
+    delivered_resources_today[resource_id] += transferred_resources;
 
     return transferred_resources;
 }
@@ -77,6 +79,7 @@ void PlanetaryEconomy::Update() {
     if (GetCalendar()->IsNewDay()) {
         for (int i=0; i < resources::MAX; i++) {
             resource_stock[i] = Clamp(resource_stock[i] + resource_delta[i], 0, resource_capacity[i]);
+            delivered_resources_today[i] = 0;
         }
         AdvanceEconomy();
     }
@@ -137,7 +140,10 @@ void PlanetaryEconomy::UIDrawResources(RID planet) {
     for (int i=0; i < resources::MAX; i++) {
         char buffer[50];
         //sprintf(buffer, "%-10s %5d/%5d (%+3d)", GetResourceData(i)->name, qtt, cap, delta);
-        ui::DrawLimitedSlider(resource_stock[i], 0, resource_capacity[i], INT32_MIN, Palette::ui_alt, Palette::ui_dark);
+        ui::DrawLimitedSlider(
+            resource_stock[i], 0, resource_capacity[i], INT32_MIN, 
+            120, 20, Palette::ui_alt, Palette::ui_dark
+        );
         if (resource_delta[i] == 0) {
             sprintf(buffer, "%2s %3d       ", GetResourceUIRep(i), resource_stock[i]);
         } else {
@@ -160,16 +166,25 @@ void PlanetaryEconomy::UIDrawResources(RID planet) {
                 resource_count_t current = plan->resource_transfer[i] + plan->fuel;
                 resource_count_t absolute_max_fuel = ship->GetRemainingPayloadCapacity(0);
                 resource_count_t relative_max = absolute_max - plan->GetPayloadMass() + plan->resource_transfer[i] + plan->fuel;
-                resource_count_t new_current = ui::DrawLimitedSlider(current, 0, absolute_max_fuel, relative_max, Palette::interactable_main, Palette::interactable_alt);
+                resource_count_t new_current = ui::DrawLimitedSlider(
+                    current, 0, absolute_max_fuel, relative_max, 
+                    120, 20, Palette::interactable_main, Palette::interactable_alt
+                );
                 if (new_current < plan->fuel) new_current = plan->fuel;
                 plan->resource_transfer[i] = new_current - plan->fuel;
             } else {
                 resource_count_t relative_max = absolute_max - plan->GetPayloadMass() + plan->resource_transfer[i];
                 if (relative_max < 0) relative_max = 0;
                 if (i == plan->fuel_type) {
-                    plan->resource_transfer[i] = ui::DrawLimitedSlider(plan->resource_transfer[i], 0, absolute_max, relative_max, Palette::interactable_main, Palette::interactable_alt);
+                    plan->resource_transfer[i] = ui::DrawLimitedSlider(
+                        plan->resource_transfer[i], 0, absolute_max, relative_max, 
+                        120, 20, Palette::interactable_main, Palette::interactable_alt
+                    );
                 } else {
-                    plan->resource_transfer[i] = ui::DrawLimitedSlider(plan->resource_transfer[i], 0, absolute_max, relative_max, Palette::ui_main, Palette::ui_alt);
+                    plan->resource_transfer[i] = ui::DrawLimitedSlider(
+                        plan->resource_transfer[i], 0, absolute_max, relative_max, 
+                        120, 20, Palette::ui_main, Palette::ui_alt
+                    );
                 }
             }
         }
@@ -185,7 +200,7 @@ void PlanetaryEconomy::UIDrawResources(RID planet) {
                 ui::WriteEx(buffer, TextAlignment::CONFORM, false);
             }
         }
-        ui::Fillline(resource_stock[i] / (double)resource_capacity[i], Palette::ui_main, Palette::bg);
+        //ui::Fillline(resource_stock[i] / (double)resource_capacity[i], Palette::ui_main, Palette::bg);
         ui::Pop();  // Inset
         //TextBoxLineBreak(&tb);
     }

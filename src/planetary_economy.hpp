@@ -69,6 +69,7 @@ struct PlanetaryEconomy {
     resource_count_t native_resource_delta[resources::MAX];
     resource_count_t resource_delta[resources::MAX];
     resource_count_t writable_resource_delta[resources::MAX];
+    resource_count_t delivered_resources_today[resources::MAX];
 
     cost_t resource_price[resources::MAX];
     cost_t resource_noise[resources::MAX];

@@ -29,6 +29,9 @@ void Planet::Serialize(DataNode* data) const {
     data->SetI("ship_production_process", ship_production_process);
     data->SetI("module_production_process", module_production_process);
     data->SetI("allegiance", allegiance);
+    data->SetI("independance", independance);
+    data->SetI("base_independance_delta", base_independance_delta);
+    data->SetI("opinion", opinion);
     ship_production_queue.SerializeTo(data, "ship_production_queue");
     module_production_queue.SerializeTo(data, "module_production_queue");
     //data->SetF("mass", mu / G);
@@ -57,6 +60,11 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
     ship_production_process = data->GetI("ship_production_process", 0, true);
     module_production_process = data->GetI("module_production_process", 0, true);
     allegiance = data->GetI("allegiance", 0);
+
+    independance = data->GetI("independance", 0, true);
+    base_independance_delta = data->GetI("base_independance_delta", 0);
+    opinion = data->GetI("opinion", 0, true);
+
     ship_production_queue.DeserializeFrom(data, "ship_production_queue", true);
     module_production_queue.DeserializeFrom(data, "module_production_queue", true);
     RID index = planets->GetIdByName(name);
@@ -85,7 +93,8 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
             ship_module_inventory[i] = GetShipModules()->GetModuleRIDFromStringId(module_id);
         }
     }
-
+    
+    RecalcStats();
     economy.RecalcEconomy();
     for (int i=0; i < PRICE_TREND_SIZE; i++) {
         economy.AdvanceEconomy();
@@ -163,15 +172,50 @@ bool Planet::CanProduce(RID id) const {
     return true;
 }
 
-void Planet::Conquer(int faction) {
+void Planet::Conquer(int faction, bool include_ships) {
+    if (include_ships) {
+        IDList ships;
+        GetShips()->GetOnPlanet(&ships, id, UINT32_MAX);
+        for (int i=0; i < ships.size; i++) {
+            GetShip(ships[i])->allegiance = faction;
+        }
+    }
     if (allegiance == faction) return;
     allegiance = faction;
 }
 
 void Planet::RecalcStats() {
     // Just call this every frame tbh
+    independance_delta_log.Clear();
+    independance_delta = base_independance_delta;
+    int delta_from_delivery = 0;
+    for(int i=0; i < resources::MAX; i++) {
+        if (economy.delivered_resources_today[i] != 0) {
+            delta_from_delivery -= economy.delivered_resources_today[i] * GetResourceData(i)->default_cost / 1000000;
+            DebugPrintText("%s: %d", resources::names[i], economy.delivered_resources_today[i]);
+            INFO("%s: %d", resources::names[i], economy.delivered_resources_today[i])
+        }
+    }
 
-    // Not used atm
+
+    independance_delta += delta_from_delivery;
+    independance_delta += module_independance_delta;
+    independance_delta_log.AddFormat("Base: %+d\n", base_independance_delta);
+    if (delta_from_delivery != 0)
+        independance_delta_log.AddFormat("From delivry: %+d\n", delta_from_delivery);
+    if (module_independance_delta != 0)
+        independance_delta_log.AddFormat("From modules: %+d\n", module_independance_delta);
+    module_independance_delta = 0;
+
+    opinion_delta_log.Clear();
+    opinion_delta_log.Add("Base: +0");
+    opinion_delta = 0;
+    opinion_delta += module_opinion_delta;
+
+    if (module_opinion_delta != 0)
+        opinion_delta_log.AddFormat("From modules: %+d\n", module_opinion_delta);
+    module_opinion_delta = 0;
+
     for (int i = 0; i < resources::MAX; i++){
         economy.resource_delta[i] = 0;
     }
@@ -180,10 +224,10 @@ void Planet::RecalcStats() {
 ShipModuleSlot Planet::GetFreeModuleSlot() const {
     for (int index = 0; index < MAX_PLANET_INVENTORY; index++) {
         if(!IsIdValid(ship_module_inventory[index])) {
-            return ShipModuleSlot(id, index, ShipModuleSlot::DRAGGING_FROM_PLANET, ModuleType::ANY);
+            return ShipModuleSlot(id, index, ShipModuleSlot::DRAGGING_FROM_PLANET, module_types::ANY);
         }
     }
-    return ShipModuleSlot(id, -1, ShipModuleSlot::DRAGGING_FROM_PLANET, ModuleType::ANY);
+    return ShipModuleSlot(id, -1, ShipModuleSlot::DRAGGING_FROM_PLANET, module_types::ANY);
 }
 
 void Planet::RemoveShipModuleInInventory(int index) {
@@ -226,8 +270,16 @@ void Planet::Update() {
     position = orbit.GetPosition(now);
     //int index = IdGetIndex(id);
     //position = orbit.FromRightAscention(-PI/2 * index);
-    position = orbit.FromRightAscention(-PI/2);
-    // RecalcStats();
+    //position = orbit.FromRightAscention(-PI/2);
+    RecalcStats();
+    if (GetCalendar()->IsNewDay()) {
+        independance += independance_delta;
+        if (independance > 150) independance = 150;
+        if (independance < 0) independance = 0;
+        if (independance >= 100 && allegiance != 0) {
+            Conquer(1, true);
+        }
+    }
     economy.Update();
 }
 
