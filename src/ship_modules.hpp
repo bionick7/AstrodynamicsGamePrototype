@@ -11,6 +11,7 @@
 struct Ship;
 
 #define SHIP_MAX_MODULES 16
+#define SHIP_MAX_FREE_MODULES 32
 #define SHIP_MODULE_WIDTH 50
 #define SHIP_MODULE_HEIGHT 50
 
@@ -81,7 +82,7 @@ namespace module_types {
         {  8, 23},
         {  8, 24},
         { 12, 27},
-        { 31, 31},
+        {  3, 30},
         { 11, 27},
         {  9, 25},
         { 31, 31},

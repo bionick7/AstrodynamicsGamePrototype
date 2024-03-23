@@ -20,7 +20,9 @@
 - Let player choose faction (Done)
 - counts should be 10 T to allow more flexibility (Done)
 - Planets track allegiance independendtly (Done) (updated in battle)
-- Independance timer
+- Independance timer (Done)
+- Dynamic Free module slots (Done)
+- Sort modules by síze
 - Unlock modules / ship classes
 - AI shits :(
 

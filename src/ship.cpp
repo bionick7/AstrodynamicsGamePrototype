@@ -928,10 +928,18 @@ void Ship::Repair(int hp) {
 }
 
 ShipModuleSlot Ship::GetFreeModuleSlot(module_types::T least) const {
-    const ModuleConfiguration* module_Config = &GetShipClassByRID(ship_class)->module_config;
-    for (int index = 0; index < module_Config->module_count; index++) {
-        if(!IsIdValid(modules[index]) && module_types::IsCompatible(least, module_Config->types[index])) {
-            return ShipModuleSlot(id, index, ShipModuleSlot::DRAGGING_FROM_SHIP, module_Config->types[index]);
+    const ModuleConfiguration* module_config = &GetShipClassByRID(ship_class)->module_config;
+    if (least == module_types::FREE) {
+        for(int index = module_config->module_count; index < SHIP_MAX_MODULES; index++) {
+            if(!IsIdValid(modules[index])) {
+                return ShipModuleSlot(id, index, ShipModuleSlot::DRAGGING_FROM_SHIP, module_types::FREE);
+            }
+        }
+        return ShipModuleSlot(id, -1, ShipModuleSlot::DRAGGING_FROM_SHIP, module_types::INVALID);
+    }
+    for (int index = 0; index < module_config->module_count; index++) {
+        if(!IsIdValid(modules[index]) && module_types::IsCompatible(least, module_config->types[index])) {
+            return ShipModuleSlot(id, index, ShipModuleSlot::DRAGGING_FROM_SHIP, module_config->types[index]);
         }
     }
     return ShipModuleSlot(id, -1, ShipModuleSlot::DRAGGING_FROM_SHIP, module_types::INVALID);

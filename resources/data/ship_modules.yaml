@@ -380,7 +380,7 @@ shipmodules:
 - id: shpmod_invasion_equipment
   name: Invasion Equipment
   description: >
-    small arms, APCs, supplies, even tanks ... Everything to arm local forces to fight a full-on war.
+    small arms, APCs, supplies, even tanks ... Everything to arm local forces with lethal equipment.
   add:
     boarding_defense: 2
     independance: -10
@@ -391,7 +391,7 @@ shipmodules:
     polymers: 10
     steel: 6
     aluminium: 8
-  icon_index: [31, 31]
+  icon_index: [3, 26]
   type: large
   
 - id: shpmod_aircraft
@@ -420,7 +420,7 @@ shipmodules:
     boarding_defense: 1
   mass: 1
   hidden: y
-  icon_index: [31, 31]
+  icon_index: [3, 25]
   type: free
 
 - id: shpmod_embassy

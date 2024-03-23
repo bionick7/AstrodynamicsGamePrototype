@@ -246,7 +246,6 @@ bool module_types::IsCompatible(module_types::T from, module_types::T to) {
         case ANY:      return from != INVALID;
         default: case INVALID: return false;
     }
-    
     return false;
 }
 
@@ -305,11 +304,14 @@ void ModuleConfiguration::Draw(Ship* ship) const {
     ShipModules* sms = GetShipModules();
 
     int width = ui::Current()->width;
-    int height = MinInt(width, mesh_draw_space.height) + 20;
 
+    Rectangle adjusted_draw_space = mesh_draw_space;
+    int upper_border = 20;
+    int lower_border = SHIP_MODULE_HEIGHT + 10;
+    adjusted_draw_space.height += upper_border + lower_border;
+    int height = adjusted_draw_space.height;
     ui::PushInset(0, height);
     Rectangle bounding = ui::Current()->GetRect();
-    Rectangle adjusted_draw_space = mesh_draw_space;
 
     WireframeMesh mesh = assets::GetWirframe(mesh_resource_path);
     float size_x = mesh.bounding_box.max.x - mesh.bounding_box.min.x;
@@ -324,8 +326,9 @@ void ModuleConfiguration::Draw(Ship* ship) const {
         bounding.y + bounding.height/2,
     };
 
-    adjusted_draw_space.x += center.x;
-    adjusted_draw_space.y += center.y;
+    adjusted_draw_space.x = bounding.x + (bounding.width-adjusted_draw_space.width) / 2;
+    adjusted_draw_space.y = bounding.y + 1;
+    DEBUG_SHOW_R(adjusted_draw_space)
     bool fits_naturally = CheckEnclosingRecs(bounding, adjusted_draw_space);
     bool show_popup = !fits_naturally && 
         (CheckCollisionPointRec(GetMousePosition(), bounding) || 
@@ -342,19 +345,18 @@ void ModuleConfiguration::Draw(Ship* ship) const {
             adjusted_draw_space.width, adjusted_draw_space.height,
             DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, ui::Current()->z_layer + 10
         );
-        center = {
-            adjusted_draw_space.x + adjusted_draw_space.width/2,
-            adjusted_draw_space.y + adjusted_draw_space.height/2,
-        };
         module_config_popup_rect = adjusted_draw_space;
 
         ui::Enclose();
     } else {
         module_config_popup_rect = {0};
     }
+    center = {
+        adjusted_draw_space.x + adjusted_draw_space.width/2,
+        adjusted_draw_space.y + adjusted_draw_space.height/2,
+    };
     ui::WriteEx(GetShipClassByRID(ship->ship_class)->name, TextAlignment::HCENTER | TextAlignment::TOP, false);
 
-    //DrawRectangleLinesEx(bounding, 1, WHITE);
     bool use_scissor = !CheckEnclosingRecs(ui::Current()->render_rec, bounding);
     if (use_scissor) {
         BeginScissorMode(ui::Current()->render_rec.x, ui::Current()->render_rec.y, ui::Current()->render_rec.width, ui::Current()->render_rec.height);
@@ -371,6 +373,7 @@ void ModuleConfiguration::Draw(Ship* ship) const {
         // Make the mesh fit (and adjust to keep the modules aligned)
         center.x -= (mesh.bounding_box.min.x + mesh.bounding_box.max.x) * 50;
         center.y -= (mesh.bounding_box.min.z + mesh.bounding_box.max.z) * 50;
+        center.y -= upper_border;
         RenderWirframeMesh2DEx(mesh, center, 100, Palette::ui_main, ui::Current()->z_layer);
     }
     BeginRenderInUILayer(ui::Current()->z_layer);
@@ -409,10 +412,62 @@ void ModuleConfiguration::Draw(Ship* ship) const {
             }
         }
     }
+
+    // Draw free modules
+
+    int first_free_freemodule_slot = -1;
+    for(int i=module_count; i < SHIP_MAX_MODULES; i++) {
+        if (!IsIdValid(ship->modules[i])) {
+            first_free_freemodule_slot = i;
+            break;
+        }
+    }
+
+    int free_module_index = 0;
+    for(int i=module_count; i < SHIP_MAX_MODULES; i++) {
+        if (!IsIdValid(ship->modules[i]) && i != first_free_freemodule_slot) {
+            continue;
+        }
+        Rectangle module_rect = { 
+            adjusted_draw_space.x + free_module_index * (SHIP_MODULE_WIDTH + 10) + 5, 
+            adjusted_draw_space.y + adjusted_draw_space.height - SHIP_MODULE_HEIGHT - 5, 
+            SHIP_MODULE_WIDTH, SHIP_MODULE_HEIGHT 
+        };
+
+        // Logic
+        ButtonStateFlags::T button_state = GetButtonStateRec(module_rect);
+        if (button_state & ButtonStateFlags::HOVER) {
+            ship->current_slot = ShipModuleSlot(ship->id, i, ShipModuleSlot::DRAGGING_FROM_SHIP, module_types::FREE);
+        }
+        if (button_state & ButtonStateFlags::JUST_PRESSED) {
+            if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) sms->DirectSwap(ship->current_slot);
+            else sms->InitDragging(ship->current_slot, module_rect);
+        }
+        
+        // Drawing
+        ui::PushFree(module_rect.x, module_rect.y, module_rect.width, module_rect.height);
+        ui::Shrink(3, 3);
+        ShipModuleSlot(ship->id, i, ShipModuleSlot::DRAGGING_FROM_SHIP, module_types::FREE).Draw();
+        sms->DrawShipModule(ship->modules[i]);
+        ui::Pop();
+
+        free_module_index++;
+    }
+
     if (use_scissor) {
         EndScissorMode();
     }
     EndRenderInUILayer();
+    //BeginRenderInUILayer(50);
+    //DrawRectangleLinesEx(adjusted_draw_space, 1, WHITE);
+    //DrawRectangleLinesEx(bounding, 1, RED);
+    //DrawLine(
+    //    adjusted_draw_space.x, adjusted_draw_space.y,
+    //    adjusted_draw_space.x+adjusted_draw_space.width, adjusted_draw_space.y+adjusted_draw_space.height, WHITE);
+    //DrawLine(
+    //    adjusted_draw_space.x+adjusted_draw_space.width, adjusted_draw_space.y, 
+    //    adjusted_draw_space.x, adjusted_draw_space.y+adjusted_draw_space.height, WHITE);
+    //EndRenderInUILayer();
     for (int i=0; i < module_count; i++) {
         // leave margin, so the rect boundaries from the mesh remain visible
         ui::PushFree(rectangles[i].x, rectangles[i].y, rectangles[i].width, rectangles[i].height);
@@ -421,11 +476,10 @@ void ModuleConfiguration::Draw(Ship* ship) const {
         sms->DrawShipModule(ship->modules[i]);
         ui::Pop();
     }
+    ui::HelperText(GetUI()->GetConceptDescription("module"));
     if (show_popup) {
         ui::Pop();
     }
-
-    ui::HelperText(GetUI()->GetConceptDescription("module"));
     ui::Pop(); // Inset
 }
 

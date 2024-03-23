@@ -71,6 +71,10 @@ planets:
       rock: 300
     inventory:
     - shpmod_heatshield
+    - shpmod_armory
+    - shpmod_armory
+    - shpmod_armory
+    - shpmod_armory
     base_independance_delta: 5
 
   - name: Titan
@@ -147,13 +151,14 @@ ships:
   allegiance: 0
   planet: Tethys
   tf_plans: []
-  modules: []
   
 - name: Light transport III
   class_id: shp_light_transport
   allegiance: 0
   planet: Rhea
   tf_plans: []
+  modules:
+  - shpmod_armory
 
 - name: Light transport IV
   class_id: shp_light_transport

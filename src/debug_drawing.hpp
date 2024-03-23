@@ -17,5 +17,6 @@ void DebugPrintText(const char* format, ...);
 
 #define DEBUG_SHOW_F(var) DebugPrintText("%s = %f", #var, var);
 #define DEBUG_SHOW_I(var) DebugPrintText("%s = %d", #var, var);
+#define DEBUG_SHOW_R(var) DebugPrintText("%s = (%d, %d); (%d, %d)", #var, (int)var.x, (int)var.y, (int)var.width, (int)var.height);
 
 #endif // DEBUG_DRAWING_H
