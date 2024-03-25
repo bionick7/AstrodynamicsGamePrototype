@@ -36,7 +36,8 @@ void _PauseMenu() {
         menu_height,
         DEFAULT_FONT_SIZE,
         Palette::ui_main,
-        Palette::bg
+        Palette::bg,
+        true
     );
     ui::Enclose();
     if (_PauseMenuButton("Save")) {
@@ -64,15 +65,18 @@ void GlobalState::Make(timemath::Time p_time) {
 }
 
 void GlobalState::LoadData() {
+    string_identifiers.clear();
+
     wren_interface.MakeVM();
     wren_interface.LoadWrenQuests();
 
-    #define NUM 4
+    #define NUM 5
     const char* loading_paths[NUM] = {
         "resources/data/ephemerides.yaml",
         "resources/data/resources.yaml",
         "resources/data/ship_modules.yaml",
         "resources/data/ship_classes.yaml",
+        "resources/data/techtree.yaml",
     };
 
     int (*load_funcs[NUM])(const DataNode*) = { 
@@ -80,6 +84,7 @@ void GlobalState::LoadData() {
         LoadResources,
         LoadShipModules,
         LoadShipClasses,
+        LoadTechTree,
     };
 
     const char* declarations[NUM] {
@@ -87,6 +92,7 @@ void GlobalState::LoadData() {
         "Resources",
         "ShipModules",
         "ShipClasses",
+        "TechTree Nodes",
     };
 
     int ammounts[NUM];
@@ -105,8 +111,8 @@ void GlobalState::LoadData() {
         printf("%d %s%s", ammounts[i], declarations[i], i == NUM-1 ? "\n" : "; ");
     }
 
-    // INFO(GetModuleByRID(GetModuleRIDFromStringId("shpmod_water_extractor"))->id)
-    // INFO("%f", GetModuleByRID(GetModuleRIDFromStringId("shpmod_heatshield"))->mass)
+    // INFO(GetModuleByRID(GetGlobalState()->GetFromStringIdentifier("shpmod_water_extractor"))->id)
+    // INFO("%f", GetModuleByRID(GetGlobalState()->GetFromStringIdentifier("shpmod_heatshield"))->mass)
 
     // Load static shaders
 
@@ -114,6 +120,12 @@ void GlobalState::LoadData() {
 }
 
 GlobalState::FocusablesPanels _GetCurrentFocus(GlobalState* gs) {
+
+    // out of techtree
+    if (gs->techtree.shown) {
+        return GlobalState::TECHTREE;
+    }
+
     // out of combat_log
     if (gs->last_battle_log.shown) {
         return GlobalState::COMBAT_LOG;
@@ -170,6 +182,9 @@ void _HandleDeselect(GlobalState* gs) {
         break;}
     case GlobalState::COMBAT_LOG:{
         gs->last_battle_log.shown = false;
+        break;}
+    case GlobalState::TECHTREE:{
+        gs->techtree.shown = false;
         break;}
     default: NOT_REACHABLE;
     }
@@ -228,7 +243,8 @@ void GlobalState::UpdateState(double delta_t) {
     calendar.AdvanceTime(delta_t);
     active_transfer_plan.Update();
     wren_interface.Update();
-    quest_manager.Update(delta_t);
+    quest_manager.Update();
+    techtree.Update();
     _UpdateShipsPlanets(this);
 
     camera.HandleInput();
@@ -275,6 +291,7 @@ void GlobalState::DrawUI() {
     DrawTimeline();
     quest_manager.Draw();
     last_battle_log.DrawUI();
+    techtree.DrawUI();
     DrawDebugConsole();
     
     if (is_in_pause_menu){
@@ -291,6 +308,19 @@ void GlobalState::DrawUI() {
 
 bool GlobalState::IsKeyBoardFocused() const {
     return IsInDebugConsole();
+}
+
+const char *GlobalState::AddStringIdentifier(const char *string_id, RID rid) {
+    auto pair = string_identifiers.insert_or_assign(std::string(string_id), rid);
+    return pair.first->first.c_str();  // points to string in dictionary
+}
+
+RID GlobalState::GetFromStringIdentifier(const char *string_id) {
+    auto find = string_identifiers.find(std::string(string_id));
+    if (find == string_identifiers.end()) {
+        return GetInvalidId();
+    }
+    return find->second;
 }
 
 void GlobalState::LoadGame(const char* file_path) {
@@ -325,6 +355,7 @@ void GlobalState::Serialize(DataNode* data) const {
     quest_manager.Serialize(data->SetChild("quests"));
 
     factions.Serialize(data);
+    techtree.Serialize(data);
 
     // ignore transferplanui for now
     data->SetI("focused_planet", focused_planet.AsInt());
@@ -365,6 +396,7 @@ void GlobalState::Deserialize(const DataNode* data) {
     // ignore transferplanui for now
 
     factions.Deserialize(data);
+    techtree.Deserialize(data);
 
     ships.alloc.Clear(); 
     planets = Planets();
@@ -413,6 +445,7 @@ Planets*             GetPlanets()             { return &global_state.planets;   
 ShipModules*         GetShipModules()         { return &global_state.ship_modules;          }
 QuestManager*        GetQuestManager()        { return &global_state.quest_manager;         }
 Factions*            GetFactions()            { return &global_state.factions;              }
+TechTree*            GetTechTree()            { return &global_state.techtree;              }
 
 // UI elements
 TransferPlanUI*      GetTransferPlanUI()      { return &global_state.active_transfer_plan;  }

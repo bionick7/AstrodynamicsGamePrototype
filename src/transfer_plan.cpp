@@ -662,7 +662,7 @@ void TransferPlanUI::DrawUI() {
     ui::CreateNew(
         GetScreenWidth() - 20*DEFAULT_FONT_SIZE - 5, y_margin,
         20*DEFAULT_FONT_SIZE, MinInt(200, GetScreenHeight()) - 2*5 - y_margin, 
-        DEFAULT_FONT_SIZE, Palette::ally, Palette::bg
+        DEFAULT_FONT_SIZE, Palette::ally, Palette::bg, false
     );
 
     ui::EncloseEx(4, Palette::bg, is_valid ? Palette::ally : Palette::red, 4);

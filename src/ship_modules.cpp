@@ -200,7 +200,7 @@ bool ShipModuleSlot::IsSlotFitting(RID module) const {
 
 void ShipModuleSlot::Draw() const {
     //if (IsSlotFitting(GetShipModules()->_dragging)) {
-    //    int enclose_dist = sin(GetRenderServer()->screen_time*5.) > 0 ? 4 : 7;
+    //    int enclose_dist = sin(GetRenderServer()->animation_time*5.) > 0 ? 4 : 7;
     //    ui::EncloseEx(-enclose_dist, BLANK, Palette::interactable_main, 5);
     //}
     ui::EncloseEx(0, Palette::bg, Palette::bg, 5);
@@ -328,7 +328,6 @@ void ModuleConfiguration::Draw(Ship* ship) const {
 
     adjusted_draw_space.x = bounding.x + (bounding.width-adjusted_draw_space.width) / 2;
     adjusted_draw_space.y = bounding.y + 1;
-    DEBUG_SHOW_R(adjusted_draw_space)
     bool fits_naturally = CheckEnclosingRecs(bounding, adjusted_draw_space);
     bool show_popup = !fits_naturally && 
         (CheckCollisionPointRec(GetMousePosition(), bounding) || 
@@ -532,8 +531,7 @@ int ShipModules::Load(const DataNode* data) {
 
         const char* string_id = module_data->Get("id", "_");
         RID rid = RID(i, EntityType::MODULE_CLASS);
-        auto pair = shipmodule_ids.insert_or_assign(string_id, rid);
-        ship_modules[i].id = pair.first->first.c_str();  // points to string in dictionary
+        ship_modules[i].id = GetGlobalState()->AddStringIdentifier(string_id, rid);
 
         #define CHECK_FOR_ID(name) else if (strcmp(string_id, "shpmod_"#name) == 0) { expected_modules.name = rid; }
         if(false) {}
@@ -546,14 +544,6 @@ int ShipModules::Load(const DataNode* data) {
         #undef CHECK_FOR_ID
     }
     return shipmodule_count;
-}
-
-RID ShipModules::GetModuleRIDFromStringId(const char* string_id) const {
-    auto find = shipmodule_ids.find(string_id);
-    if (find == shipmodule_ids.end()) {
-        return GetInvalidId();
-    }
-    return find->second;
 }
 
 const ShipModuleClass* ShipModules::GetModuleByRID(RID index) const {
@@ -572,7 +562,7 @@ const ShipModuleClass* ShipModules::GetModuleByRID(RID index) const {
 }
 
 void ShipModules::DrawShipModule(RID index) const {
-    if(!IsIdValid(index)) {  // empty
+    if(!IsIdValidTyped(index, EntityType::MODULE_CLASS)) {  // empty
         return;
         //ui::EncloseEx(4, Palette::bg, Palette::ui_dark, 4);
     } else {  // filled

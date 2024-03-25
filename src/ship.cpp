@@ -138,7 +138,7 @@ void Ship::Deserialize(const DataNode* data) {
     strcpy(name, data->Get("name", "UNNAMED"));
     allegiance = data->GetI("allegiance", allegiance);
     plan_edit_index = -1;
-    ship_class = GetShips()->GetShipClassIndexById(data->Get("class_id"));
+    ship_class = GetGlobalState()->GetFromStringIdentifier(data->Get("class_id"));
     if (!IsIdValid(ship_class)) {
         FAIL("Invalid ship class")  // TODO fail more gracefully
     }
@@ -151,7 +151,7 @@ void Ship::Deserialize(const DataNode* data) {
         modules[i] = GetInvalidId();
     }
     for(int i=0; i < modules_count; i++) {
-        RID module_rid = sms->GetModuleRIDFromStringId(data->GetArrayElem("modules", i));
+        RID module_rid = GetGlobalState()->GetFromStringIdentifier(data->GetArrayElem("modules", i));
         if (!IsIdValidTyped(module_rid, EntityType::MODULE_CLASS)) continue;
         module_types::T module_type = sms->GetModuleByRID(module_rid)->type;
         int proper_index = GetFreeModuleSlot(module_type).index;
@@ -870,7 +870,7 @@ void Ship::DrawUI() {
         OUTSET_MARGIN + 200,
         width + 2*INSET_MARGIN, 
         GetScreenHeight() - 200 - OUTSET_MARGIN - 2*INSET_MARGIN,
-        TEXT_SIZE, Palette::ui_main, Palette::bg
+        TEXT_SIZE, Palette::ui_main, Palette::bg, false
     );
     ui::EncloseEx(4, Palette::bg, GetColor(), 4);
     ui::Shrink(INSET_MARGIN, INSET_MARGIN);
@@ -1131,8 +1131,6 @@ void Ship::_EnsureContinuity() {
 
 Ships::Ships() {
     alloc.Init();
-
-    ship_classes_ids = std::map<std::string, RID>();
     ship_classes = NULL;
     ship_classes_count = 0;
 }
@@ -1213,8 +1211,7 @@ int Ships::LoadShipClasses(const DataNode* data) {
 
         ship_classes[index] = sc;
         RID rid = RID(index, EntityType::SHIP_CLASS);
-        auto pair = ship_classes_ids.insert_or_assign(ship_id, rid);
-        ship_classes[index].id = pair.first->first.c_str();  // points to string in dictionary
+        ship_classes[index].id = GetGlobalState()->AddStringIdentifier(ship_id, rid);
     }
     return ship_classes_count;
 }
@@ -1224,15 +1221,6 @@ Ship* Ships::GetShip(RID id) const {
         FAIL("Invalid id (%d)", id)
     }
     return (Ship*) alloc.Get(id);
-}
-
-RID Ships::GetShipClassIndexById(const char *id) const { 
-    auto find = ship_classes_ids.find(id);
-    if (find == ship_classes_ids.end()) {
-        ERROR("No such ship class id '%s'", id)
-        return GetInvalidId();
-    }
-    return find->second;
 }
 
 void Ships::GetOnPlanet(IDList* list, RID planet, uint32_t allegiance_bits) const {
@@ -1269,6 +1257,24 @@ void Ships::KillShip(RID uuid, bool notify_callback) {
         GetWrenInterface()->NotifyShipEvent(uuid, "die");
     }
     alloc.EraseAt(uuid);
+}
+
+void Ships::DrawShipClassUI(RID uuid) const {
+    if(!IsIdValidTyped(uuid, EntityType::SHIP_CLASS)) {  // empty
+        return;
+    } else {  // filled
+        const ShipClass* sc = GetShipClassByRID(uuid);
+        ButtonStateFlags::T button_state = ui::AsButton();
+        if (button_state & ButtonStateFlags::HOVER) {
+            StringBuilder sb;
+            sc->MouseHintWrite(&sb);
+            sb.AutoBreak(150);
+            ui::SetMouseHint(sb.c_str);
+        }
+        ui::VSpace((ui::Current()->height - 40) / 2);
+        ui::HSpace((ui::Current()->width - 40) / 2);
+        ui::DrawIconSDF(sc->icon_index, Palette::ui_main, 40);
+    }
 }
 
 const ShipClass* Ships::GetShipClassByRID(RID id) const {

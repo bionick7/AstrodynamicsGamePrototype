@@ -310,7 +310,6 @@ void TimelineClose() {
 }
 
 void DrawTimeline() {
-
     // Manage viewing
     if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_TWO)) {
         show_timeline = !show_timeline;
@@ -319,7 +318,10 @@ void DrawTimeline() {
 
     // Create UI Context
     GlobalState* gs = GetGlobalState();
-    ui::CreateNew(20, 100, GetScreenWidth() - 40, GetScreenHeight() - 100, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg);
+    ui::CreateNew(
+        20, 100, GetScreenWidth() - 40, GetScreenHeight() - 100, 
+        DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, true
+    );
     ui::Enclose();
 
     // Initiualize Common Data Structure

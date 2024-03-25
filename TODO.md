@@ -22,8 +22,8 @@
 - Planets track allegiance independendtly (Done) (updated in battle)
 - Independance timer (Done)
 - Dynamic Free module slots (Done)
-- Sort modules by síze
-- Unlock modules / ship classes
+- Sort modules by síze (Done)
+- Unlock modules / ship classes (Done)
 - AI shits :(
 
 ## Known Bugs
@@ -37,6 +37,7 @@
 - ASTRO: Transfer plan cancels wen it shouldn't (Done)
 - QUESTS: Accepting more than one quest fucks up the order
 - UI: measuring inline (conforming) text cannot rely on raylibs MeassureTextEx
+- SAVING: planets get loaded twice
 
 ## Necessary Incomplete features
 - save wren quest state (Done)

@@ -163,7 +163,7 @@ struct UIGlobals {
 namespace ui {
     void PushTextBox(TextBox tb);
     void PushGlobal(int x, int y, int w, int h, int text_size, Color color, Color background, uint8_t z_layer);
-    void CreateNew(int x, int y, int w, int h, int text_size, Color color, Color background);
+    void CreateNew(int x, int y, int w, int h, int text_size, Color color, Color background, bool overlay);
     void PushMouseHint(Vector2 mouse_pos, int width, int height, uint8_t z_layer);
 
     int PushInset(int margin, int h);

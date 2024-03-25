@@ -273,7 +273,7 @@ void RenderServer::OnScreenResize() {
 
 
 void RenderServer::Draw() {
-    screen_time += GetFrameTime();
+    animation_time += GetFrameTime();
     if (render_targets[0].texture.width != GetScreenWidth() || render_targets[0].texture.height != GetScreenHeight()) {
         OnScreenResize();
     }

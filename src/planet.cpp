@@ -90,7 +90,7 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
         
         for (int i = 0; i < ship_module_inventory_count; i++) {
             const char* module_id = data->GetArrayElem("inventory", i);
-            ship_module_inventory[i] = GetShipModules()->GetModuleRIDFromStringId(module_id);
+            ship_module_inventory[i] = GetGlobalState()->GetFromStringIdentifier(module_id);
         }
     }
     

@@ -140,6 +140,7 @@ void ListSettings(const char*);
 void SaveSettings(const char*);
 void RelaodSettings(const char*);
 void GiveResource(const char*);
+void UnlockTech(const char*);
 
 struct { const char* name; void(*func)(const char*); } commands[] = {
     { "help", Help },
@@ -148,6 +149,7 @@ struct { const char* name; void(*func)(const char*); } commands[] = {
     { "save", SaveSettings },
     { "reload", RelaodSettings },
     { "give_rsc", GiveResource },
+    { "unlock_tech", UnlockTech },
 };
 
 void Help(const char* prompt) {
@@ -235,6 +237,16 @@ void GiveResource(const char* prompt) {
     planet->economy.GiveResource(rsc_index, val);
 }
 
+void UnlockTech(const char* prompt) {
+    static char tech_id[DEBUG_CONSOLE_MAX_LINE_SIZE];
+    if (*prompt == '\0') {
+        PushLine("Expected argument: techtreenode id");
+        return;
+    }
+    prompt = FetchArg(tech_id, prompt);
+    GetTechTree()->ForceUnlockTechnology(tech_id);
+}
+
 void InterpreteResult(const char* prompt) {
     static char command_str[DEBUG_CONSOLE_MAX_LINE_SIZE];
     prompt = FetchArg(command_str, prompt);
@@ -263,7 +275,7 @@ void DrawDebugConsole() {
     
     int height = 500;
     if (height > GetScreenHeight()) height = GetScreenHeight();
-    ui::CreateNew(0, 0, GetScreenWidth(), height, DEFAULT_FONT_SIZE, WHITE, BLACK);
+    ui::CreateNew(0, 0, GetScreenWidth(), height, DEFAULT_FONT_SIZE, WHITE, BLACK, true);
     ui::Current()->z_layer = 254;
     ui::Enclose();
     int line_height = ui::Current()->text_size + ui::Current()->text_margin_y;

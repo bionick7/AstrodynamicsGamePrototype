@@ -148,7 +148,7 @@ void RenderWirframeMesh(WireframeMesh mesh, Matrix transform, Color color) {
     SetShaderValue(wireframe_shader::shader, wireframe_shader::color, color4, SHADER_UNIFORM_VEC4);
     int render_mode = 0;
     SetShaderValue(wireframe_shader::shader, wireframe_shader::render_mode, &render_mode, SHADER_UNIFORM_INT);
-    float time = GetRenderServer()->screen_time;
+    float time = GetRenderServer()->animation_time;
     SetShaderValue(wireframe_shader::shader, wireframe_shader::time, &time, SHADER_UNIFORM_FLOAT);
     //SetShaderValueMatrix(wireframe_shader::shader, wireframe_shader::mvp2, MVP);
     BeginShaderMode(wireframe_shader::shader);
@@ -224,7 +224,7 @@ void RenderWirframeMesh2DEx(WireframeMesh mesh, Vector2 origin, float scale, Col
 
     BeginShaderMode(ui_shader::shader);
     rlBegin(RL_LINES);
-    int max_j = fmod(GetRenderServer()->screen_time * 0.3, 1.0) * mesh.line_count;
+    int max_j = fmod(GetRenderServer()->animation_time * 0.3, 1.0) * mesh.line_count;
     max_j = mesh.line_count;
     for (int j=0; j < max_j; j++) {
         int v1 = mesh.lines[j*2];

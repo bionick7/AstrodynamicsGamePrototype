@@ -13,6 +13,7 @@
 #include "combat.hpp"
 #include "factions.hpp"
 #include "render_server.hpp"
+#include "techtree.hpp"
 
 struct GlobalState {
     enum FocusablesPanels {
@@ -22,6 +23,7 @@ struct GlobalState {
         BUILDING_CONSTRUCTION,
         TRANSFER_PLAN_UI,
         PLANET_SHIP_DETAILS,
+        TECHTREE,
         MAP,
     };
 
@@ -38,6 +40,7 @@ struct GlobalState {
 	ShipModules ship_modules;
 	QuestManager quest_manager;
 	Factions factions;
+    TechTree techtree;
 
 	TransferPlanUI active_transfer_plan;
 	BattleLog last_battle_log;
@@ -46,6 +49,8 @@ struct GlobalState {
 	RenderServer render_server;
 	UIGlobals ui;
 	WrenInterface wren_interface;
+
+    std::map<std::string, RID> string_identifiers = std::map<std::string, RID>();
 
     // Lifecycle
     void Make(timemath::Time time);
@@ -56,6 +61,9 @@ struct GlobalState {
     void DrawUI();
 
     bool IsKeyBoardFocused() const;
+
+    const char* AddStringIdentifier(const char* string_id, RID rid);
+    RID GetFromStringIdentifier(const char* string_id);
 
     // Interaction
     bool CompleteTransaction(int faction, int delta);
@@ -82,6 +90,7 @@ Planets* GetPlanets();
 ShipModules* GetShipModules();
 QuestManager* GetQuestManager();
 Factions* GetFactions();
+TechTree* GetTechTree();
 
 TransferPlanUI* GetTransferPlanUI();
 BattleLog* GetBattleLog();

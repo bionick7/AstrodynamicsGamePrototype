@@ -34,7 +34,7 @@ void QuestManager::Make() {
     _RegenQuests();
 }
 
-void QuestManager::Update(double dt) {
+void QuestManager::Update() {
     timemath::Time now = GlobalGetNow();
 
     if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_ONE)) show_ui = !show_ui;
@@ -108,7 +108,7 @@ void QuestManager::Draw() {
     int y_margin = MinInt(50, GetScreenWidth()*.1);
     int w = GetScreenWidth() - x_margin*2;
     int h = GetScreenHeight() - y_margin*2;
-    ui::CreateNew(x_margin, y_margin, w, h, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg);
+    ui::CreateNew(x_margin, y_margin, w, h, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, true);
     ui::Enclose();
 
     // TABS

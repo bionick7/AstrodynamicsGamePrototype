@@ -169,7 +169,6 @@ struct Ships {
     const static uint32_t CIVILIAN_SELECTION_FLAG = 0x0200;
 
     IDAllocatorList<Ship, EntityType::SHIP> alloc;
-    std::map<std::string, RID> ship_classes_ids;
     ShipClass* ship_classes;
     uint32_t ship_classes_count;
 
@@ -179,11 +178,11 @@ struct Ships {
     void ClearShips();
 
     Ship* GetShip(RID uuid) const;
-    RID GetShipClassIndexById(const char* id) const;
     const ShipClass* GetShipClassByRID(RID index) const;
     void GetOnPlanet(IDList* list, RID planet, uint32_t allegiance_bits) const;
     void GetFleet(IDList* list, RID ship) const;
     void KillShip(RID uuid, bool notify_callback);
+    void DrawShipClassUI(RID uuid) const;
 };
 
 Ship* GetShip(RID uuid);

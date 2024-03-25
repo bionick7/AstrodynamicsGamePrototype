@@ -27,7 +27,7 @@ struct QuestManager {
     void Deserialize(const DataNode* data);
 
     void Make();
-    void Update(double dt);
+    void Update();
     void Draw();
 
     void AcceptQuest(RID quest_index);

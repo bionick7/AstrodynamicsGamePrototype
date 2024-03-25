@@ -49,6 +49,8 @@ bool IsIdValid(RID id) {
         return gs->render_server.icons.ContainsID(id);
     case EntityType::TEXT3D:
         return gs->render_server.text_labels_3d.ContainsID(id);
+    case EntityType::TECHTREE_NODE:
+        return index < gs->techtree.nodes_count;
     default:
     case EntityType::INVALID:
         return false;

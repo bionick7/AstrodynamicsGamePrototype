@@ -89,7 +89,8 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
         return;
     }
 
-    ui::VSpace(10);
+    ui::VSpace(6);
+    ui::Write("To build:");
     for (int i=0; i < resources::MAX; i++) {
         if (construction_resources[i] == 0) {
             continue;
@@ -106,7 +107,7 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
     }
     ui::Current()->EnsureLineBreak();
     sb.Clear();
-    sb.AddI(build_time).Add("D");
+    sb.AddFormat("Takes %dD", build_time);
     if(batch_size > 1) {
         sb.AddFormat(" (x%d)", batch_size);
     }
@@ -116,6 +117,7 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
     //}
 }
 
+int module_class_ui_tab = 0;
 void _UIDrawProduction(Planet* planet, EntityType type) {
     // Set variables for planet/ship
     int option_size;
@@ -136,19 +138,48 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
     }
     int margin = 3;
     int columns = ui::Current()->width / (SHIP_MODULE_WIDTH + margin);
+    if (type == EntityType::MODULE_CLASS) {
+        columns -= 1;
+    }
     int rows = std::ceil(option_size / (double)columns);
     ui::PushInset(0, 50*rows);
     ui::Shrink(5, 5);
 
     RID hovered_id = GetInvalidId();
 
+
+    // Draw tabs for modules
+    if (type == EntityType::MODULE_CLASS) {
+        int panel_width = ui::Current()->width;
+        ui::PushHSplit(0, 48);
+        int tabs_x = ui::Current()->text_start_x + ui::Current()->width;
+        int tabs_y = ui::Current()->text_start_y;
+        for(int i=0; i < module_types::MAX; i++) {
+            Color tab_draw_color = (module_class_ui_tab == i) ? Palette::ui_main : Palette::ui_alt;
+            ui::PushInset(0, 40);
+            ui::Shrink(4, 4);
+            ui::EncloseEx(0, Palette::bg, tab_draw_color, 0);
+            ui::DrawIconSDF(module_types::icons[i], tab_draw_color, 40);
+            ButtonStateFlags::T button_state = ui::AsButton();
+            HandleButtonSound(button_state);
+            if (button_state & ButtonStateFlags::JUST_PRESSED) {
+                module_class_ui_tab = i;
+            }
+            ui::Pop();  // Inset
+            ui::HSpace(5);
+        }
+        ui::Pop(); // HSplit
+        ui::PushHSplit(50, panel_width);
+    }
+
     // Draw options
 
     int draw_index = 0;
     for(int i=0; i < option_size; i++) {
-        RID id = RID(i, type);
         AtlasPos atlas_pos;
+        RID id;
         if (type == EntityType::SHIP_CLASS) {
+            id = RID(i, type);
             const ShipClass* sc = GetShipClassByRID(id);
             if (sc->is_hidden) {
                 continue;
@@ -156,12 +187,17 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
             atlas_pos = sc->icon_index;
         }
         if (type == EntityType::MODULE_CLASS) {
+            id = RID(i, type);
             const ShipModuleClass* smc = GetModule(id);
-            if (smc->is_hidden) {
+            if (smc->is_hidden || smc->type != module_class_ui_tab) {
                 continue;
             }
             atlas_pos = smc->icon_index;
         }
+        if (!GetTechTree()->IsUnlocked(id)) {
+            continue;
+        }
+
         ui::PushGridCell(columns, rows, draw_index % columns, draw_index / columns);
         ui::Shrink(margin, margin);
         
@@ -183,6 +219,11 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
         ui::Pop();  // GridCell
         draw_index++;
     }
+
+    if (type == EntityType::MODULE_CLASS) {
+        ui::Pop();  // HSplit from tabs
+    }
+
     ui::Pop();  // Inset
 
     // Draw queue
@@ -242,7 +283,7 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
         ui::EncloseDynamic(5, Palette::bg, Palette::ui_main, 4);
         ui::Pop();
     }
-}
+ }
 
 int current_tab = 0;  // Global variable, I suppose
 void Planet::DrawUI() {
@@ -289,7 +330,7 @@ void Planet::DrawUI() {
         return;
     }
 
-    ui::CreateNew(10, y_start, 340, height, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg);
+    ui::CreateNew(10, y_start, 340, height, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, false);
     ui::Enclose();
 
     if (IsKeyPressed(KEY_Q)) current_tab = 0;
@@ -418,7 +459,7 @@ void Planet::DrawUI() {
     ui::PushGlobal(x_max + 10, y_start, 200, 30 * ships_around_planet.size, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, 10);
     for(int i=0; i < ships_around_planet.size; i++) {
         const Ship* ship = GetShip(ships_around_planet[i]);
-        ui::PushInset(0, 30-8);
+        ui::PushInset(0, 30 - 8);
         ButtonStateFlags::T button_state = ui::AsButton();
         if (button_state & ButtonStateFlags::JUST_PRESSED) {
             GetGlobalState()->focused_ship = ships_around_planet[i];

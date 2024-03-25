@@ -366,11 +366,11 @@ void ui::PushGlobal(int x, int y, int w, int h, int text_size, Color color, Colo
     GetUI()->AddBlockingRect({(float)x, (float)y, (float)w, (float)h}, z_layer);
 }
 
-void ui::CreateNew(int x, int y, int w, int h, int text_size, Color color, Color background) {
+void ui::CreateNew(int x, int y, int w, int h, int text_size, Color color, Color background, bool overlay) {
     while (GetUI()->text_box_stack.size() > 0) {  // Clear stack
         ui::Pop();
     }
-    ui::PushGlobal(x, y, w, h, text_size, color, background, 10);
+    ui::PushGlobal(x, y, w, h, text_size, color, background, overlay ? 10 : 30);
 }
 
 void ui::PushMouseHint(Vector2 mousepos, int width, int height, uint8_t z_layer) {

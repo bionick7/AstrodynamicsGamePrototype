@@ -14,6 +14,7 @@ enum class EntityType: uint8_t {
     DIALOGUE,
     ICON3D,
     TEXT3D,
+    TECHTREE_NODE,
     TEST = 0xFE,
     INVALID = 0xFF,
 };

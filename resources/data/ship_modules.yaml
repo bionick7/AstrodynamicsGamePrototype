@@ -10,17 +10,29 @@ shipmodules:
   icon_index: [8, 25]
   type: armor
 
-- id: shpmod_droptank
+- id: shpmod_droptank_water
   name: Water Drop-tank
   description: The ship can hold 10 extra counts of water. Lost after use
   mass: 12
   construction_resources:
-    steel: 3
+    aluminium: 3
     water: 10
   construction_time: 2
   construction_batch_size: 1
   icon_index: [9, 25]
-  type: droptank
+  type: drop_tank
+
+- id: shpmod_droptank_hydrogen
+  name: Hydrogen Drop-tank
+  description: The ship can hold 10 extra counts of hydrogen. Lost after use
+  mass: 12
+  construction_resources:
+    aluminium: 3
+    hydrogen: 10
+  construction_time: 2
+  construction_batch_size: 1
+  icon_index: [9, 25]
+  type: drop_tank
 
 # Production
 - id: shpmod_farm_old
@@ -138,7 +150,7 @@ shipmodules:
   construction_resources:
     steel: 10
   icon_index: [31, 31]
-  type: small
+  type: medium
 
 - id: shpmod_waste_treatment
   name: waste treatment
@@ -354,7 +366,7 @@ shipmodules:
     water: 10
     uranium: 1
   icon_index: [6, 25]
-  type: small
+  type: medium
 
 # Boarding
 - id: shpmod_exp_brigade
@@ -392,7 +404,7 @@ shipmodules:
     steel: 6
     aluminium: 8
   icon_index: [3, 26]
-  type: large
+  type: medium
   
 - id: shpmod_aircraft
   name: Aircraft
@@ -410,7 +422,7 @@ shipmodules:
   planets_restriction:
   - Titan
   icon_index: [31, 31]
-  type: large
+  type: medium
 
 - id: shpmod_armory
   name: Armory

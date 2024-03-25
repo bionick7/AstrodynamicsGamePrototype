@@ -37,7 +37,7 @@ struct RenderServer {
     IDAllocatorList<Text3D, EntityType::TEXT3D> text_labels_3d;
     RenderTexture2D render_targets[2];
     
-    double screen_time = 0;  // Can drive animations
+    double animation_time = 0;  // Can drive animations
     
     void OnScreenResize();
     void Draw();

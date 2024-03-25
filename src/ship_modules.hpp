@@ -176,7 +176,6 @@ struct ModuleConfiguration {
 };
 
 struct ShipModules {
-    std::map<std::string, RID> shipmodule_ids = std::map<std::string, RID>();
     ShipModuleClass* ship_modules = NULL;
     size_t shipmodule_count = 0;
 
@@ -186,7 +185,6 @@ struct ShipModules {
     ShipModuleSlot _dragging_origin;
 
     int Load(const DataNode* data);
-    RID GetModuleRIDFromStringId(const char* id) const;
     const ShipModuleClass* GetModuleByRID(RID index) const;
 
     void DrawShipModule(RID index) const;
