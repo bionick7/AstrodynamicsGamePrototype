@@ -62,6 +62,7 @@ Near-term, realizable only
 - warn before committing to an empty transform ("empty" in red or required to choose it explicitly) (Done)
 - special UI for 0 dv ships (e.g. disallow transfer entirely)
 
+- warn when fuel is currently insufficient
 - Show tasks and wait times also in dialogue
 - front-end info and error log
 - good ui showing quests

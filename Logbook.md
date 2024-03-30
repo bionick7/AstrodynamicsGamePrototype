@@ -373,3 +373,6 @@ Opinion is influenced by
     ammount of trade
     number of military ships on the planet (when at high independance)
     ship modules
+
+## Status 30 Mar 24
+Instead of techtree, regulate progress over construction modules

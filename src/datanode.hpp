@@ -85,7 +85,7 @@ struct DataNode {
     size_t GetArrayCount() const;
     size_t GetChildArrayCount() const;
 
-    void SerializeBuffer(const char* name, const int buffer[], const char* names[], int buffer_size);
+    void SerializeBuffer(const char* name, const int buffer[], const char* names[], int buffer_size, bool skip_zeros=true);
     void DeserializeBuffer(const char* name, int buffer[], const char* names[], int buffer_size) const;
 
     const char* GetKey(int index) const;

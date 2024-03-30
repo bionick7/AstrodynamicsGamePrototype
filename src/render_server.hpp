@@ -27,7 +27,7 @@ struct Text3D {
 
     Color color;
     DVector3 world_pos;
-    TextAlignment::T alignment;
+    text_alignment::T alignment;
 
     void Draw() const;
 };

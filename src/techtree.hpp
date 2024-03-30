@@ -8,7 +8,7 @@
 struct TechTreeNode {
     // Primary info
     char name[100] = "UNNAMED";
-    const char* str_id;
+    const char* str_id;  // Not owning. Is stored in the map GlobalState
     IDList attached_components;
     IDList prerequisites;
     double defualt_status = -1;
@@ -21,12 +21,14 @@ struct TechTreeNode {
     int total_in_layer = 0;
 };
 
-
 struct TechTree {
     int nodes_count = 0;
     TechTreeNode* nodes = NULL;  // Static
     int* node_progress = NULL;
+    const char** node_names_ptrs = NULL;  // Needed for serialization, not owning
     int research_focus = -1;
+
+    int daily_progress = 0;
 
     int layers = 0;
     int max_indecies_in_layer = 0;

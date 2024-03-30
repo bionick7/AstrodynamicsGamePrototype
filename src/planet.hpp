@@ -43,11 +43,11 @@ struct Planet {
     PlanetaryEconomy economy;
 
     RID ship_module_inventory[MAX_PLANET_INVENTORY];
-    IDList ship_production_queue;
-    IDList module_production_queue;
+    struct ProductionOrder { RID worker, product; };
+    List<ProductionOrder> ship_production_queue;
+    List<ProductionOrder> module_production_queue;
 
-    int ship_production_process;
-    int module_production_process;
+    IDList cached_ship_list;  // Cached for quicka access (renewed every frame)
 
     bool mouse_hover;
     RID id;
@@ -67,7 +67,7 @@ struct Planet {
     double GetDVFromExcessVelocity(double vel) const;
     double GetDVFromExcessVelocityPro(double vel, double parking_orbit, bool aerobreaking) const;
     Color GetColor() const;
-    bool CanProduce(RID id) const;
+    bool CanProduce(RID id, bool check_resources, bool check_stats) const;
 
     void Conquer(int faction, bool include_ships);
 
@@ -75,11 +75,12 @@ struct Planet {
 
     ShipModuleSlot GetFreeModuleSlot() const;
     void RemoveShipModuleInInventory(int index);
+    ProductionOrder MakeProductionOrder(RID id) const;
 
     bool HasMouseHover(double* distance) const;
     void Update();
-    void AdvanceShipProductionQueue();
-    void AdvanceModuleProductionQueue();
+    //void AdvanceShipProductionQueue();
+    //void AdvanceModuleProductionQueue();
     void DrawUI();
     void _UIDrawModuleProduction();
     void _UIDrawShipProduction();

@@ -15,7 +15,7 @@ ship_class: >
 module: >
   A ship module is an entity that can be fitted to a ship. To fit a module onto a ship is instant for the
   purpose of this simulation. The modules can be anything from production facilities to military equipment to 
-  [[shipyard]] parts. Some, like [[shpmod_heatshield]] or [[shpmod_droptank]] provide a special benefit, 
+  [[shipyard]] parts. Some, like [[shpmod_heatshield]] or [[shpmod_droptank_water]] provide a special benefit, 
   while others provide an increase to certain stats. Most modules have a [[weight]] associated with them,
   so certain [[transfer]] are limited in the types of modules they can bring.
   Modules can be build in a [[shipyard]] if it is fitted appropriatly* (cf [[shipyard]]).
@@ -65,9 +65,9 @@ allegiance: TBD
 
 shipyard: >
   A shipyard is a collection of modules that can be used to build modules and ships. There are 4 shipyard
-  modules: [[shpmod_small_yard_1]], [[shpmod_small_yard_2]], [[shpmod_small_yard_3]], [[shpmod_small_yard_4]].
-  Each collection of [[shpmod_small_yard_2]] & [[shpmod_small_yard_3]] can build modules.
-  Each collection of [[shpmod_small_yard_3]] & [[shpmod_small_yard_4]] can reapair ships.
+  modules: [[shpmod_manufacture_offices]], [[shpmod_large_storage]], [[shpmod_workshop]], [[shpmod_wetdock]].
+  Each collection of [[shpmod_large_storage]] & [[shpmod_workshop]] can build modules.
+  Each collection of [[shpmod_workshop]] & [[shpmod_wetdock]] can reapair ships.
   Each collection of all 4 can build ships.
 transfer: >
   A transfer of a single [[ship]] between [[planet]]. A transfer is defined by the departure and arrival times.

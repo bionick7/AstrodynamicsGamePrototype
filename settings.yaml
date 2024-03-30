@@ -1,11 +1,20 @@
-# Enable features
+# Gameplay features
 allow_fullscreen: n
 enable_ai: y
 enable_player_ai: y
+
+# Visual features
 sdf_text: y
 skip_postprocessing: n
+show_help: y
 
 # Debug info
 show_fps: n
 draw_renderrects: n
 draw_textrects: n
+
+# Gameplay variables
+base_tech_progress: 10
+tech_progress_per_lab: 10
+
+default_savefile: year_2

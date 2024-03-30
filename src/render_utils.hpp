@@ -9,7 +9,7 @@
 struct OrbitSegment;
 struct Text3D;
 
-namespace OrbitRenderMode {
+namespace orbit_render_mode {
     enum T {
         Solid = 0,
         Gradient = 1,
@@ -29,7 +29,7 @@ void RenderWirframeMesh(WireframeMesh mesh, Matrix transform, Color color);
 void RenderWirframeMesh2D(WireframeMesh mesh, Rectangle box, Color color, uint8_t z_layer);
 void RenderWirframeMesh2DEx(WireframeMesh mesh, Vector2 mid_pos, float scale, Color color, uint8_t z_layer);
 void RenderOrbit(const OrbitSegment* orbit, int point_count, 
-                 OrbitRenderMode::T render_mode, Color color);
+                 orbit_render_mode::T render_mode, Color color);
 void RenderPerfectSphere(DVector3 pos, double radius, Color color);
 void RenderRings(DVector3 normal, double min_rad, double max_rad, Color color);
 void RenderSkyBox();

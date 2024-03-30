@@ -26,11 +26,11 @@ void Planet::_UIDrawInventory() {
         //if (!IsIdValid(ship_module_inventory[i])) continue;
         ui::PushGridCell(columns, rows, i % columns, i / columns);
         ui::Shrink(MARGIN, MARGIN);
-        ButtonStateFlags::T button_state = ui::AsButton();
-        if (button_state & ButtonStateFlags::HOVER) {
+        button_state_flags::T button_state = ui::AsButton();
+        if (button_state & button_state_flags::HOVER) {
             current_slot = this_slot;
         }
-        if (button_state & ButtonStateFlags::JUST_PRESSED) {
+        if (button_state & button_state_flags::JUST_PRESSED) {
             if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) {
                 sms->DirectSwap(current_slot);
             } else {
@@ -98,10 +98,10 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
         sb.Clear();
         sb.AddFormat("%s: %d  ", GetResourceUIRep(i), construction_resources[i]);
         if (construction_resources[i] <= planet_resource_array[i]) {
-            ui::WriteEx(sb.c_str, TextAlignment::CONFORM, false);
+            ui::WriteEx(sb.c_str, text_alignment::CONFORM, false);
         } else {
             ui::Current()->text_color = Palette::red;
-            ui::WriteEx(sb.c_str, TextAlignment::CONFORM, false);
+            ui::WriteEx(sb.c_str, text_alignment::CONFORM, false);
             ui::Current()->text_color = Palette::ui_main;
         }
     }
@@ -121,20 +121,13 @@ int module_class_ui_tab = 0;
 void _UIDrawProduction(Planet* planet, EntityType type) {
     // Set variables for planet/ship
     int option_size;
-    IDList* queue;
-    double progress = 0;
+    List<Planet::ProductionOrder>* queue;
     if (type == EntityType::SHIP_CLASS) {
         option_size = GetShips()->ship_classes_count;
         queue = &planet->ship_production_queue;
-        if (queue->size > 0) {
-            progress = planet->ship_production_process / (float)GetShipClassByRID(queue->Get(0))->construction_time;
-        }
     } else if (type == EntityType::MODULE_CLASS) {
         option_size = GetShipModules()->shipmodule_count;
         queue = &planet->module_production_queue;
-        if (queue->size > 0) {
-            progress = planet->module_production_process / (float)GetModule(queue->Get(0))->construction_time;
-        }
     }
     int margin = 3;
     int columns = ui::Current()->width / (SHIP_MODULE_WIDTH + margin);
@@ -160,9 +153,9 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
             ui::Shrink(4, 4);
             ui::EncloseEx(0, Palette::bg, tab_draw_color, 0);
             ui::DrawIconSDF(module_types::icons[i], tab_draw_color, 40);
-            ButtonStateFlags::T button_state = ui::AsButton();
+            button_state_flags::T button_state = ui::AsButton();
             HandleButtonSound(button_state);
-            if (button_state & ButtonStateFlags::JUST_PRESSED) {
+            if (button_state & button_state_flags::JUST_PRESSED) {
                 module_class_ui_tab = i;
             }
             ui::Pop();  // Inset
@@ -194,7 +187,12 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
             }
             atlas_pos = smc->icon_index;
         }
-        if (!GetTechTree()->IsUnlocked(id)) {
+
+        //if (!GetTechTree()->IsUnlocked(id)) {
+        //    continue;
+        //}
+        
+        if (!planet->CanProduce(id, false, true)) {
             continue;
         }
 
@@ -202,16 +200,19 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
         ui::Shrink(margin, margin);
         
         // Possible since Shipclasses get loaded once in continuous mempry
-        ButtonStateFlags::T button_state = ui::AsButton();
-        if (button_state & ButtonStateFlags::HOVER) {
+        button_state_flags::T button_state = ui::AsButton();
+        if (button_state & button_state_flags::HOVER) {
             ui::EncloseEx(0, Palette::bg, Palette::interactable_main, 4);
             hovered_id = id;
         } else {
             ui::Enclose();
         }
         HandleButtonSound(button_state);
-        if ((button_state & ButtonStateFlags::JUST_PRESSED) && planet->CanProduce(id)) {
-            queue->Append(id);
+        if ((button_state & button_state_flags::JUST_PRESSED)) {
+            Planet::ProductionOrder production_order = planet->MakeProductionOrder(id);
+            if (IsIdValid(production_order.worker)) {
+                queue->Append(production_order);
+            }
         }
         ui::DrawIcon(atlas_pos, Palette::ui_main, ui::Current()->height);
         //ui::Fillline(1.0, Palette::ui_main, Palette::bg);
@@ -230,20 +231,26 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
 
     bool hover_over_queue = false;
     for(int i=0; i < queue->size; i++) {
-        RID id = queue->Get(i);
+        Planet::ProductionOrder production_tuple = queue->Get(i);
+        RID id = production_tuple.product;
+        Ship* worker = GetShip(production_tuple.worker);
+
         AtlasPos atlas_pos;
+        int total_construction_time;
         if (type == EntityType::SHIP_CLASS) {
+            total_construction_time = GetShipClassByRID(id)->construction_time;
             const ShipClass* sc = GetShipClassByRID(id);
             atlas_pos = sc->icon_index;
         } else if (type == EntityType::MODULE_CLASS) {
+            total_construction_time = GetShipModules()->GetModuleByRID(id)->construction_time;
             const ShipModuleClass* smc = GetModule(id);
             atlas_pos = smc->icon_index;
         }
 
         ui::PushInset(0, SHIP_MODULE_HEIGHT + margin + 2);
         ui::Shrink(margin, margin);
-        ButtonStateFlags::T button_state = ui::AsButton();
-        if (button_state & ButtonStateFlags::HOVER) {
+        button_state_flags::T button_state = ui::AsButton();
+        if (button_state & button_state_flags::HOVER) {
             ui::Enclose();
             hovered_id = id;
             hover_over_queue = true;
@@ -251,17 +258,18 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
             ui::EncloseEx(0, Palette::bg, Palette::interactable_main, 4);
             ui::Shrink(4, 4);
         }
-        if (button_state & ButtonStateFlags::JUST_PRESSED) {
+        if (button_state & button_state_flags::JUST_PRESSED) {
             queue->EraseAt(i);
 
             if (type == EntityType::SHIP_CLASS) {
-                planet->ship_production_process = 0;
+                worker->ship_production_process = 0;
             } else if (type == EntityType::MODULE_CLASS) {
-                planet->module_production_process = 0;
+                worker->module_production_process = 0;
             }
             i--;
         }
         ui::DrawIconSDF(atlas_pos, Palette::ui_main, ui::Current()->height);
+        double progress = worker->ship_production_process / (double) total_construction_time;
         if (i == 0) {
             ui::FilllineEx(
                 ui::Current()->text_start_x,
@@ -357,18 +365,18 @@ void Planet::DrawUI() {
     for (int i=0; i < n_tabs; i++) {
         ui::PushGridCell(tab_columns, 2, i%tab_columns, i/tab_columns);
         //ui::PushHSplit(i * w / n_tabs, (i + 1) * w / n_tabs);
-        ButtonStateFlags::T button_state = ui::AsButton();
-        HandleButtonSound(button_state & ButtonStateFlags::JUST_PRESSED);
+        button_state_flags::T button_state = ui::AsButton();
+        HandleButtonSound(button_state & button_state_flags::JUST_PRESSED);
         if (i == 1 && !economy.trading_accessible) {
             ui::Write("~Economy~");
             ui::Pop();
             continue;
         }
-        if (button_state & ButtonStateFlags::JUST_PRESSED) {
+        if (button_state & button_state_flags::JUST_PRESSED) {
             current_tab = i;
         }
-        if (button_state & ButtonStateFlags::HOVER || i == current_tab) {
-            ui::EnclosePartial(0, Palette::bg, Palette::ui_main, Direction::DOWN);
+        if (button_state & button_state_flags::HOVER || i == current_tab) {
+            ui::EnclosePartial(0, Palette::bg, Palette::ui_main, direction::DOWN);
         }
         ui::Write(tab_descriptions[i]);
         ui::Pop();  // GridCell
@@ -376,14 +384,14 @@ void Planet::DrawUI() {
     ui::Pop();  // Tab container
     ui::PushInset(0, 10000);  // Constrained by outside container
 
-    ui::WriteEx(name, TextAlignment::CONFORM, true);
+    ui::WriteEx(name, text_alignment::CONFORM, true);
 
     // Independance slider
     ui::PushInset(0, 30);
     Vector2 cursor_pos = ui::Current()->GetTextCursor();
     Rectangle slider_rect = {cursor_pos.x, cursor_pos.y, 300, 20};
     ui::HelperText(GetUI()->GetConceptDescription("independance"));
-    if (GetButtonStateRec(slider_rect) & ButtonStateFlags::HOVER) {
+    if (GetButtonStateRec(slider_rect) & button_state_flags::HOVER) {
         ui::SetMouseHint(independance_delta_log.c_str);
     }
     if (independance > 100) {
@@ -397,7 +405,7 @@ void Planet::DrawUI() {
     }
     StringBuilder sb;
     sb.AddFormat("%3d/%d (%+2d)", independance, 150, independance_delta);
-    ui::WriteEx(sb.c_str, TextAlignment::CONFORM, true);
+    ui::WriteEx(sb.c_str, text_alignment::CONFORM, true);
     ui::Pop();
 
     // Opinion slider
@@ -405,7 +413,7 @@ void Planet::DrawUI() {
     cursor_pos = ui::Current()->GetTextCursor();
     slider_rect = {cursor_pos.x, cursor_pos.y, 300, 20};
     ui::HelperText(GetUI()->GetConceptDescription("opinion"));
-    if (GetButtonStateRec(slider_rect) & ButtonStateFlags::HOVER) {
+    if (GetButtonStateRec(slider_rect) & button_state_flags::HOVER) {
         ui::SetMouseHint(opinion_delta_log.c_str);
     }
     if (opinion >= 0) {
@@ -419,7 +427,7 @@ void Planet::DrawUI() {
     }
     sb.Clear();
     sb.AddFormat("%3d (%+2d)", opinion, opinion_delta);
-    ui::WriteEx(sb.c_str, TextAlignment::CONFORM, false);
+    ui::WriteEx(sb.c_str, text_alignment::CONFORM, false);
     ui::Fillline(1, Palette::ui_main, Palette::ui_main);
     ui::Pop();
 
@@ -452,25 +460,22 @@ void Planet::DrawUI() {
 
     // Side ship buttons
 
-    IDList ships_around_planet = IDList();
-    GetShips()->GetOnPlanet(&ships_around_planet, id, UINT32_MAX);
-
     int x_max = ui::Current()->text_start_x + ui::Current()->width;
-    ui::PushGlobal(x_max + 10, y_start, 200, 30 * ships_around_planet.size, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, 10);
-    for(int i=0; i < ships_around_planet.size; i++) {
-        const Ship* ship = GetShip(ships_around_planet[i]);
+    ui::PushGlobal(x_max + 10, y_start, 200, 30 * cached_ship_list.size, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, 10);
+    for(int i=0; i < cached_ship_list.size; i++) {
+        const Ship* ship = GetShip(cached_ship_list[i]);
         ui::PushInset(0, 30 - 8);
-        ButtonStateFlags::T button_state = ui::AsButton();
-        if (button_state & ButtonStateFlags::JUST_PRESSED) {
-            GetGlobalState()->focused_ship = ships_around_planet[i];
+        button_state_flags::T button_state = ui::AsButton();
+        if (button_state & button_state_flags::JUST_PRESSED) {
+            GetGlobalState()->focused_ship = cached_ship_list[i];
         }
-        if (button_state & ButtonStateFlags::HOVER) {
+        if (button_state & button_state_flags::HOVER) {
             ui::Current()->text_color = Palette::ui_main;
         } else {
             ui::Current()->text_color = ship->GetColor();
         }
         HandleButtonSound(button_state);
-        ui::WriteEx(ship->GetTypeIcon(), TextAlignment::CONFORM, false);
+        ui::WriteEx(ship->GetTypeIcon(), text_alignment::CONFORM, false);
         ui::Write(ship->name);
         ui::Pop();
     }

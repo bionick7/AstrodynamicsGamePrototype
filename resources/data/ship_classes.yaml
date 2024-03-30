@@ -21,11 +21,11 @@ ship_classes:
   name: C1K-998
   description: >
     Despite beeing nowadays classified as a light freightship, the C1K was
-    at its time the largest cargo ship at the time of its construction. With
+    the largest cargo ship at the time of its construction. With
     simple Hydrolox combustion engines, this design was ideal to haul large
     ammount of cargo with cislunar space. After loosing popularity around the 
     2060s, some modified version made it to the outer planets and found some 
-    popularity due to their large maintenancy ecosystem and their independance 
+    popularity due to their large maintenance ecosystem and their independance 
     of nuclear fuel.
   dv: 6
   Isp: 4.5
@@ -43,9 +43,9 @@ ship_classes:
 - id: shp_spacestation
   name: Station 10M
   description: >
-    General Cosmonautics space station bus is a structural framework that can 
-    hold 10 metric kilotonns of cargo. It is often used for medium sized habitats, 
-    shipyards and logistics points. 
+    General Cosmonautics space station bus is a structural, thermal and power
+    framework that can hold 10 metric kilotonns of cargo. It is often used for 
+    medium sized habitats, shipyards and logistics points. 
     The station has just enough propulsion to maintain orbit and attitude 
     and cannot be used to transport equipment between points
   dv: 0

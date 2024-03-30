@@ -18,16 +18,17 @@ DISPLAY: Device initialized successfully
     > Render size:  1600 x 900
     > Viewport offsets: 0, 0
 GLAD: OpenGL extensions loaded successfully
-GL: Supported extensions count: 384
+GL: Supported extensions count: 239
 GL: OpenGL device information:
-    > Vendor:   NVIDIA Corporation
-    > Renderer: NVIDIA GeForce GTX 960/PCIe/SSE2
-    > Version:  3.3.0 NVIDIA 535.161.07
-    > GLSL:     3.30 NVIDIA via Cg compiler
+    > Vendor:   Intel
+    > Renderer: Intel(R) UHD Graphics 630
+    > Version:  3.3.0 - Build 27.20.100.8935
+    > GLSL:     3.30 - Build 27.20.100.8935
 GL: VAO extension detected, VAO functions loaded successfully
 GL: NPOT textures extension detected, full NPOT textures supported
 GL: DXT compressed textures supported
 GL: ETC2/EAC compressed textures supported
+GL: ASTC compressed textures supported
 PLATFORM: DESKTOP (GLFW): Initialized successfully
 TEXTURE: [ID 1] Texture loaded successfully (1x1 | R8G8B8A8 | 1 mipmaps)
 TEXTURE: [ID 1] Default texture loaded successfully
@@ -41,77 +42,42 @@ RLGL: Default OpenGL state initialized successfully
 TEXTURE: [ID 2] Texture loaded successfully (128x128 | GRAY_ALPHA | 1 mipmaps)
 FONT: Default font loaded successfully (224 glyphs)
 AUDIO: Device initialized successfully
-    > Backend:       miniaudio / PulseAudio
-    > Format:        32-bit IEEE Floating Point -> 16-bit Signed Integer
+    > Backend:       miniaudio / WASAPI
+    > Format:        32-bit IEEE Floating Point -> 32-bit IEEE Floating Point
     > Channels:      2 -> 2
-    > Sample rate:   48000 -> 48000
-    > Periods size:  3600
+    > Sample rate:   44100 -> 44100
+    > Periods size:  1323
 IMAGE: Data loaded successfully (128x128 | GRAYSCALE | 1 mipmaps)
 GLFW: Window icon image must be in R8G8B8A8 pixel format
-src/main.cpp:34 :: Init from working directory: '/media/nick/Data/Games/astrodyn_concept_3/standalone'
+src\main.cpp:34 :: Init from working directory: 'E:\Games\astrodyn_concept_3\standalone'
 IMAGE: Data loaded successfully (1280x1280 | GRAYSCALE | 1 mipmaps)
 TEXTURE: [ID 3] Texture loaded successfully (1280x1280 | GRAY_ALPHA | 1 mipmaps)
 FONT: [resources/fonts/space_mono_small_sdf.fnt] Font loaded successfully (710 glyphs)
 FONT: Data loaded successfully (32 pixel size | 95 glyphs)
-src/quests/wren_interface.cpp:575 :: Loading example
-src/quests/wren_interface.cpp:575 :: Loading raiders
-src/quests/wren_interface.cpp:575 :: Loading raiders_reward
-src/quests/wren_interface.cpp:575 :: Loading tutorial
-src/global_state.cpp:101 :: Loading Planets
-src/global_state.cpp:101 :: Loading Resources
-src/global_state.cpp:101 :: Loading ShipModules
-src/datanode.cpp:404 :: Key 'construction_time' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:404 :: Key 'construction_time' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:404 :: Key 'construction_time' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/global_state.cpp:101 :: Loading ShipClasses
-src/global_state.cpp:101 :: Loading TechTree Nodes
-src/datanode.cpp:404 :: Key 'effort' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:404 :: Key 'effort' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:404 :: Key 'effort' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:404 :: Key 'effort' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:404 :: Key 'effort' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:404 :: Key 'effort' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:404 :: Key 'effort' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:404 :: Key 'effort' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:404 :: Key 'effort' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:404 :: Key 'effort' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:404 :: Key 'effort' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:404 :: Key 'effort' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:404 :: Key 'effort' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:404 :: Key 'effort' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:404 :: Key 'effort' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:404 :: Key 'effort' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:404 :: Key 'effort' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:404 :: Key 'effort' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:404 :: Key 'effort' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:404 :: Key 'effort' not found
-src/datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
-src/datanode.cpp:442 :: Key techtree not found
-
+src\quests\wren_interface.cpp:575 :: Loading example
+src\quests\wren_interface.cpp:575 :: Loading raiders
+src\quests\wren_interface.cpp:575 :: Loading raiders_reward
+src\quests\wren_interface.cpp:575 :: Loading tutorial
+src\global_state.cpp:101 :: Loading Planets
+src\global_state.cpp:101 :: Loading Resources
+src\global_state.cpp:101 :: Loading ShipModules
+src\datanode.cpp:404 :: Key 'construction_time' not found
+src\datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
+src\datanode.cpp:404 :: Key 'construction_time' not found
+src\datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
+src\datanode.cpp:404 :: Key 'construction_time' not found
+src\datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
+src\datanode.cpp:404 :: Key 'construction_time' not found
+src\datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
+src\datanode.cpp:404 :: Key 'construction_time' not found
+src\datanode.cpp:414 :: Could not convert 'needs non-empty string' to int
+src\global_state.cpp:101 :: Loading ShipClasses
+src\global_state.cpp:101 :: Loading TechTree Nodes
+src\datanode.cpp:404 :: Key 'time_scale' not found
+src\datanode.cpp:425 :: Could not convert 'needs non-empty string' to double
+src\datanode.cpp:404 :: Key 'paused' not found
+src\datanode.cpp:404 :: Key 'tech_focus' not found
 FILEIO: [DVTable.txt] Text file saved successfully
-WAVE: Data loaded successfully (96000 Hz, 16 bit, 2 channels)
 TEXTURE: [ID 4] Texture loaded successfully (1600x900 | R8G8B8A8 | 1 mipmaps)
 TEXTURE: Depth texture loaded successfully
 TEXTURE: [ID 6] Texture loaded successfully (1600x900 | R8G8B8A8 | 1 mipmaps)
@@ -140,7 +106,12 @@ SHADER: [ID 4] Fragment shader compiled successfully
 SHADER: [ID 12] Program shader loaded successfully
 SHADER: [ID 4] Fragment shader compiled successfully
 SHADER: [ID 13] Program shader loaded successfully
+WAVE: Data loaded successfully (96000 Hz, 16 bit, 2 channels)
 WAVE: Data loaded successfully (48000 Hz, 16 bit, 2 channels)
+IMAGE: Data loaded successfully (1280x1280 | GRAYSCALE | 1 mipmaps)
+TEXTURE: [ID 9] Texture loaded successfully (1280x1280 | GRAY_ALPHA | 1 mipmaps)
+FONT: [resources/fonts/space_mono_small.fnt] Font loaded successfully (710 glyphs)
+FONT: Data loaded successfully (32 pixel size | 95 glyphs)
 TEXTURE: [ID 2] Unloaded texture data from VRAM (GPU)
 SHADER: [ID 3] Default shader unloaded successfully
 TEXTURE: [ID 1] Default texture unloaded successfully

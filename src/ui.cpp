@@ -9,19 +9,19 @@
 #include "render_utils.hpp"
 #include "text_rendering.hpp"
 
-Vector2 ApplyAlignment(Vector2 anchorpoint, Vector2 size, TextAlignment::T alignment) {
-    switch(alignment & TextAlignment::HFILTER){
-        case TextAlignment::HCENTER: anchorpoint.x -= size.x/2; break;
-        case TextAlignment::RIGHT: anchorpoint.x -= size.x; break;
+Vector2 ApplyAlignment(Vector2 anchorpoint, Vector2 size, text_alignment::T alignment) {
+    switch(alignment & text_alignment::HFILTER){
+        case text_alignment::HCENTER: anchorpoint.x -= size.x/2; break;
+        case text_alignment::RIGHT: anchorpoint.x -= size.x; break;
     }
-    switch(alignment & TextAlignment::VFILTER){
-        case TextAlignment::VCENTER: anchorpoint.y -= size.y/2; break;
-        case TextAlignment::BOTTOM: anchorpoint.y -= size.y; break;
+    switch(alignment & text_alignment::VFILTER){
+        case text_alignment::VCENTER: anchorpoint.y -= size.y/2; break;
+        case text_alignment::BOTTOM: anchorpoint.y -= size.y; break;
     }
     return anchorpoint;
 }
 
-Rectangle DrawTextAligned(const char* text, Vector2 pos, TextAlignment::T alignment, Color c, uint8_t z_layer) {
+Rectangle DrawTextAligned(const char* text, Vector2 pos, text_alignment::T alignment, Color c, uint8_t z_layer) {
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, DEFAULT_FONT_SIZE, 1);
     pos = ApplyAlignment(pos, size, alignment);
     //Vector2 bottom_left = Vector2Subtract(pos, Vector2Scale(size, 0.5));
@@ -30,33 +30,33 @@ Rectangle DrawTextAligned(const char* text, Vector2 pos, TextAlignment::T alignm
     return rect;
 }
 
-ButtonStateFlags::T GetButtonState(bool is_in_area, bool was_in_area) {
-    ButtonStateFlags::T res = ButtonStateFlags::NONE;
+button_state_flags::T GetButtonState(bool is_in_area, bool was_in_area) {
+    button_state_flags::T res = button_state_flags::NONE;
     if (is_in_area) {
-        res |= ButtonStateFlags::HOVER;
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))     res |= ButtonStateFlags::PRESSED;
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))  res |= ButtonStateFlags::JUST_PRESSED;
-        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) res |= ButtonStateFlags::JUST_UNPRESSED;
+        res |= button_state_flags::HOVER;
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))     res |= button_state_flags::PRESSED;
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))  res |= button_state_flags::JUST_PRESSED;
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) res |= button_state_flags::JUST_UNPRESSED;
 
-        if (!was_in_area) res |= ButtonStateFlags::JUST_HOVER_IN;
+        if (!was_in_area) res |= button_state_flags::JUST_HOVER_IN;
     }
-    if (was_in_area && !is_in_area) res |= ButtonStateFlags::JUST_HOVER_OUT;
+    if (was_in_area && !is_in_area) res |= button_state_flags::JUST_HOVER_OUT;
 
     return res;
 }
 
-ButtonStateFlags::T GetButtonStateRec(Rectangle rec) {
+button_state_flags::T GetButtonStateRec(Rectangle rec) {
     return GetButtonState(
         CheckCollisionPointRec(GetMousePosition(), rec), 
         CheckCollisionPointRec(Vector2Subtract(GetMousePosition(), GetMouseDelta()), rec)
     );
 }
 
-void HandleButtonSound(ButtonStateFlags::T state) {
-    if (state & ButtonStateFlags::JUST_PRESSED) {
+void HandleButtonSound(button_state_flags::T state) {
+    if (state & button_state_flags::JUST_PRESSED) {
         PlaySFX(SFX_CLICK_BUTTON);
     }
-    if (state & ButtonStateFlags::JUST_HOVER_IN) {
+    if (state & button_state_flags::JUST_HOVER_IN) {
         PlaySFX(SFX_CLICK_SHORT);
     }
 }
@@ -141,7 +141,7 @@ void TextBox::Enclose(int inset, int corner_radius, Color background_color, Colo
     EndRenderInUILayer();
 }
 
-void TextBox::EnclosePartial(int inset, Color background_color, Color line_color, Direction::T directions) {
+void TextBox::EnclosePartial(int inset, Color background_color, Color line_color, direction::T directions) {
     Rectangle rect;
     rect.x = text_start_x;
     rect.y = text_start_y;
@@ -150,16 +150,16 @@ void TextBox::EnclosePartial(int inset, Color background_color, Color line_color
 
     BeginRenderInUILayer(z_layer);
     DrawRectangleRounded(rect, 0, 1, background_color);
-    if (directions & Direction::TOP) {
+    if (directions & direction::TOP) {
         DrawLine(rect.x, rect.y, rect.x + width, rect.y, line_color);
     }
-    if (directions & Direction::DOWN) {
+    if (directions & direction::DOWN) {
         DrawLine(rect.x, rect.y + rect.height, rect.x + width, rect.y + rect.height, line_color);
     }
-    if (directions & Direction::LEFT) {
+    if (directions & direction::LEFT) {
         DrawLine(rect.x, rect.y, rect.x, rect.y + rect.height, line_color);
     }
-    if (directions & Direction::RIGHT) {
+    if (directions & direction::RIGHT) {
         DrawLine(rect.x + width, rect.y, rect.x + width, rect.y + rect.height, line_color);
     }
     EndRenderInUILayer();
@@ -197,17 +197,17 @@ void TextBox::Shrink(int dx, int dy) {
     height -= 2*dy;
 }
 
-void TextBox::WriteRaw(const char *text, TextAlignment::T align) {
+void TextBox::WriteRaw(const char *text, text_alignment::T align) {
     text::Layout layout = GetTextLayout(text, align);
     WriteLayout(&layout, false);
 }
 
-void TextBox::Write(const char* text, TextAlignment::T align) {
+void TextBox::Write(const char* text, text_alignment::T align) {
     text::Layout layout = GetTextLayout(text, align);
     WriteLayout(&layout, true);
 }
 
-void TextBox::WriteLine(const char* text, TextAlignment::T align) {
+void TextBox::WriteLine(const char* text, text_alignment::T align) {
     Write(text, align);
     LineBreak();
 }
@@ -273,7 +273,7 @@ void TextBox::DrawTexture(Texture2D texture, Rectangle source, int texture_heigh
     if (y_cursor > text_max_y + line_size_y) text_max_y = text_max_y + line_size_y;
 }
 
-ButtonStateFlags::T TextBox::WriteButton(const char* text, int inset) {
+button_state_flags::T TextBox::WriteButton(const char* text, int inset) {
     Vector2 pos = {text_start_x + x_cursor, text_start_y + y_cursor + text_margin_y};
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
     // text fully in render rectangle
@@ -281,7 +281,7 @@ ButtonStateFlags::T TextBox::WriteButton(const char* text, int inset) {
         (!CheckCollisionPointRec(pos, render_rec)
         || !CheckCollisionPointRec(Vector2Add(pos, size), render_rec))
         && !flexible
-    ) return ButtonStateFlags::DISABLED;
+    ) return button_state_flags::DISABLED;
 
     if (inset >= 0) {
         size.x += 2*inset;
@@ -291,7 +291,7 @@ ButtonStateFlags::T TextBox::WriteButton(const char* text, int inset) {
     }
     bool is_in_area = CheckCollisionPointRec(GetMousePosition(), {pos.x, pos.y, size.x, size.y});
     bool was_in_area = CheckCollisionPointRec(Vector2Subtract(GetMousePosition(), GetMouseDelta()), {pos.x, pos.y, size.x, size.y});
-    ButtonStateFlags::T res = GetButtonState(is_in_area, was_in_area);
+    button_state_flags::T res = GetButtonState(is_in_area, was_in_area);
     Color c = is_in_area ? Palette::ui_main : Palette::interactable_main;
     DrawRectangleLines(pos.x - inset, pos.y - inset, size.x, size.y, c);
     text::DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec, z_layer);
@@ -299,7 +299,7 @@ ButtonStateFlags::T TextBox::WriteButton(const char* text, int inset) {
     return res;
 }
 
-ButtonStateFlags::T TextBox::AsButton() const {
+button_state_flags::T TextBox::AsButton() const {
     return GetButtonStateRec(GetRect());
 }
 
@@ -322,7 +322,7 @@ int TextBox::GetLineHeight() const {
     return text_size + text_margin_y;
 }
 
-text::Layout TextBox::GetTextLayout(const char *text, TextAlignment::T alignemnt) {
+text::Layout TextBox::GetTextLayout(const char *text, text_alignment::T alignemnt) {
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
     Vector2 pos = ApplyAlignment(GetAnchorPoint(alignemnt), size, alignemnt);
     text::Layout text_layout;
@@ -330,23 +330,23 @@ text::Layout TextBox::GetTextLayout(const char *text, TextAlignment::T alignemnt
     return text_layout;
 }
 
-Rectangle TextBox::TbMeasureText(const char* text, TextAlignment::T alignemnt) const {
+Rectangle TextBox::TbMeasureText(const char* text, text_alignment::T alignemnt) const {
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
     Vector2 pos = ApplyAlignment(GetAnchorPoint(alignemnt), size, alignemnt);
     return {pos.x, pos.y, size.x, size.y};
 }
 
-Vector2 TextBox::GetAnchorPoint(TextAlignment::T align) const {
+Vector2 TextBox::GetAnchorPoint(text_alignment::T align) const {
     Vector2 res = { (float)text_start_x, (float)text_start_y };
-    switch(align & TextAlignment::HFILTER){
-        case TextAlignment::HCENTER: res.x += width/2; break;
-        case TextAlignment::RIGHT: res.x += width; break;
-        case TextAlignment::HCONFORM: res.x += x_cursor; break;
+    switch(align & text_alignment::HFILTER){
+        case text_alignment::HCENTER: res.x += width/2; break;
+        case text_alignment::RIGHT: res.x += width; break;
+        case text_alignment::HCONFORM: res.x += x_cursor; break;
     }
-    switch(align & TextAlignment::VFILTER){
-        case TextAlignment::VCENTER: res.y += height/2; break;
-        case TextAlignment::BOTTOM: res.y += height; break;
-        case TextAlignment::VCONFORM: res.y += y_cursor; break;
+    switch(align & text_alignment::VFILTER){
+        case text_alignment::VCENTER: res.y += height/2; break;
+        case text_alignment::BOTTOM: res.y += height; break;
+        case text_alignment::VCONFORM: res.y += y_cursor; break;
     }
     return res;
 }
@@ -411,7 +411,7 @@ int ui::PushScrollInset(int margin, int h, int allocated_height, int* scroll) {
     int buildin_scrollbar_margin = 3;
     int buildin_scrollbar_width = 6;
 
-    if (ui::AsButton() & ButtonStateFlags::HOVER) {
+    if (ui::AsButton() & button_state_flags::HOVER) {
         int max_scroll = MaxInt(allocated_height - ui::Current()->height, 0);
         *scroll = ClampInt(*scroll - GetMouseWheelMove() * 20, 0, max_scroll);
     }
@@ -469,22 +469,22 @@ void ui::PushInline(int width, int height) {
     ui::PushTextBox(new_tb);
 }
 
-void ui::PushAligned(int width, int height, TextAlignment::T alignment) {
+void ui::PushAligned(int width, int height, text_alignment::T alignment) {
     TextBox* tb = ui::Current();
     tb->EnsureLineBreak();
 
     int x = tb->text_start_x;
     int y = tb->text_start_y;
-    if (alignment & TextAlignment::HCENTER) {
+    if (alignment & text_alignment::HCENTER) {
         x += (tb->width - width) / 2;
-    } else if (alignment & TextAlignment::RIGHT) {
+    } else if (alignment & text_alignment::RIGHT) {
         x += tb->width - width;
     } else {  // left - aligned
         // Do nothing
     }
-    if (alignment & TextAlignment::VCENTER) {
+    if (alignment & text_alignment::VCENTER) {
         y += (tb->height - height) / 2;
-    } else if (alignment & TextAlignment::BOTTOM) {
+    } else if (alignment & text_alignment::BOTTOM) {
         y += (tb->height - height);
     } else {  // top - aligned
         // Do nothing
@@ -521,7 +521,7 @@ void ui::PushGridCell(int columns, int rows, int column, int row) {
     ui::PushTextBox(new_text_box);
 }
 
-ButtonStateFlags::T ui::AsButton() {
+button_state_flags::T ui::AsButton() {
     return ui::Current()->AsButton();
 }
 
@@ -549,7 +549,7 @@ void ui::EncloseEx(int shrink, Color background_color, Color line_color, int cor
     ui::Current()->Enclose(shrink, corner_radius, background_color, line_color);
 }
 
-void ui::EnclosePartial(int inset, Color background_color, Color line_color, Direction::T directions) {
+void ui::EnclosePartial(int inset, Color background_color, Color line_color, direction::T directions) {
     ui::Current()->EnclosePartial(inset, background_color, line_color, directions);
 }
 
@@ -566,10 +566,10 @@ void ui::DrawIconSDF(AtlasPos atlas_index, Color tint, int height) {
 }
 
 void ui::Write(const char *text) {
-    ui::WriteEx(text, TextAlignment::CONFORM, true);
+    ui::WriteEx(text, text_alignment::CONFORM, true);
 }
 
-void ui::WriteEx(const char *text, TextAlignment::T alignemnt, bool linebreak) {
+void ui::WriteEx(const char *text, text_alignment::T alignemnt, bool linebreak) {
     TextBox* tb = ui::Current();
     if (linebreak) {
         tb->WriteLine(text, alignemnt);
@@ -582,7 +582,7 @@ void ui::DecorateEx(const text::Layout* layout, const TokenList* tokens) {
     ui::Current()->Decorate(layout, tokens);
 }
 
-Rectangle ui::MeasureTextEx(const char *text, TextAlignment::T alignemnt) {
+Rectangle ui::MeasureTextEx(const char *text, text_alignment::T alignemnt) {
     return ui::Current()->TbMeasureText(text, alignemnt);
 }
 
@@ -607,28 +607,28 @@ void ui::FilllineEx(int x_start, int x_end, int y, double value, Color fill_colo
     EndRenderInUILayer();
 }
 
-ButtonStateFlags::T ui::DirectButton(const char* text, int margin) {
+button_state_flags::T ui::DirectButton(const char* text, int margin) {
     TextBox* tb = ui::Current();
     /*ButtonStateFlags::T button_state = tb->WriteButton(text, inset);
     HandleButtonSound(button_state);*/
-    Rectangle text_rect = tb->TbMeasureText(text, TextAlignment::CONFORM);
+    Rectangle text_rect = tb->TbMeasureText(text, text_alignment::CONFORM);
     ui::PushInline(text_rect.width + 2*margin, text_rect.height + 2*margin);
-    ButtonStateFlags::T button_state = ui::AsButton();
-    if (button_state & ButtonStateFlags::HOVER) {
+    button_state_flags::T button_state = ui::AsButton();
+    if (button_state & button_state_flags::HOVER) {
         ui::EncloseEx(2, tb->background_color, Palette::interactable_main, 0);
     } else {
         ui::EncloseEx(2, tb->background_color, tb->text_color, 0);
     }
-    ui::WriteEx(text, TextAlignment::CENTER, false);
+    ui::WriteEx(text, text_alignment::CENTER, false);
     HandleButtonSound(button_state);
     ui::Pop();
     return button_state;
 }
 
-ButtonStateFlags::T ui::ToggleButton(bool on) {
-    ui::WriteEx(" ", TextAlignment::CONFORM, false);
-    ButtonStateFlags::T res = ui::DirectButton(on ? " X " : "   ", -2);
-    ui::WriteEx(" ", TextAlignment::CONFORM, false);
+button_state_flags::T ui::ToggleButton(bool on) {
+    ui::WriteEx(" ", text_alignment::CONFORM, false);
+    button_state_flags::T res = ui::DirectButton(on ? " X " : "   ", -2);
+    ui::WriteEx(" ", text_alignment::CONFORM, false);
     return res;
 }
 
@@ -671,11 +671,14 @@ int ui::DrawLimitedSlider(int current, int min, int max, int limit, int width, i
 }
 
 void ui::HelperText(const char* description) {
+    if (!GetSettingBool("show_help", true)) {
+        return;
+    }
     TextBox* tb = ui::Current();
     StringBuilder sb = StringBuilder(description);
     sb.AutoBreak(100);
     Vector2 button_size = { 24, 24 };
-    TextAlignment::T button_align = TextAlignment::TOP | TextAlignment::RIGHT;
+    text_alignment::T button_align = text_alignment::TOP | text_alignment::RIGHT;
     Vector2 button_pos = ApplyAlignment(ui::Current()->GetAnchorPoint(button_align), button_size, button_align);
     button_pos.x -= 2;
     button_pos.y += 2;
@@ -777,7 +780,7 @@ void UIGlobals::_HandleMouseTips() {
         Vector2 anchor = { mousehints.hint_rects[i].x, mousehints.hint_rects[i].y};
         ui::PushMouseHint(anchor, text_size.x+8, text_size.y+8, 255 - MAX_TOOLTIP_RECURSIONS + i);
 
-        text::Layout layout = ui::Current()->GetTextLayout(sb_substr.c_str, TextAlignment::CONFORM);
+        text::Layout layout = ui::Current()->GetTextLayout(sb_substr.c_str, text_alignment::CONFORM);
         mousehints.hint_rects[i] = ui::Current()->render_rec;
         
         int hover_char_index = -1;
@@ -950,7 +953,7 @@ Font GetCustomDefaultFont() {
     return font;
 }
 
-ButtonStateFlags::T DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color) {
+button_state_flags::T DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color) {
     Vector2 base_pos = Vector2Add(point, base);
     Vector2 tangent_dir = Vector2Rotate(Vector2Normalize(base), PI/2);
     Vector2 side_1 =  Vector2Add(base_pos, Vector2Scale(tangent_dir, -width));
@@ -967,7 +970,7 @@ ButtonStateFlags::T DrawTriangleButton(Vector2 point, Vector2 base, double width
     );
 }
 
-ButtonStateFlags::T DrawCircleButton(Vector2 midpoint, double radius, Color color) {
+button_state_flags::T DrawCircleButton(Vector2 midpoint, double radius, Color color) {
     bool is_in_area = CheckCollisionPointCircle(GetMousePosition(), midpoint, radius);
     if (is_in_area) {
         DrawCircleV(midpoint, radius, Palette::interactable_main);

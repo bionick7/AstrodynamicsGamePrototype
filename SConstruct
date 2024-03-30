@@ -1,7 +1,7 @@
 import os
 
-#platform = "win"
-platform = "linux"
+platform = "win"
+#platform = "linux"
 
 #build = "release"
 build = "debug"

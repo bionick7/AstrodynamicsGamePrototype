@@ -354,7 +354,7 @@ void ModuleConfiguration::Draw(Ship* ship) const {
         adjusted_draw_space.x + adjusted_draw_space.width/2,
         adjusted_draw_space.y + adjusted_draw_space.height/2,
     };
-    ui::WriteEx(GetShipClassByRID(ship->ship_class)->name, TextAlignment::HCENTER | TextAlignment::TOP, false);
+    ui::WriteEx(GetShipClassByRID(ship->ship_class)->name, text_alignment::HCENTER | text_alignment::TOP, false);
 
     bool use_scissor = !CheckEnclosingRecs(ui::Current()->render_rec, bounding);
     if (use_scissor) {
@@ -399,11 +399,11 @@ void ModuleConfiguration::Draw(Ship* ship) const {
         //DrawRectangleRec(rectangles[i], WHITE);
         //DrawRectangleLinesEx(module_rect, 1, Palette::ui_alt);
 
-        ButtonStateFlags::T button_state = GetButtonStateRec(module_rect);
-        if (button_state & ButtonStateFlags::HOVER) {
+        button_state_flags::T button_state = GetButtonStateRec(module_rect);
+        if (button_state & button_state_flags::HOVER) {
             ship->current_slot = ShipModuleSlot(ship->id, i, ShipModuleSlot::DRAGGING_FROM_SHIP, types[i]);
         }
-        if (button_state & ButtonStateFlags::JUST_PRESSED) {
+        if (button_state & button_state_flags::JUST_PRESSED) {
             if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) {
                 sms->DirectSwap(ship->current_slot);
             } else {
@@ -434,11 +434,11 @@ void ModuleConfiguration::Draw(Ship* ship) const {
         };
 
         // Logic
-        ButtonStateFlags::T button_state = GetButtonStateRec(module_rect);
-        if (button_state & ButtonStateFlags::HOVER) {
+        button_state_flags::T button_state = GetButtonStateRec(module_rect);
+        if (button_state & button_state_flags::HOVER) {
             ship->current_slot = ShipModuleSlot(ship->id, i, ShipModuleSlot::DRAGGING_FROM_SHIP, module_types::FREE);
         }
-        if (button_state & ButtonStateFlags::JUST_PRESSED) {
+        if (button_state & button_state_flags::JUST_PRESSED) {
             if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) sms->DirectSwap(ship->current_slot);
             else sms->InitDragging(ship->current_slot, module_rect);
         }
@@ -506,6 +506,18 @@ int ShipModules::Load(const DataNode* data) {
             ship_modules[i].planets_restriction = UINT64_MAX;
         }
 
+        if (module_data->HasChild("construction_reqirements")) {
+            module_data->DeserializeBuffer("construction_reqirements", ship_modules[i].construction_reqirements, ship_stats::names, ship_stats::MAX);
+            //module_data->GetChild("construction_reqirements")->Inspect();
+            //SHOW_I(ship_modules[i].construction_reqirements[ship_stats::INDUSTRIAL_DOCK])
+            //SHOW_I(ship_modules[i].construction_reqirements[ship_stats::INDUSTRIAL_ADMIN])
+        } else {  // Set default requirements
+            for (int j=0; j < ship_stats::MAX; j++) {
+                ship_modules[i].construction_reqirements[j] = 0;
+            }
+            ship_modules[i].construction_reqirements[ship_stats::INDUSTRIAL_ADMIN] = 1;
+            ship_modules[i].construction_reqirements[ship_stats::INDUSTRIAL_MANUFACTURING] = 1;
+        }
         module_data->DeserializeBuffer("add", ship_modules[i].delta_stats, ship_stats::names, ship_stats::MAX);
         module_data->DeserializeBuffer("require", ship_modules[i].required_stats, ship_stats::names, ship_stats::MAX);
         if (module_data->HasChild("add")) {
@@ -526,7 +538,7 @@ int ShipModules::Load(const DataNode* data) {
                 module_data->GetArrayElemI("icon_index", 0),
                 module_data->GetArrayElemI("icon_index", 1));
         } else {
-            ship_modules[i].icon_index = AtlasPos(31, 31);
+            ship_modules[i].icon_index = AtlasPos(15, 31);
         }
 
         const char* string_id = module_data->Get("id", "_");
@@ -535,12 +547,13 @@ int ShipModules::Load(const DataNode* data) {
 
         #define CHECK_FOR_ID(name) else if (strcmp(string_id, "shpmod_"#name) == 0) { expected_modules.name = rid; }
         if(false) {}
-        CHECK_FOR_ID(small_yard_1)
-        CHECK_FOR_ID(small_yard_2)
-        CHECK_FOR_ID(small_yard_3)
-        CHECK_FOR_ID(small_yard_4)
+        //CHECK_FOR_ID(small_yard_1)
+        //CHECK_FOR_ID(small_yard_2)
+        //CHECK_FOR_ID(small_yard_3)
+        //CHECK_FOR_ID(small_yard_4)
         CHECK_FOR_ID(heatshield)
         CHECK_FOR_ID(droptank)
+        //CHECK_FOR_ID(shpmod_research_lab)
         #undef CHECK_FOR_ID
     }
     return shipmodule_count;
@@ -568,11 +581,11 @@ void ShipModules::DrawShipModule(RID index) const {
     } else {  // filled
         const ShipModuleClass* smc = GetModuleByRID(index);
         //ui::Enclose();
-        ButtonStateFlags::T button_state = ui::AsButton();
-        if (button_state & ButtonStateFlags::HOVER) {
+        button_state_flags::T button_state = ui::AsButton();
+        if (button_state & button_state_flags::HOVER) {
             StringBuilder sb;
             smc->MouseHintWrite(&sb);
-            sb.AutoBreak(150);
+            sb.AutoBreak(50);
             ui::SetMouseHint(sb.c_str);
         }
         /*if (button_state & ButtonStateFlags::PRESSED) {

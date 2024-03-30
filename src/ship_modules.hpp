@@ -26,7 +26,11 @@ struct Ship;
     X(BOARDING_OFFENSE, boarding_offense)\
     X(KINETIC_DEFENSE, kinetic_defense)\
     X(ORDNANCE_DEFENSE, ordnance_defense)\
-    X(BOARDING_DEFENSE, boarding_defense)
+    X(BOARDING_DEFENSE, boarding_defense)\
+    X(INDUSTRIAL_ADMIN, industrial_admin)\
+    X(INDUSTRIAL_STORAGE, industrial_storage)\
+    X(INDUSTRIAL_MANUFACTURING, industrial_manufacturing)\
+    X(INDUSTRIAL_DOCK, industrial_dock)\
 
 namespace ship_stats {  // Better enum class, since you can treat the enum as integer
     enum T {
@@ -57,6 +61,7 @@ namespace ship_variables {
 
         MAX,
     };
+
     static const char* names[] = {
         "kinetic_armor",
         "energy_armor",
@@ -85,7 +90,7 @@ namespace module_types {
         {  3, 30},
         { 11, 27},
         {  9, 25},
-        { 31, 31},
+        { 15, 31},
     };
 
     enum T {
@@ -112,6 +117,7 @@ namespace module_types {
 struct ShipModuleClass {
     int delta_stats[ship_stats::MAX];
     int required_stats[ship_stats::MAX];
+    int construction_reqirements[ship_stats::MAX];
     resource_count_t production[resources::MAX];
     resource_count_t consumption[resources::MAX];
     resource_count_t construction_resources[resources::MAX];
@@ -194,10 +200,6 @@ struct ShipModules {
     void UpdateDragging();
     
     struct{
-        RID small_yard_1;
-        RID small_yard_2;
-        RID small_yard_3;
-        RID small_yard_4;
         RID heatshield;
         RID droptank;
     } expected_modules;

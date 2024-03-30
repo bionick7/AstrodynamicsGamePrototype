@@ -123,12 +123,12 @@ void QuestManager::Draw() {
     if (tab_width > 150) tab_width = 150;
     for (int i_tab = 0; i_tab < n_tabs; i_tab++) {
         ui::PushHSplit(i_tab * tab_width, (i_tab + 1) * tab_width);
-        ButtonStateFlags::T button_state = ui::AsButton();
-        HandleButtonSound(button_state & ButtonStateFlags::JUST_PRESSED);
-        if (button_state & ButtonStateFlags::JUST_PRESSED) {
+        button_state_flags::T button_state = ui::AsButton();
+        HandleButtonSound(button_state & button_state_flags::JUST_PRESSED);
+        if (button_state & button_state_flags::JUST_PRESSED) {
             current_tab_qst = i_tab;
         }
-        if (button_state & ButtonStateFlags::HOVER || i_tab == current_tab_qst) {
+        if (button_state & button_state_flags::HOVER || i_tab == current_tab_qst) {
             ui::Enclose();
         }
         if (i_tab == 0) {
@@ -171,7 +171,7 @@ void QuestManager::Draw() {
         // Available Quests
         for(auto it = available_quests.GetIter(); it; it++) {
             if (!available_quests[it]->IsValid()) continue;
-            if (available_quests[it]->DrawUI(true, true) & ButtonStateFlags::JUST_PRESSED) {
+            if (available_quests[it]->DrawUI(true, true) & button_state_flags::JUST_PRESSED) {
                 AcceptQuest(it.GetId());
             }
         }

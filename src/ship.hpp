@@ -17,14 +17,14 @@
 struct WrenHandle;
 
 // Pseudo enum to use flags
-namespace IntelLevel {
+namespace intel_level {
     typedef uint32_t T;
     static const T TRAJECTORY = 1;
     static const T STATS = 2;
     static const T FULL = UINT32_MAX;
 };
 
-namespace ShipType {
+namespace ship_type {
     enum T {
         UTILITY = 0,
         SHIPYARD,
@@ -48,6 +48,7 @@ struct ShipClass {
 
     int construction_time;
     resource_count_t construction_resources[resources::MAX] = {0};
+    int construction_reqirements[ship_stats::MAX] = {0};
     int construction_batch_size;
     bool is_hidden;
     
@@ -107,6 +108,10 @@ struct Ship {
     resource_count_t transporting[resources::MAX];
     ShipModuleSlot current_slot;
 
+    // Construction
+    int ship_production_process;
+    int module_production_process;
+
     Ship();
     ~Ship();
 
@@ -135,27 +140,32 @@ struct Ship {
     resource_count_t GetFuelRequired(double dv, resource_count_t payload) const;
     double GetCapableDV() const;
     bool IsPlayerControlled() const;
-    IntelLevel::T GetIntelLevel() const;
+    intel_level::T GetIntelLevel() const;
     bool IsTrajectoryKnown(int index) const;
     int GetCombatStrength() const;
     int GetMissingHealth() const;
     const char* GetTypeIcon() const;
-
 
     bool CanDragModule(int index) const;
     bool IsParked() const;
     bool IsLeading() const;
     RID GetParentPlanet() const;
     int CountModulesOfClass(RID module_class) const;
-    ShipType::T GetShipType() const;
+    ship_type::T GetShipType() const;
     Color GetColor() const;
     bool IsStatic() const;
 
+    // Transfer plans
     TransferPlan* GetEditedTransferPlan();
     void ConfirmEditedTransferPlan();
     void CloseEditedTransferPlan();
     void RemoveTransferPlan(int index);
     void StartEditingPlan(int index);
+
+    // Production
+    bool CanProduce(RID object, bool check_resources, bool check_stats) const;
+    void AdvanceShipProductionQueue();
+    void AdvanceModuleProductionQueue();
 
     void _OnDeparture(const TransferPlan *tp);
     void _OnArrival(const TransferPlan *tp);
@@ -164,10 +174,24 @@ struct Ship {
     void _OnClicked();
 };
 
-struct Ships {
-    const static uint32_t MILITARY_SELECTION_FLAG = 0x0100;  // Allowing for 8 factions
-    const static uint32_t CIVILIAN_SELECTION_FLAG = 0x0200;
+namespace ship_selection_flags {
+    typedef uint32_t T;
 
+    const static T MILITARY = 0x0100;  // Allowing for 8 factions
+    const static T CIVILIAN = 0x0200;
+    const static T ALL_SELECTION  = 0xFFFFFF00;
+    const static T ALL_ALLEGIANCE = 0x000000FF;
+    const static T ALL = ALL_SELECTION | ALL_ALLEGIANCE;
+
+    constexpr T GetAllegianceFlags(unsigned int index) { 
+        if (index > 0) return 0;
+        return 1u << index & ALL_SELECTION;  // By default, includes everything. filter as needed using '&'
+    };
+
+    bool MatchesShip(T selectio_flags, const Ship* ship);
+}
+
+struct Ships {
     IDAllocatorList<Ship, EntityType::SHIP> alloc;
     ShipClass* ship_classes;
     uint32_t ship_classes_count;
@@ -179,7 +203,8 @@ struct Ships {
 
     Ship* GetShip(RID uuid) const;
     const ShipClass* GetShipClassByRID(RID index) const;
-    void GetOnPlanet(IDList* list, RID planet, uint32_t allegiance_bits) const;
+    void GetOnPlanet(IDList* list, RID planet, ship_selection_flags::T selection) const;
+    void GetAll(IDList* list, ship_selection_flags::T selection) const;
     void GetFleet(IDList* list, RID ship) const;
     void KillShip(RID uuid, bool notify_callback);
     void DrawShipClassUI(RID uuid) const;

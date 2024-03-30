@@ -2,28 +2,23 @@
 #include "global_state.hpp"
 #include "logging.hpp"
 #include "debug_drawing.hpp"
+#include "debug_console.hpp"
 
 void TechTree::Serialize(DataNode *data) const {
-    DataNode *techtree_data = data->SetChild("techtree");
-    techtree_data->CreateArray("techtree_status", nodes_count);
-    for(int i=0; i < nodes_count; i++) {
-        techtree_data->InsertIntoArrayI("techtree_status", i, node_progress[i]);
-    }
-    techtree_data->SetI("research_focus", research_focus);
+    data->SerializeBuffer("techtree_status", node_progress, node_names_ptrs, nodes_count, false);
+    data->Set("tech_focus", nodes[research_focus].str_id);
 }
 
 void TechTree::Deserialize(const DataNode *data) {
-    DataNode *techtree_data = data->GetChild("techtree");
-    if (techtree_data == NULL) return;
-    int status_length = techtree_data->GetArrayLen("techtree_status", true);
-    if (status_length > nodes_count) {
-        status_length = nodes_count;
+    data->DeserializeBuffer("techtree_status", node_progress, node_names_ptrs, nodes_count);
+    for(int i=0; i < nodes_count; i++) {
+        if (node_progress[i] > nodes[i].research_effort) 
+            node_progress[i] = nodes[i].research_effort;
+        //INFO("%s: %d", node_names_ptrs[i], node_progress[i])
     }
-    for(int i=0; i < status_length; i++) {
-        node_progress[i] = techtree_data->GetArrayElemI("techtree_status", i);
-    }
-    research_focus = techtree_data->GetI("research_focus", -1);
+    research_focus = IdGetIndex(GetGlobalState()->GetFromStringIdentifier(data->Get("tech_focus")));
 }
+
 int _SetNodeLayer(TechTreeNode* nodes, int index) {
     if (nodes[index].layer >= 0) {
         return nodes[index].layer;
@@ -42,8 +37,10 @@ int TechTree::Load(const DataNode *data) {
     nodes_count = data->GetChildArrayLen("techtree");
     delete[] nodes;
     delete[] node_progress;
+    delete[] node_names_ptrs;
     nodes = new TechTreeNode[nodes_count];
     node_progress = new int[nodes_count];
+    node_names_ptrs = new const char*[nodes_count];
     // 1st pass: most data
     for(int i=0; i < nodes_count; i++) {
         const DataNode* node_data = data->GetChildArrayElem("techtree", i);
@@ -71,6 +68,7 @@ int TechTree::Load(const DataNode *data) {
 
         RID rid = RID(i, EntityType::TECHTREE_NODE);
         nodes[i].str_id = GetGlobalState()->AddStringIdentifier(node_data->Get("id"), rid);
+        node_names_ptrs[i] = nodes[i].str_id;
     }
     // 2nd pass: prerequisites
     for(int i=0; i < nodes_count; i++) {
@@ -134,9 +132,17 @@ bool TechTree::IsUnlocked(RID entity_class) const {
 }
 
 void TechTree::Update() {
+    return;
+    daily_progress = GetSettingNum("base_tech_progress");
+    IDList all_ships;
+    GetShips()->GetAll(&all_ships, ship_selection_flags::GetAllegianceFlags(0));
+    //RID lab = GetShipModules()->expected_modules.shpmod_research_lab;
+    for(int i=0; i < all_ships.size; i++) {
+        //daily_progress += GetShip(all_ships[i])->CountModulesOfClass(lab) * GetSettingNum("tech_progress_per_lab");
+    }
     if (GetCalendar()->IsNewDay() && research_focus >= 0) {
         // TODO: calculate research
-        node_progress[research_focus] += 20;
+        node_progress[research_focus] += daily_progress;
 
         if (node_progress[research_focus] >= nodes[research_focus].research_effort) {
             node_progress[research_focus] = nodes[research_focus].research_effort;
@@ -210,9 +216,9 @@ void TechTree::DrawUI() {
         }
 
         ui::PushGlobal(node_pos.x, node_pos.y, 50, 50, DEFAULT_FONT_SIZE, color, Palette::bg, ui::Current()->z_layer);
-        ButtonStateFlags::T button_state = ui::AsButton();
+        button_state_flags::T button_state = ui::AsButton();
         HandleButtonSound(button_state);
-        if (button_state & ButtonStateFlags::HOVER) {
+        if (button_state & button_state_flags::HOVER) {
             ui::SetMouseHint(nodes[i].name);
             ui_hovered_tech = i;
         }
@@ -223,7 +229,7 @@ void TechTree::DrawUI() {
         }
 
         ui::Enclose();
-        ui::DrawIconSDF(nodes[i].icon_index, Palette::ui_main, 40);
+        ui::DrawIconSDF(nodes[i].icon_index, color, 40);
         ui::Pop();  // Global
         if (node_progress[i] > 0 && node_progress[i] < nodes[i].research_effort) {
             ui::FilllineEx(
@@ -291,18 +297,18 @@ void TechTree::DrawUI() {
 
         // Confirm button
         if (can_research_preview) {
-            ui::PushAligned(ui::Current()->width - 10, 20, TextAlignment::HCENTER | TextAlignment::BOTTOM);
-            ButtonStateFlags::T confirm_button = ui::AsButton();
-            if (confirm_button & ButtonStateFlags::HOVER) {
+            ui::PushAligned(ui::Current()->width - 10, 20, text_alignment::HCENTER | text_alignment::BOTTOM);
+            button_state_flags::T confirm_button = ui::AsButton();
+            if (confirm_button & button_state_flags::HOVER) {
                 ui::EncloseEx(0, Palette::bg, Palette::interactable_main, 4);
                 ui::Shrink(4, 4);
             } else {
                 ui::Enclose();
             }
-            if (confirm_button & ButtonStateFlags::JUST_PRESSED) {
+            if (confirm_button & button_state_flags::JUST_PRESSED) {
                 research_focus = preview_tech;
             }
-            ui::WriteEx("Focus", TextAlignment::CENTER, false);
+            ui::WriteEx("Focus", text_alignment::CENTER, false);
             ui::Pop();
         }
 

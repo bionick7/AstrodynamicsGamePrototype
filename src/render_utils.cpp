@@ -258,7 +258,7 @@ namespace orbit_shader {
     }
 }
 
-void RenderOrbit(const OrbitSegment *segment, int point_count, OrbitRenderMode::T render_mode, Color color) {
+void RenderOrbit(const OrbitSegment *segment, int point_count, orbit_render_mode::T render_mode, Color color) {
     RELOAD_IF_NECAISSARY(orbit_shader)
 
     const Orbit* orbit = segment->orbit;

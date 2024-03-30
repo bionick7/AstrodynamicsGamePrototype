@@ -65,7 +65,7 @@ void DebugFlushText() {
     TextBox debug_textbox = TextBox(5, 35, 500, GetScreenHeight() - 40, DEFAULT_FONT_SIZE, GREEN, BLACK, 255);
     debug_textbox.text_background = BLACK;
     for (int i=0; i < debug_drawing::lines_index; i++) {
-        debug_textbox.WriteLine(debug_drawing::lines[i], TextAlignment::CONFORM);
+        debug_textbox.WriteLine(debug_drawing::lines[i], text_alignment::CONFORM);
     }
     debug_drawing::lines_index = 0;
 }

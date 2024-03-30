@@ -90,22 +90,22 @@ namespace Palette {
 #define ICON_CROSSED_SWORDS  "\u04c2"
 #define ICON_CIRCLE          "\u04c3"
 
-#define ICON_WATER_EXTRACTOR "\u0408"
-#define ICON_METAL_EXTRACTOR "\u0409"
-#define ICON_HEATSHIELD      "\u0428"
-#define ICON_FUELTANK        "\u0429"
-#define ICON_SHIPYARD_1      "\u0448"
-#define ICON_SHIPYARD_2      "\u0449"
-#define ICON_SHIPYARD_3      "\u044A"
-#define ICON_SHIPYARD_4      "\u044B"
-#define ICON_RAILGUN         "\u0468"
-#define ICON_MISSILE         "\u0469"
-#define ICON_LIGHTARMOR      "\u046A"
-#define ICON_ARMOR           "\u046B"
-#define ICON_PDC             "\u046C"
-#define ICON_ACS             "\u046E"
+#define ICON_WATER_EXTRACTOR          "\u0408"
+#define ICON_METAL_EXTRACTOR          "\u0409"
+#define ICON_HEATSHIELD               "\u0428"
+#define ICON_FUELTANK                 "\u0429"
+#define ICON_INDUSTRIAL_ADMIN         "\u0448"
+#define ICON_INDUSTRIAL_STORAGE       "\u0449"
+#define ICON_INDUSTRIAL_MANUFACTURING "\u044A"
+#define ICON_INDUSTRIAL_DOCK          "\u044B"
+#define ICON_RAILGUN                  "\u0468"
+#define ICON_MISSILE                  "\u0469"
+#define ICON_LIGHTARMOR               "\u046A"
+#define ICON_ARMOR                    "\u046B"
+#define ICON_PDC                      "\u046C"
+#define ICON_ACS                      "\u046E"
 
-// Aliases for ship_modules
+// Aliases for ship stats
 
 #define ICON_INITIATIVE       ICON_ACS
 #define ICON_KINETIC_HP       ICON_HEART_KINETIC

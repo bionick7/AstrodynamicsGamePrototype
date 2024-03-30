@@ -883,10 +883,10 @@ ships:
   - 0
   - 0
   modules:
-  - shpmod_small_yard_1
-  - shpmod_small_yard_2
-  - shpmod_small_yard_3
-  - shpmod_small_yard_4
+  - shpmod_manufacture_offices
+  - shpmod_large_storage
+  - shpmod_workshop
+  - shpmod_wetdock
   - shpmod_water_extractor
   - ---
   - ---
@@ -1033,10 +1033,10 @@ ships:
   - 0
   - 0
   modules:
-  - shpmod_small_yard_1
-  - shpmod_small_yard_2
-  - shpmod_small_yard_3
-  - shpmod_small_yard_4
+  - shpmod_manufacture_offices
+  - shpmod_large_storage
+  - shpmod_workshop
+  - shpmod_wetdock
   - shpmod_ore_extractor
   - shpmod_smelter
   - shpmod_electrolyser

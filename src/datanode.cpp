@@ -524,10 +524,10 @@ size_t DataNode::GetChildArrayCount() const {
     return ChildArrays.size();
 }
 
-void DataNode::SerializeBuffer(const char* name, const int buffer[], const char* names[], int buffer_size) {
+void DataNode::SerializeBuffer(const char* name, const int buffer[], const char* names[], int buffer_size, bool skip_zeros) {
     DataNode* child_data = SetChild(name);
     for(int i=0; i < buffer_size; i++) {
-        if (buffer[i] > 0) {
+        if (buffer[i] > 0 || !skip_zeros) {
             child_data->SetI(names[i], buffer[i]);
         }
     }

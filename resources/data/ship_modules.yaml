@@ -1,3 +1,10 @@
+# industrial_admin
+# industrial_storage
+# industrial_manufacturing
+# industrial_dock
+# workforce
+# specialists
+
 shipmodules:
 # Mobility
 - id: shpmod_heatshield
@@ -7,16 +14,26 @@ shipmodules:
   construction_resources: 
     steel: 10
   construction_time: 10
+  construction_reqirements:
+    industrial_admin: 1
+    industrial_manufacturing: 1
+    industrial_dock: 1
   icon_index: [8, 25]
   type: armor
 
 - id: shpmod_droptank_water
   name: Water Drop-tank
-  description: The ship can hold 10 extra counts of water. Lost after use
+  description: >
+    This expandable tank allows a ship to hold 10 extra counts of water. 
+    Ejected during flight
   mass: 12
   construction_resources:
     aluminium: 3
     water: 10
+  construction_reqirements:
+    industrial_admin: 1
+    industrial_manufacturing: 1
+    industrial_storage: 1
   construction_time: 2
   construction_batch_size: 1
   icon_index: [9, 25]
@@ -24,33 +41,26 @@ shipmodules:
 
 - id: shpmod_droptank_hydrogen
   name: Hydrogen Drop-tank
-  description: The ship can hold 10 extra counts of hydrogen. Lost after use
+  description: >
+    This expandable tank allows a ship to hold 10 extra counts of hydrogen. 
+    Ejected during flight
   mass: 12
   construction_resources:
     aluminium: 3
     hydrogen: 10
+  construction_reqirements:
+    industrial_admin: 1
+    industrial_manufacturing: 1
+    industrial_storage: 1
   construction_time: 2
   construction_batch_size: 1
   icon_index: [9, 25]
   type: drop_tank
 
 # Production
-- id: shpmod_farm_old
-  name: Farm (old)
-  description: Provides + 1 count food / day
-  produce: { food: 10 }
-  mass: 10
-  construction_time: 30
-  construction_resources:
-    steel: 10
-    electronics: 1
-  icon_index: [31, 31]
-  hidden: y
-  type: large
-
 - id: shpmod_water_extractor
   name: Water extractor
-  description: Provides + 1 count water / day if stationned on an icey moon
+  description: Extracts water from icey moons
   produce: { water: 10 }  # Special behaviour, since it needs to check for environemnet
   mass: 10  # counts
   construction_time: 15
@@ -60,31 +70,54 @@ shipmodules:
   icon_index: [8, 24]
   type: medium
 
-#- id: shpmod_rock_extractor
-#  name: rock extractor
-#  description: ""
-#  produce: { rock: 10 }
-#  consume: {} 
-#  mass: 10
-#  construction_resources:
-#    steel: 10
-#  icon_index: [0, 0]
+- id: shpmod_rock_extractor_primitive
+  name: Primitive rock extractor
+  description: >
+    This low-tech rock extractor has been designed specifically to bootstrap
+    a metal industry on small rocky moons and asteroids. It requires no advanced components.
+  produce: { rock: 50 }
+  requires: { crew: 50 }
+  adds: { crew: -50 }
+  mass: 60
+  construction_resources:
+    rock: 30
+  construction_time: 20
+  planets_restriction:
+  - Rhea
+  icon_index: [9, 24]
+  type: large
+
+- id: shpmod_rock_extractor
+  name: Rock extractor
+  description: >
+    A more advanced, more efficient rock excrevator, worthy of a self-sufficient industrial power
+  produce: { rock: 300 }
+  mass: 60
+  construction_resources:
+    steel: 55
+    electronics: 5
+  construction_time: 20
+  planets_restriction:
+  - Rhea
+  icon_index: [9, 24]
+  type: large
 
 - id: shpmod_ore_extractor
-  name: ore extractor
-  description: ""
+  name: Ore Extractor
+  description: Extracts aluminium and iron ore from rock. Fundamental part in metallurgy
   produce: { iron_ore: 4, aluminium_ore: 4 }
   consume: { rock: 200 }
   mass: 30
   construction_resources:
     rock: 30
     electronics: 1
+  construction_time: 20
   icon_index: [11, 24]
   type: large
 
 - id: shpmod_carbon_extractor
-  name: carbon extractor
-  description: ""
+  name: Carbon Filter
+  description: Extracts carbon from the atmosphere. Performs suboptimally outside of an atmosphere
   produce: { carbon: 8 }
   mass: 30
   construction_resources:
@@ -96,43 +129,77 @@ shipmodules:
   type: large
 
 - id: shpmod_electrolyser
-  name: electrolyser
-  description: ""
+  name: Electrolyser
+  description: Splits water into hydrogen and oxygen by applying a voltage.
   produce: { oxygen: 18, hydrogen: 2 }
   consume: { water: 20 }
+  requires: { power: 2 }
+  adds: { power: -2 }
   mass: 10
   construction_resources:
     steel: 10
   icon_index: [12, 24]
   type: medium
-
-- id: shpmod_steel_smelter
-  name: steel smelter
-  description: ""
-  produce: { steel: 14, water: 7 }
-  consume: { iron_ore: 20, hydrogen: 1 }
-  mass: 10
-  construction_resources:
-    rock: 10
-  icon_index: [14, 24]
-  type: large
-
+  
 - id: shpmod_fuel_cell
-  name: fuel cell
-  description: ""
+  name: Fuel cell
+  description: Recombines hydrogen and oxygen into water. This reaction releases energy
   produce: { water: 20 }
   consume: { hydrogen: 2, oxygen: 18 }
+  adds: { power: 1 }
   mass: 10
   construction_resources:
     steel: 10
   icon_index: [13, 24]
   type: medium
 
-- id: shpmod_habitat
-  name: Habitat
+- id: shpmod_steel_smelter
+  name: Steel Smelter
+  description: The steel smelting industry is vital for any major construction project.
+  produce: { steel: 14, water: 7 }
+  consume: { iron_ore: 20, hydrogen: 1 }
+  mass: 10
+  construction_resources:
+    rock: 10
+  construction_time: 30
+  icon_index: [14, 24]
+  type: large
+
+- id: shpmod_aluminium_smelter
+  name: Aluminium Smelter
+  description: >
+    Aluminium alloys are indespensible for high-strength, low-weight 
+    products, like ships.
+  produce: { aluminium: 9, co2: 11 }
+  consume: { aluminium_ore: 17, carbon: 3 }
+  mass: 10
+  construction_resources:
+    rock: 10
+  construction_time: 45
+  icon_index: [15, 24]
+  type: large
+
+- id: shpmod_rock_habitat
+  name: Regolith settlement
   description: ""
   produce: { waste: 20, co2: 10}
+  consume: { food: 10, oxygen: 20, water: 10 }
+  add: { workforce: 200, crew: 50 }
+  mass: 80
+  construction_resources:
+    rock: 200
+  icon_index: [8, 23]
+  hidden: y
+  type: large
+
+- id: shpmod_habitat
+  name: Habitat
+  description: >
+    A collection of residential, commercial and service buildings that can accomodate
+    around 1500 people in total. 
+  produce: { waste: 20, co2: 10}
   consume: { food: 10, oxygen: 10, water: 10 }
+  add: { workforce: 500, specialists: 500, crew: 50 }
   mass: 80
   construction_resources:
     steel: 50
@@ -141,20 +208,34 @@ shipmodules:
   icon_index: [8, 23]
   type: large
 
-- id: shpmod_carbon_splitter
-  name: carbon splitter
+- id: shpmod_research_lab
+  name: Research Laboratory
   description: ""
+  produce: { waste: 20, co2: 10 }
+  consume: { food: 10, oxygen: 10, water: 10 }
+  mass: 80
+  construction_resources:
+    steel: 20
+    electronics : 20
+    polymers : 30
+  icon_index: [8, 23]
+  hidden: y
+  type: large
+
+- id: shpmod_carbon_splitter
+  name: Carbon Splitter
+  description: Splits carbon dioxide into oxygen and carbon
   produce: { oxygen: 8, carbon: 3 }
   consume: { co2: 11 }
   mass: 10
   construction_resources:
     steel: 10
-  icon_index: [31, 31]
+  icon_index: [15, 31]
   type: medium
 
 - id: shpmod_waste_treatment
-  name: waste treatment
-  description: ""
+  name: Waste Treatment
+  description: Part of the life support system, cleaning and repurposing water from habitats
   produce: { biomass: 10, water: 10 }
   consume: { waste: 10, oxygen: 10 }
   mass: 30
@@ -165,19 +246,23 @@ shipmodules:
   type: medium
 
 - id: shpmod_farms
-  name: farms
-  description: ""
+  name: Farms
+  description: A combination of aquaponics and densly packed bean, fungus and fruit plantages.
   produce: { oxygen: 10, food: 10 }
   consume: { biomass: 10, co2: 10 }
-  mass: 10
+  mass: 22
   construction_resources:
     steel: 10
+    rock: 10
+    electronics: 2
   icon_index: [9, 23]
   type: medium
 
 - id: shpmod_polymers
-  name: polymers factory
-  description: ""
+  name: Polymers Factory
+  description: >
+    Polymers are one of the most versitile and useful materials in human history.
+    They are required in lots of advanced products
   produce: { polymers: 3 }
   consume: { hydrogen: 1, oxygen: 1, carbon: 2 }
   mass: 10
@@ -189,37 +274,45 @@ shipmodules:
   type: large
 
 - id: shpmod_electronics
-  name: semiconductor laboratory
-  description: ""
+  name: Semiconductor Laboratory
+  description: TBD (warrants a large desription)
   produce: { waste: 60, electronics: 3 }
   consume: { water: 60, rock: 30, aluminium: 3, polymers: 2 }
   mass: 30
   construction_resources:
     steel: 10
     polymers: 20
+  construction_reqirements:
+    industrial_admin: 2
+    industrial_manufacturing: 1
+    industrial_storage: 1
+    clean_room: 1
   planets_restriction:
+  - Mimas
+  - Encelladus
   - Iaeptus
   icon_index: [10, 23]
   type: large
 
-# water extractor :                                               => 1 water
-# rock extractor  :                                               => 1 rock
-# ore extractor   : 5 rock                                        => 1 ore
-# electrolyser    : 9 water                                       => 1 hydrogen + 8 oxygen
-# smelter         :20 iron ore    + 1 hydrogen                    =>14 steel   + 7 water
-# fuel cell       : 1 hydrogen    + 8 oxygen                      => 9 water
-# kitchen         : 1 food        + 1 oxygen      + 1 water       => 2 waste   + 1 co2
-# carbon splitter :11 co2                                         => 3 carbon  + 8 oxygen
-# waste treatment : 1 waste       + 1 oxygen                      => 1 biomass + 1 water
-# farms           : 1 biomass     + 1 co2                         => 1 food    + 1 oxygen
-# polymer prod    : 2 carbon      + 1 hydrogen    + 1 oxygen      => 3 polymers
-# semiconductors  : 1 steel       + 1 rock        +20 water       => 1 electronics
+# water extractor :                                                  =>  1 water
+# rock extractor  :                                                  =>  1 rock
+# ore extractor   :  5 rock                                          =>  1 ore
+# electrolyser    :  9 water                                         =>  1 hydrogen +  8 oxygen
+# smelter         : 20 iron ore    +  1 hydrogen                     => 14 steel    +  7 water
+# fuel cell       :  1 hydrogen    +  8 oxygen                       =>  9 water
+# kitchen         :  1 food        +  1 oxygen      +  1 water       =>  2 waste    +  1 co2
+# carbon splitter : 11 co2                                           =>  3 carbon   +  8 oxygen
+# waste treatment :  1 waste       +  1 oxygen                       =>  1 biomass  +  1 water
+# farms           :  1 biomass     +  1 co2                          =>  1 food     +  1 oxygen
+# polymer prod    :  2 carbon      +  1 hydrogen    +  1 oxygen      =>  3 polymers
+# semiconductors  :  1 steel       +  1 rock        + 20 water       =>  1 electronics
 
 # Shipyard
 # Build modules: workshop + storage
 # Repair ships: workshop + scaffolding
 # Build ships: admin + workshop + storage + scaffolding
-- id: shpmod_small_yard_1
+
+- id: shpmod_manufacture_offices
   name: Small shipyard offices
   description: Administrative and design offices. Needed in order to build ships
   mass: 10
@@ -227,44 +320,95 @@ shipmodules:
   construction_resources:
     steel: 10
     electronics: 1
+  add: 
+    industrial_admin: 1
   icon_index: [8, 26]
   type: medium
 
-- id: shpmod_small_yard_2
+- id: shpmod_large_storage
   name: Shipyard storage facility
-  description: Part and material warehouses. Needed in order to build ships or modules.
+  description: Warehouses for storing parts and material. Needed for larger, more complex production pipelines, like that of ships
   mass: 20
   construction_time: 10
   construction_resources:
     steel: 20
+  add: 
+    industrial_storage: 1
   icon_index: [9, 26]
   type: large
 
-- id: shpmod_small_yard_3
-  name: Small shipyard workshop
-  description: Construction Workshops. Needed in order to build or repair ships or build modules.
+- id: shpmod_workshop
+  name: Workshop
+  description: Construction Workshops. Needed in order to build most ships and modules or repair ships
   mass: 40
   construction_time: 60
   construction_resources:
     steel: 40
-    electronics: 5
+    polymers: 15
+    electronics: 15
+  require:
+    workforce: 200
+  add: 
+    industrial_manufacturing: 1
+    workforce: -200
   icon_index: [10, 26]
   type: large
 
-- id: shpmod_small_yard_4
-  name: Small shipyard scaffolding
-  description: TODO
-  mass: 20
+- id: shpmod_wetdock
+  name: Wet Dock
+  description: >
+    Dock, where ships can be build and repaired. 'Wet' docks keep ships exposed to the vacuum.
+  mass: 50
   construction_time: 30
   construction_resources:
-    steel: 20
+    steel: 50
+  require:
+    workforce: 100
+  add: 
+    industrial_dock: 1
+    workforce: -100
   icon_index: [11, 26]
+  type: large
+
+- id: shpmod_drydock
+  name: Dry Dock
+  description: >
+    Dock, where ships can be build and repaired. 'Dry' docks pressurize the entire area around the ship.
+    Construction in dry-docks is much more efficient, but the large volume of atmosphere leaks air at a significnat rate.
+  mass: 150
+  construction_time: 45
+  consume: { oxygen: 2 }
+  construction_resources:
+    steel: 50
+    polymers: 100
+  require:
+    workforce: 100
+  add: 
+    industrial_dock: 2
+    industrial_manufacturing: 1
+    workforce: -100
+  icon_index: [11, 26]
+  type: large
+  
+- id: shpmod_cleanroom
+  name: Clean room
+  description: >
+    Clean rooms are required to manufacture special high-tech components, like electronics, optics or medicine.
+  mass: 30
+  construction_time: 20
+  construction_resources:
+    aluminium: 10
+    polymers: 20
+  require: {}
+  add: 
+    clean_room: 1
+  icon_index: [10, 26]
   type: large
 
 # Military
 - id: shpmod_railgun
   name: Railgun
-  description: Consumes 1 power. Kinetic Attk. +1
+  description: High-velocity kinetic weapon that needs extra energy to fire.
   add: 
     kinetic_offense: 1
     power: -2
@@ -281,7 +425,7 @@ shipmodules:
   
 - id: shpmod_missiles
   name: Missiles
-  description: Ordonance Attk. +1
+  description: Tactical non-nuclear missiles. Basic ordonance used in combat
   add: 
     ordnance_offense: 2
     independance: -1
@@ -297,7 +441,7 @@ shipmodules:
 
 - id: shpmod_light_armor
   name: Light armor
-  description: TODO
+  description: A lighter, thinner armor, granting basic protection to ships.
   add: 
     kinetic_hp: 10
     energy_hp: 5
@@ -305,16 +449,24 @@ shipmodules:
   construction_time: 5
   construction_resources:
     steel: 10
+  construction_reqirements:
+    industrial_admin: 1
+    industrial_manufacturing: 1
+    industrial_dock: 1
   icon_index: [10, 27]
   type: armor
 
 - id: shpmod_armor
   name: Armor
-  description: TODO
+  description: A full suite of heavy armor for military ships
   add: 
     kinetic_hp: 20
     energy_hp: 10
     kinetic_defense: 1
+  construction_reqirements:
+    industrial_admin: 1
+    industrial_manufacturing: 1
+    industrial_dock: 1
   mass: 20
   construction_time: 10
   construction_resources:
@@ -324,7 +476,7 @@ shipmodules:
   
 - id: shpmod_pdc
   name: Point-defence cannons
-  description: TODO
+  description: High-volume machine cannons provide a good defence against missiles, torpedos and drones.
   add: 
     ordnance_defense: 1
   mass: 5
@@ -338,7 +490,9 @@ shipmodules:
 
 - id: shpmod_acs
   name: High-fi Attitude Control System
-  description: TODO
+  description: >
+    A high-accuracy attitude controle system ensuring precise targeting is crucial to strike
+    before anybody else does.
   add: 
     initiative: 1
   mass: 10
@@ -365,6 +519,30 @@ shipmodules:
     steel: 30
     water: 10
     uranium: 1
+  construction_reqirements:
+    industrial_admin: 2
+    industrial_manufacturing: 1
+    clean_room: 1
+  icon_index: [6, 25]
+  type: medium
+  
+- id: shpmod_geothermal
+  name: Geothermal power plant
+  description: >
+    On tidally active worlds, it can be usefull to harvest the power of thides directly
+  add:
+    power: 4
+  mass: 58
+  construction_time: 40
+  construction_resources:
+    electronics: 8
+    steel: 50
+  construction_reqirements:
+    industrial_admin: 2
+    industrial_manufacturing: 1
+    clean_room: 1
+  planets_restriction:
+  - Encelladus
   icon_index: [6, 25]
   type: medium
 
@@ -386,7 +564,7 @@ shipmodules:
 
   mass: 2
   hidden: y
-  icon_index: [31, 31]
+  icon_index: [15, 31]
   type: free
 
 - id: shpmod_invasion_equipment
@@ -421,7 +599,7 @@ shipmodules:
     aluminium: 16
   planets_restriction:
   - Titan
-  icon_index: [31, 31]
+  icon_index: [15, 31]
   type: medium
 
 - id: shpmod_armory
@@ -446,7 +624,7 @@ shipmodules:
   construction_resources:
     polymers: 10
     steel: 10
-  icon_index: [31, 31]
+  icon_index: [15, 31]
   type: large
 
 # Developer
@@ -457,7 +635,7 @@ shipmodules:
     initiative: 1
   mass: 0
   hidden: y
-  icon_index: [31, 31]
+  icon_index: [15, 31]
   type: free
 
 # ... Weapons, time extenders

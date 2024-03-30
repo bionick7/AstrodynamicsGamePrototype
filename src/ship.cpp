@@ -53,6 +53,8 @@ Ship::Ship() {
     for (int i=0; i < SHIP_MAX_MODULES; i++) {
         modules[i] = GetInvalidId();
     }
+    ship_production_process = 0;
+    module_production_process = 0;
 }
 
 Ship::~Ship() {
@@ -75,7 +77,7 @@ void Ship::_OnClicked() {
     } else {
         GetGlobalState()->focused_ship = id;
     }
-    HandleButtonSound(ButtonStateFlags::JUST_PRESSED);
+    HandleButtonSound(button_state_flags::JUST_PRESSED);
 }
 
 void Ship::_OnNewPlanClicked() {
@@ -118,6 +120,9 @@ void Ship::Serialize(DataNode *data) const {
     data->Set("class_id", GetShipClassByRID(ship_class)->id);
     data->SerializeBuffer("transporting", transporting, resources::names, resources::MAX);
     data->SerializeBuffer("dammage_taken", dammage_taken, ship_variables::names, ship_variables::MAX);
+    
+    data->SetI("ship_production_process", ship_production_process);
+    data->SetI("module_production_process", module_production_process);
 
     data->CreateArray("modules", SHIP_MAX_MODULES);
     for(int i=0; i < SHIP_MAX_MODULES; i++) {
@@ -142,6 +147,12 @@ void Ship::Deserialize(const DataNode* data) {
     if (!IsIdValid(ship_class)) {
         FAIL("Invalid ship class")  // TODO fail more gracefully
     }
+
+    data->DeserializeBuffer("dammage_taken", dammage_taken, ship_variables::names, ship_variables::MAX);
+    
+    ship_production_process = data->GetI("ship_production_process", 0, true);
+    module_production_process = data->GetI("module_production_process", 0, true);
+
     data->DeserializeBuffer("transporting", transporting, resources::names, resources::MAX);
 
     int modules_count = data->GetArrayLen("modules", true);
@@ -165,8 +176,6 @@ void Ship::Deserialize(const DataNode* data) {
         prepared_plans[i] = TransferPlan();
         prepared_plans[i].Deserialize(data->GetChildArrayElem("prepared_plans", i, true));
     }
-
-    data->DeserializeBuffer("dammage_taken", dammage_taken, ship_variables::names, ship_variables::MAX);
 }
 
 double Ship::GetOperationalMass() const {  // Without resources
@@ -235,13 +244,13 @@ bool Ship::IsPlayerControlled() const {
     return allegiance == GetFactions()->player_faction;
 }
 
-IntelLevel::T Ship::GetIntelLevel() const {
-    return IntelLevel::FULL;
+intel_level::T Ship::GetIntelLevel() const {
+    return intel_level::FULL;
 
     if (IsPlayerControlled()) {
-        return IntelLevel::FULL;
+        return intel_level::FULL;
     }
-    return IntelLevel::STATS | (is_detected * IntelLevel::TRAJECTORY);
+    return intel_level::STATS | (is_detected * intel_level::TRAJECTORY);
 }
 
 bool Ship::IsTrajectoryKnown(int index) const {
@@ -249,7 +258,7 @@ bool Ship::IsTrajectoryKnown(int index) const {
     if (IsPlayerControlled()) {
         return true;
     }
-    if((GetIntelLevel() & IntelLevel::TRAJECTORY) == 0) {
+    if((GetIntelLevel() & intel_level::TRAJECTORY) == 0) {
         return false;
     }
     return index == 0 && !IsParked();
@@ -276,12 +285,12 @@ int Ship::GetMissingHealth() const {
     ;
 }
 
-const char* _GetTypeIcon(ShipType::T ship_type) {
+const char* _GetTypeIcon(ship_type::T ship_type) {
     switch (ship_type) {
-        case ShipType::SHIPYARD: return " " ICON_STATION;
-        case ShipType::UTILITY: return " " ICON_UTIL_SHIP;
-        case ShipType::TRANSPORT: return " " ICON_TRANSPORT_SHIP;
-        case ShipType::MILITARY: return " " ICON_MIL_SHIP;
+        case ship_type::SHIPYARD: return " " ICON_STATION;
+        case ship_type::UTILITY: return " " ICON_UTIL_SHIP;
+        case ship_type::TRANSPORT: return " " ICON_TRANSPORT_SHIP;
+        case ship_type::MILITARY: return " " ICON_MIL_SHIP;
     }
     return ICON_EMPTY;
 }
@@ -345,14 +354,14 @@ int Ship::CountModulesOfClass(RID module_class) const {
     return res;
 }
 
-ShipType::T Ship::GetShipType() const {
-    if (IsStatic()) return ShipType::SHIPYARD;
+ship_type::T Ship::GetShipType() const {
+    if (IsStatic()) return ship_type::SHIPYARD;
     for(int i=0; i < SHIP_MAX_MODULES; i++) {
         //if (GetShipModules()->GetModuleByRID(modules[i])->production) return ShipType::UTILITY;
         // TODO: when is it 'UTILITY'?
     }
-    if (GetCombatStrength() > 0) return ShipType::MILITARY;
-    return ShipType::TRANSPORT;
+    if (GetCombatStrength() > 0) return ship_type::MILITARY;
+    return ship_type::TRANSPORT;
 }
 
 TransferPlan* Ship::GetEditedTransferPlan() {
@@ -460,16 +469,16 @@ void Ship::Update() {
     }
 
     _UpdateModules();
-    _UpdateShipyard();
+    //_UpdateShipyard();
 }
 
-void Ship::_UpdateShipyard() {
+/*void Ship::_UpdateShipyard() {
     int collected_components[4] = {0};
     for (int i=0; i < SHIP_MAX_MODULES; i++) {
-        if(modules[i] == GetShipModules()->expected_modules.small_yard_1) collected_components[0]++;
-        if(modules[i] == GetShipModules()->expected_modules.small_yard_2) collected_components[1]++;
-        if(modules[i] == GetShipModules()->expected_modules.small_yard_3) collected_components[2]++;
-        if(modules[i] == GetShipModules()->expected_modules.small_yard_4) collected_components[3]++;
+        //if(modules[i] == GetShipModules()->expected_modules.small_yard_1) collected_components[0]++;
+        //if(modules[i] == GetShipModules()->expected_modules.small_yard_2) collected_components[1]++;
+        //if(modules[i] == GetShipModules()->expected_modules.small_yard_3) collected_components[2]++;
+        //if(modules[i] == GetShipModules()->expected_modules.small_yard_4) collected_components[3]++;
     }
     int module_factories = MinInt(collected_components[1], collected_components[2]);
     int repair_stations = MinInt(collected_components[2], collected_components[3]);
@@ -480,8 +489,8 @@ void Ship::_UpdateShipyard() {
     if (GetCalendar()->IsNewDay() && IsParked()) {
         for(int i=0; i < repair_stations; i++) {
             IDList available_ships;
-            uint32_t filter = ((1 << allegiance) & 0xFFU) | 0xFFFFFF00U;
-            GetShips()->GetOnPlanet(&available_ships, parent_obj, filter);
+            ship_selection_flags::T selection_flags = ship_selection_flags::GetAllegianceFlags(allegiance);
+            GetShips()->GetOnPlanet(&available_ships, parent_obj, selection_flags);
             available_ships.Sort([](RID ship1, RID ship2){
                 return GetShip(ship2)->GetMissingHealth() - GetShip(ship1)->GetMissingHealth();
             });
@@ -502,7 +511,7 @@ void Ship::_UpdateShipyard() {
             GetPlanet(GetParentPlanet())->AdvanceShipProductionQueue();
         }
     }
-}
+}*/
 
 void Ship::_UpdateModules() {
     // Recalculate every frame
@@ -574,7 +583,7 @@ void Ship::DrawIcon(int x_offsets[], int y_offsets[], float grow_factor) {
     text_inst->color = GetColor();
     text_inst->color.a = grow_factor * 255;
     text_inst->world_pos = position.cartesian;
-    text_inst->alignment = (type < 2 ? TextAlignment::RIGHT : TextAlignment::LEFT) | TextAlignment::VCENTER;
+    text_inst->alignment = (type < 2 ? text_alignment::RIGHT : text_alignment::LEFT) | text_alignment::VCENTER;
 
     //DrawLineV(draw_pos, Vector2Add(draw_pos, draw_offset), GetColor());
     
@@ -597,7 +606,7 @@ void Ship::DrawTrajectories() const {
     }*/
     
 
-    if ((GetIntelLevel() & IntelLevel::TRAJECTORY) == 0) {
+    if ((GetIntelLevel() & intel_level::TRAJECTORY) == 0) {
         return;
     }
 
@@ -619,33 +628,33 @@ void Ship::DrawTrajectories() const {
         OrbitSegment tf_orbit = OrbitSegment(&plan->transfer_orbit[plan->primary_solution], to_departure, to_arrival);
         //RenderOrbit(&tf_orbit, 256, i == plan_edit_index ? Palette::ui_main : GetColor());
         //OrbitSegment tf_orbit = OrbitSegment(&plan->transfer_orbit[plan->primary_solution]);
-        RenderOrbit(&tf_orbit, 256, OrbitRenderMode::Solid, color);
+        RenderOrbit(&tf_orbit, 256, orbit_render_mode::Solid, color);
     }
 }
 
 void _UIDrawHeader(const Ship* ship) {
-    ui::WriteEx(ship->name, TextAlignment::CONFORM, false);  
-    ui::WriteEx(ship->GetTypeIcon(), TextAlignment::CONFORM, false);
+    ui::WriteEx(ship->name, text_alignment::CONFORM, false);  
+    ui::WriteEx(ship->GetTypeIcon(), text_alignment::CONFORM, false);
     const char* text = ICON_EMPTY " " ICON_EMPTY "  ";  // use ICON_EMPTY instead of space to get the right spacing
     if (!ship->IsParked() && !ship->IsLeading()) text = ICON_EMPTY " " ICON_TRANSPORT_FLEET "  ";
     if (ship->IsParked() && ship->IsLeading()) text = ICON_PLANET " " ICON_EMPTY "  ";
     if (ship->IsParked() && !ship->IsLeading()) text = ICON_PLANET " " ICON_TRANSPORT_FLEET "  ";
-    text::Layout layout = ui::Current()->GetTextLayout(text, TextAlignment::RIGHT | TextAlignment::VCONFORM);
+    text::Layout layout = ui::Current()->GetTextLayout(text, text_alignment::RIGHT | text_alignment::VCONFORM);
     int pos = layout.GetCharacterIndex(GetMousePosition());
-    ui::WriteEx(text, TextAlignment::RIGHT | TextAlignment::VCONFORM, true);
-    ButtonStateFlags::T planet_button_state = GetButtonState(pos >= 0 && pos < 2, false);  // Don't care about hover_in
-    ButtonStateFlags::T fleet_button_state = GetButtonState(pos >= 3 && pos < 5, false);  // Don't care about hover_in
-    if (planet_button_state & ButtonStateFlags::JUST_PRESSED && ship->IsParked()) {
+    ui::WriteEx(text, text_alignment::RIGHT | text_alignment::VCONFORM, true);
+    button_state_flags::T planet_button_state = GetButtonState(pos >= 0 && pos < 2, false);  // Don't care about hover_in
+    button_state_flags::T fleet_button_state = GetButtonState(pos >= 3 && pos < 5, false);  // Don't care about hover_in
+    if (planet_button_state & button_state_flags::JUST_PRESSED && ship->IsParked()) {
         GetGlobalState()->focused_planet = ship->GetParentPlanet();
     }
-    if (fleet_button_state & ButtonStateFlags::JUST_PRESSED && !ship->IsLeading()) {
+    if (fleet_button_state & button_state_flags::JUST_PRESSED && !ship->IsLeading()) {
         GetGlobalState()->focused_ship = ship->parent_obj;
     }
     
-    if (planet_button_state & ButtonStateFlags::HOVER && ship->IsParked()) {
+    if (planet_button_state & button_state_flags::HOVER && ship->IsParked()) {
         ui::SetMouseHint("Select parent planet");
     }
-    if (fleet_button_state & ButtonStateFlags::HOVER && !ship->IsLeading()) {
+    if (fleet_button_state & button_state_flags::HOVER && !ship->IsLeading()) {
         ui::SetMouseHint("Select leading ship");
     }
     ui::VSpace(10);
@@ -654,14 +663,14 @@ void _UIDrawHeader(const Ship* ship) {
 void _UIDrawStats(const Ship* ship) {
     StringBuilder sb;
     sb.AddFormat(ICON_PAYLOAD " %d / %d ", KGToResourceCounts(ship->GetOperationalMass()), ship->GetMaxCapacity());
-    ui::WriteEx(sb.c_str, TextAlignment::LEFT | TextAlignment::VCONFORM, false);
+    ui::WriteEx(sb.c_str, text_alignment::LEFT | text_alignment::VCONFORM, false);
     sb.Clear();
     if (ship->IsStatic()) {
         sb.AddFormat("\u0394V --       ", ship->GetCapableDV() / 1000.f);
     } else {
         sb.AddFormat("\u0394V %2.2f km/s  ", ship->GetCapableDV() / 1000.f);
     }
-    ui::WriteEx(sb.c_str, TextAlignment::RIGHT | TextAlignment::VCONFORM, false);
+    ui::WriteEx(sb.c_str, text_alignment::RIGHT | text_alignment::VCONFORM, false);
     ui::Fillline(ship->GetOperationalMass() / ResourceCountsToKG(ship->GetMaxCapacity()), Palette::ui_main, Palette::bg);
     ui::Write("");  // Linebreak
     ui::VSpace(15);
@@ -723,34 +732,34 @@ void _UIDrawTransferplans(Ship* ship) {
 
         // Double Button
         ui::PushInset(2, ui::Current()->GetLineHeight() * 2);
-        ButtonStateFlags::T button_state = ui::AsButton();
-        if (button_state & ButtonStateFlags::HOVER) {
+        button_state_flags::T button_state = ui::AsButton();
+        if (button_state & button_state_flags::HOVER) {
             ui::EncloseEx(4, Palette::bg, Palette::interactable_main, 4);
         } else {
             ui::Enclose();
         }
         ui::PushHSplit(0, -32);
         ui::Write(sb.c_str);
-        HandleButtonSound(button_state & ButtonStateFlags::JUST_PRESSED);
-        if (button_state & ButtonStateFlags::HOVER) {
+        HandleButtonSound(button_state & button_state_flags::JUST_PRESSED);
+        if (button_state & button_state_flags::HOVER) {
             ship->highlighted_plan_index = i;
         }
-        if (button_state & ButtonStateFlags::JUST_PRESSED) {
+        if (button_state & button_state_flags::JUST_PRESSED) {
             ship->StartEditingPlan(i);
         }
         ui::Pop();  // HSplit
 
         if (i != ship->plan_edit_index) {
             ui::PushHSplit(-32, -1);
-            ButtonStateFlags::T button_state = ui::AsButton();
-            if (button_state & ButtonStateFlags::HOVER) {
+            button_state_flags::T button_state = ui::AsButton();
+            if (button_state & button_state_flags::HOVER) {
                 ui::EncloseEx(4, Palette::interactable_alt, Palette::interactable_alt, 4);
             } else {
                 ui::EncloseEx(4, Palette::bg, Palette::bg, 4);
             }
-            ui::WriteEx(ICON_X, TextAlignment::CENTER, false);
-            HandleButtonSound(button_state & ButtonStateFlags::JUST_PRESSED);
-            if (button_state & ButtonStateFlags::JUST_PRESSED) {
+            ui::WriteEx(ICON_X, text_alignment::CENTER, false);
+            HandleButtonSound(button_state & button_state_flags::JUST_PRESSED);
+            if (button_state & button_state_flags::JUST_PRESSED) {
                 ship->RemoveTransferPlan(i);
             }
             ui::Pop();  // HSplit
@@ -763,18 +772,18 @@ void _UIDrawTransferplans(Ship* ship) {
     
     // 'New transfer' button
 
-    Rectangle text_rect = ui::Current()->TbMeasureText("New transfer", TextAlignment::CONFORM);
+    Rectangle text_rect = ui::Current()->TbMeasureText("New transfer", text_alignment::CONFORM);
     ui::PushInline(text_rect.width + 2, text_rect.height + 2);
-    ButtonStateFlags::T new_button_state = ui::AsButton();
-    if (new_button_state & ButtonStateFlags::HOVER) {
-        ui::EnclosePartial(0, Palette::bg, Palette::interactable_main, Direction::DOWN);
+    button_state_flags::T new_button_state = ui::AsButton();
+    if (new_button_state & button_state_flags::HOVER) {
+        ui::EnclosePartial(0, Palette::bg, Palette::interactable_main, direction::DOWN);
     } else {
-        ui::EnclosePartial(0, Palette::bg, Palette::ui_main, Direction::DOWN);
+        ui::EnclosePartial(0, Palette::bg, Palette::ui_main, direction::DOWN);
     }
-    ui::WriteEx("New transfer", TextAlignment::CENTER, false);
+    ui::WriteEx("New transfer", text_alignment::CENTER, false);
     HandleButtonSound(new_button_state);
     ui::Pop();  // Inline
-    if (new_button_state & ButtonStateFlags::JUST_PRESSED) {
+    if (new_button_state & button_state_flags::JUST_PRESSED) {
         ship->_OnNewPlanClicked();
     }
 }
@@ -786,9 +795,9 @@ void _UIDrawFleet(Ship* ship) {
         StringBuilder sb;
         if (ship->IsParked()) {
             sb.Add("Detach from").Add(GetShip(ship->parent_obj)->name);
-            ButtonStateFlags::T button_state = ui::DirectButton(sb.c_str, 0);
+            button_state_flags::T button_state = ui::DirectButton(sb.c_str, 0);
             HandleButtonSound(button_state);
-            if (button_state & ButtonStateFlags::JUST_PRESSED) {
+            if (button_state & button_state_flags::JUST_PRESSED) {
                 ship->Detach();
             }
         } else {
@@ -799,18 +808,18 @@ void _UIDrawFleet(Ship* ship) {
         return;
     }
     IDList candidates;
-    uint32_t selection_flags = ((1UL << ship->allegiance) & 0xFF) | 0xFFFFFF00;
+    ship_selection_flags::T selection_flags = ship_selection_flags::GetAllegianceFlags(ship->allegiance);
     GetShips()->GetOnPlanet(&candidates, ship->GetParentPlanet(), selection_flags);
     for (int i=0; i < candidates.size; i++) {
         if (candidates[i] == ship->id) continue;
         const Ship* candidate = GetShip(candidates[i]);
         if (!candidate->IsLeading()) continue;
         ui::PushInset(0, DEFAULT_FONT_SIZE + 4);
-        ui::WriteEx("Attach to ", TextAlignment::CONFORM, false);
+        ui::WriteEx("Attach to ", text_alignment::CONFORM, false);
         ui::Write(candidate->name);
-        ButtonStateFlags::T button_state = ui::AsButton();
+        button_state_flags::T button_state = ui::AsButton();
         HandleButtonSound(button_state);
-        if (button_state & ButtonStateFlags::JUST_PRESSED) {
+        if (button_state & button_state_flags::JUST_PRESSED) {
             ship->AttachTo(candidate->id);
         }
         ui::Pop();  // Inset
@@ -826,8 +835,8 @@ void _UIDrawQuests(Ship* ship) {
         bool is_quest_in_cargo = quest->ship == ship->id;
         if (quest->current_planet != ship->parent_obj && !is_quest_in_cargo) continue;
         bool can_accept = quest->payload_mass <= max_mass;
-        ButtonStateFlags::T button_state = quest->DrawUI(true, is_quest_in_cargo);
-        if (button_state & ButtonStateFlags::JUST_PRESSED && can_accept) {
+        button_state_flags::T button_state = quest->DrawUI(true, is_quest_in_cargo);
+        if (button_state & button_state_flags::JUST_PRESSED && can_accept) {
             if (is_quest_in_cargo) {
                 qm->PutbackTask(ship->id, it.GetId());
             } else {
@@ -875,7 +884,7 @@ void Ship::DrawUI() {
     ui::EncloseEx(4, Palette::bg, GetColor(), 4);
     ui::Shrink(INSET_MARGIN, INSET_MARGIN);
 
-    if ((GetIntelLevel() & IntelLevel::STATS) == 0) {
+    if ((GetIntelLevel() & intel_level::STATS) == 0) {
         return;
     }
 
@@ -961,6 +970,116 @@ void Ship::Detach() {
     parent_obj = GetParentPlanet();
 }
 
+bool Ship::CanProduce(RID object, bool check_resources, bool check_stats) const  {
+    if (!IsParked()) return false;
+    if (!IsIdValid(object)) return false;
+    const resource_count_t* construction_resources = NULL;
+    const int* construction_required = NULL;
+    switch (IdGetType(object)) {
+        case EntityType::SHIP_CLASS: {
+            const ShipClass* ship_class = GetShipClassByRID(object);
+            construction_resources = ship_class->construction_resources;
+            construction_required = ship_class->construction_reqirements;
+            break;
+        }
+        case EntityType::MODULE_CLASS: {
+            const ShipModuleClass* module_class = GetModule(object);
+            construction_resources = module_class->construction_resources;
+            construction_required = module_class->construction_reqirements;
+            break;
+        }
+        default: break;
+    }
+
+    if (check_resources && construction_resources == NULL) return false;
+    if (check_stats && construction_required == NULL) return false;
+    if (check_resources) {
+        const PlanetaryEconomy* economy = &GetPlanet(GetParentPlanet())->economy;
+        for (int i=0; i < resources::MAX; i++) {
+            if (construction_resources[i] > economy->resource_stock[i]) {
+                return false;
+            }
+        }
+    }
+    if (check_stats) {
+        for (int i=0; i < ship_stats::MAX; i++) {
+            if (construction_required[i] > stats[i]) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+/*void Ship::AdvanceShipProductionQueue() {
+    // Update ship production
+    if (ship_production_queue.size == 0) return;
+    if (!CanProduce(ship_production_queue[0])) {
+        // TODO: notify the player
+        return;
+    }
+    ship_production_process++;
+    const ShipClass* sc = GetShipClassByRID(ship_production_queue[0]);
+    if (ship_production_process < sc->construction_time) return;
+
+    IDList list;
+    GetShips()->GetOnPlanet(&list, id, ship_selection_flags::ALL);
+    int allegiance = GetShip(list[0])->allegiance;// Assuming planets can't have split allegiance!
+
+    DataNode ship_data;
+    ship_data.Set("name", "TODO: random name");
+    ship_data.Set("class_id", sc->id);
+    ship_data.SetI("allegiance", allegiance); 
+    ship_data.Set("planet", name);
+    ship_data.CreateArray("tf_plans", 0);
+    ship_data.CreateArray("modules", 0);
+    GetShips()->AddShip(&ship_data);
+
+    for (int i=0; i < resources::MAX; i++) {
+        if (sc->construction_resources[i] != 0) {
+            economy.TakeResource((resources::T) i, sc->construction_resources[i]);
+        }
+    }
+
+    ship_production_queue.EraseAt(0);
+    ship_production_process = 0;
+}
+
+void Ship::AdvanceModuleProductionQueue() {
+    if (!IsParked()) return;
+    IDList* module_production_queue = &GetPlanet(GetParentPlanet())->module_production_queue;
+    if (module_production_queue->size == 0) return;
+    RID candidate = GetInvalidId();
+    for (int i=0; i < module_production_queue->size; i++) {
+        candidate = module_production_queue->Get(i);
+        if (CanProduce(candidate)) break;
+    }
+    
+    if (candidate == GetInvalidId()) {
+        // TODO: notify the player
+        ERROR("CANNOT PRODUCE %s on %s", GetModule(module_production_queue->Get(0))->name, name)
+        return;
+    }
+    module_production_process++;
+    const ShipModuleClass* smc = GetModule(module_production_queue->Get(0));
+    if (module_production_process < smc->GetConstructionTime()) return;
+    
+    ShipModuleSlot free_slot = GetFreeModuleSlot();
+    if (free_slot.IsValid()) {
+        free_slot.SetSlot(candidate);
+    }
+
+    for (int i=0; i < resources::MAX; i++) {
+        if (smc->construction_resources[i] != 0) {
+            economy.TakeResource((resources::T) i, smc->construction_resources[i]);
+        }
+    }
+
+    module_production_queue.EraseAt(0);
+    module_production_process = 0;
+}*/
+
+
 void Ship::_OnDeparture(const TransferPlan* tp) {
     // Make sure this is called first on the leading ship
 
@@ -1033,7 +1152,7 @@ void Ship::_OnDeparture(const TransferPlan* tp) {
 void _OnFleetArrival(Ship* leading_ship, const TransferPlan* tp) {
     // Collects ships for combat
     IDList hostile_ships;
-    uint32_t selection_flags = (~(1UL << leading_ship->allegiance) & 0xFF) | Ships::MILITARY_SELECTION_FLAG;
+    ship_selection_flags::T selection_flags = (~ship_selection_flags::GetAllegianceFlags(leading_ship->allegiance) & 0xFF) | ship_selection_flags::MILITARY;
     GetShips()->GetOnPlanet(&hostile_ships, tp->arrival_planet, selection_flags);
     IDList allied_ships;
     GetShips()->GetFleet(&allied_ships, leading_ship->id);
@@ -1043,7 +1162,7 @@ void _OnFleetArrival(Ship* leading_ship, const TransferPlan* tp) {
         bool victory = ShipBattle(&allied_ships, &hostile_ships, tp->arrival_dvs[tp->primary_solution].Length());
         // allied ship and hostile ship might contain dead ships
         if (victory) {
-            uint32_t selection_flags = (~(1UL << leading_ship->allegiance) & 0xFF) | 0xFFFFFF00;
+            ship_selection_flags::T selection_flags = (~ship_selection_flags::GetAllegianceFlags(leading_ship->allegiance) & 0xFF) | ship_selection_flags::ALL_SELECTION;
             IDList conquered;
             GetShips()->GetOnPlanet(&conquered, tp->arrival_planet, selection_flags);
             for(int i=0; i < conquered.size; i++) {
@@ -1057,7 +1176,7 @@ void _OnFleetArrival(Ship* leading_ship, const TransferPlan* tp) {
             }
         }
     } else {
-        uint32_t selection_flags = (~(1UL << leading_ship->allegiance) & 0xFF) | 0xFFFFFF00;
+        ship_selection_flags::T selection_flags = (~ship_selection_flags::GetAllegianceFlags(leading_ship->allegiance) & 0xFF) | ship_selection_flags::ALL_SELECTION;
         IDList conquered;
         GetShips()->GetOnPlanet(&conquered, tp->arrival_planet, selection_flags);
         for(int i=0; i < conquered.size; i++) {
@@ -1127,6 +1246,13 @@ void Ship::_EnsureContinuity() {
             RemoveTransferPlan(i);
         }
     }
+}
+
+bool ship_selection_flags::MatchesShip(T selection_flags, const Ship *ship) {
+    if (((1 << ship->allegiance) & selection_flags) == 0)  return false;
+    if (!(selection_flags & ship_selection_flags::MILITARY) && ship->GetCombatStrength() > 0)  return false;
+    if (!(selection_flags & ship_selection_flags::CIVILIAN) && ship->GetCombatStrength() == 0)  return false;
+    return true;
 }
 
 Ships::Ships() {
@@ -1204,6 +1330,18 @@ int Ships::LoadShipClasses(const DataNode* data) {
             sc_data->GetArrayElemI("icon_index", 1, 31));
         sc.module_config.Load(module_configurations, ship_id);
 
+        if (sc_data->HasChild("construction_reqirements")) {
+            sc_data->DeserializeBuffer("construction_reqirements", sc.construction_reqirements, ship_stats::names, ship_stats::MAX);
+        } else {  // Set default requirements
+            for (int j=0; j < ship_stats::MAX; j++) {
+                sc.construction_reqirements[j] = 0;
+            }
+            sc.construction_reqirements[ship_stats::INDUSTRIAL_ADMIN] = 1;
+            sc.construction_reqirements[ship_stats::INDUSTRIAL_STORAGE] = 1;
+            sc.construction_reqirements[ship_stats::INDUSTRIAL_MANUFACTURING] = 1;
+            sc.construction_reqirements[ship_stats::INDUSTRIAL_DOCK] = 1;
+        }
+
         sc_data->DeserializeBuffer("construction_resources", sc.construction_resources, resources::names, resources::MAX);
         sc_data->DeserializeBuffer("stats", sc.stats, ship_stats::names, ship_stats::MAX);
 
@@ -1223,26 +1361,31 @@ Ship* Ships::GetShip(RID id) const {
     return (Ship*) alloc.Get(id);
 }
 
-void Ships::GetOnPlanet(IDList* list, RID planet, uint32_t allegiance_bits) const {
+void Ships::GetOnPlanet(IDList* list, RID planet, ship_selection_flags::T selection) const {
     for (auto it = alloc.GetIter(); it; it++) {
         Ship* ship = GetShip(it.GetId());
         if (ship->IsParked() && planet != ship->GetParentPlanet()) 
             continue;
         if (!ship->IsParked() && planet != GetInvalidId()) 
             continue;
-        if (((1 << ship->allegiance) & allegiance_bits) == 0) 
-            continue;
-        if (!(allegiance_bits & MILITARY_SELECTION_FLAG) && ship->GetCombatStrength() > 0) 
-            continue;
-        if (!(allegiance_bits & CIVILIAN_SELECTION_FLAG) && ship->GetCombatStrength() == 0) 
-            continue;
-        list->Append(it.GetId());
+        if (ship_selection_flags::MatchesShip(selection, ship)) {
+            list->Append(it.GetId());
+        }
+    }
+}
+
+void Ships::GetAll(IDList *list, ship_selection_flags::T selection) const {
+    for (auto it = alloc.GetIter(); it; it++) {
+        const Ship* ship = GetShip(it.GetId());
+        if (ship_selection_flags::MatchesShip(selection, ship)) {
+            list->Append(it.GetId());
+        }
     }
 }
 
 void Ships::GetFleet(IDList *list, RID leading) const {
     for (auto it = alloc.GetIter(); it; it++) {
-        Ship* ship = GetShip(it.GetId());
+        const Ship* ship = GetShip(it.GetId());
         if (ship->parent_obj == leading) {
             list->Append(it.GetId());
         }
@@ -1264,11 +1407,11 @@ void Ships::DrawShipClassUI(RID uuid) const {
         return;
     } else {  // filled
         const ShipClass* sc = GetShipClassByRID(uuid);
-        ButtonStateFlags::T button_state = ui::AsButton();
-        if (button_state & ButtonStateFlags::HOVER) {
+        button_state_flags::T button_state = ui::AsButton();
+        if (button_state & button_state_flags::HOVER) {
             StringBuilder sb;
             sc->MouseHintWrite(&sb);
-            sb.AutoBreak(150);
+            sb.AutoBreak(50);
             ui::SetMouseHint(sb.c_str);
         }
         ui::VSpace((ui::Current()->height - 40) / 2);

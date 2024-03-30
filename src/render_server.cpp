@@ -126,7 +126,7 @@ void _DrawTrajectories() {
     // Draw planet trajectories
     for(int i=0; i < GetPlanets()->GetPlanetCount(); i++) {
         OrbitSegment segment = OrbitSegment(&GetPlanetByIndex(i)->orbit);
-        RenderOrbit(&segment, 256, OrbitRenderMode::Gradient, GetPlanetByIndex(i)->GetColor());
+        RenderOrbit(&segment, 256, orbit_render_mode::Gradient, GetPlanetByIndex(i)->GetColor());
     }
     
     // Draw ship trajectories
@@ -142,7 +142,6 @@ void _DrawTrajectories() {
 void _UpdateShipIcons() {
     static int x_offsets[4];
     static int y_offsets[4];
-    IDList ships_in_orbit;
 
     for(int i=0; i < GetPlanets()->GetPlanetCount(); i++) {
         Planet* planet = GetPlanetByIndex(i);
@@ -160,11 +159,9 @@ void _UpdateShipIcons() {
         text3d->text = planet->name;
         text3d->color = Palette::ui_main;
         text3d->world_pos = planet->position.cartesian;
-        text3d->alignment = TextAlignment::HCENTER | TextAlignment::BOTTOM;
+        text3d->alignment = text_alignment::HCENTER | text_alignment::BOTTOM;
 
         // Collect ships
-        ships_in_orbit.Clear();
-        GetShips()->GetOnPlanet(&ships_in_orbit, RID(i, EntityType::PLANET), 0xFFFFFFFFU);
 
         float pixel_size = GetCamera()->MeasurePixelSize(GameCamera::WorldToRender(GetPlanetByIndex(i)->position.cartesian));
         float planet_pixel_size = GameCamera::WorldToRender(GetPlanetByIndex(i)->radius) / pixel_size;
@@ -183,15 +180,15 @@ void _UpdateShipIcons() {
         x_offsets[2] =  planet_pixel_size + stride;
         x_offsets[3] =  planet_pixel_size + stride;
         
-        for (int j=0; j < ships_in_orbit.size; j++) {
-            Ship* ship = GetShip(ships_in_orbit[j]);
+        for (int j=0; j < planet->cached_ship_list.size; j++) {
+            Ship* ship = GetShip(planet->cached_ship_list[j]);
             ship->DrawIcon(x_offsets, y_offsets, grow_factor);
         }
     }
 
     // Handle orphan ships
-    ships_in_orbit.Clear();
-    GetShips()->GetOnPlanet(&ships_in_orbit, GetInvalidId(), 0xFFFFFFFFU);
+    IDList ships_in_orbit;
+    GetShips()->GetOnPlanet(&ships_in_orbit, GetInvalidId(), ship_selection_flags::ALL);
     for (int j=0; j < ships_in_orbit.size; j++) {
         Ship* ship = GetShip(ships_in_orbit[j]);
         // TODO: offsets to draw fleets

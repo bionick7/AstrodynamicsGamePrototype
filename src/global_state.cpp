@@ -18,10 +18,10 @@ bool _PauseMenuButton(const char* label) {
     ui::PushInset(0, DEFAULT_FONT_SIZE+4);
     ui::Enclose();
     ui::Write(label);
-    ButtonStateFlags::T button_state = ui::AsButton();
-    HandleButtonSound(button_state & ButtonStateFlags::JUST_PRESSED);
+    button_state_flags::T button_state = ui::AsButton();
+    HandleButtonSound(button_state & button_state_flags::JUST_PRESSED);
     ui::Pop();
-    return button_state & ButtonStateFlags::JUST_PRESSED;
+    return button_state & button_state_flags::JUST_PRESSED;
 }
 
 bool is_in_pause_menu;
@@ -225,10 +225,10 @@ void _UpdateShipsPlanets(GlobalState* gs) {
     }
 
     if (prev_hover != gs->hover) {
-        HandleButtonSound(ButtonStateFlags::JUST_HOVER_IN);
+        HandleButtonSound(button_state_flags::JUST_HOVER_IN);
     }
     if (IsIdValid(prev_hover) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        HandleButtonSound(ButtonStateFlags::JUST_PRESSED);
+        HandleButtonSound(button_state_flags::JUST_PRESSED);
     }
     prev_hover = gs->hover;
 }
@@ -271,7 +271,7 @@ void GlobalState::DrawUI() {
     );
     DrawTextAligned(
         capital_str, {GetScreenWidth() / 2.0f, 10}, 
-        TextAlignment::HCENTER & TextAlignment::TOP, 
+        text_alignment::HCENTER & text_alignment::TOP, 
         Palette::ui_main, 0
     );
 

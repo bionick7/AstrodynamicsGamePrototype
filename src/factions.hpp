@@ -5,7 +5,7 @@
 
 #define MAX_FACTIONS 8
 
-namespace DiplomaticStatus {
+namespace diplomatic_status {
     typedef uint32_t T;
     const static int AT_WAR = 1UL;
     const static int CAN_TRADE = 2UL;
@@ -19,7 +19,7 @@ struct Factions {
     int player_faction;
 
     double reputation_matrix[MAX_FACTIONS*MAX_FACTIONS];
-    DiplomaticStatus::T diplomacy_matrix[MAX_FACTIONS*MAX_FACTIONS];
+    diplomatic_status::T diplomacy_matrix[MAX_FACTIONS*MAX_FACTIONS];
 
     cost_t money[MAX_FACTIONS];
     //AIBlackboard ai_information[MAX_FACTIONS];

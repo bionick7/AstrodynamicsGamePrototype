@@ -153,7 +153,7 @@ void PlanetaryEconomy::UIDrawResources(RID planet) {
         ui::PushInset(0, DEFAULT_FONT_SIZE + 4);
         Vector2 cursor_pos = ui::Current()->GetTextCursor();
         Rectangle button_rect = {cursor_pos.x, cursor_pos.y, 16, 16};
-        ui::WriteEx(buffer, TextAlignment::CONFORM, false);
+        ui::WriteEx(buffer, text_alignment::CONFORM, false);
         if (CheckCollisionPointRec(GetMousePosition(), button_rect)) {
             //ui::SetMouseHint(GetUI()->GetConceptDescription(resources::names[i]));
             ui::SetMouseHint(resources::names[i]);
@@ -197,7 +197,7 @@ void PlanetaryEconomy::UIDrawResources(RID planet) {
             if (plan->departure_planet == planet) qtt *= -1;
             if (qtt != 0) {
                 sprintf(buffer, "   %+3d", qtt);
-                ui::WriteEx(buffer, TextAlignment::CONFORM, false);
+                ui::WriteEx(buffer, text_alignment::CONFORM, false);
             }
         }
         //ui::Fillline(resource_stock[i] / (double)resource_capacity[i], Palette::ui_main, Palette::bg);
@@ -252,7 +252,7 @@ void PlanetaryEconomy::UIDrawEconomy(RID planet) {
 
         /*if (GetTransferPlanUI()->IsActive()) {
             // Button
-            if (ui::ToggleButton(transfer.resource_id == i) & ButtonStateFlags::JUST_PRESSED) {
+            if (ui::ToggleButton(transfer.resource_id == i) & button_state_flags::JUST_PRESSED) {
                 GetTransferPlanUI()->Setresources::T(resource);
             }
         }*/
@@ -260,7 +260,7 @@ void PlanetaryEconomy::UIDrawEconomy(RID planet) {
         StringBuilder sb = StringBuilder();
         sb.AddFormat("%-10s", GetResourceData(i)->name).AddCost(resource_price[i]);
         //sprintf(buffer, "%-10sM§M  %+3fK /cnt", GetResourceData(i)->name, resource_price[i]/1e3);
-        ui::WriteEx(sb.c_str, TextAlignment::CONFORM, false);
+        ui::WriteEx(sb.c_str, text_alignment::CONFORM, false);
 
         resource_count_t qtt = 0;
         /*if (transfer.resource_id == i) {
@@ -272,14 +272,14 @@ void PlanetaryEconomy::UIDrawEconomy(RID planet) {
         if (qtt != 0) {
             sb.Clear();
             sb.AddI(qtt).Add("(").AddCost(GetPrice(resource, qtt)).Add(")");
-            ui::WriteEx(sb.c_str, TextAlignment::CONFORM, false);
+            ui::WriteEx(sb.c_str, text_alignment::CONFORM, false);
         }
 
         resource_count_t trade_ammount = 0;
-        if (ui::DirectButton("+ 10", 0) & ButtonStateFlags::JUST_PRESSED) trade_ammount = 10;
-        if (ui::DirectButton("+ 1", 0) & ButtonStateFlags::JUST_PRESSED) trade_ammount = 1;
-        if (ui::DirectButton("- 1", 0) & ButtonStateFlags::JUST_PRESSED) trade_ammount = -1;
-        if (ui::DirectButton("- 10", 0) & ButtonStateFlags::JUST_PRESSED) trade_ammount = -10;
+        if (ui::DirectButton("+ 10", 0) & button_state_flags::JUST_PRESSED) trade_ammount = 10;
+        if (ui::DirectButton("+ 1", 0) & button_state_flags::JUST_PRESSED) trade_ammount = 1;
+        if (ui::DirectButton("- 1", 0) & button_state_flags::JUST_PRESSED) trade_ammount = -1;
+        if (ui::DirectButton("- 10", 0) & button_state_flags::JUST_PRESSED) trade_ammount = -10;
 
         if (trade_ammount != 0) {
             TryPlayerTransaction(resource, trade_ammount);

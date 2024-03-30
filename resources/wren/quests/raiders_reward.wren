@@ -18,10 +18,10 @@ class RaidersReward is Quest {
     ]}
 
     static modules_shipyard {[
-        "shpmod_small_yard_1",
-        "shpmod_small_yard_2",
-        "shpmod_small_yard_3",
-        "shpmod_small_yard_4",
+        "shpmod_manufacture_offices",
+        "shpmod_large_storage",
+        "shpmod_workshop",
+        "shpmod_wetdock",
     ]}
 
     static modules_combat {[

@@ -15,8 +15,6 @@ Planet::Planet(const char* p_name, double p_mu, double p_radius) {
     radius = p_radius;
     ship_production_queue.Clear();
     module_production_queue.Clear();
-    ship_production_process = 0;
-    module_production_process = 0;
 
     for (int i = 0; i < MAX_PLANET_INVENTORY; i++) {
         ship_module_inventory[i] = GetInvalidId();
@@ -26,14 +24,22 @@ Planet::Planet(const char* p_name, double p_mu, double p_radius) {
 void Planet::Serialize(DataNode* data) const {
     data->Set("name", name);
     data->Set("trading_accessible", economy.trading_accessible ? "y" : "n");
-    data->SetI("ship_production_process", ship_production_process);
-    data->SetI("module_production_process", module_production_process);
     data->SetI("allegiance", allegiance);
     data->SetI("independance", independance);
     data->SetI("base_independance_delta", base_independance_delta);
     data->SetI("opinion", opinion);
-    ship_production_queue.SerializeTo(data, "ship_production_queue");
-    module_production_queue.SerializeTo(data, "module_production_queue");
+    data->CreatChildArray("ship_production_queue", ship_production_queue.size);
+    for(int i=0; i < ship_production_queue.size; i++) {
+        DataNode* dn = data->InsertIntoChildArray("ship_production_queue", i);
+        dn->SetI("worker", ship_production_queue[i].worker.AsInt());
+        dn->SetI("product", ship_production_queue[i].product.AsInt());
+    }
+    data->CreatChildArray("module_production_queue", module_production_queue.size);
+    for(int i=0; i < module_production_queue.size; i++) {
+        DataNode* dn = data->InsertIntoChildArray("module_production_queue", i);
+        dn->SetI("worker", module_production_queue[i].worker.AsInt());
+        dn->SetI("product", module_production_queue[i].product.AsInt());
+    }
     //data->SetF("mass", mu / G);
     //data->SetF("radius", radius);
 
@@ -57,16 +63,24 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
     //SettingOverridePush("datanode_quite", true);
     //SettingOverridePop("datanode_quite");
     strcpy(name, data->Get("name", name, true));
-    ship_production_process = data->GetI("ship_production_process", 0, true);
-    module_production_process = data->GetI("module_production_process", 0, true);
     allegiance = data->GetI("allegiance", 0);
 
     independance = data->GetI("independance", 0, true);
     base_independance_delta = data->GetI("base_independance_delta", 0);
     opinion = data->GetI("opinion", 0, true);
 
-    ship_production_queue.DeserializeFrom(data, "ship_production_queue", true);
-    module_production_queue.DeserializeFrom(data, "module_production_queue", true);
+    ship_production_queue.Resize(data->GetChildArrayLen("ship_production_queue", true));
+    for(int i=0; i < ship_production_queue.size; i++) {
+        const DataNode* dn = data->GetChildArrayElem("ship_production_queue", i);
+        ship_production_queue[i].worker = RID(dn->GetI("worker"));
+        ship_production_queue[i].product = RID(dn->GetI("product"));
+    }
+    module_production_queue.Resize(data->GetChildArrayLen("module_production_queue", true));
+    for(int i=0; i < module_production_queue.size; i++) {
+        const DataNode* dn = data->GetChildArrayElem("module_production_queue", i);
+        module_production_queue[i].worker = RID(dn->GetI("worker"));
+        module_production_queue[i].product = RID(dn->GetI("product"));
+    }
     RID index = planets->GetIdByName(name);
     if (!IsIdValid(index)) {
         return;
@@ -146,38 +160,23 @@ Color Planet::GetColor() const {
     //return allegiance == GetFactions()->player_faction ? Palette::green : Palette::red;
 }
 
-bool Planet::CanProduce(RID id) const {
+bool Planet::CanProduce(RID id, bool check_resources, bool check_stats) const {
     if (!IsIdValid(id)) return false;
-    const resource_count_t* construction_resources = NULL;
-    switch (IdGetType(id)) {
-        case EntityType::SHIP_CLASS: {
-            const ShipClass* ship_class = GetShipClassByRID(id);
-            construction_resources = &ship_class->construction_resources[0];
-            break;
-        }
-        case EntityType::MODULE_CLASS: {
-            const ShipModuleClass* module_class = GetModule(id);
-            construction_resources = &module_class->construction_resources[0];
-            break;
-        }
-        default: break;
-    }
-
-    if (construction_resources == NULL) return false;
-    for (int i=0; i < resources::MAX; i++) {
-        if (construction_resources[i] > economy.resource_stock[i]) {
-            return false;
+    for (int i=0; i < cached_ship_list.size; i++) {
+        const Ship* ship = GetShip(cached_ship_list[i]);
+        if (ship->CanProduce(id, check_resources, check_stats)) {
+            return true;
         }
     }
-    return true;
+    return false;
 }
 
 void Planet::Conquer(int faction, bool include_ships) {
     if (include_ships) {
-        IDList ships;
-        GetShips()->GetOnPlanet(&ships, id, UINT32_MAX);
-        for (int i=0; i < ships.size; i++) {
-            GetShip(ships[i])->allegiance = faction;
+        cached_ship_list.Clear();
+        GetShips()->GetOnPlanet(&cached_ship_list, id, ship_selection_flags::ALL);
+        for (int i=0; i < cached_ship_list.size; i++) {
+            GetShip(cached_ship_list[i])->allegiance = faction;
         }
     }
     if (allegiance == faction) return;
@@ -191,9 +190,11 @@ void Planet::RecalcStats() {
     int delta_from_delivery = 0;
     for(int i=0; i < resources::MAX; i++) {
         if (economy.delivered_resources_today[i] != 0) {
-            delta_from_delivery -= economy.delivered_resources_today[i] * GetResourceData(i)->default_cost / 1000000;
-            DebugPrintText("%s: %d", resources::names[i], economy.delivered_resources_today[i]);
-            INFO("%s: %d", resources::names[i], economy.delivered_resources_today[i])
+            //delta_from_delivery -= economy.delivered_resources_today[i] * GetResourceData(i)->default_cost / 1000000;
+            delta_from_delivery -= economy.delivered_resources_today[i] / 10;
+
+            //DebugPrintText("%s: %d", resources::names[i], economy.delivered_resources_today[i]);
+            //INFO("%s: %d", resources::names[i], economy.delivered_resources_today[i])
         }
     }
 
@@ -234,6 +235,35 @@ void Planet::RemoveShipModuleInInventory(int index) {
     ship_module_inventory[index] = GetInvalidId();
 }
 
+Planet::ProductionOrder Planet::MakeProductionOrder(RID id) const {
+    // TODO: untested
+    int current_order_count = INT32_MAX;
+    ProductionOrder res;
+    res.product = id;
+    res.worker = GetInvalidId();
+    const List<ProductionOrder>* production_orders;
+    if (IsIdValidTyped(id, EntityType::SHIP_CLASS)) {
+        production_orders = &ship_production_queue;
+    } else {
+        production_orders = &module_production_queue;
+    }
+    for (int i=0; i < cached_ship_list.size; i++) {
+        const Ship* ship = GetShip(cached_ship_list[i]);
+        if (!ship->CanProduce(id, true, true)) {
+            continue;
+        }
+        int ship_order_count = 0;
+        for (int j=0; j < production_orders->size; j++) {
+            if (production_orders->Get(j).worker == cached_ship_list[i]) ship_order_count++;
+        }
+        if (ship_order_count < current_order_count) {
+            current_order_count = ship_order_count;
+            res.worker = cached_ship_list[i];
+        }
+    }
+    return res;
+}
+
 bool Planet::HasMouseHover(double* min_distance) const {
     // TODO: proximity approximation is pretty shit at flat angles
 
@@ -268,6 +298,8 @@ bool Planet::HasMouseHover(double* min_distance) const {
 void Planet::Update() {
     timemath::Time now = GlobalGetNow();
     position = orbit.GetPosition(now);
+    cached_ship_list.Clear();
+    GetShips()->GetOnPlanet(&cached_ship_list, id, ship_selection_flags::ALL);
     //int index = IdGetIndex(id);
     //position = orbit.FromRightAscention(-PI/2 * index);
     //position = orbit.FromRightAscention(-PI/2);
@@ -282,7 +314,7 @@ void Planet::Update() {
     }
     economy.Update();
 }
-
+/*
 void Planet::AdvanceShipProductionQueue() {
     // Update ship production
     if (ship_production_queue.size == 0) return;
@@ -295,7 +327,7 @@ void Planet::AdvanceShipProductionQueue() {
     if (ship_production_process < sc->construction_time) return;
 
     IDList list;
-    GetShips()->GetOnPlanet(&list, id, UINT32_MAX);
+    GetShips()->GetOnPlanet(&list, id, ship_selection_flags::ALL);
     int allegiance = GetShip(list[0])->allegiance;// Assuming planets can't have split allegiance!
 
     DataNode ship_data;
@@ -341,7 +373,7 @@ void Planet::AdvanceModuleProductionQueue() {
 
     module_production_queue.EraseAt(0);
     module_production_process = 0;
-}
+}*/
 
 Planets::Planets() {
     planet_array = NULL;

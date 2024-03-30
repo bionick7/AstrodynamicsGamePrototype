@@ -1,7 +1,7 @@
 #include "datanode.hpp"
 #include "app_meta.hpp"
-#include "audio_server.hpp"
 #include "global_state.hpp"
+#include "debug_console.hpp"
 
 #include "constants.hpp"
 #include "tests.hpp"
@@ -48,7 +48,7 @@ void Load(int argc, const char** argv) {
     app->Make(1e6);
     app->LoadData();
     //app->LoadGame("resources/data/start_saves/combat_waves.yaml");
-    app->LoadGame("resources/data/start_saves/industry.yaml");
+    app->LoadGame(TextFormat("resources/data/start_saves/%s.yaml", GetSettingStr("default_savefile")));
     TestingSetup(app);
 
     // Interpreting cmdline

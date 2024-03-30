@@ -28,7 +28,7 @@ struct Task {
     void Deserialize(const DataNode* data);
 
     bool IsValid() const;
-    ButtonStateFlags::T DrawUI(bool show_as_button, bool highlight) const;
+    button_state_flags::T DrawUI(bool show_as_button, bool highlight) const;
 };
 
 

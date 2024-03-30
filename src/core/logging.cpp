@@ -53,7 +53,7 @@ void VLogImpl(const char* file, int line, LogType level, const char* format, va_
 
     if (logging::target_file[0]) {
         timespec time;
-        clock_gettime(CLOCK_MONOTONIC_RAW, &time);
+        clock_gettime(CLOCK_MONOTONIC, &time);
         if (logging::buffer_offset + print_size > LOGGING_BUFFER_SIZE || (logging::time_since_last_save - time.tv_nsec) > 1e8) {
             FILE* f = fopen(logging::target_file, "at");
             fprintf(f, logging::buffer);

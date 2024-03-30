@@ -93,10 +93,10 @@ ships:
   planet: Tethys
   tf_plans: []
   modules:
-  - shpmod_small_yard_1
-  - shpmod_small_yard_2
-  - shpmod_small_yard_3
-  - shpmod_small_yard_4
+  - shpmod_manufacture_offices
+  - shpmod_large_storage
+  - shpmod_workshop
+  - shpmod_wetdock
 
 - name: Military ship 1
   class_id: shp_light_transport
@@ -172,10 +172,10 @@ ships:
   planet: Titan
   tf_plans: []
   modules:
-  - shpmod_small_yard_1
-  - shpmod_small_yard_2
-  - shpmod_small_yard_3
-  - shpmod_small_yard_4
+  - shpmod_manufacture_offices
+  - shpmod_large_storage
+  - shpmod_workshop
+  - shpmod_wetdock
   - shpmod_pdc
   - shpmod_pdc
 
@@ -185,10 +185,10 @@ ships:
   planet: Rhea
   tf_plans: []
   modules:
-  - shpmod_small_yard_1
-  - shpmod_small_yard_2
-  - shpmod_small_yard_3
-  - shpmod_small_yard_4
+  - shpmod_manufacture_offices
+  - shpmod_large_storage
+  - shpmod_workshop
+  - shpmod_wetdock
 
 - name: Military ship I
   class_id: shp_express
@@ -270,9 +270,9 @@ ships:
   planet: Iaeptus
   tf_plans: []
   modules:
-  - shpmod_small_yard_1
-  - shpmod_small_yard_2
-  - shpmod_small_yard_3
-  - shpmod_small_yard_4
-  - shpmod_small_yard_3
-  - shpmod_small_yard_4
+  - shpmod_manufacture_offices
+  - shpmod_large_storage
+  - shpmod_workshop
+  - shpmod_wetdock
+  - shpmod_workshop
+  - shpmod_wetdock

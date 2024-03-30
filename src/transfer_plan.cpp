@@ -465,7 +465,7 @@ void TransferPlanUI::Update() {
         resource_count_t capacity = ship_instance->GetRemainingPayloadCapacity(plan->tot_dv);
         if (total_payload > capacity) total_payload = capacity;
         SetLogistics(ship_instance->GetFuelRequired(plan->tot_dv, total_payload));
-        DebugPrintText("%d fuel (%d payload)", ship_instance->GetFuelRequired(plan->tot_dv, total_payload), total_payload);
+        //DebugPrintText("%d fuel (%d payload)", ship_instance->GetFuelRequired(plan->tot_dv, total_payload), total_payload);
 
     } else {
         SetLogistics(0);
@@ -524,7 +524,7 @@ void _DrawTransferOrbit(const TransferPlan* plan, int solution, bool is_secondar
     _DrawSweep(&from->orbit, t0, plan->departure_time, orbit_color);
     _DrawSweep(&to->orbit,   t0, plan->arrival_time,   orbit_color);
     OrbitSegment segment = OrbitSegment(&plan->transfer_orbit[solution], pos1, pos2);
-    RenderOrbit(&segment, 256, OrbitRenderMode::Solid, orbit_color);
+    RenderOrbit(&segment, 256, orbit_render_mode::Solid, orbit_color);
 }
 
 timemath::Time _DrawHandle(
@@ -544,9 +544,9 @@ timemath::Time _DrawHandle(
     if (full_orbits > 0) {
         char text_content[4];
         sprintf(text_content, "%+3d", full_orbits);
-        DrawTextAligned(text_content, text_pos, TextAlignment::HCENTER | TextAlignment::RIGHT, c, 0);
+        DrawTextAligned(text_content, text_pos, text_alignment::HCENTER | text_alignment::RIGHT, c, 0);
     }
-    if (DrawTriangleButton(pos, Vector2Scale(radial_dir, 20), 10, c) & ButtonStateFlags::JUST_PRESSED) {
+    if (DrawTriangleButton(pos, Vector2Scale(radial_dir, 20), 10, c) & button_state_flags::JUST_PRESSED) {
         *is_dragging = true;
     }
     const int extend = 5;
@@ -565,10 +565,10 @@ timemath::Time _DrawHandle(
         Vector2Add(plus_pos, {0, extend}),
         c
     );
-    ButtonStateFlags::T button_state_plus  = DrawCircleButton(plus_pos, 10, c);
-    ButtonStateFlags::T button_state_minus = DrawCircleButton(minus_pos, 10, c);
-    if (button_state_plus & ButtonStateFlags::JUST_PRESSED)  current = current + period;
-    if (button_state_minus & ButtonStateFlags::JUST_PRESSED) current = current - period;
+    button_state_flags::T button_state_plus  = DrawCircleButton(plus_pos, 10, c);
+    button_state_flags::T button_state_minus = DrawCircleButton(minus_pos, 10, c);
+    if (button_state_plus & button_state_flags::JUST_PRESSED)  current = current + period;
+    if (button_state_minus & button_state_flags::JUST_PRESSED) current = current - period;
     HandleButtonSound(button_state_plus);
     HandleButtonSound(button_state_minus);
     if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
@@ -672,7 +672,7 @@ void TransferPlanUI::DrawUI() {
     sb.Add("\nArrives in ").AddTime(plan->arrival_time - time_bounds[0]);
     //DebugPrintText("%i", sb.CountLines());
     ui::PushInset(0, (DEFAULT_FONT_SIZE) * sb.CountLines() + 1);
-    ui::WriteEx(sb.c_str, TextAlignment::CONFORM, false);
+    ui::WriteEx(sb.c_str, text_alignment::CONFORM, false);
     ui::Fillline(
         fmin(timemath::Time::SecDiff(plan->arrival_time, time_bounds[0]) / timemath::Time::SecDiff(plan->hohmann_arrival_time, time_bounds[0]), 1.0), 
         Palette::ally, Palette::bg
@@ -699,7 +699,7 @@ void TransferPlanUI::DrawUI() {
     }
 
     ui::PushInset(0, (DEFAULT_FONT_SIZE) * sb.CountLines() + 1);
-    ui::WriteEx(sb.c_str, TextAlignment::CONFORM, false);
+    ui::WriteEx(sb.c_str, text_alignment::CONFORM, false);
     ui::Fillline(fmax(0, capacity_ratio), capacity >= 0 ? Palette::ally : Palette::red, Palette::bg);
     ui::Pop();  // Inset
 
@@ -707,45 +707,45 @@ void TransferPlanUI::DrawUI() {
     ui::PushInset(0, DEFAULT_FONT_SIZE+4);
     {
         ui::PushHSplit(0, w/3);
-        ButtonStateFlags::T button_state = ui::AsButton();
-        if (button_state & ButtonStateFlags::HOVER) {
+        button_state_flags::T button_state = ui::AsButton();
+        if (button_state & button_state_flags::HOVER) {
             ui::EncloseEx(0, Palette::bg, Palette::ui_main, 4);
         }
-        if(button_state & ButtonStateFlags::JUST_PRESSED) {
+        if(button_state & button_state_flags::JUST_PRESSED) {
             TransferPlanSoonest(plan, ship_instance->GetCapableDV() - 1);
         }
-        ui::WriteEx("ASAP", TextAlignment::CENTER, false);
+        ui::WriteEx("ASAP", text_alignment::CENTER, false);
         ui::Pop();  // HSplit
     }
     {
         ui::PushHSplit(w/3, 2*w/3);
-        ButtonStateFlags::T button_state = ui::AsButton();
-        if (button_state & ButtonStateFlags::HOVER) {
+        button_state_flags::T button_state = ui::AsButton();
+        if (button_state & button_state_flags::HOVER) {
             ui::EncloseEx(0, Palette::bg, Palette::ui_main, 4);
             resource_count_t tot_payload = plan->GetPayloadMass();
-            if (tot_payload == 0 && GetShip(ship)->GetShipType() == ShipType::TRANSPORT) {
+            if (tot_payload == 0 && GetShip(ship)->GetShipType() == ship_type::TRANSPORT) {
                 ui::SetMouseHint("WARNING: Transferring with a transport ship\nwithout resources");
             }
         }
-        if(button_state & ButtonStateFlags::JUST_PRESSED) {
+        if(button_state & button_state_flags::JUST_PRESSED) {
             if (is_valid) {
                 ship_instance->ConfirmEditedTransferPlan();
                 Reset();
             }
         }
-        ui::WriteEx("Confirm", TextAlignment::CENTER, false);
+        ui::WriteEx("Confirm", text_alignment::CENTER, false);
         ui::Pop();  // HSplit
     }
     {
         ui::PushHSplit(2*w/3, w);
-        ButtonStateFlags::T button_state = ui::AsButton();
-        if (departure_time_automatic || (button_state & ButtonStateFlags::HOVER)) {
+        button_state_flags::T button_state = ui::AsButton();
+        if (departure_time_automatic || (button_state & button_state_flags::HOVER)) {
             ui::EncloseEx(0, Palette::bg, Palette::ui_main, 4);
         }
-        if(button_state & ButtonStateFlags::JUST_PRESSED) {
+        if(button_state & button_state_flags::JUST_PRESSED) {
             departure_time_automatic = !departure_time_automatic;
         }
-        ui::WriteEx("Lock", TextAlignment::CENTER, false);
+        ui::WriteEx("Lock", text_alignment::CENTER, false);
         ui::Pop();  // HSplit
     }
     ui::Pop();  // Inset

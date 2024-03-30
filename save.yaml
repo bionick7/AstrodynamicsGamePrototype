@@ -30,26 +30,28 @@ quests:
 
 techtree:
   techtree_status:
-  - 1000
-  - 1000
-  - 0
-  - 0
-  - 0
-  - 1000
-  - -1000
-  - 0
-  - 1000
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - -1000
-  - 0
-  - 0
-  - 0
-  - 0
+    tech_admin: 0
+    tech_advanced_military: -800
+    tech_aeronautics: -700
+    tech_atmo_extraction: -100
+    tech_basic_extraction: 150
+    tech_bulk_storage: 0
+    tech_chem_industry: 0
+    tech_cryo: 0
+    tech_habs_advanced: 0
+    tech_habs_basic: 200
+    tech_largescale_construction: 0
+    tech_manufacturing: 0
+    tech_metallurgy: 0
+    tech_military_electronics: 0
+    tech_ntr: 0
+    tech_nuclear_power: 0
+    tech_research: 0
+    tech_sc_basics: 200
+    tech_semiconductors: 0
+    tech_small_arms: 0
+    tech_weapon_basics: 200
+
 
 factions:
 - money: 0
@@ -71,7 +73,7 @@ planets:
     water: 50
 
   resource_stock:
-    hydrogen: 30
+    hydrogen: 60
     water: 1000
 
   inventory:
@@ -436,7 +438,7 @@ planets:
     water: 20
 
   resource_stock:
-    carbon: 30
+    carbon: 60
     electronics: 6
     steel: 20
     water: 1000
@@ -711,10 +713,10 @@ ships:
   transporting:
 
   modules:
-  - shpmod_small_yard_1
-  - shpmod_small_yard_2
-  - shpmod_small_yard_3
-  - shpmod_small_yard_4
+  - shpmod_manufacture_offices
+  - shpmod_large_storage
+  - shpmod_workshop
+  - shpmod_wetdock
   - ---
   - ---
   - ---
@@ -851,10 +853,10 @@ ships:
   transporting:
 
   modules:
-  - shpmod_small_yard_1
-  - shpmod_small_yard_2
-  - shpmod_small_yard_3
-  - shpmod_small_yard_4
+  - shpmod_manufacture_offices
+  - shpmod_large_storage
+  - shpmod_workshop
+  - shpmod_wetdock
   - ---
   - ---
   - ---

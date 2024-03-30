@@ -50,7 +50,7 @@
   ]}
 }
 #columns(2)[
-  #let modules = yaml("../shipmodules.yaml").at("shipmodules")
+  #let modules = yaml("../ship_modules.yaml").at("shipmodules")
   #modules.map(show_module).join()
 ]
 
