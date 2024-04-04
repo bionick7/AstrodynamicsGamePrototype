@@ -2,6 +2,40 @@
 #include "rlgl.h"
 #include "logging.hpp"
 
+WireframeMesh MakeWireframeMeshFromBuffers(int p_vertex_count, int p_triangle_count, int p_line_count,
+    float* vertex_buffer, unsigned short* triangle_buffer, unsigned short* line_buffer
+) {
+    WireframeMesh mesh = WireframeMesh {0};
+
+    mesh.vertex_count = p_vertex_count;
+    mesh.triangle_count = p_triangle_count;
+    mesh.line_count = p_line_count;
+
+    // Triangles
+    mesh.vao_triangles = rlLoadVertexArray();
+    rlEnableVertexArray(mesh.vao_triangles);
+
+    mesh.vbo_triangles = rlLoadVertexBuffer(vertex_buffer, p_vertex_count*3*sizeof(float), false);
+    rlSetVertexAttribute(0, 3, RL_FLOAT, 0, 0, 0);
+    rlEnableVertexAttribute(0);
+
+    int triangle_elements = rlLoadVertexBufferElement(triangle_buffer, p_triangle_count*3*sizeof(float), false);
+    rlDisableVertexArray();
+    
+    // Lines
+    mesh.vao_lines = rlLoadVertexArray();
+    rlEnableVertexArray(mesh.vao_lines);
+
+    mesh.vbo_lines = rlLoadVertexBuffer(vertex_buffer, p_vertex_count*3*sizeof(float), false);
+    rlSetVertexAttribute(0, 3, RL_FLOAT, 0, 0, 0);
+    rlEnableVertexAttribute(0);
+
+    int line_elements = rlLoadVertexBufferElement(line_buffer, p_line_count*2*sizeof(float), false);
+    rlDisableVertexArray();
+
+    return mesh;
+}
+
 static bool _GetNextLine(const char *origin, int *cursor) {
     int count = 0;
     bool reached_end = false;
@@ -16,11 +50,9 @@ static bool _GetNextLine(const char *origin, int *cursor) {
 }
 
 WireframeMesh LoadWireframeMesh(const char* filepath) {
-    WireframeMesh mesh = {0};
-
     char* text = LoadFileText(filepath);
     if (text == NULL) {
-        return mesh;
+        return {0};
     }
     int text_size = strlen(text);
     int text_cursor = 0;
@@ -30,8 +62,9 @@ WireframeMesh LoadWireframeMesh(const char* filepath) {
     int counter = 0;
     int line = 0;
 
-    mesh.vertex_count = 0;
-    mesh.line_count = 0;
+    int vertex_count = 0;
+    int line_count = 0;
+    int triangle_count = 0;
 
     do {
         line++;
@@ -43,21 +76,27 @@ WireframeMesh LoadWireframeMesh(const char* filepath) {
         if (c == '\n' || c == '\0') continue;
         
         if (c == '#') continue;
-        else if (c == 'v') mesh.vertex_count++;
-        else if (c == 'l') mesh.line_count++;
+        else if (c == 'v') vertex_count++;
+        else if (c == 'l') line_count++;
+        else if (c == 'f') triangle_count++;
+        else if (c == 'o') continue;  // Ignorr object name
+        else if (c == 's') continue;  // Ignore surfaces
+        else if (text_size - text_cursor >= 6 && strncmp("mtllib", &text[text_cursor], 6) == 0) ;  // Ignore material library
         else ERROR("Unexpected character ('%c'%u) when reading at %s:%d:0", c, c, filepath, line)
     } while (_GetNextLine(text, &text_cursor));
 
-
-    mesh.vertecies = new float[mesh.vertex_count*3];
-    mesh.vertex_distances = new float[mesh.vertex_count];
-    mesh.lines = new int[mesh.line_count*2];
+    float* vertecies = new float[vertex_count*3];
+    float* vertex_distances = new float[vertex_count];
+    unsigned short* lines = new unsigned short[line_count*2];
+    unsigned short* triangles = new unsigned short[triangle_count*3];
 
     int vertex_cursor = 0;
     int line_cursor = 0;
+    int triangle_cursor = 0;
 
-    mesh.bounding_box.min = { INFINITY, INFINITY, INFINITY };
-    mesh.bounding_box.max = {-INFINITY,-INFINITY,-INFINITY };
+    BoundingBox bounding_box;
+    bounding_box.min = { INFINITY, INFINITY, INFINITY };
+    bounding_box.max = {-INFINITY,-INFINITY,-INFINITY };
 
     text_cursor = 0;
     line = 0;
@@ -66,80 +105,119 @@ WireframeMesh LoadWireframeMesh(const char* filepath) {
         if (text[text_cursor] == 'v') {
             float x, y, z;
             sscanf(&text[text_cursor], "v %f %f %f", &x, &y, &z);
-            mesh.vertecies[3*vertex_cursor] = x;
-            mesh.vertecies[3*vertex_cursor+1] = y;
-            mesh.vertecies[3*vertex_cursor+2] = z;
+            vertecies[3*vertex_cursor] = x;
+            vertecies[3*vertex_cursor+1] = y;
+            vertecies[3*vertex_cursor+2] = z;
 
-            if (x > mesh.bounding_box.max.x) mesh.bounding_box.max.x = x;
-            if (x < mesh.bounding_box.min.x) mesh.bounding_box.min.x = x;
-            if (y > mesh.bounding_box.max.y) mesh.bounding_box.max.y = y;
-            if (y < mesh.bounding_box.min.y) mesh.bounding_box.min.y = y;
-            if (z > mesh.bounding_box.max.z) mesh.bounding_box.max.z = z;
-            if (z < mesh.bounding_box.min.z) mesh.bounding_box.min.z = z;
+            if (x > bounding_box.max.x) bounding_box.max.x = x;
+            if (x < bounding_box.min.x) bounding_box.min.x = x;
+            if (y > bounding_box.max.y) bounding_box.max.y = y;
+            if (y < bounding_box.min.y) bounding_box.min.y = y;
+            if (z > bounding_box.max.z) bounding_box.max.z = z;
+            if (z < bounding_box.min.z) bounding_box.min.z = z;
 
             if (vertex_cursor == 0) {
-                mesh.vertex_distances[vertex_cursor] = 0;
+                vertex_distances[vertex_cursor] = 0;
             } else {
-                float dx = x - mesh.vertecies[3*vertex_cursor - 3];
-                float dy = y - mesh.vertecies[3*vertex_cursor - 2];
-                float dz = z - mesh.vertecies[3*vertex_cursor - 1];
+                float dx = x - vertecies[3*vertex_cursor - 3];
+                float dy = y - vertecies[3*vertex_cursor - 2];
+                float dz = z - vertecies[3*vertex_cursor - 1];
                 float distance_to_previous = sqrtf(dx*dx + dy*dy + dz*dz);
-                mesh.vertex_distances[vertex_cursor] = mesh.vertex_distances[vertex_cursor-1] + distance_to_previous;
+                vertex_distances[vertex_cursor] = vertex_distances[vertex_cursor-1] + distance_to_previous;
             }
-            //INFO("%d - %f", vertex_cursor, mesh.vertex_distances[vertex_cursor])
+            //INFO("%d - %f", vertex_cursor, vertex_distances[vertex_cursor])
 
             vertex_cursor++;
         }
         else if (text[text_cursor] == 'l') {
-            sscanf(&text[text_cursor], "l %d %d", &mesh.lines[line_cursor], &mesh.lines[line_cursor+1]);
+            int l1, l2;
+            sscanf(&text[text_cursor], "l %d %d", &l1, &l2);
+            lines[line_cursor] = l1;
+            lines[line_cursor+1] = l2;
             line_cursor += 2;
+        }
+        else if (text[text_cursor] == 'f') {
+            /*int fs[9];
+            sscanf(&text[text_cursor], "f %d/%d/%d %d/%d/%d %d/%d/%d", 
+                &fs[0], &fs[1], &fs[2],
+                &fs[3], &fs[4], &fs[5],
+                &fs[6], &fs[7], &fs[8]
+            );
+            triangles[triangle_cursor] = fs[0];
+            triangles[triangle_cursor+1] = fs[3];
+            triangles[triangle_cursor+2] = fs[6];*/
+            int fs1, fs2, fs3;
+            sscanf(&text[text_cursor], "f %d %d %d", &fs1, &fs2, &fs3);
+            triangles[triangle_cursor] = fs1;
+            triangles[triangle_cursor+1] = fs2;
+            triangles[triangle_cursor+2] = fs3;
+            //INFO("faces: %d, %d, %d\n", fs1, fs2, fs3);
+            triangle_cursor += 3;
         }
     } while (_GetNextLine(text, &text_cursor));
 
     UnloadFileText(text);
 
-    float total_distance = mesh.vertex_distances[mesh.vertex_count-1];
-    for(int i=0; i < mesh.vertex_count; i++) {
-        mesh.vertex_distances[i] = mesh.vertex_distances[i] / total_distance;
+    float total_distance = vertex_distances[vertex_count-1];
+    for(int i=0; i < vertex_count; i++) {
+        vertex_distances[i] = vertex_distances[i] / total_distance;
     }
 
-    for(int i=0; i < mesh.line_count*2; i++) {
-        mesh.lines[i]--;
-    }
+    // .obj starts indecies at 1, not 0
+    for(int i=0; i < line_count*2; i++) lines[i]--;
+    for(int i=0; i < triangle_count*3; i++) triangles[i]--;
 
-#ifdef WIREFRAME_USE_NATIVE_BUFFERS
-    mesh.vao = rlLoadVertexArray();
-    rlEnableVertexArray(mesh.vao);
+    WireframeMesh mesh = MakeWireframeMeshFromBuffers(
+        vertex_count, triangle_count, line_count,
+        vertecies, triangles, lines
+    );
 
-    mesh.vbo_vertecies = rlLoadVertexBuffer(mesh.vertecies, mesh.vertex_count*3*sizeof(float), false);
-    rlSetVertexAttribute(0, 3, RL_FLOAT, 0, 0, 0);
-    rlEnableVertexAttribute(0);
-    mesh.vbo_lines = rlLoadVertexBufferElement(mesh.lines, mesh.line_count*2*sizeof(int), false);
+    delete[] vertecies;
+    delete[] vertex_distances;
+    delete[] lines;
+    delete[] triangles;
 
-    rlDisableVertexArray();
-    //rlDisableVertexBuffer();
-    //rlDisableVertexBufferElement();
-#endif // WIREFRAME_USE_NATIVE_BUFFERS
+    mesh.bounding_box = bounding_box;
+
+    return mesh;
+}
+
+WireframeMesh LoadTestWireframeMesh() {
+    static float vertexBuffer[4*3] = {
+        0.0f, 0.0f, 1.0f,
+        1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 1.0f,
+    };
+
+    static float uvBuffer[4*2] = {
+        0.0f, 1.0f,
+        1.0f, 0.0f,
+        0.0f, 0.0f,
+        1.0f, 1.0f,
+    };
+
+    static unsigned short triangleIndexBuffer[6] = {0, 1, 2, 3, 1, 0};
+    static unsigned short lineIndexBuffer[8] = {0, 3, 3, 1, 1, 2, 2, 0};
+
+    WireframeMesh mesh = MakeWireframeMeshFromBuffers(4, 4, 2, vertexBuffer, triangleIndexBuffer, lineIndexBuffer);
+    mesh.bounding_box.min = {0,0,0};
+    mesh.bounding_box.max = {1,0,1};
     return mesh;
 }
 
 bool IsWireframeReady(WireframeMesh wireframe_mesh) {
     int res = (
-        wireframe_mesh.vertex_count * wireframe_mesh.line_count * 
-        (size_t)wireframe_mesh.vertecies * (size_t)wireframe_mesh.vertex_distances * 
-        (size_t)wireframe_mesh.lines
+        wireframe_mesh.vertex_count * (wireframe_mesh.line_count + wireframe_mesh.triangle_count) *
+        (wireframe_mesh.vao_triangles + wireframe_mesh.vao_lines) * 
+        (wireframe_mesh.vbo_triangles + wireframe_mesh.vbo_lines)
     );  // >;)
     return res;
 }
 
 void UnLoadWireframeMesh(WireframeMesh wireframe_mesh) {
-#ifdef WIREFRAME_USE_NATIVE_BUFFERS
-    rlUnloadVertexArray(wireframe_mesh.vao);
-    rlUnloadVertexBuffer(wireframe_mesh.vbo_vertecies);
+    rlUnloadVertexArray(wireframe_mesh.vao_triangles);
+    rlUnloadVertexArray(wireframe_mesh.vao_lines);
+    rlUnloadVertexBuffer(wireframe_mesh.vbo_triangles);
     rlUnloadVertexBuffer(wireframe_mesh.vbo_lines);
-#endif // WIREFRAME_USE_NATIVE_BUFFERS
-
-    delete[] wireframe_mesh.vertecies;
-    delete[] wireframe_mesh.vertex_distances;
-    delete[] wireframe_mesh.lines;
 }

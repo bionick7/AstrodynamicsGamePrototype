@@ -27,23 +27,24 @@ ShipModuleClass::ShipModuleClass() {
     }
 }
 
-void ShipModuleClass::UpdateStats(Ship* ship) const {
+bool ShipModuleClass::IsEnabled(const Ship* ship) const {
     for (int i=0; i < (int) ship_stats::MAX; i++) {
         if (ship->stats[i] < required_stats[i]) {
-            return;
+            return false;
         }
     }
+    return true;
+}
+
+void ShipModuleClass::UpdateStats(Ship* ship) const {
+    if (!IsEnabled(ship)) return;
     for (int i=0; i < (int) ship_stats::MAX; i++) {
         ship->stats[i] += delta_stats[i];
     }
 }
 
 void ShipModuleClass::UpdateCustom(Ship* ship) const {
-    for (int i=0; i < (int) ship_stats::MAX; i++) {
-        if (ship->stats[i] < required_stats[i]) {
-            return;
-        }
-    }
+    if (!IsEnabled(ship)) return;
     bool new_day = GetCalendar()->IsNewDay();
     if (ship->IsParked()) {
         Planet* planet = GetPlanet(ship->GetParentPlanet());
@@ -51,16 +52,13 @@ void ShipModuleClass::UpdateCustom(Ship* ship) const {
             return;
         }
         for (int i=0; i < resources::MAX; i++) {
-            if (planet->economy.resource_stock[i] < consumption[i]) {
+            if (production[i] < -planet->economy.resource_stock[i]) {
                 return;
             }
         }
         for (int i=0; i < resources::MAX; i++) {
             if (production[i] != 0) {
                 planet->economy.AddResourceDelta((resources::T) i, production[i]);
-            }
-            if (consumption[i] != 0) {
-                planet->economy.AddResourceDelta((resources::T) i, -consumption[i]);
             }
         }
         planet->module_opinion_delta += opinion_delta;
@@ -84,10 +82,10 @@ void ShipModuleClass::MouseHintWrite(StringBuilder* sb) const {
     int production_rsc_count = 0;
     StringBuilder sb2 = StringBuilder("    ");
     for (int i=0; i < resources::MAX; i++) {
-        if (consumption[i] > 0) {
+        if (production[i] < 0) {
             if (consumptions_count != 0)
             sb2.Add(" + ");
-            sb2.AddFormat("%3d %s", consumption[i], GetResourceUIRep(i));
+            sb2.AddFormat("%3d %s", -production[i], GetResourceUIRep(i));
             consumptions_count++;
         }
     }
@@ -326,6 +324,8 @@ void ModuleConfiguration::Draw(Ship* ship) const {
         bounding.y + bounding.height/2,
     };
 
+    // Adjust drawing box on mousehover
+
     adjusted_draw_space.x = bounding.x + (bounding.width-adjusted_draw_space.width) / 2;
     adjusted_draw_space.y = bounding.y + 1;
     bool fits_naturally = CheckEnclosingRecs(bounding, adjusted_draw_space);
@@ -361,6 +361,8 @@ void ModuleConfiguration::Draw(Ship* ship) const {
         BeginScissorMode(ui::Current()->render_rec.x, ui::Current()->render_rec.y, ui::Current()->render_rec.width, ui::Current()->render_rec.height);
     }
 
+    // Draw mesh
+
     if (IsWireframeReady(mesh)) {
         Rectangle wf_draw_rect = adjusted_draw_space;
         if (show_popup) {
@@ -373,7 +375,7 @@ void ModuleConfiguration::Draw(Ship* ship) const {
         center.x -= (mesh.bounding_box.min.x + mesh.bounding_box.max.x) * 50;
         center.y -= (mesh.bounding_box.min.z + mesh.bounding_box.max.z) * 50;
         center.y -= upper_border;
-        RenderWirframeMesh2DEx(mesh, center, 100, Palette::ui_main, ui::Current()->z_layer);
+        RenderWireframeMesh2DEx(mesh, center, 100, Palette::bg, Palette::ui_main, ui::Current()->z_layer);
     }
     BeginRenderInUILayer(ui::Current()->z_layer);
     //DrawRectangle(center.x + 5, center.y-25, 50, 50, WHITE);
@@ -515,11 +517,17 @@ int ShipModules::Load(const DataNode* data) {
             for (int j=0; j < ship_stats::MAX; j++) {
                 ship_modules[i].construction_reqirements[j] = 0;
             }
-            ship_modules[i].construction_reqirements[ship_stats::INDUSTRIAL_ADMIN] = 1;
+            ///ship_modules[i].construction_reqirements[ship_stats::INDUSTRIAL_ADMIN] = 1;
             ship_modules[i].construction_reqirements[ship_stats::INDUSTRIAL_MANUFACTURING] = 1;
         }
         module_data->DeserializeBuffer("add", ship_modules[i].delta_stats, ship_stats::names, ship_stats::MAX);
         module_data->DeserializeBuffer("require", ship_modules[i].required_stats, ship_stats::names, ship_stats::MAX);
+        // Add negative stats to requirements
+        for (int j=0; j < ship_stats::MAX; j++) {
+            if (ship_modules[i].delta_stats[j] < 0) {
+                ship_modules[i].required_stats[j] = -ship_modules[i].delta_stats[j];
+            }
+        }
         if (module_data->HasChild("add")) {
             ship_modules[i].independance_delta = module_data->GetChild("add")->GetI("independance", 0, true);
             ship_modules[i].opinion_delta = module_data->GetChild("add")->GetI("opinion", 0, true);
@@ -532,7 +540,7 @@ int ShipModules::Load(const DataNode* data) {
 
         module_data->DeserializeBuffer("construction_resources", ship_modules[i].construction_resources, resources::names, resources::MAX);
         module_data->DeserializeBuffer("produce", ship_modules[i].production, resources::names, resources::MAX);
-        module_data->DeserializeBuffer("consume", ship_modules[i].consumption, resources::names, resources::MAX);
+        //module_data->DeserializeBuffer("consume", ship_modules[i].consumption, resources::names, resources::MAX);
         if (module_data->GetArrayLen("icon_index") == 2) {
             ship_modules[i].icon_index = AtlasPos(
                 module_data->GetArrayElemI("icon_index", 0),

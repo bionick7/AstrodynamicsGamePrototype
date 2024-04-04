@@ -28,7 +28,7 @@ int ListTests() {
     //list.DeserializeFrom(&dn, "key", _DeserializeTestStruct);
 
     list.Clear();
-    //printf("%016zX\n", *list.verifier_array);
+    //INFO("%016zX\n", *list.verifier_array);
     for(int i=0; i < 40; i++) {
         list.Append({ 0 });
         list[i].m0 = i;

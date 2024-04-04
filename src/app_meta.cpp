@@ -23,7 +23,7 @@ void InternalToggleFullScreen() {
         prev_screen_width = GetScreenWidth();
         prev_screen_height = GetScreenHeight();
         int monitor = GetCurrentMonitor();
-        //printf("Current monitor %d/%d (%s) %dx%d\n", monitor, GetMonitorCount(), GetMonitorName(monitor), GetMonitorWidth(monitor), GetMonitorHeight(monitor));
+        //INFO("Current monitor %d/%d (%s) %dx%d\n", monitor, GetMonitorCount(), GetMonitorName(monitor), GetMonitorWidth(monitor), GetMonitorHeight(monitor));
         SetWindowSize(
             GetMonitorWidth(monitor),
             GetMonitorHeight(monitor)

@@ -108,7 +108,7 @@ void GlobalState::LoadData() {
     }
 
     for (int i=0; i < NUM; i++) {
-        printf("%d %s%s", ammounts[i], declarations[i], i == NUM-1 ? "\n" : "; ");
+        INFO("%d %s%s", ammounts[i], declarations[i], i == NUM-1 ? "\n" : "; ");
     }
 
     // INFO(GetModuleByRID(GetGlobalState()->GetFromStringIdentifier("shpmod_water_extractor"))->id)

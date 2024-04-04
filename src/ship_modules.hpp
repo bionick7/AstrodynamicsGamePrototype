@@ -27,10 +27,19 @@ struct Ship;
     X(KINETIC_DEFENSE, kinetic_defense)\
     X(ORDNANCE_DEFENSE, ordnance_defense)\
     X(BOARDING_DEFENSE, boarding_defense)\
+    X(GROUND_CONNECTION, ground_connection)\
+    X(THERMAL_CONTROL, thermal_control)\
     X(INDUSTRIAL_ADMIN, industrial_admin)\
     X(INDUSTRIAL_STORAGE, industrial_storage)\
     X(INDUSTRIAL_MANUFACTURING, industrial_manufacturing)\
     X(INDUSTRIAL_DOCK, industrial_dock)\
+    X(CRYOGENICS_FACILITY, cryogenics_facility)\
+    X(CLEAN_ROOM, clean_room)\
+    X(BIO_MANUFACTURING, bio_manufacturing)\
+    X(ARMS_MANUFACTURING, arms_manufacturing)\
+    X(PRECISION_MANUFACTURING, precision_manufacturing)\
+    X(NUCLEAR_ENRICHMENT, nuclear_enrichment)\
+    X(MILITARY_TRAINING, military_training)\
 
 namespace ship_stats {  // Better enum class, since you can treat the enum as integer
     enum T {
@@ -119,7 +128,6 @@ struct ShipModuleClass {
     int required_stats[ship_stats::MAX];
     int construction_reqirements[ship_stats::MAX];
     resource_count_t production[resources::MAX];
-    resource_count_t consumption[resources::MAX];
     resource_count_t construction_resources[resources::MAX];
     int independance_delta;
     int opinion_delta;
@@ -138,6 +146,7 @@ struct ShipModuleClass {
 
     ShipModuleClass();
     void MouseHintWrite(StringBuilder* sb) const;
+    bool IsEnabled(const Ship* ship) const;
     void UpdateStats(Ship* ship) const;
     void UpdateCustom(Ship* ship) const;
     bool HasDependencies() const;

@@ -164,7 +164,6 @@ void TransferPlanSolveInputImpl(TransferPlan* tp, const Orbit* from_orbit, const
         // Direct orbit is retrograde
         //is_prograde = lambert_cases[i] == 0 || lambert_cases[i] == 2;
         tp->transfer_orbit[i] = Orbit(pos1, pos2, t1, aa[i], mu, lambert_cases[i]);
-        //OrbitPrint(&tp->transfer_orbit[i]); printf("\n");
 
         OrbitPos pos1_tf = tp->transfer_orbit[i].GetPosition(t1);
         OrbitPos pos2_tf = tp->transfer_orbit[i].GetPosition(t2);
@@ -351,7 +350,7 @@ int TransferPlanTests() {
         double ddx = _LambertDerivative(x, K, solution);
         double central_difference = (_Lambert(x + epsilon, K, solution) - _Lambert(x - epsilon, K, solution)) / (2*epsilon);
         if (fabs(ddx - central_difference) > epsilon) {
-            printf("Error for x=%f, K=%f, solution=%d d/dx expected to be %f, but is measured to be %f\n", x, K, solution, ddx, central_difference);
+            ERROR("Error for x=%f, K=%f, solution=%d d/dx expected to be %f, but is measured to be %f\n", x, K, solution, ddx, central_difference);
             return 1;
         }
     }

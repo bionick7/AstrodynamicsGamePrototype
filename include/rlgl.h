@@ -702,6 +702,7 @@ RLAPI void rlSetVertexAttributeDivisor(unsigned int index, int divisor); // Set 
 RLAPI void rlSetVertexAttributeDefault(int locIndex, const void *value, int attribType, int count); // Set vertex attribute default value, when attribute to provided
 RLAPI void rlDrawVertexArray(int offset, int count);    // Draw vertex array (currently active vao)
 RLAPI void rlDrawVertexLineArray(int offset, int count);
+RLAPI void rlDrawVertexLineArrayElements(int offset, int count, const void *buffer); // Draw vertex array elements
 RLAPI void rlDrawVertexArrayElements(int offset, int count, const void *buffer); // Draw vertex array elements
 RLAPI void rlDrawVertexArrayInstanced(int offset, int count, int instances); // Draw vertex array (currently active vao) with instancing
 RLAPI void rlDrawVertexArrayElementsInstanced(int offset, int count, const void *buffer, int instances); // Draw vertex array elements with instancing
@@ -3758,6 +3759,16 @@ void rlDrawVertexLineArray(int offset, int count)
 {
     glDrawArrays(GL_LINES, offset, count);
 }
+
+void rlDrawVertexLineArrayElements(int offset, int count, const void *buffer)
+{
+    // NOTE: Added pointer math separately from function to avoid UBSAN complaining
+    unsigned short *bufferPtr = (unsigned short *)buffer;
+    if (offset > 0) bufferPtr += offset;
+
+    glDrawElements(GL_LINES, count, GL_UNSIGNED_SHORT, (const unsigned short *)bufferPtr);
+}
+
 
 // Draw vertex array elements
 void rlDrawVertexArrayElements(int offset, int count, const void *buffer)

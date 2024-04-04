@@ -979,7 +979,7 @@ bool Ship::CanProduce(RID object, bool check_resources, bool check_stats) const 
         case EntityType::SHIP_CLASS: {
             const ShipClass* ship_class = GetShipClassByRID(object);
             construction_resources = ship_class->construction_resources;
-            construction_required = ship_class->construction_reqirements;
+            construction_required = ship_class->construction_requirements;
             break;
         }
         case EntityType::MODULE_CLASS: {
@@ -1331,15 +1331,15 @@ int Ships::LoadShipClasses(const DataNode* data) {
         sc.module_config.Load(module_configurations, ship_id);
 
         if (sc_data->HasChild("construction_reqirements")) {
-            sc_data->DeserializeBuffer("construction_reqirements", sc.construction_reqirements, ship_stats::names, ship_stats::MAX);
+            sc_data->DeserializeBuffer("construction_reqirements", sc.construction_requirements, ship_stats::names, ship_stats::MAX);
         } else {  // Set default requirements
             for (int j=0; j < ship_stats::MAX; j++) {
-                sc.construction_reqirements[j] = 0;
+                sc.construction_requirements[j] = 0;
             }
-            sc.construction_reqirements[ship_stats::INDUSTRIAL_ADMIN] = 1;
-            sc.construction_reqirements[ship_stats::INDUSTRIAL_STORAGE] = 1;
-            sc.construction_reqirements[ship_stats::INDUSTRIAL_MANUFACTURING] = 1;
-            sc.construction_reqirements[ship_stats::INDUSTRIAL_DOCK] = 1;
+            sc.construction_requirements[ship_stats::INDUSTRIAL_ADMIN] = 1;
+            sc.construction_requirements[ship_stats::INDUSTRIAL_STORAGE] = 1;
+            sc.construction_requirements[ship_stats::INDUSTRIAL_MANUFACTURING] = 1;
+            sc.construction_requirements[ship_stats::INDUSTRIAL_DOCK] = 1;
         }
 
         sc_data->DeserializeBuffer("construction_resources", sc.construction_resources, resources::names, resources::MAX);

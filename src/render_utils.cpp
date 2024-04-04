@@ -130,6 +130,7 @@ namespace wireframe_shader {
     int render_mode = -1;
     int mvp = -1;
     int time = -1;
+    int depth = -1;
 
     void Load() {
         LOAD_SHADER(wireframe_shader)
@@ -137,104 +138,110 @@ namespace wireframe_shader {
         LOAD_SHADER_UNIFORM(wireframe_shader, color)
         LOAD_SHADER_UNIFORM(wireframe_shader, mvp)
         LOAD_SHADER_UNIFORM(wireframe_shader, time)
+        LOAD_SHADER_UNIFORM(wireframe_shader, depth)
     }
 }
 
-void RenderWirframeMesh(WireframeMesh mesh, Matrix transform, Color color) {
+void RenderWireframeMesh(WireframeMesh mesh, Matrix transform, Color background, Color foreground) {
     RELOAD_IF_NECAISSARY(wireframe_shader)
 
-    float color4[4];
-    _ColorToFloat4Buffer(color4, color);
-    SetShaderValue(wireframe_shader::shader, wireframe_shader::color, color4, SHADER_UNIFORM_VEC4);
-    int render_mode = 0;
-    SetShaderValue(wireframe_shader::shader, wireframe_shader::render_mode, &render_mode, SHADER_UNIFORM_INT);
-    float time = GetRenderServer()->animation_time;
-    SetShaderValue(wireframe_shader::shader, wireframe_shader::time, &time, SHADER_UNIFORM_FLOAT);
-    //SetShaderValueMatrix(wireframe_shader::shader, wireframe_shader::mvp2, MVP);
-    BeginShaderMode(wireframe_shader::shader);
+    static float bg_color[4];
+    static float fg_color[4];
+    _ColorToFloat4Buffer(bg_color, background);
+    _ColorToFloat4Buffer(fg_color, foreground);
 
-#ifdef WIREFRAME_USE_NATIVE_BUFFERS
-    Matrix matModel = MatrixIdentity();
     Matrix matView = rlGetMatrixModelview();
-    Matrix matModelView = MatrixIdentity();
     Matrix matProjection = rlGetMatrixProjection();
-    //matModel = MatrixMultiply(transform, rlGetMatrixTransform());
-    matModel = transform;
-    //matModelView = MatrixMultiply(matModel, matView);
-    //Matrix MVP = MatrixMultiply(matModelView, matProjection);
-    matModelView = MatrixMultiply(matView, matModel);
-    Matrix MVP = MatrixMultiply(matProjection, matModelView);
-    rlSetUniformMatrix(wireframe_shader::shader.locs[SHADER_LOC_MATRIX_MVP], MVP);
-    
-    rlEnableVertexArray(mesh.vao);
-    rlEnableVertexBuffer(mesh.vbo_vertecies);
-    rlSetVertexAttribute(wireframe_shader::vertexPosition, 3, RL_FLOAT, 0, 0, 0);
-    rlEnableVertexAttribute(wireframe_shader::vertexPosition);
-    rlEnableVertexBufferElement(mesh.vbo_lines);
+    Matrix matModel = MatrixMultiply(transform, rlGetMatrixTransform());
+    Matrix matModelView = MatrixMultiply(matModel, matView);
+    Matrix matModelViewProjection = MatrixMultiply(matModelView, matProjection);
 
-    rlDrawVertexLineArray(0, mesh.vertex_count * 3);
-    //rlDrawVertexArray(0, mesh.vertex_count * 3);
-    DEBUG_SHOW_I(mesh.vertex_count)
+    int render_mode_lines = 0;
+    int render_mode_faces = 3;
+    float default_depth = -1.0;
+
+    rlEnableShader(wireframe_shader::shader.id);
+    rlSetUniformMatrix(wireframe_shader::mvp, matModelViewProjection);
+    rlSetUniform(wireframe_shader::depth, &default_depth, RL_SHADER_UNIFORM_FLOAT, 1);
+
+    rlSetUniform(wireframe_shader::render_mode, &render_mode_faces, RL_SHADER_UNIFORM_INT, 1);
+    rlSetUniform(wireframe_shader::color, bg_color, RL_SHADER_UNIFORM_VEC4, 1);
+    rlDisableBackfaceCulling();
+
+    rlEnableVertexArray(mesh.vao_triangles);
+    rlDrawVertexArrayElements(0, mesh.triangle_count*3, 0);
     rlDisableVertexArray();
-#else
-    rlPushMatrix();
-    rlMultMatrixf(MatrixToFloat(transform));
-    rlBegin(RL_LINES);
-    //int max_j = fmod(GetRenderServer()->screen_time * 0.3, 1.0) * mesh.line_count;
-    int max_j = mesh.line_count;
-    for (int j=0; j < max_j; j++) {
-        int v1 = mesh.lines[j*2];
-        int v2 = mesh.lines[j*2+1];
-        rlColor4f(0, 0, 0, mesh.vertex_distances[j]);
-        rlVertex3f(mesh.vertecies[v1*3], mesh.vertecies[v1*3+1], mesh.vertecies[v1*3+2]);
-        rlColor4f(0, 0, 0, mesh.vertex_distances[j]);
-        rlVertex3f(mesh.vertecies[v2*3], mesh.vertecies[v2*3+1], mesh.vertecies[v2*3+2]);
-    }
-    rlEnd();
 
-    rlPopMatrix();
+    rlSetUniform(wireframe_shader::render_mode, &render_mode_lines, RL_SHADER_UNIFORM_INT, 1);
+    rlSetUniform(wireframe_shader::color, fg_color, RL_SHADER_UNIFORM_VEC4, 1);
 
-#endif  // WIREFRAME_USE_NATIVE_BUFFERS
-
-    EndShaderMode();
-
-    //rlPushMatrix();
-    //rlMultMatrixf(MatrixToFloat(transform));
-    //DrawBoundingBox(mesh.bounding_box, color);
-    //rlPopMatrix();
+    rlEnableVertexArray(mesh.vao_lines);
+    rlDrawVertexLineArrayElements(0, mesh.line_count*2, 0);
+    rlDisableVertexArray();
+    
+    rlDisableShader();
 }
 
-void RenderWirframeMesh2D(WireframeMesh mesh, Rectangle box, Color color, uint8_t z_layer) {
+void RenderWireframeMesh2DEx(WireframeMesh mesh, Vector2 origin, float scale, 
+                             Color background, Color foreground, uint8_t z_layer) {
+    RELOAD_IF_NECAISSARY(wireframe_shader)
+
+    static float bg_color[4];
+    static float fg_color[4];
+    _ColorToFloat4Buffer(bg_color, background);
+    _ColorToFloat4Buffer(fg_color, foreground);
+
+    // model to pixel-space 
+    //Matrix model2ndc_matrix = MatrixScale(2.0, 1, 1);
+    Matrix model2ndc_matrix = MatrixMultiply(MatrixScale(scale, scale, scale), MatrixTranslate(origin.x, 0, origin.y));
+    // pixel-space to ndc
+    model2ndc_matrix = MatrixMultiply(model2ndc_matrix, {
+        2.0f / GetScreenWidth(), 0, 0, -1,
+        0, 0, -2.0f / GetScreenHeight(), 1,
+        0, 0, 0, 0,
+        0, 0, 0, 1
+    });
+
+    int render_mode_lines = 0;
+    int render_mode_faces = 3;
+    int render_mode = 0;
+    float time = GetTime();
+    float z_layer_f = 1.0f - z_layer / 256.0f;
+    float z_layer_f_lines = 1.0f - (z_layer + 1) / 256.0f;
+
+    rlEnableShader(wireframe_shader::shader.id);
+
+    rlSetUniform(wireframe_shader::time, &time, SHADER_UNIFORM_FLOAT, 1);
+    rlSetUniformMatrix(wireframe_shader::mvp, model2ndc_matrix);
+
+    rlSetUniform(wireframe_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT, 1);
+    rlSetUniform(wireframe_shader::render_mode, &render_mode_faces, RL_SHADER_UNIFORM_INT, 1);
+    rlSetUniform(wireframe_shader::color, bg_color, RL_SHADER_UNIFORM_VEC4, 1);
+    rlDisableBackfaceCulling();
+
+    rlEnableVertexArray(mesh.vao_triangles);
+    rlDrawVertexArrayElements(0, mesh.triangle_count*3, 0);
+    rlDisableVertexArray();
+
+    rlSetUniform(wireframe_shader::depth, &z_layer_f_lines, SHADER_UNIFORM_FLOAT, 1);
+    rlSetUniform(wireframe_shader::render_mode, &render_mode_lines, RL_SHADER_UNIFORM_INT, 1);
+    rlSetUniform(wireframe_shader::color, fg_color, RL_SHADER_UNIFORM_VEC4, 1);
+
+    rlEnableVertexArray(mesh.vao_lines);
+    rlDrawVertexLineArrayElements(0, mesh.line_count*2, 0);
+    rlDisableVertexArray();
+    
+    rlDisableShader();
+}
+
+void RenderWireframeMesh2D(WireframeMesh mesh, Rectangle box, Color color, uint8_t z_layer) {
     float scale = fmin(
         box.width / (mesh.bounding_box.max.x - mesh.bounding_box.min.x),
         box.height / (mesh.bounding_box.max.z - mesh.bounding_box.min.z)
     );
     float offset_x = box.x - mesh.bounding_box.min.x * scale;
     float offset_y = box.y - mesh.bounding_box.min.z * scale;
-    RenderWirframeMesh2DEx(mesh, { offset_x, offset_y }, scale, color, z_layer);
-}
-
-void RenderWirframeMesh2DEx(WireframeMesh mesh, Vector2 origin, float scale, Color color, uint8_t z_layer) {
-    RELOAD_IF_NECAISSARY(ui_shader)
-
-    float color4[4];
-    _ColorToFloat4Buffer(color4, color);
-    float z_layer_f = 1.0f - z_layer / 256.0f;
-    SetShaderValue(ui_shader::shader, ui_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT);
-
-    BeginShaderMode(ui_shader::shader);
-    rlBegin(RL_LINES);
-    int max_j = fmod(GetRenderServer()->animation_time * 0.3, 1.0) * mesh.line_count;
-    max_j = mesh.line_count;
-    for (int j=0; j < max_j; j++) {
-        int v1 = mesh.lines[j*2];
-        int v2 = mesh.lines[j*2+1];
-        rlColor4ub(color.r, color.g, color.b, color.a);
-        rlVertex2f(origin.x + mesh.vertecies[v1*3] * scale, origin.y + mesh.vertecies[v1*3+2] * scale);
-        rlVertex2f(origin.x + mesh.vertecies[v2*3] * scale, origin.y + mesh.vertecies[v2*3+2] * scale);
-    }
-    rlEnd();
-    EndShaderMode();
+    RenderWireframeMesh2DEx(mesh, { offset_x, offset_y }, scale, color, Palette::bg, z_layer);
 }
 
 namespace orbit_shader {

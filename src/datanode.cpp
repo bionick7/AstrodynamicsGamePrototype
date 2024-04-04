@@ -3,6 +3,7 @@
 #include "logging.hpp"
 #include "string_builder.hpp"
 #include "assets.hpp"
+#include "debug_console.hpp"
 
 const DataNode DataNode::Empty = DataNode();
 
@@ -93,7 +94,7 @@ int _YamlParseFromText(DataNode* node, const char* origin, const char* text, boo
 
 int _YamlParse(DataNode* node, const char* filepath, bool quiet) {
     if (!assets::HasTextResource(filepath)) {
-        if (!quiet) { ERROR("No such file: %s\n", filepath) }
+        if (!quiet && !GetSettingBool("suppress_datanode_warnings")) { ERROR("No such file: %s\n", filepath) }
         return 1;
     }
 
@@ -400,7 +401,7 @@ const char* DataNode::Get(const char* key, const char* def, bool quiet) const {
     if (it != Fields.end()) {
         return it->second.c_str();
     }
-    if (!quiet) {
+    if (!quiet && !GetSettingBool("suppress_datanode_warnings")) {
         WARNING("Key '%s' not found", key)
     }
     return def;
@@ -411,7 +412,7 @@ long DataNode::GetI(const char* key, long def, bool quiet) const {
     char *p; 
     long res = strtol(str, &p, 10);
     if (p == str) {  // intentionally comparing pointers because of how strtoX works
-        if (!quiet) WARNING("Could not convert '%s' to int", str)
+        if (!quiet && !GetSettingBool("suppress_datanode_warnings")) WARNING("Could not convert '%s' to int", str)
         return def;
     }
     return res;
@@ -422,7 +423,7 @@ double DataNode::GetF(const char* key, double def, bool quiet) const {
     char *p; 
     double res = (double) strtod(str, &p);
     if (p == str) {  // intentionally comparing pointers because of how strtoX works
-        if (!quiet) WARNING("Could not convert '%s' to double", str)
+        if (!quiet && !GetSettingBool("suppress_datanode_warnings")) WARNING("Could not convert '%s' to double", str)
         return def;
     }
     return res;
@@ -438,7 +439,7 @@ DataNode* DataNode::GetChild(const char* key, bool quiet) const {
     if (it != Children.end()) {
         return it->second;
     }
-    if (!quiet) {
+    if (!quiet && !GetSettingBool("suppress_datanode_warnings")) {
         WARNING("Key %s not found\n", key)
     }
     return NULL;
@@ -451,7 +452,7 @@ const char* DataNode::GetArrayElem(const char* key, int index, const char* def, 
             return it->second[index].c_str();
         }
     }
-    if (!quiet) {
+    if (!quiet && !GetSettingBool("suppress_datanode_warnings")) {
         WARNING("Key %s not found\n", key)
     }
     return def;
@@ -478,7 +479,7 @@ DataNode* DataNode::GetChildArrayElem(const char* key, int index, bool quiet) co
             return &it->second->at(index);
         }
     }
-    if (!quiet) {
+    if (!quiet && !GetSettingBool("suppress_datanode_warnings")) {
         WARNING("Key %s not found\n", key)
     }
     return NULL;
@@ -489,7 +490,7 @@ size_t DataNode::GetArrayLen(const char* key, bool quiet) const {
     if (it != FieldArrays.end()) {
         return it->second.size();
     } else {
-        if (!quiet) {
+        if (!quiet && !GetSettingBool("suppress_datanode_warnings")) {
             WARNING("Key %s not found\n", key)
         }
         return 0;
@@ -501,7 +502,7 @@ size_t DataNode::GetChildArrayLen(const char* key, bool quiet) const {
     if (it != ChildArrays.end()) {
         return it->second->size();
     } else {
-        if (!quiet) {
+        if (!quiet && !GetSettingBool("suppress_datanode_warnings")) {
             WARNING("Key '%s' not found", key)
         }
         return 0;
@@ -792,22 +793,22 @@ void RemoveAt(const char* key, int index) {
 
 #define DN_TEST_FAIL(msg, exit_code) {ERROR("DataNodeTest failed with: %s\n", msg); return exit_code;}
 #define DN_TEST_ASSERTKV(node, key, value) if(strcmp(node.Get(key), value) != 0){ \
-    printf("DataNodeTest failed with: %s != %s\n", key, value); \
+    ERROR("DataNodeTest failed with: %s != %s\n", key, value); \
     return 1; \
 }
 #define DN_TEST_ASSERTKV_PTR(node, key, value) if(strcmp(node->Get(key), value) != 0){ \
-    printf("DataNodeTest failed with: %s != %s\n", key, value); \
+    ERROR("DataNodeTest failed with: %s != %s\n", key, value); \
     return 1; \
 }
 #define DN_TEST_ASSERTNOKV_PTR(node, key, value) if(strcmp(node->Get(key, "__INVALID__", true), value) == 0){ \
-    printf("DataNodeTest failed with: %s != %s\n", key, value); \
+    ERROR("DataNodeTest failed with: %s != %s\n", key, value); \
     return 1; \
 }
 
 int DataNodeTests() {
     DataNode node = DataNode();
     
-    //printf("Current directiory: %s\n", GetWorkingDirectory());
+    //INFO("Current directiory: %s\n", GetWorkingDirectory());
 
     int status;
     status = _YamlParse(&node, "resources/data/test_data/inexistiant_file.yaml", true);

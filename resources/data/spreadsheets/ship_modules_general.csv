@@ -1,0 +1,47 @@
+id,name,description,type,mass,ground_connection,thermal_control,industrial_admin,industrial_storage,industrial_manufacturing,industrial_dock,cryogenics_facility,clean_room,bio_manufacturing,arms_manufacturing,precision_manufacturing,nuclear_enrichment,military_training,construction_time
+shpmod_heatshield,Heatshield,Allows more efficient maneuvers around Titan and low Saturn orbit,armor,10, , ,1, ,1,1, , , , , , , ,10
+shpmod_droptank_water,Water Drop-tank,This expandable tank allows a ship to hold 10 extra counts of water.  Ejected during flight,drop_tank,12, , ,1,1,1, , , , , , , , ,2
+shpmod_droptank_hydrogen,Hydrogen Drop-tank,This expandable tank allows a ship to hold 10 extra counts of hydrogen.  Ejected during flight,drop_tank,12, , ,1,1,1, ,1, , , , , , ,2
+shpmod_water_extractor,Water extractor,Extracts water from icey moons,medium,10,1, , ,1,1, , , , , , , , ,15
+shpmod_rock_extractor_primitive,Primitive rock extractor,This low-tech rock extractor has been designed specifically to bootstrap a metal industry on small rocky moons and asteroids. It requires no advanced components.,large,60,1, , , ,1, , , , , , , , ,20
+shpmod_rock_extractor,Rock extractor,"A more advanced, more efficient rock excrevator, worthy of a self-sufficient industrial power",large,60,1, , ,1,1, , , , , , , , ,20
+shpmod_ore_extractor,Ore Extractor,Extracts aluminium and iron ore from rock. Fundamental part in metallurgy,large,30,1, , , ,1, , , , , , , , ,20
+shpmod_carbon_extractor,Carbon Filter,Extracts carbon from the atmosphere. Performs suboptimally outside of an atmosphere,large,30,1, , , ,1, , , , , , , , ,20
+shpmod_electrolyser,Electrolyser,Splits water into hydrogen and oxygen by applying a voltage.,medium,10, , , , ,1, ,1, , , , , , ,20
+shpmod_fuel_cell,Fuel cell,Recombines hydrogen and oxygen into water. This reaction releases energy,medium,10, , , , ,1, ,1, , , , , , ,20
+shpmod_steel_smelter,Steel Smelter,The steel smelting industry is vital for any major construction project.,large,10, ,2, , ,1, ,1, , , , , , ,30
+shpmod_aluminium_smelter,Aluminium Smelter,"Aluminium alloys are indespensible for high-strength, low-weight  products, like ships.",large,10, ,2, , ,1, , , , , , , , ,45
+shpmod_rock_habitat,Regolith settlement,,large,80,1, , , ,1, , , , , , , , ,20
+shpmod_habitat,Habitat,"A collection of residential, commercial and service buildings that can accomodate around 1500 people in total. ",large,80, ,1,1, ,1, , , , , , , , ,20
+shpmod_research_lab,Research Laboratory,,large,80, , ,1, ,1, ,1,1, , , , , ,20
+shpmod_carbon_splitter,Carbon Splitter,Splits carbon dioxide into oxygen and carbon,medium,10, , , , ,1, , , , , , , , ,20
+shpmod_waste_treatment,Waste Treatment,"Part of the life support system, cleaning and repurposing water from habitats",medium,30, , , , ,1, , , ,1, , , , ,20
+shpmod_farms,Farms,"A combination of aquaponics and densly packed bean, fungus and fruit plantages.",medium,22, , , , ,1, , , ,1, , , , ,20
+shpmod_polymers,Polymers Factory,Polymers are one of the most versitile and useful materials in human history. They are required in lots of advanced products,large,10, ,2,1, ,2, , , , , , , , ,20
+shpmod_electronics,Semiconductor Laboratory,TBD (warrants a large desription),large,30, ,3,2,1,1, , ,1, , , , , ,20
+shpmod_manufacture_offices,Small shipyard offices,Administrative and design offices. Needed in order to build ships,medium,10, , ,1, ,1, , , , , , , , ,20
+shpmod_large_storage,Shipyard storage facility,"Warehouses for storing parts and material. Needed for larger, more complex production pipelines, like that of ships",large,20, , , ,1,1, , , , , , , , ,10
+shpmod_workshop,Workshop,Construction Workshops. Needed in order to build most ships and modules or repair ships,large,40, , ,1, ,1, , , , , , , , ,40
+shpmod_wetdock,Wet Dock,"Dock, where ships can be build and repaired. 'Wet' docks keep ships exposed to the vacuum.",large,50, , , ,1,1, , , , , , , , ,30
+shpmod_drydock,Dry Dock,"Dock, where ships can be build and repaired. 'Dry' docks pressurize the entire area around the ship. Construction in dry-docks is much more efficient, but the large volume of atmosphere leaks air at a significnat rate.",large,150, , , ,2,2, , , , , , , , ,45
+shpmod_cleanroom,Clean room,"Clean rooms are required to manufacture special high-tech components, like electronics, optics or medicine.",large,30, ,1,1, ,1, , , , , , , , ,20
+shpmod_railgun,Railgun,High-velocity kinetic weapon that needs extra energy to fire.,small,2, , , , ,1, , , , ,1,1, , ,15
+shpmod_missiles,Missiles,Tactical non-nuclear missiles. Basic ordonance used in combat,small,5, , , , ,1, , , , ,1, , , ,20
+shpmod_light_armor,Light armor,"A lighter, thinner armor, granting basic protection to ships.",armor,10, , ,1, ,1,1, , , , , , , ,5
+shpmod_armor,Armor,A full suite of heavy armor for military ships,armor,20, , ,1, ,1,1, , , , , , , ,10
+shpmod_pdc,Point-defence cannons,"High-volume machine cannons provide a good defence against missiles, torpedos and drones.",small,5, , , , ,1, , ,1, ,1,1, , ,25
+shpmod_acs,High-fi Attitude Control System,A high-accuracy attitude controle system ensuring precise targeting is crucial to strike before anybody else does.,small,10, , , , ,1, , ,1, , ,1, , ,30
+shpmod_reactor,Sailed Reactor,"While most ship classes have a power regeneration system that can support the most basic ship functions, some modules require a dedicated, 'sailed'  reactor.",medium,20, ,2,2, ,1, , ,1, , ,1,1, ,40
+shpmod_geothermal,Geothermal power plant,"On tidally active worlds, it can be usefull to harvest the power of thides directly",medium,58, ,2,1, ,1, , ,1, , , , , ,40
+shpmod_exp_brigade,Platoon of the Expeditionary brigade,TODO,free,2, , , , , , , , , ,1, , ,2,60
+shpmod_invasion_equipment,Invasion Equipment,"small arms, APCs, supplies, even tanks ... Everything to arm local forces with lethal equipment.",medium,30, , , , ,1, , , , ,2, , , ,50
+shpmod_aircraft,Aircraft,Very effective fighting force uniquely suited for atmospheric planetary bodies (Titan),medium,30, , , , ,1, , , , ,1, , , ,60
+shpmod_armory,Armory,TODO,free,1, , , , ,1, , , , ,1, , , ,20
+shpmod_embassy,Embassy,TODO,large,20, , , , ,1, , , , , , , , ,20
+shpmod_boost_init,DEV - INITIAITVE BOOST,DEV - Free boost to initiativeTODO,free,0, , , , , , , , , , , , , ,20
+shpmod_sail_small,Tactical Sail,TODO,small,4, , , , ,1, , , , , , , , ,5
+shpmod_sail_medium,Ship Sail,TODO,medium,8, , , , ,1, , , , , , , , ,7
+shpmod_sail_large,Industrial Sail,TODO,large,15, , , , ,1,1, , , , , , , ,10
+shpmod_reactor_industrial,Industrial Reactor,TODO,medium,20, ,,2, ,1, , , , , ,1,2, ,40
+shpmod_heatpump,Heatpump,TODO,medium,10,,1,,,1,,,,,,,,,20
+shpmod_industrial_heatpump,Industrial Heatpump,TODO,,20,,2,,,1,,,,,,,,,30

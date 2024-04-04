@@ -198,6 +198,6 @@ void IDList::Sort(SortFn *fn) {
 
 void IDList::Inspect() {
     for(int i=0; i < size; i++) {
-        printf("%d: type %d, id %d\n", i, (int) IdGetType(buffer[i]), IdGetIndex(buffer[i]));
+        INFO("%d: type %d, id %d\n", i, (int) IdGetType(buffer[i]), IdGetIndex(buffer[i]));
     }
 }

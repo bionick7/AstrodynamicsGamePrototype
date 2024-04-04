@@ -268,7 +268,6 @@ void RenderServer::OnScreenResize() {
     render_targets[1] = _LoadRenderTextureDepthTex(GetScreenWidth(), GetScreenHeight());
 }
 
-
 void RenderServer::Draw() {
     animation_time += GetFrameTime();
     if (render_targets[0].texture.width != GetScreenWidth() || render_targets[0].texture.height != GetScreenHeight()) {
@@ -280,61 +279,64 @@ void RenderServer::Draw() {
         render_targets[1] = _LoadRenderTextureDepthTex(GetScreenWidth(), GetScreenHeight());
     }
 
+    //WireframeMesh test_mesh = assets::GetWirframe("resources/meshes/test/ship_contours.obj");
+    //WireframeMesh test_mesh = assets::GetWirframe("resources/meshes/ships/shp_light_transport.obj");
+
     BeginTextureMode(render_targets[0]);
-    ClearBackground(WHITE);  // Very important apperently
-    BeginMode3D(GetCamera()->rl_camera);
-    RenderSkyBox();
- 
-    // Draw Saturn
-    RenderPerfectSphere(DVector3::Zero(), GetPlanets()->GetParentNature()->radius, Palette::ui_main);
+        ClearBackground(WHITE);  // Very important apperently
 
-    // Rings are hardcoded, because why not?
-    RenderRings(DVector3::Up(), 74.0e+6, 92.0e+6, Palette::ui_main);
-    RenderRings(DVector3::Up(), 94.0e+6, 117.58e+6, Palette::ui_main);
-    RenderRings(DVector3::Up(), 122.17e+6, 136.775e+6, Palette::ui_main);
+        //RenderWireframeMesh(test_mesh, MatrixIdentity(), Palette::bg, Palette::ui_main);
 
-    for(int i=0; i < GetPlanets()->GetPlanetCount(); i++) {
-        const Planet* planet = GetPlanetByIndex(i);
+        // True 3D
+        BeginMode3D(GetCamera()->rl_camera);
+            RenderSkyBox();
 
-        // planet spheres
-        RenderPerfectSphere(
-            planet->position.cartesian,
-            planet->radius,
-            planet->GetColor()
-        );
-    }
 
-    _DrawTrajectories();
-    _UpdateShipIcons();
+            // Draw Saturn
+            RenderPerfectSphere(DVector3::Zero(), GetPlanets()->GetParentNature()->radius, Palette::ui_main);
 
-    // Draw icons
-    RELOAD_IF_NECAISSARY(icon_shader)
-    BeginShaderMode(icon_shader::shader);
-    for (auto it = icons.GetIter(); it; it++) {
-        icons[it.GetId()]->Draw();
-    }
-    EndShaderMode();
-    DebugFlush3D();
-    EndMode3D();
+            // Rings are hardcoded, because why not?
+            RenderRings(DVector3::Up(), 74.0e+6, 92.0e+6, Palette::ui_main);
+            RenderRings(DVector3::Up(), 94.0e+6, 117.58e+6, Palette::ui_main);
+            RenderRings(DVector3::Up(), 122.17e+6, 136.775e+6, Palette::ui_main);
 
-    // Pseudo-3d
-    rlEnableDepthTest();    
-    RELOAD_IF_NECAISSARY(text3d_shader)
-    for (auto it = text_labels_3d.GetIter(); it; it++) {
-        text_labels_3d[it.GetId()]->Draw();
-    }
-    rlDisableDepthTest();
-    GetTransferPlanUI()->Draw3DGizmos();
+            for(int i=0; i < GetPlanets()->GetPlanetCount(); i++) {
+                const Planet* planet = GetPlanetByIndex(i);
+                RenderPerfectSphere(planet->position.cartesian, planet->radius, planet->GetColor());
+            }
+
+            _DrawTrajectories();
+            _UpdateShipIcons();
+
+            // Draw icons
+            RELOAD_IF_NECAISSARY(icon_shader)
+            BeginShaderMode(icon_shader::shader);
+            for (auto it = icons.GetIter(); it; it++) {
+                icons[it.GetId()]->Draw();
+            }
+            EndShaderMode();
+            DebugFlush3D();
+        EndMode3D();
+
+        // Pseudo-3d
+        rlEnableDepthTest();    
+            RELOAD_IF_NECAISSARY(text3d_shader)
+            for (auto it = text_labels_3d.GetIter(); it; it++) {
+                text_labels_3d[it.GetId()]->Draw();
+            }
+        rlDisableDepthTest();
+        GetTransferPlanUI()->Draw3DGizmos();
     
     EndTextureMode();
 
-    BeginTextureMode(render_targets[1]);
-    ClearBackground(ColorAlpha(Palette::bg, 0));
     // All UI shenanigans
-    rlEnableDepthTest(); 
-    GetGlobalState()->DrawUI();
+    BeginTextureMode(render_targets[1]);
+        ClearBackground(ColorAlpha(Palette::bg, 0));
 
-    rlDisableDepthTest();
+        rlEnableDepthTest(); 
+            GetGlobalState()->DrawUI();
+            //RenderWireframeMesh2DEx(test_mesh, {500, 500}, 100, Palette::bg, Palette::ui_main, 255);
+        rlDisableDepthTest();
     EndTextureMode();
 
     // Postprocessing etc.

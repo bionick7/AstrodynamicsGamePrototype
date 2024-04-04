@@ -48,7 +48,7 @@ struct ShipClass {
 
     int construction_time;
     resource_count_t construction_resources[resources::MAX] = {0};
-    int construction_reqirements[ship_stats::MAX] = {0};
+    int construction_requirements[ship_stats::MAX] = {0};
     int construction_batch_size;
     bool is_hidden;
     

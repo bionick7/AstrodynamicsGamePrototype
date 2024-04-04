@@ -48,7 +48,7 @@ int IDAllocatorListTests() {
     TEST_ASSERT(!list.ContainsID(TSTID(8)))
     TEST_ASSERT_EQUAL(list[TSTID(23)]->m0, 23);
     list.Clear();
-    //printf("%016zX\n", *list.verifier_array);
+    //INFO("%016zX\n", *list.verifier_array);
     for(int i=0; i < 40; i++) {
         list.Allocate(&mm);
         mm->m0 = i;

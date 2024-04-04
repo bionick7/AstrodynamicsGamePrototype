@@ -8,6 +8,7 @@
 #include "string_builder.hpp"
 #include "render_utils.hpp"
 #include "debug_drawing.hpp"
+#include "debug_console.hpp"
 
 void Planet::_UIDrawInventory() {
     const int MARGIN = 3;
@@ -192,7 +193,7 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
         //    continue;
         //}
         
-        if (!planet->CanProduce(id, false, true)) {
+        if (!planet->CanProduce(id, false, true) && !GetSettingBool("show_unconstructable_products")) {
             continue;
         }
 

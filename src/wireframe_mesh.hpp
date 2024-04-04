@@ -3,26 +3,21 @@
 
 #include "basic.hpp"
 
-//#define WIREFRAME_USE_NATIVE_BUFFERS  // Better, but harder (unsolved)
-
 struct WireframeMesh {
     int vertex_count;
+    int triangle_count;
     int line_count;
-
-    float* vertecies;
-    float* vertex_distances;
-    int* lines;
 
     BoundingBox bounding_box;
 
-#ifdef WIREFRAME_USE_NATIVE_BUFFERS
-    unsigned int vao;
-    unsigned int vbo_vertecies;
-    unsigned int vbo_lines;
-#endif
+    int vao_triangles = -1;
+    int vao_lines = -1;
+    int vbo_triangles = -1;
+    int vbo_lines = -1;
 };
 
 WireframeMesh LoadWireframeMesh(const char* filepath);
+WireframeMesh LoadTestWireframeMesh();
 void UnLoadWireframeMesh(WireframeMesh wireframe_mesh);
 bool IsWireframeReady(WireframeMesh wireframe_mesh);
 

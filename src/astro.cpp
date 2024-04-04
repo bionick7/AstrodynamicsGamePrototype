@@ -29,12 +29,11 @@ double _Mean2Ecc(double M, double e) {
         }
         E += δ;
         if (counter++ > 1000) {
-            printf("Counter exceeded for M = %f, e = %f\n", M, e);
+            WARNING("Counter exceeded for M = %f, e = %f\n", M, e);
             return E;
         }
     } while (fabs(δ) > 1e-6);
 
-    //printf("E = %f\n", E);
     return E;
 }
 
@@ -75,11 +74,10 @@ double _Mean2EccHyp(double M, double e) {
         δ = (e*sinh(F) - F - M) / (e*cosh(F) - 1);
         F -= δ;
         if (counter++ > 1000) {
-            printf("Counter exceeded for M = %f, e = %f\n", M, e);
+            WARNING("Counter exceeded for M = %f, e = %f\n", M, e);
             return F;
         }
     } while (fabs(δ) > 1e-6);
-    //printf("E = %f\n", E);
     return F;
 }
 
