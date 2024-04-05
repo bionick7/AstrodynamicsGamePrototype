@@ -61,11 +61,10 @@ button_state_flags::T GetButtonStateRec(Rectangle rec);
 
 struct TextBox {
     // Rect
-    int text_start_x;
-    int text_start_y;
+    int x, y;
     int width;
     int height;
-
+    
     // Render Rect
     Rectangle render_rec;
     bool flexible;
@@ -83,8 +82,11 @@ struct TextBox {
     int x_cursor;
     int y_cursor;
     int line_size_y;
-    int text_max_x;
-    int text_max_y;
+    // Tracks bounding box of written
+    int extend_x;
+    int extend_y;
+
+    void (*on_pop_action)(TextBox* parent, TextBox* child) = NULL;
 
     TextBox(int x, int y, int w, int h, int text_size, Color color, Color background_color, uint8_t z_layer);
     TextBox(const TextBox* parent, int x, int y, int w, int h);
@@ -107,6 +109,7 @@ struct TextBox {
     Rectangle GetRect() const;
 
     Vector2 GetAnchorPoint(text_alignment::T align) const;
+    Vector2 GetAnchorPointText(text_alignment::T align) const;
     int GetLineHeight() const;
     text::Layout GetTextLayout(const char *text, text_alignment::T alignemnt);
     //int TbGetCharacterIndex(Vector2 collision_pos, const char* text, TextAlignment::T alignemnt) const;
@@ -114,6 +117,7 @@ struct TextBox {
     Rectangle TbMeasureText(const char* text, text_alignment::T alignemnt) const;
 
     void _Advance(Vector2 pos, Vector2 size);
+    void RecalculateExtends();
 };
 
 struct AtlasPos {
@@ -127,7 +131,10 @@ struct AtlasPos {
 #define MAX_BLOCKING_RECTS 20
 
 struct UIGlobals {
-    std::stack<TextBox> text_box_stack = std::stack<TextBox>();
+    TextBox *text_box_stack = NULL;
+    int text_box_stack_capacity = 0;
+    int text_box_stack_index = 0;
+
     struct BlockingRect {Rectangle rec; uint8_t z;};
     BlockingRect acc_blocking_rects[MAX_BLOCKING_RECTS];
     BlockingRect blocking_rects[MAX_BLOCKING_RECTS];
@@ -166,7 +173,7 @@ namespace ui {
     void CreateNew(int x, int y, int w, int h, int text_size, Color color, Color background, bool overlay);
     void PushMouseHint(Vector2 mouse_pos, int width, int height, uint8_t z_layer);
 
-    int PushInset(int margin, int h);
+    int PushInset(int h);
     int PushScrollInset(int margin, int h, int allocated_height, int* scroll);
     void PushFree(int x, int y, int w, int h);
     void PushInline(int width, int height);

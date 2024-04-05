@@ -70,7 +70,7 @@ button_state_flags::T Task::DrawUI(bool show_as_button, bool highlight) const {
         return button_state_flags::NONE;
     }
 
-    int height = ui::PushInset(3, TASK_PANEL_HEIGHT);
+    int height = ui::PushInset(TASK_PANEL_HEIGHT);
 
     if (height == 0) {
         ui::Pop();

@@ -154,12 +154,12 @@ void TechTree::Update() {
 Vector2 _GetNodePos(const TechTreeNode* node) {
     int total_height = ui::Current()->height;
     Vector2 res;
-    res.x = ui::Current()->text_start_x + 20 + node->layer * 75;
+    res.x = ui::Current()->x + 20 + node->layer * 75;
     if (node->total_in_layer == 1) {
-        res.y = ui::Current()->text_start_y + 20 + (total_height - 90) / 2;
+        res.y = ui::Current()->y + 20 + (total_height - 90) / 2;
         res.y += node->layer * 5;
     } else {
-        res.y = ui::Current()->text_start_y + 20 + node->index_in_layer * (total_height - 90) / (node->total_in_layer - 1);
+        res.y = ui::Current()->y + 20 + node->index_in_layer * (total_height - 90) / (node->total_in_layer - 1);
     }
     return res;
 }
@@ -282,7 +282,7 @@ void TechTree::DrawUI() {
         int columns = nodes[preview_tech].attached_components.size;
         if (columns < 2) columns = 2;
         int icon_size = width / columns;
-        ui::PushInset(0, icon_size - 8);
+        ui::PushInset(icon_size - 8);
         for (int i=0; i < nodes[preview_tech].attached_components.size; i++) {
             ui::PushGridCell(columns, 1, i, 0);
             RID component_id = nodes[preview_tech].attached_components[i];

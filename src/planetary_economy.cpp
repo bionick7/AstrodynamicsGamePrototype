@@ -150,7 +150,7 @@ void PlanetaryEconomy::UIDrawResources(RID planet) {
             sprintf(buffer, "%2s %3d : %+2d ", GetResourceUIRep(i), resource_stock[i], resource_delta[i]);
         }        
 
-        ui::PushInset(0, DEFAULT_FONT_SIZE + 4);
+        ui::PushInset(DEFAULT_FONT_SIZE + 4);
         Vector2 cursor_pos = ui::Current()->GetTextCursor();
         Rectangle button_rect = {cursor_pos.x, cursor_pos.y, 16, 16};
         ui::WriteEx(buffer, text_alignment::CONFORM, false);
@@ -216,18 +216,18 @@ void _UIDrawResourceGrpah(const cost_t price_history[], int resource_index) {
 
     int current_graph_x = 0;
     int current_graph_y = price_history[resource_index] - r_data.min_cost;
-    int current_draw_x = box->text_start_x + current_graph_x * box->width / PRICE_TREND_SIZE;
-    int current_draw_y = box->text_start_y + box->height - current_graph_y * box->height / graph_height;
+    int current_draw_x = box->x + current_graph_x * box->width / PRICE_TREND_SIZE;
+    int current_draw_y = box->y + box->height - current_graph_y * box->height / graph_height;
     for (int i=1; i < PRICE_TREND_SIZE; i++){
         current_graph_x = i;
         current_graph_y = price_history[i * resources::MAX + resource_index] - r_data.min_cost;
-        int next_draw_x = box->text_start_x + current_graph_x * box->width / PRICE_TREND_SIZE;
-        int next_draw_y = box->text_start_y + box->height - current_graph_y * box->height / graph_height;
+        int next_draw_x = box->x + current_graph_x * box->width / PRICE_TREND_SIZE;
+        int next_draw_y = box->y + box->height - current_graph_y * box->height / graph_height;
         DrawLine(current_draw_x, current_draw_y, next_draw_x, next_draw_y, Palette::ui_main);
         current_draw_x = next_draw_x;
         current_draw_y = next_draw_y;
     }
-    DrawLine(current_draw_x, current_draw_y, box->text_start_x, current_draw_y, Palette::interactable_main);
+    DrawLine(current_draw_x, current_draw_y, box->x, current_draw_y, Palette::interactable_main);
 }
 
 void PlanetaryEconomy::TryPlayerTransaction(resources::T resource_id, resource_count_t quantity) {
@@ -247,7 +247,7 @@ void PlanetaryEconomy::UIDrawEconomy(RID planet) {
     for (int i=0; i < resources::MAX; i++) {
         //char buffer[50];
         //sprintf(buffer, "%-10s %5d/%5d (%+3d)", GetResourceData(i)->name, qtt, cap, delta);
-        ui::PushInset(0, DEFAULT_FONT_SIZE+4);
+        ui::PushInset(DEFAULT_FONT_SIZE+4);
         resources::T resource = (resources::T) i;
 
         /*if (GetTransferPlanUI()->IsActive()) {
@@ -286,7 +286,7 @@ void PlanetaryEconomy::UIDrawEconomy(RID planet) {
         }
             
         ui::Pop();  // Inset
-        ui::PushInset(0, 32);
+        ui::PushInset(32);
             _UIDrawResourceGrpah(price_history, i);
         ui::Pop();  // Inset
         //TextBoxLineBreak(&tb);

@@ -61,18 +61,18 @@ void HandleButtonSound(button_state_flags::T state) {
     }
 }
 
-TextBox::TextBox(int x, int y, int w, int h, int ptext_size, Color color, Color pbackground_color, uint8_t pz_layer) {
+TextBox::TextBox(int p_x, int p_y, int w, int h, int ptext_size, Color color, Color pbackground_color, uint8_t pz_layer) {
     ASSERT(w > 0)
     ASSERT(h >= 0)
-    text_start_x = x;
-    text_start_y = y;
+    x = p_x;
+    y = p_y;
     width = w;
     height = h;
-    text_margin_x = 2;
-    text_margin_y = 2;
+    text_margin_x = 6;
+    text_margin_y = 0;
 
-    render_rec.x = x;
-    render_rec.y = y;
+    render_rec.x = p_x;
+    render_rec.y = p_y;
     render_rec.width = w;
     render_rec.height = h;
     flexible = false;
@@ -86,13 +86,15 @@ TextBox::TextBox(int x, int y, int w, int h, int ptext_size, Color color, Color 
     x_cursor = 0;
     y_cursor = 0;
     line_size_y = 0;
-    text_max_x = 0;
-    text_max_y = 0;
+    extend_x = 0;
+    extend_y = 0;
 }
 
 TextBox::TextBox(const TextBox *parent, int x, int y, int w, int h) : 
     TextBox::TextBox(x, y, w, h, parent->text_size, parent->text_color, 
-                     parent->background_color, parent->z_layer+2) {}
+                     parent->background_color, parent->z_layer+2) {
+        flexible = parent->flexible;
+    }
 
 int TextBox::GetCharWidth() {
     Font font = GetCustomDefaultFont();
@@ -102,26 +104,34 @@ int TextBox::GetCharWidth() {
 
 void TextBox::_Advance(Vector2 pos, Vector2 size) {
     if (size.y > line_size_y) line_size_y = size.y;
-    if (pos.x + size.x > text_start_x + x_cursor) x_cursor = pos.x + size.x - text_start_x;
+    if (pos.x + size.x > x + x_cursor) x_cursor = pos.x + size.x - (x + text_margin_x);
 
-    if (x_cursor > text_max_x) text_max_x = x_cursor;
-    if (y_cursor > text_max_y + line_size_y) text_max_y = text_max_y + line_size_y;
+    RecalculateExtends();
+}
+
+void TextBox::RecalculateExtends() {
+    if (x_cursor > extend_x) {
+        extend_x = x_cursor;
+    }
+    if (y_cursor + line_size_y > extend_y) {
+        extend_y = y_cursor + line_size_y;
+    }
 }
 
 void TextBox::LineBreak() {
     x_cursor = 0;
-    y_cursor += line_size_y + text_margin_y;
+    y_cursor += line_size_y;
     line_size_y = 0;
-    if (y_cursor > text_max_y + line_size_y) text_max_y = text_max_y + line_size_y;
+    RecalculateExtends();
 }
 
 void TextBox::EnsureLineBreak() {
     if (x_cursor > 0) {
-        y_cursor += line_size_y + text_margin_y;
+        y_cursor += line_size_y;
         x_cursor = 0;
     }
     line_size_y = 0;
-    if (y_cursor > text_max_y + line_size_y) text_max_y = text_max_y + line_size_y;
+    RecalculateExtends();
 }
 
 void TextBox::Enclose(int inset, int corner_radius, Color background_color, Color line_color) {
@@ -143,8 +153,8 @@ void TextBox::Enclose(int inset, int corner_radius, Color background_color, Colo
 
 void TextBox::EnclosePartial(int inset, Color background_color, Color line_color, direction::T directions) {
     Rectangle rect;
-    rect.x = text_start_x;
-    rect.y = text_start_y;
+    rect.x = x;
+    rect.y = y;
     rect.width = width;
     rect.height = height;
 
@@ -171,10 +181,10 @@ void TextBox::EnclosePartial(int inset, Color background_color, Color line_color
 
 void TextBox::EncloseDynamic(int inset, int corner_radius, Color background_color, Color line_color) {
     Rectangle rect;
-    rect.x = text_start_x;
-    rect.y = text_start_y;
-    rect.width = text_max_x;
-    rect.height = text_max_y;
+    rect.x = x;
+    rect.y = y;
+    rect.width = extend_x + 2 * text_margin_x;
+    rect.height = extend_y + 2 * text_margin_y;
 
     if (!flexible)
         rect = GetCollisionRec(rect, render_rec);
@@ -191,8 +201,8 @@ void TextBox::EncloseDynamic(int inset, int corner_radius, Color background_colo
 }
 
 void TextBox::Shrink(int dx, int dy) {
-    text_start_x += dx;
-    text_start_y += dy;
+    x += dx;
+    y += dy;
     width -= 2*dx;
     height -= 2*dy;
 }
@@ -226,10 +236,10 @@ void TextBox::WriteLayout(const text::Layout* layout, bool advance_cursor) {
     }
     if (advance_cursor) {
         line_size_y = 20;
-        x_cursor = rect.x + rect.width - text_start_x;
-        y_cursor = rect.y + rect.height - text_start_y - 20;
-        if (x_cursor > text_max_x) text_max_x = x_cursor;
-        if (rect.y + rect.height - text_start_y > text_max_y) text_max_y = rect.y + rect.height - text_start_y;
+        x_cursor = rect.x + rect.width - (x + text_margin_x);
+        y_cursor = rect.y + rect.height - (y + text_margin_y) - line_size_y;
+        if (x_cursor > extend_x) extend_x = x_cursor;
+        if (rect.y + rect.height - y > extend_y) extend_y = rect.y + rect.height - y;
     }
 }
 
@@ -245,7 +255,7 @@ void TextBox::Decorate(const text::Layout* layout, const TokenList* tokens) {
 }
 
 void TextBox::DrawTexture(Texture2D texture, Rectangle source, int texture_height, Color tint, bool sdf) {
-    Vector2 pos = {text_start_x + x_cursor, text_start_y + y_cursor};
+    Vector2 pos = {x + x_cursor, y + y_cursor};
     int texture_width = texture_height * source.width / source.height;
     Rectangle destination = { pos.x, pos.y, (float)texture_width, (float)texture_height };
     bool outside_render_rect = !CheckCollisionRecs(render_rec, destination);
@@ -269,12 +279,11 @@ void TextBox::DrawTexture(Texture2D texture, Rectangle source, int texture_heigh
     }
     x_cursor = 0;
     y_cursor += height;
-    if (x_cursor > text_max_x) text_max_x = x_cursor;
-    if (y_cursor > text_max_y + line_size_y) text_max_y = text_max_y + line_size_y;
+    RecalculateExtends();
 }
 
 button_state_flags::T TextBox::WriteButton(const char* text, int inset) {
-    Vector2 pos = {text_start_x + x_cursor, text_start_y + y_cursor + text_margin_y};
+    Vector2 pos = {x + text_margin_x + x_cursor, y + text_margin_y + y_cursor};
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
     // text fully in render rectangle
     if (
@@ -304,27 +313,25 @@ button_state_flags::T TextBox::AsButton() const {
 }
 
 Vector2 TextBox::GetTextCursor() const {
-    return (Vector2) {
-        text_start_x + x_cursor,
-        text_start_y + y_cursor
+    return {
+        (float)(x + x_cursor),
+        (float)(y + y_cursor)
     };
 }
 
 Rectangle TextBox::GetRect() const {
     // Different from render_rec e.g. in case of ScrollInset
-    return {
-        text_start_x, text_start_y,
-        width, height
-    };
+    return { (float)x, (float)y, (float)width, (float)height};
 }
 
 int TextBox::GetLineHeight() const {
-    return text_size + text_margin_y;
+    return text_size;
 }
 
 text::Layout TextBox::GetTextLayout(const char *text, text_alignment::T alignemnt) {
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
-    Vector2 pos = ApplyAlignment(GetAnchorPoint(alignemnt), size, alignemnt);
+    Vector2 anchor = GetAnchorPointText(alignemnt);
+    Vector2 pos = ApplyAlignment(GetAnchorPointText(alignemnt), size, alignemnt);
     text::Layout text_layout;
     text::GetLayout(&text_layout, pos, GetCustomDefaultFont(), text, text_size, 1);
     return text_layout;
@@ -332,12 +339,12 @@ text::Layout TextBox::GetTextLayout(const char *text, text_alignment::T alignemn
 
 Rectangle TextBox::TbMeasureText(const char* text, text_alignment::T alignemnt) const {
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
-    Vector2 pos = ApplyAlignment(GetAnchorPoint(alignemnt), size, alignemnt);
+    Vector2 pos = ApplyAlignment(GetAnchorPointText(alignemnt), size, alignemnt);
     return {pos.x, pos.y, size.x, size.y};
 }
 
 Vector2 TextBox::GetAnchorPoint(text_alignment::T align) const {
-    Vector2 res = { (float)text_start_x, (float)text_start_y };
+    Vector2 res = { (float)x, (float)y };
     switch(align & text_alignment::HFILTER){
         case text_alignment::HCENTER: res.x += width/2; break;
         case text_alignment::RIGHT: res.x += width; break;
@@ -351,8 +358,35 @@ Vector2 TextBox::GetAnchorPoint(text_alignment::T align) const {
     return res;
 }
 
+Vector2 TextBox::GetAnchorPointText(text_alignment::T align) const {
+    Vector2 res = { (float)x + text_margin_x, (float)y + text_margin_y };
+    int w2 = width - 2 * text_margin_x;
+    int h2 = height - 2 * text_margin_y;
+    switch(align & text_alignment::HFILTER){
+        case text_alignment::HCENTER: res.x += w2/2; break;
+        case text_alignment::RIGHT: res.x += w2; break;
+        case text_alignment::HCONFORM: res.x += x_cursor; break;
+    }
+    switch(align & text_alignment::VFILTER){
+        case text_alignment::VCENTER: res.y += h2/2; break;
+        case text_alignment::BOTTOM: res.y += h2; break;
+        case text_alignment::VCONFORM: res.y += y_cursor; break;
+    }
+    return res;
+}
+
 void ui::PushTextBox(TextBox tb) {
-    GetUI()->text_box_stack.push(tb);
+    if (GetUI()->text_box_stack == NULL) {
+        GetUI()->text_box_stack = (TextBox*) malloc(5 * sizeof(TextBox));
+        GetUI()->text_box_stack_capacity = 5;
+    }
+    if (GetUI()->text_box_stack_index + 1 >= GetUI()->text_box_stack_capacity) {
+        int new_capacity = GetUI()->text_box_stack_index + 5;
+        GetUI()->text_box_stack = (TextBox*) realloc(GetUI()->text_box_stack, new_capacity * sizeof(TextBox));
+        GetUI()->text_box_stack_capacity = new_capacity;
+    }
+    GetUI()->text_box_stack[GetUI()->text_box_stack_index] = tb;
+    GetUI()->text_box_stack_index++;
     if (GetSettingBool("draw_renderrects", false)) {
         BeginRenderInUILayer(tb.z_layer);
         DrawRectangleLinesEx(tb.render_rec, 1, GREEN);
@@ -367,7 +401,7 @@ void ui::PushGlobal(int x, int y, int w, int h, int text_size, Color color, Colo
 }
 
 void ui::CreateNew(int x, int y, int w, int h, int text_size, Color color, Color background, bool overlay) {
-    while (GetUI()->text_box_stack.size() > 0) {  // Clear stack
+    while (GetUI()->text_box_stack_index > 0) {  // Clear stack
         ui::Pop();
     }
     ui::PushGlobal(x, y, w, h, text_size, color, background, overlay ? 10 : 30);
@@ -387,21 +421,41 @@ void ui::PushFree(int x, int y, int w, int h) {
     ui::PushTextBox(new_text_box);
 }
 
-int ui::PushInset(int margin, int h) {
+void _FlexibleInsetPopAction(TextBox* parent, TextBox* child) {
+    parent->y_cursor += child->extend_x + 2 * child->text_margin_x;
+    parent->RecalculateExtends();
+}
+
+int ui::PushInset(int h) {
     // Returns the actual height
-    h += 8;  // straight up allocating extra space for magins
+    bool is_flexible = false;
+    if (h < 0) {
+        h = 1;
+        is_flexible = true;
+    }
     TextBox* tb = ui::Current();
+    if (tb == NULL) {
+        FAIL("Cannot push inset textbox as root box")
+    }
     tb->EnsureLineBreak();
-    h = fmin(h, fmax(0, tb->height - tb->y_cursor - 2*margin));
+    if (!tb->flexible) {  // Limit height according to parent
+        h = fmin(h, fmax(0, tb->height - tb->y_cursor));
+    }
     TextBox new_text_box = TextBox(tb,
-        tb->text_start_x + tb->x_cursor + margin,
-        tb->text_start_y + tb->y_cursor + margin,
-        tb->width - tb->x_cursor - 2*margin,
+        tb->x + tb->x_cursor,
+        tb->y + tb->y_cursor,
+        tb->width - tb->x_cursor,
         h
     );
     new_text_box.render_rec = GetCollisionRec(new_text_box.render_rec, tb->render_rec);
 
-    tb->y_cursor += h + 2*margin;
+    if (is_flexible) {
+        new_text_box.flexible = true;
+        new_text_box.on_pop_action = _FlexibleInsetPopAction;
+    } else {
+        tb->y_cursor += h;
+        tb->RecalculateExtends();
+    }
     ui::PushTextBox(new_text_box);
     return h;
 }
@@ -424,8 +478,8 @@ int ui::PushScrollInset(int margin, int h, int allocated_height, int* scroll) {
     if (allocated_height > h) {
         BeginRenderInUILayer(tb->z_layer + 1);
         DrawRectangleRounded({
-            (float) tb->text_start_x + tb->width - buildin_scrollbar_margin,
-            (float) tb->text_start_y + scroll_progress * (h - scrollbar_height),
+            (float) tb->x + tb->width - buildin_scrollbar_margin,
+            (float) tb->y + scroll_progress * (h - scrollbar_height),
             (float) buildin_scrollbar_width,
             (float) scrollbar_height},
             buildin_scrollbar_width/2,
@@ -437,15 +491,16 @@ int ui::PushScrollInset(int margin, int h, int allocated_height, int* scroll) {
         buildin_scrollbar_width = 0;
     }
     TextBox new_text_box = TextBox(tb,
-        tb->text_start_x + tb->x_cursor + margin,
-        tb->text_start_y + tb->y_cursor + margin - *scroll,
+        tb->x + tb->x_cursor + margin,
+        tb->y + tb->y_cursor + margin - *scroll,
         tb->width - tb->x_cursor - 2*margin - 2*buildin_scrollbar_margin - buildin_scrollbar_width,
         allocated_height
     );
-    new_text_box.render_rec.y = tb->text_start_y + tb->y_cursor + margin;
+    new_text_box.render_rec.y = tb->y + tb->y_cursor + margin;
     new_text_box.render_rec.height = height;
 
     tb->y_cursor += h + 2*margin;
+    tb->RecalculateExtends();
     ui::PushTextBox(new_text_box);
     return height;
 }
@@ -455,15 +510,15 @@ void ui::PushInline(int width, int height) {
     if (width > tb->width - tb->x_cursor)
         width = tb->width - tb->x_cursor;
     TextBox new_tb = TextBox(tb,
-        tb->text_start_x + tb->x_cursor,
-        tb->text_start_y + tb->y_cursor,
+        tb->x + tb->x_cursor,
+        tb->y + tb->y_cursor,
         width,
-        height + 8
+        height
     );
     new_tb.render_rec = GetCollisionRec(new_tb.render_rec, tb->render_rec);
 
     tb->_Advance(
-        {(float)new_tb.text_start_x, (float)new_tb.text_start_y}, 
+        {(float)new_tb.x, (float)new_tb.y}, 
         {(float)new_tb.width, (float)new_tb.height}
     );
     ui::PushTextBox(new_tb);
@@ -473,21 +528,18 @@ void ui::PushAligned(int width, int height, text_alignment::T alignment) {
     TextBox* tb = ui::Current();
     tb->EnsureLineBreak();
 
-    int x = tb->text_start_x;
-    int y = tb->text_start_y;
-    if (alignment & text_alignment::HCENTER) {
-        x += (tb->width - width) / 2;
-    } else if (alignment & text_alignment::RIGHT) {
-        x += tb->width - width;
-    } else {  // left - aligned
-        // Do nothing
+    int x = tb->x;
+    int y = tb->y;
+
+    switch(alignment & text_alignment::HFILTER){
+        case text_alignment::HCENTER: x += (tb->width - width) / 2; break;
+        case text_alignment::RIGHT: x += tb->width - width; break;
+        case text_alignment::HCONFORM: x += tb->x_cursor + tb->text_margin_x; break;
     }
-    if (alignment & text_alignment::VCENTER) {
-        y += (tb->height - height) / 2;
-    } else if (alignment & text_alignment::BOTTOM) {
-        y += (tb->height - height);
-    } else {  // top - aligned
-        // Do nothing
+    switch(alignment & text_alignment::VFILTER){
+        case text_alignment::VCENTER: y += (tb->height - height) / 2; break;
+        case text_alignment::BOTTOM: y += (tb->height - height); break;
+        case text_alignment::VCONFORM: y += tb->y_cursor + tb->text_margin_y; break;
     }
 
     TextBox new_text_box = TextBox(tb, x, y, width, height);
@@ -500,8 +552,8 @@ void ui::PushHSplit(int x_start, int x_end) {
     if (x_start < 0) x_start += tb->width;
     if (x_end < 0) x_end += tb->width;
     TextBox new_text_box = TextBox(tb,
-        tb->text_start_x + x_start,
-        tb->text_start_y,
+        tb->x + x_start,
+        tb->y,
         x_end - x_start,
         tb->height
     );
@@ -512,8 +564,8 @@ void ui::PushHSplit(int x_start, int x_end) {
 void ui::PushGridCell(int columns, int rows, int column, int row) {
     TextBox* tb = ui::Current();
     TextBox new_text_box = TextBox(tb,
-        tb->text_start_x + column * tb->width / columns,
-        tb->text_start_y + row * tb->height / rows,
+        tb->x + column * tb->width / columns,
+        tb->y + row * tb->height / rows,
         tb->width / columns,
         tb->height / rows
     );
@@ -526,13 +578,21 @@ button_state_flags::T ui::AsButton() {
 }
 
 void ui::Pop() {
-    GetUI()->text_box_stack.pop();
+    TextBox* current = ui::Current();
+    TextBox* parent = NULL;
+    if (GetUI()->text_box_stack_index >= 2) {
+        parent = &GetUI()->text_box_stack[GetUI()->text_box_stack_index - 2];
+    }
+    if (current->on_pop_action != NULL) {
+        (*current->on_pop_action)(parent, current);
+    }
+    GetUI()->text_box_stack_index--;
 }
 
 Vector2 ui::GetRelMousePos() {
     return {
-        GetMousePosition().x - ui::Current()->text_start_x,
-        GetMousePosition().y - ui::Current()->text_start_y
+        GetMousePosition().x - ui::Current()->x,
+        GetMousePosition().y - ui::Current()->y
     };
 }
 
@@ -588,9 +648,9 @@ Rectangle ui::MeasureTextEx(const char *text, text_alignment::T alignemnt) {
 
 void ui::Fillline(double value, Color fill_color, Color background_color) {
     TextBox* tb = ui::Current();
-    int y = tb->text_start_y + tb->y_cursor + 20;    
-    int x_start = ClampInt(tb->text_start_x, tb->render_rec.x, tb->render_rec.x + tb->render_rec.width);
-    int x_end = ClampInt(tb->text_start_x + tb->width, tb->render_rec.x, tb->render_rec.x + tb->render_rec.width);
+    int y = tb->y + tb->y_cursor + 20;    
+    int x_start = ClampInt(tb->x, tb->render_rec.x, tb->render_rec.x + tb->render_rec.width);
+    int x_end = ClampInt(tb->x + tb->width, tb->render_rec.x, tb->render_rec.x + tb->render_rec.width);
     ui::FilllineEx(x_start, x_end, y, value, fill_color, background_color);
 }
 
@@ -640,7 +700,7 @@ int ui::DrawLimitedSlider(int current, int min, int max, int limit, int width, i
     if (val < 0) val = 0;
     if (val > 1) val = 1;
     
-    Rectangle primary = { tb->x_cursor + tb->text_start_x, tb->y_cursor + tb->text_start_y, width, height };
+    Rectangle primary = { tb->x_cursor + tb->x, tb->y_cursor + tb->y, width, height };
     Rectangle fill = primary;
     fill.width *= val;
 
@@ -710,17 +770,20 @@ void ui::EndDirectDraw() {
 }
 
 TextBox* ui::Current() {
-    if (GetUI()->text_box_stack.size() > 0)
-        return &GetUI()->text_box_stack.top();
+    if (GetUI()->text_box_stack_index > 0) {
+        return &GetUI()->text_box_stack[GetUI()->text_box_stack_index-1];
+    }
     return NULL;
 }
 
 void ui::HSpace(int pixels) {
     ui::Current()->x_cursor += pixels;
+    ui::Current()->RecalculateExtends();
 }
 
 void ui::VSpace(int pixels) {
     ui::Current()->y_cursor += pixels;
+    ui::Current()->RecalculateExtends();
 }
 
 void ui::SetMouseHint(const char* text) {
@@ -981,4 +1044,4 @@ button_state_flags::T DrawCircleButton(Vector2 midpoint, double radius, Color co
         is_in_area,
         CheckCollisionPointCircle(Vector2Subtract(GetMousePosition(), GetMouseDelta()), midpoint, radius)
     );
-}
+} 

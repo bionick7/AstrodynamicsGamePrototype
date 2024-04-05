@@ -670,7 +670,7 @@ void TransferPlanUI::DrawUI() {
     sb.Add("Departs in ").AddTime(plan->departure_time - time_bounds[0]);
     sb.Add("\nArrives in ").AddTime(plan->arrival_time - time_bounds[0]);
     //DebugPrintText("%i", sb.CountLines());
-    ui::PushInset(0, (DEFAULT_FONT_SIZE) * sb.CountLines() + 1);
+    ui::PushInset((DEFAULT_FONT_SIZE) * sb.CountLines() + 1);
     ui::WriteEx(sb.c_str, text_alignment::CONFORM, false);
     ui::Fillline(
         fmin(timemath::Time::SecDiff(plan->arrival_time, time_bounds[0]) / timemath::Time::SecDiff(plan->hohmann_arrival_time, time_bounds[0]), 1.0), 
@@ -697,13 +697,13 @@ void TransferPlanUI::DrawUI() {
         sb.Add("Cannot make transfer");
     }
 
-    ui::PushInset(0, (DEFAULT_FONT_SIZE) * sb.CountLines() + 1);
+    ui::PushInset((DEFAULT_FONT_SIZE) * sb.CountLines() + 1);
     ui::WriteEx(sb.c_str, text_alignment::CONFORM, false);
     ui::Fillline(fmax(0, capacity_ratio), capacity >= 0 ? Palette::ally : Palette::red, Palette::bg);
     ui::Pop();  // Inset
 
     int w = ui::Current()->width;
-    ui::PushInset(0, DEFAULT_FONT_SIZE+4);
+    ui::PushInset(DEFAULT_FONT_SIZE+4);
     {
         ui::PushHSplit(0, w/3);
         button_state_flags::T button_state = ui::AsButton();

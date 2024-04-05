@@ -104,7 +104,7 @@ void Quest::Deserialize(const DataNode* data) {
 }
 
 button_state_flags::T Quest::DrawUI(bool show_as_button, bool highlight) const {
-    int height = ui::PushInset(3, QUEST_PANEL_HEIGHT);
+    int height = ui::PushInset(QUEST_PANEL_HEIGHT);
 
     if (height == 0) {
         ui::Pop();

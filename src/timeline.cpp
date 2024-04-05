@@ -326,8 +326,8 @@ void DrawTimeline() {
 
     // Initiualize Common Data Structure
     TimeLineCoordinateData tcd = TimeLineCoordinateData();
-    tcd.x0 = ui::Current()->text_start_x;
-    tcd.y0 = ui::Current()->text_start_y;
+    tcd.x0 = ui::Current()->x;
+    tcd.y0 = ui::Current()->y;
     tcd.w  = ui::Current()->width;
     tcd.h  = ui::Current()->height;
     tcd.planet_coords = new int[gs->planets.planet_count];

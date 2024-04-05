@@ -15,7 +15,7 @@ void GlobalState::_InspectState() {
 }
 
 bool _PauseMenuButton(const char* label) {
-    ui::PushInset(0, DEFAULT_FONT_SIZE+4);
+    ui::PushInset(DEFAULT_FONT_SIZE+4);
     ui::Enclose();
     ui::Write(label);
     button_state_flags::T button_state = ui::AsButton();

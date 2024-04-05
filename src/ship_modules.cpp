@@ -215,8 +215,8 @@ void ShipModuleSlot::Draw() const {
     if (IsIdValid(dragging_object) && 
         (!IsSlotFitting(dragging_object) || !IsReachable(GetShipModules()->_dragging_origin))
     ){
-        int center_x = ui::Current()->text_start_x + ui::Current()->width/2;
-        int center_y = ui::Current()->text_start_y + ui::Current()->height/2;
+        int center_x = ui::Current()->x + ui::Current()->width/2;
+        int center_y = ui::Current()->y + ui::Current()->height/2;
         ui::BeginDirectDraw();
         DrawLine(center_x - 20, center_y - 20, center_x + 20, center_y + 20, Palette::red);
         DrawLine(center_x - 20, center_y + 20, center_x + 20, center_y - 20, Palette::red);
@@ -308,7 +308,7 @@ void ModuleConfiguration::Draw(Ship* ship) const {
     int lower_border = SHIP_MODULE_HEIGHT + 10;
     adjusted_draw_space.height += upper_border + lower_border;
     int height = adjusted_draw_space.height;
-    ui::PushInset(0, height);
+    ui::PushInset(height);
     Rectangle bounding = ui::Current()->GetRect();
 
     WireframeMesh mesh = assets::GetWirframe(mesh_resource_path);
@@ -616,6 +616,9 @@ void ShipModules::InitDragging(ShipModuleSlot slot, Rectangle current_draw_rect)
 }
 
 void ShipModules::DirectSwap(ShipModuleSlot slot) {
+    if (!IsIdValid(slot.GetSlot())) {
+        return;
+    }
     ShipModuleSlot available = ShipModuleSlot();
     if (slot.origin_type == ShipModuleSlot::DRAGGING_FROM_SHIP
         && IsIdValidTyped(GetGlobalState()->focused_planet, EntityType::PLANET)

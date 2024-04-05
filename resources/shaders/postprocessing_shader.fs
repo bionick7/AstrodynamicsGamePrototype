@@ -34,20 +34,24 @@ void main() {
     vec2 uv = fragTexCoord*2. -1.0;
 
     float edge_dist = 1. + sdf_box(uv, vec2(1.));
-    float fade_factor = smoothstep(0.8, 1.2, edge_dist) * 0.1;
+    float fade_factor_color = smoothstep(0.8, 1.0, edge_dist) * 0.07;
+    float fade_factor_distortion = edge_dist * edge_dist * 0.01;
 
-    uv.y *= 1. + fade_factor*0.2;
-    uv.x *= 1. + fade_factor*0.2;
+    uv.y *= 1. + fade_factor_distortion;
+    uv.x *= 1. + fade_factor_distortion;
 
     vec4 tex_color = texture(texture0, uv*.5+.5);
+    vec2 screen_mask_v2 = step(vec2(-1), uv) * step(uv, vec2(1));
+    float screen_mask = screen_mask_v2.x * screen_mask_v2.y;
     // Alpha scissor prevents unfortunate fading
     if (tex_color.a > 0.01) finalColor.a = 1.0;
     else discard;
     vec3 col = tex_color.rgb;
+    col = mix(fade_color * 0.1, col, screen_mask);
 
     //finalColor.rgb = visualize_depth_map(texture(depthMap, fragTexCoord).r);
     //float fade_factor = smoothstep(0.6, 1.2, 1. - fragTexCoord.y) * 0.1;
-    col = mix(col, fade_color, fade_factor);
+    col = mix(col, fade_color, fade_factor_color);
     //col = vec3(1) * edge_dist;
     
     finalColor.rgb = col;

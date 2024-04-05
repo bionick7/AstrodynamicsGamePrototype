@@ -18,7 +18,7 @@ void Planet::_UIDrawInventory() {
     int height = MinInt(available_height, max_rows * (SHIP_MODULE_HEIGHT + MARGIN));
     int rows = height / (SHIP_MODULE_HEIGHT + MARGIN);
     int i_max = MinInt(rows * columns, MAX_PLANET_INVENTORY);
-    ui::PushInset(0, height);
+    ui::PushInset(height);
     ui::Current()->width = (SHIP_MODULE_WIDTH + MARGIN) * columns;
     
     ShipModules* sms = GetShipModules();
@@ -136,7 +136,7 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
         columns -= 1;
     }
     int rows = std::ceil(option_size / (double)columns);
-    ui::PushInset(0, 50*rows);
+    ui::PushInset(50*rows);
     ui::Shrink(5, 5);
 
     RID hovered_id = GetInvalidId();
@@ -146,11 +146,11 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
     if (type == EntityType::MODULE_CLASS) {
         int panel_width = ui::Current()->width;
         ui::PushHSplit(0, 48);
-        int tabs_x = ui::Current()->text_start_x + ui::Current()->width;
-        int tabs_y = ui::Current()->text_start_y;
+        int tabs_x = ui::Current()->x + ui::Current()->width;
+        int tabs_y = ui::Current()->y;
         for(int i=0; i < module_types::MAX; i++) {
             Color tab_draw_color = (module_class_ui_tab == i) ? Palette::ui_main : Palette::ui_alt;
-            ui::PushInset(0, 40);
+            ui::PushInset(40);
             ui::Shrink(4, 4);
             ui::EncloseEx(0, Palette::bg, tab_draw_color, 0);
             ui::DrawIconSDF(module_types::icons[i], tab_draw_color, 40);
@@ -248,7 +248,7 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
             atlas_pos = smc->icon_index;
         }
 
-        ui::PushInset(0, SHIP_MODULE_HEIGHT + margin + 2);
+        ui::PushInset(SHIP_MODULE_HEIGHT + margin + 2);
         ui::Shrink(margin, margin);
         button_state_flags::T button_state = ui::AsButton();
         if (button_state & button_state_flags::HOVER) {
@@ -273,9 +273,9 @@ void _UIDrawProduction(Planet* planet, EntityType type) {
         double progress = worker->ship_production_process / (double) total_construction_time;
         if (i == 0) {
             ui::FilllineEx(
-                ui::Current()->text_start_x,
-                ui::Current()->text_start_x + ui::Current()->width,
-                ui::Current()->text_start_y + ui::Current()->height,
+                ui::Current()->x,
+                ui::Current()->x + ui::Current()->width,
+                ui::Current()->y + ui::Current()->height,
                 progress, Palette::ui_main, Palette::bg);
         }
         ui::Pop();  // Inset
@@ -349,7 +349,7 @@ void Planet::DrawUI() {
     if (IsKeyPressed(KEY_S)) current_tab = 4;
     if (IsKeyPressed(KEY_D)) current_tab = 5;
 
-    ui::PushInset(4, (DEFAULT_FONT_SIZE+4)*2);  // Tab container
+    ui::PushInset((DEFAULT_FONT_SIZE+4)*2);  // Tab container
     int w = ui::Current()->width;
     const int n_tabs = 6;
     const int tab_columns = 3;
@@ -383,12 +383,12 @@ void Planet::DrawUI() {
         ui::Pop();  // GridCell
     }
     ui::Pop();  // Tab container
-    ui::PushInset(0, 10000);  // Constrained by outside container
+    ui::PushInset(10000);  // Constrained by outside container
 
     ui::WriteEx(name, text_alignment::CONFORM, true);
 
     // Independance slider
-    ui::PushInset(0, 30);
+    ui::PushInset(30);
     Vector2 cursor_pos = ui::Current()->GetTextCursor();
     Rectangle slider_rect = {cursor_pos.x, cursor_pos.y, 300, 20};
     ui::HelperText(GetUI()->GetConceptDescription("independance"));
@@ -410,7 +410,7 @@ void Planet::DrawUI() {
     ui::Pop();
 
     // Opinion slider
-    ui::PushInset(0, 30);
+    ui::PushInset(30);
     cursor_pos = ui::Current()->GetTextCursor();
     slider_rect = {cursor_pos.x, cursor_pos.y, 300, 20};
     ui::HelperText(GetUI()->GetConceptDescription("opinion"));
@@ -461,11 +461,11 @@ void Planet::DrawUI() {
 
     // Side ship buttons
 
-    int x_max = ui::Current()->text_start_x + ui::Current()->width;
+    int x_max = ui::Current()->x + ui::Current()->width;
     ui::PushGlobal(x_max + 10, y_start, 200, 30 * cached_ship_list.size, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, 10);
     for(int i=0; i < cached_ship_list.size; i++) {
         const Ship* ship = GetShip(cached_ship_list[i]);
-        ui::PushInset(0, 30 - 8);
+        ui::PushInset(30);
         button_state_flags::T button_state = ui::AsButton();
         if (button_state & button_state_flags::JUST_PRESSED) {
             GetGlobalState()->focused_ship = cached_ship_list[i];

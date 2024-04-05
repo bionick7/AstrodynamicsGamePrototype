@@ -11,6 +11,7 @@ WireframeMesh MakeWireframeMeshFromBuffers(int p_vertex_count, int p_triangle_co
     mesh.triangle_count = p_triangle_count;
     mesh.line_count = p_line_count;
 
+
     // Triangles
     mesh.vao_triangles = rlLoadVertexArray();
     rlEnableVertexArray(mesh.vao_triangles);
@@ -19,9 +20,9 @@ WireframeMesh MakeWireframeMeshFromBuffers(int p_vertex_count, int p_triangle_co
     rlSetVertexAttribute(0, 3, RL_FLOAT, 0, 0, 0);
     rlEnableVertexAttribute(0);
 
-    int triangle_elements = rlLoadVertexBufferElement(triangle_buffer, p_triangle_count*3*sizeof(float), false);
+    int triangle_elements = rlLoadVertexBufferElement(triangle_buffer, p_triangle_count*3*sizeof(unsigned short), false);
     rlDisableVertexArray();
-    
+        
     // Lines
     mesh.vao_lines = rlLoadVertexArray();
     rlEnableVertexArray(mesh.vao_lines);
@@ -30,7 +31,7 @@ WireframeMesh MakeWireframeMeshFromBuffers(int p_vertex_count, int p_triangle_co
     rlSetVertexAttribute(0, 3, RL_FLOAT, 0, 0, 0);
     rlEnableVertexAttribute(0);
 
-    int line_elements = rlLoadVertexBufferElement(line_buffer, p_line_count*2*sizeof(float), false);
+    int line_elements = rlLoadVertexBufferElement(line_buffer, p_line_count*2*sizeof(unsigned short), false);
     rlDisableVertexArray();
 
     return mesh;
@@ -132,9 +133,9 @@ WireframeMesh LoadWireframeMesh(const char* filepath) {
         else if (text[text_cursor] == 'l') {
             int l1, l2;
             sscanf(&text[text_cursor], "l %d %d", &l1, &l2);
-            lines[line_cursor] = l1;
-            lines[line_cursor+1] = l2;
-            line_cursor += 2;
+            lines[2*line_cursor] = l1;
+            lines[2*line_cursor+1] = l2;
+            line_cursor++;
         }
         else if (text[text_cursor] == 'f') {
             /*int fs[9];
@@ -148,16 +149,21 @@ WireframeMesh LoadWireframeMesh(const char* filepath) {
             triangles[triangle_cursor+2] = fs[6];*/
             int fs1, fs2, fs3;
             sscanf(&text[text_cursor], "f %d %d %d", &fs1, &fs2, &fs3);
-            triangles[triangle_cursor] = fs1;
-            triangles[triangle_cursor+1] = fs2;
-            triangles[triangle_cursor+2] = fs3;
+            triangles[3*triangle_cursor] = fs1;
+            triangles[3*triangle_cursor+1] = fs2;
+            triangles[3*triangle_cursor+2] = fs3;
             //INFO("faces: %d, %d, %d\n", fs1, fs2, fs3);
-            triangle_cursor += 3;
+            triangle_cursor++;
         }
     } while (_GetNextLine(text, &text_cursor));
+    if (triangle_cursor != triangle_count || line_cursor != line_count || vertex_cursor != vertex_count) {
+        FAIL("Mismatch while reading mesh '%s' tris: %d/%d, lines: %d/%d, verts: %d/%d)", 
+            filepath, triangle_cursor, triangle_count, line_cursor, line_count, vertex_cursor, vertex_count)
+    }
 
     UnloadFileText(text);
 
+    // Normalize vertex distances
     float total_distance = vertex_distances[vertex_count-1];
     for(int i=0; i < vertex_count; i++) {
         vertex_distances[i] = vertex_distances[i] / total_distance;

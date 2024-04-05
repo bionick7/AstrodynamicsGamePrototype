@@ -90,7 +90,7 @@ void Dialogue::DrawToUIContext() {
     ui::Write(GetSpeaker());
     ui::Write(GetBody());
     int w = ui::Current()->width;
-    ui::PushInset(0, 32);
+    ui::PushInset(32);
     for(int i=0; i < reply_count; i++) {
         ui::PushHSplit(i * w / reply_count, (i + 1) * w / reply_count);
         ui::Enclose();

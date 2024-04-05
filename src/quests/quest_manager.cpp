@@ -113,7 +113,7 @@ void QuestManager::Draw() {
 
     // TABS
 
-    ui::PushInset(4, 20);  // Tab container
+    ui::PushInset(20);  // Tab container
     const int n_tabs = active_quests.Count() + 1;
     if (current_tab_qst >= n_tabs) {
         current_tab_qst = 0;
@@ -141,7 +141,7 @@ void QuestManager::Draw() {
     }
     ui::Pop();  // Tab container
 
-    ui::PushInset(0, h - 20);
+    ui::PushInset(h - 20);
     if (current_tab_qst == 0) {
         ui::PushHSplit(0, w/2);
         ui::Shrink(5, 5);
@@ -182,12 +182,12 @@ void QuestManager::Draw() {
         for(int i=1; i < current_tab_qst; i++) it++;
         Quest* q = active_quests[it];
         for(int i=0; i < q->dialogue_backlog.size; i++) {
-            ui::PushInset(0, 100);
+            ui::PushInset(100);
             dialogues[q->dialogue_backlog.Get(i)]->DrawToUIContext();
             ui::Pop();  // Inset
         }
         if (active_quests[it]->await_type == Quest::DAILOGUE) {
-            ui::PushInset(0, 100);
+            ui::PushInset(100);
             dialogues[active_quests[it]->current.dialogue]->DrawToUIContext();
             ui::Pop();  // Inset
         }
