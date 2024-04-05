@@ -28,8 +28,7 @@ void EndRenderInUILayer();
 void RenderWireframeMesh(WireframeMesh mesh, Matrix transform, Color background, Color foreground);
 void RenderWireframeMesh2D(WireframeMesh mesh, Rectangle box, Color foreground, uint8_t z_layer);
 void RenderWireframeMesh2DEx(WireframeMesh mesh, Vector2 mid_pos, float scale, Color background, Color foreground, uint8_t z_layer);
-void RenderOrbit(const OrbitSegment* orbit, int point_count, 
-                 orbit_render_mode::T render_mode, Color color);
+void RenderOrbit(const OrbitSegment* orbit, orbit_render_mode::T render_mode, Color color);
 void RenderPerfectSphere(DVector3 pos, double radius, Color color);
 void RenderRings(DVector3 normal, double min_rad, double max_rad, Color color);
 void RenderSkyBox();

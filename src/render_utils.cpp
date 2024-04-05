@@ -11,6 +11,33 @@
 
 #include "rlgl.h"
 
+#define ORBIT_BUFFER_SIZE 1024
+
+namespace default_buffers {
+    int orbit_vao = -1;
+    int orbit_vbo = -1;
+
+    void ReloadIfNecaissary() {
+        // Not expected to unload / reload
+        if (orbit_vao < 0 || orbit_vbo < 0) {
+            float* float_array = new float[ORBIT_BUFFER_SIZE];
+
+            for (int i=0; i < ORBIT_BUFFER_SIZE; i++) {
+                float_array[i] = i / (float)ORBIT_BUFFER_SIZE;
+            }
+
+            orbit_vao = rlLoadVertexArray();
+            rlEnableVertexArray(orbit_vao);
+
+            orbit_vbo = rlLoadVertexBuffer(float_array, ORBIT_BUFFER_SIZE*sizeof(float), false);
+            rlSetVertexAttribute(0, 1, RL_FLOAT, 0, 0, 0);
+            rlEnableVertexAttribute(0);
+            rlDisableVertexArray();
+            delete[] float_array;
+        }
+    }
+};
+
 void _RenderQuad(Color color) {
     rlBegin(RL_TRIANGLES);
         rlColor4ub(color.r, color.g, color.b, color.a);
@@ -248,25 +275,34 @@ namespace orbit_shader {
     Shader shader;
     int semi_latus_rectum = -1;
     int eccentricity = -1;
-    int orbit_transform = -1;
     int current_anomaly = -1;
+    int focal_bound_start = -1;
+    int focal_range = -1;
 
     int color = -1;
     int render_mode = -1;
+
+    int orbit_transform = -1;
+    int mvp = -1;
 
     void Load() {
         LOAD_SHADER(orbit_shader)
         LOAD_SHADER_UNIFORM(orbit_shader, semi_latus_rectum)
         LOAD_SHADER_UNIFORM(orbit_shader, eccentricity)
-        LOAD_SHADER_UNIFORM(orbit_shader, orbit_transform)
         LOAD_SHADER_UNIFORM(orbit_shader, current_anomaly)
-        LOAD_SHADER_UNIFORM(orbit_shader, render_mode)
+        LOAD_SHADER_UNIFORM(orbit_shader, focal_bound_start)
+        LOAD_SHADER_UNIFORM(orbit_shader, focal_range)
+
         LOAD_SHADER_UNIFORM(orbit_shader, color)
+        LOAD_SHADER_UNIFORM(orbit_shader, render_mode)
+
+        LOAD_SHADER_UNIFORM(orbit_shader, mvp)
     }
 }
 
-void RenderOrbit(const OrbitSegment *segment, int point_count, orbit_render_mode::T render_mode, Color color) {
+void RenderOrbit(const OrbitSegment *segment, orbit_render_mode::T render_mode, Color color) {
     RELOAD_IF_NECAISSARY(orbit_shader)
+    default_buffers::ReloadIfNecaissary();
 
     const Orbit* orbit = segment->orbit;
 
@@ -275,41 +311,61 @@ void RenderOrbit(const OrbitSegment *segment, int point_count, orbit_render_mode
     Vector3 mat_x = (Vector3) orbit->periapsis_dir;
     Vector3 mat_y = (Vector3) orbit->normal;
     Vector3 mat_z = Vector3CrossProduct(mat_y, mat_x);
+    Matrix matModel = MatrixFromColumns(mat_x, mat_y, mat_z);
+    Matrix matModelView = MatrixMultiply(matModel, rlGetMatrixModelview());
+    Matrix matModelViewProjection = MatrixMultiply(matModelView, rlGetMatrixProjection());
 
     float current_focal_anomaly = orbit->GetPosition(GlobalGetNow()).θ;
 
-    SetShaderValue(orbit_shader::shader, orbit_shader::semi_latus_rectum, &p, SHADER_UNIFORM_FLOAT);
-    SetShaderValue(orbit_shader::shader, orbit_shader::eccentricity, &ecc, SHADER_UNIFORM_FLOAT);
-    SetShaderValue(orbit_shader::shader, orbit_shader::current_anomaly, &current_focal_anomaly, SHADER_UNIFORM_FLOAT);
-    int render_mode_int = render_mode;
-    SetShaderValue(orbit_shader::shader, orbit_shader::render_mode, &render_mode_int, SHADER_UNIFORM_INT);
-    SetShaderValueMatrix(orbit_shader::shader, orbit_shader::orbit_transform, MatrixFromColumns(mat_x, mat_y, mat_z));
-
-    float color4[4];
-    _ColorToFloat4Buffer(color4, color);
-    SetShaderValue(orbit_shader::shader, orbit_shader::color, color4, SHADER_UNIFORM_VEC4);
-
-    BeginShaderMode(orbit_shader::shader);
-    rlBegin(RL_LINES);
+    float focal_bound1 = 0;
+    float focal_range = 0;
     if (segment->is_full_circle) {
-        float delta = 2*PI / (float) point_count;
-        for (int j=0; j < point_count; j++) {
-            rlVertex3f(j * delta, 0, 0);
-            rlVertex3f((j + 1) * delta, 0, 0);
-        }
+        focal_bound1 = 0;
+        focal_range = 2*PI;
     } else {
-        float focal_bound1 = segment->bound1.θ;
-        float focal_bound2 = segment->bound2.θ;
-        if (focal_bound2 < focal_bound1) focal_bound2 += PI*2;
-        float delta = (focal_bound2 - focal_bound1) / (float) point_count;
-        for (int j=0; j < point_count; j++) {
-            rlVertex3f(focal_bound1 + j * delta, 0, 0);
-            rlVertex3f(focal_bound1 + (j + 1) * delta, 0, 0);
-        }
+        focal_bound1 = segment->bound1.θ;
+        float focal_bound2;
+        focal_bound2 = segment->bound2.θ;
+        if (focal_bound2 < focal_bound1) focal_bound2 += 2*PI;
+        focal_range = focal_bound2 - focal_bound1;
     }
 
-    rlEnd();
-    EndShaderMode();
+    int render_mode_int = render_mode;
+    float color4[4];
+    _ColorToFloat4Buffer(color4, color);
+
+    rlEnableShader(orbit_shader::shader.id);
+    rlSetUniform(orbit_shader::semi_latus_rectum, &p, RL_SHADER_UNIFORM_FLOAT, 1);
+    rlSetUniform(orbit_shader::eccentricity, &ecc, RL_SHADER_UNIFORM_FLOAT, 1);
+    rlSetUniform(orbit_shader::current_anomaly, &current_focal_anomaly, RL_SHADER_UNIFORM_FLOAT, 1);
+    rlSetUniform(orbit_shader::focal_bound_start, &focal_bound1, RL_SHADER_UNIFORM_FLOAT, 1);
+    rlSetUniform(orbit_shader::focal_range, &focal_range, RL_SHADER_UNIFORM_FLOAT, 1);
+    rlSetUniform(orbit_shader::color, color4, RL_SHADER_UNIFORM_VEC4, 1);
+
+    rlSetUniform(orbit_shader::render_mode, &render_mode_int, RL_SHADER_UNIFORM_INT, 1);
+    rlSetUniformMatrix(orbit_shader::mvp, matModelViewProjection);
+
+
+    // Maybe keep around for performence compairison
+    //const int point_count = 1024;
+    //BeginShaderMode(orbit_shader::shader);
+    //rlBegin(RL_LINES);
+    //float delta = 1.0 / (float) point_count;
+    //rlVertex3f(0.0, 0.0, 1.0);
+    //for (int j=0; j < point_count; j++) {
+    //    float focal = j * delta;
+    //    rlVertex3f(focal, sin(focal), cos(focal));
+    //    rlVertex3f(focal, sin(focal), cos(focal));
+    //}
+    //rlVertex3f(1.0, 0.0, 1.0);
+    //rlEnd();
+    //EndShaderMode();
+    
+    rlEnableVertexArray(default_buffers::orbit_vao);
+    rlDrawVertexLineStripArray(0, ORBIT_BUFFER_SIZE);
+    rlDisableVertexArray();
+    
+    rlDisableShader();
 }
 
 namespace planet_shader {

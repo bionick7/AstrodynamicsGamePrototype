@@ -626,9 +626,9 @@ void Ship::DrawTrajectories() const {
         );
 
         OrbitSegment tf_orbit = OrbitSegment(&plan->transfer_orbit[plan->primary_solution], to_departure, to_arrival);
-        //RenderOrbit(&tf_orbit, 256, i == plan_edit_index ? Palette::ui_main : GetColor());
+        //RenderOrbit(&tf_orbit, i == plan_edit_index ? Palette::ui_main : GetColor());
         //OrbitSegment tf_orbit = OrbitSegment(&plan->transfer_orbit[plan->primary_solution]);
-        RenderOrbit(&tf_orbit, 256, orbit_render_mode::Solid, color);
+        RenderOrbit(&tf_orbit, orbit_render_mode::Solid, color);
     }
 }
 

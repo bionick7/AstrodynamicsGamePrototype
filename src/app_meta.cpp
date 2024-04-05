@@ -50,9 +50,14 @@ void AppMetaInit() {
     LogSetOutput("log.txt");
     LogToStdout(true);
 
+    int fps_cap = GetSettingNum("fps_cap");  // negative cap means unlimited
+    bool v_sync = GetSettingBool("v_sync");
+
     // ConfigFlags are called before window creation
     SetConfigFlags(FLAG_MSAA_4X_HINT);
-    SetConfigFlags(FLAG_VSYNC_HINT);
+    if (v_sync && fps_cap >= 0) {
+        SetConfigFlags(FLAG_VSYNC_HINT);
+    }
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 
     InitWindow(1600, 900, WINDOW_TITLE);
@@ -61,7 +66,11 @@ void AppMetaInit() {
     SetWindowIcon(assets::GetImage("resources/icons/app_icon.png"));
     
     SetExitKey(KEY_NULL);
-    //SetTargetFPS(1e6);
+    if (fps_cap >= 0) {
+        SetTargetFPS(fps_cap);
+    } else {
+        SetTargetFPS(1e9);
+    }
 }
 
 void AppMetaStep() {

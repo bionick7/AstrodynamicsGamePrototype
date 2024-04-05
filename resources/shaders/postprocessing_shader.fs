@@ -12,22 +12,43 @@ uniform vec4 colDiffuse;
 // Output fragment color
 out vec4 finalColor;
 
-// NOTE: Add here your custom variables
+const vec3 fade_color = vec3(0,1,.5);
+
+vec3 visualize_depth_map(float depthmap_value) {
+    float z_n = 2.0 * depthmap_value - 1.0;
+    float near = 0.01;
+    float far = 1000.0;
+    float z_e = 2.0 * near * far / (far + near - z_n * (far - near));
+    return vec3(1. - z_e / 10.0);
+}
+
+float sdf_box( vec2 p, vec2 b ) {
+  vec2 q = abs(p) - b;
+  return length(max(q, 0.0)) + min(max(q.x, q.y),0.0);
+}
 
 void main() {
     // Texel color fetching from texture sampler
     //vec4 texel_color = texture(texture0, fragTexCoord);
 
-    finalColor = texture(texture0, fragTexCoord);
-    // Alpha scissor prevents unfortunate fading
-    if (finalColor.a > 0.01) finalColor.a = 1.0;
-    else discard;
+    vec2 uv = fragTexCoord*2. -1.0;
 
-    float depth_map = texture(depthMap, fragTexCoord).r;
-    float z_n = 2.0 * depth_map - 1.0;
-    float near = 0.01;
-    float far = 1000.0;
-    float z_e = 2.0 * near * far / (far + near - z_n * (far - near));
-    //finalColor.rgb = 1. - vec3(z_e / 10.0);
-    //finalColor.rgb = vec3(1) * depth_map * 20.0;
+    float edge_dist = 1. + sdf_box(uv, vec2(1.));
+    float fade_factor = smoothstep(0.8, 1.2, edge_dist) * 0.1;
+
+    uv.y *= 1. + fade_factor*0.2;
+    uv.x *= 1. + fade_factor*0.2;
+
+    vec4 tex_color = texture(texture0, uv*.5+.5);
+    // Alpha scissor prevents unfortunate fading
+    if (tex_color.a > 0.01) finalColor.a = 1.0;
+    else discard;
+    vec3 col = tex_color.rgb;
+
+    //finalColor.rgb = visualize_depth_map(texture(depthMap, fragTexCoord).r);
+    //float fade_factor = smoothstep(0.6, 1.2, 1. - fragTexCoord.y) * 0.1;
+    col = mix(col, fade_color, fade_factor);
+    //col = vec3(1) * edge_dist;
+    
+    finalColor.rgb = col;
 }

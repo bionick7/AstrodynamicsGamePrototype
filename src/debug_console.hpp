@@ -28,4 +28,8 @@ const char* GetSettingStr(const char* key, const char* default_="");
 bool GetSettingBool(const char* key, bool default_=false);
 double GetSettingNum(const char* key, double default_=0);
 
+void PushTimer();
+double PopTimer();  // in ms
+double PopAndReadTimer(const char* label, bool to_screen);
+
 #endif  // DEBUG_CONSOLE_H

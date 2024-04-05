@@ -11,7 +11,6 @@ Supported raylib modules:
     > rmodels:... loaded (optional)
     > raudio:.... loaded (optional)
 DISPLAY: Trying to enable MSAA x4
-DISPLAY: Trying to enable VSYNC
 DISPLAY: Device initialized successfully
     > Display size: 1920 x 1080
     > Screen size:  1600 x 900
@@ -49,6 +48,7 @@ AUDIO: Device initialized successfully
     > Periods size:  1323
 IMAGE: Data loaded successfully (128x128 | GRAYSCALE | 1 mipmaps)
 GLFW: Window icon image must be in R8G8B8A8 pixel format
+TIMER: Target time per frame: 0.000 milliseconds
 src\main.cpp:34 :: Init from working directory: 'E:\Games\astrodyn_concept_3\standalone'
 IMAGE: Data loaded successfully (1280x1280 | GRAYSCALE | 1 mipmaps)
 TEXTURE: [ID 3] Texture loaded successfully (1280x1280 | GRAY_ALPHA | 1 mipmaps)
@@ -103,6 +103,12 @@ SHADER: [ID 14] Program shader loaded successfully
 SHADER: [ID 4] Fragment shader compiled successfully
 SHADER: [ID 13] Program shader loaded successfully
 WAVE: Data loaded successfully (48000 Hz, 16 bit, 2 channels)
+FBO: [ID 1] Unloaded framebuffer from VRAM (GPU)
+FBO: [ID 2] Unloaded framebuffer from VRAM (GPU)
+TEXTURE: [ID 4] Texture loaded successfully (1920x1017 | R8G8B8A8 | 1 mipmaps)
+TEXTURE: Depth texture loaded successfully
+TEXTURE: [ID 6] Texture loaded successfully (1920x1017 | R8G8B8A8 | 1 mipmaps)
+TEXTURE: Depth texture loaded successfully
 TEXTURE: [ID 2] Unloaded texture data from VRAM (GPU)
 SHADER: [ID 3] Default shader unloaded successfully
 TEXTURE: [ID 1] Default texture unloaded successfully

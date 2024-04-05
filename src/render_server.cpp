@@ -126,7 +126,7 @@ void _DrawTrajectories() {
     // Draw planet trajectories
     for(int i=0; i < GetPlanets()->GetPlanetCount(); i++) {
         OrbitSegment segment = OrbitSegment(&GetPlanetByIndex(i)->orbit);
-        RenderOrbit(&segment, 256, orbit_render_mode::Gradient, GetPlanetByIndex(i)->GetColor());
+        RenderOrbit(&segment, orbit_render_mode::Gradient, GetPlanetByIndex(i)->GetColor());
     }
     
     // Draw ship trajectories
@@ -240,6 +240,7 @@ RenderTexture2D _LoadRenderTextureDepthTex(int width, int height) {
         if (rlFramebufferComplete(target.id)) TRACELOG(LOG_INFO, "FBO: [ID %i] Framebuffer object created successfully", target.id);
 
         rlDisableFramebuffer();
+        SetTextureFilter(target.texture, TEXTURE_FILTER_BILINEAR);
     }
     else TRACELOG(LOG_WARNING, "FBO: Framebuffer object can not be created");
 
@@ -282,6 +283,7 @@ void RenderServer::Draw() {
     //WireframeMesh test_mesh = assets::GetWirframe("resources/meshes/test/ship_contours.obj");
     //WireframeMesh test_mesh = assets::GetWirframe("resources/meshes/ships/shp_light_transport.obj");
 
+    PushTimer();
     BeginTextureMode(render_targets[0]);
         ClearBackground(WHITE);  // Very important apperently
 
@@ -290,7 +292,6 @@ void RenderServer::Draw() {
         // True 3D
         BeginMode3D(GetCamera()->rl_camera);
             RenderSkyBox();
-
 
             // Draw Saturn
             RenderPerfectSphere(DVector3::Zero(), GetPlanets()->GetParentNature()->radius, Palette::ui_main);
@@ -307,7 +308,6 @@ void RenderServer::Draw() {
 
             _DrawTrajectories();
             _UpdateShipIcons();
-
             // Draw icons
             RELOAD_IF_NECAISSARY(icon_shader)
             BeginShaderMode(icon_shader::shader);
@@ -328,8 +328,10 @@ void RenderServer::Draw() {
         GetTransferPlanUI()->Draw3DGizmos();
     
     EndTextureMode();
+    PopAndReadTimer("3D rendering", true);
 
     // All UI shenanigans
+    PushTimer();
     BeginTextureMode(render_targets[1]);
         ClearBackground(ColorAlpha(Palette::bg, 0));
 
@@ -338,8 +340,10 @@ void RenderServer::Draw() {
             //RenderWireframeMesh2DEx(test_mesh, {500, 500}, 100, Palette::bg, Palette::ui_main, 255);
         rlDisableDepthTest();
     EndTextureMode();
+    PopAndReadTimer("UI rendering", true);
 
     // Postprocessing etc.
+    ClearBackground(MAGENTA);  // Clear coat to notice 'holes'
     RenderDeferred(render_targets[0]);
     RenderDeferred(render_targets[1]);
 }

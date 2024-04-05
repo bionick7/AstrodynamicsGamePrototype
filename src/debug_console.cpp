@@ -1,10 +1,13 @@
 #include "debug_console.hpp"
-#include "raylib.h"
 #include "ui.hpp"
 #include "constants.hpp"
 #include "global_state.hpp"
 #include "basic.hpp"
 #include "assets.hpp"
+#include "debug_drawing.hpp"
+
+#include "raylib.h"
+#include <sys/time.h>
 
 #define SETTINGS_FILE_PATH "settings.yaml"
 
@@ -364,4 +367,43 @@ void DrawDebugConsole() {
     ui::BeginDirectDraw();
     DrawLine(x_offset, ui::Current()->y_cursor, x_offset, ui::Current()->y_cursor - line_height, WHITE);
     ui::EndDirectDraw();
+}
+
+timeval timer_stack[100];  // If you stack more than 100 timers, you're doing something wrong
+int timer_stack_index = 0;
+
+void PushTimer() {
+    if (timer_stack_index >= 100) {
+        timer_stack_index = 100;
+        return;
+    }
+
+    struct timeval start;
+    gettimeofday(&start, NULL);
+
+    timer_stack[timer_stack_index++] = start;
+}
+
+double PopTimer() {
+    if (timer_stack_index <= 0) {
+        timer_stack_index = 0;
+        return 0.0;
+    }
+
+    struct timeval start = timer_stack[--timer_stack_index];
+    struct timeval end;
+    gettimeofday(&end, NULL);
+
+    int elapsed = ((end.tv_sec - start.tv_sec) * 1000000) + (end.tv_usec - start.tv_usec);
+    return elapsed / 1000.0;
+}
+
+double PopAndReadTimer(const char *label, bool to_screen) {
+    double ms = PopTimer();
+    if (to_screen) {
+        DebugPrintText("%s: %f ms", label, ms);
+    } else {
+        INFO("%s: %f ms", label, ms);
+    }
+    return ms;
 }
