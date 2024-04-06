@@ -2,7 +2,7 @@
 allow_fullscreen: n
 enable_ai: y
 enable_player_ai: y
-show_unconstructable_products: n
+show_unconstructable_products: y
 show_help: y
 
 # Graphics

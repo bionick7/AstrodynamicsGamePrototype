@@ -510,7 +510,7 @@ shipmodules:
     industrial_manufacturing: 1
     industrial_dock: 2
   icon_index:
-  - 11
+  - 12
   - 26
   type: large
   construction_reqirements:
@@ -916,3 +916,4 @@ shipmodules:
   type: ''
   mass: 20
   construction_time: 30
+  type: large

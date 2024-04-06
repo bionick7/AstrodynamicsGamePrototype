@@ -1,10 +1,18 @@
 from PIL import Image
 import PIL.ImageOps
-import skfmm
 import numpy as np
 import regex as re
 
+import os
+import skfmm
+
+#BASE_PATH = "resources/fonts"
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
+
 def main(base_font, new_font, base_size, downsampled_size):
+    base_font = base_font
     with open(base_font) as f:
         lines = f.readlines()
 
@@ -97,6 +105,8 @@ def main(base_font, new_font, base_size, downsampled_size):
     #im_font.show()
 
     phi = np.array(im_font) / 255
+    #phi[phi > 0.5] = 1.0
+    #phi[phi <= 0.5] = 0.0
     sdf_final = np.ones(phi.shape)
 
     """
@@ -117,7 +127,7 @@ def main(base_font, new_font, base_size, downsampled_size):
             sdf_in = skfmm.distance(phi_local, dx = 1 / base_size)
         except ValueError as e:
             print(f"Error in line {i+5}: {l}")
-            raise
+            #raise
         else:
             sdf_final[y1:y2,x1:x2] = (1 + sdf_out - sdf_in) * 0.5
             

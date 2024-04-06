@@ -105,13 +105,16 @@ void ShipModuleClass::MouseHintWrite(StringBuilder* sb) const {
     sb2.Clear();
     int delta_stats_num = 0;
     for (int i=0; i < ship_stats::MAX; i++) {
-        if (delta_stats[i] != 0) {
-            sb2.AddFormat("%s %+3d  ", ship_stats::icons[i], delta_stats[i]);
+        if (delta_stats[i] == 1) {
+            sb2.AddFormat(" %s", ship_stats::icons[i]);
+            delta_stats_num++;
+        } else if (delta_stats[i] > 1) {
+            sb2.AddFormat(" %dx%s", delta_stats[i], ship_stats::icons[i]);
             delta_stats_num++;
         }
     }
     if (delta_stats_num > 0) {
-        sb->Add(" Adds ").Add(sb2.c_str).Add("\n");
+        sb->Add(" Adds").Add(sb2.c_str).Add("\n");
     }
     if (independance_delta != 0) 
         sb->AddFormat("Independance %+3d\n", independance_delta);
@@ -121,8 +124,11 @@ void ShipModuleClass::MouseHintWrite(StringBuilder* sb) const {
     sb2.Clear();
     int req_stats_num = 0;
     for (int i=0; i < ship_stats::MAX; i++) {
-        if (required_stats[i] != 0) {
-            sb2.AddFormat("%s %3d  ", ship_stats::icons[i], required_stats[i]);
+        if (required_stats[i] == 1) {
+            sb2.AddFormat(" %s", ship_stats::icons[i]);
+            req_stats_num++;
+        } else if (required_stats[i] > 1) {
+            sb2.AddFormat(" %dx%s", required_stats[i], ship_stats::icons[i]);
             req_stats_num++;
         }
     }
