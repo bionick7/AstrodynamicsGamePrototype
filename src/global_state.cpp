@@ -286,7 +286,7 @@ void GlobalState::DrawUI() {
         ship->DrawUI();
     }
     // Standalone UI Panels
-    active_transfer_plan.DrawUI();
+    //active_transfer_plan.DrawUI();
     ship_modules.UpdateDragging();
     DrawTimeline();
     quest_manager.Draw();

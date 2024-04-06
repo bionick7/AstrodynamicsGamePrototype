@@ -13,8 +13,8 @@ Planet::Planet(const char* p_name, double p_mu, double p_radius) {
     strcpy(name, p_name);
     mu = p_mu;
     radius = p_radius;
-    ship_production_queue.Clear();
-    module_production_queue.Clear();
+    //ship_production_queue.Clear();
+    //module_production_queue.Clear();
 
     for (int i = 0; i < MAX_PLANET_INVENTORY; i++) {
         ship_module_inventory[i] = GetInvalidId();
@@ -28,7 +28,7 @@ void Planet::Serialize(DataNode* data) const {
     data->SetI("independance", independance);
     data->SetI("base_independance_delta", base_independance_delta);
     data->SetI("opinion", opinion);
-    data->CreatChildArray("ship_production_queue", ship_production_queue.size);
+    /*data->CreatChildArray("ship_production_queue", ship_production_queue.size);
     for(int i=0; i < ship_production_queue.size; i++) {
         DataNode* dn = data->InsertIntoChildArray("ship_production_queue", i);
         dn->SetI("worker", ship_production_queue[i].worker.AsInt());
@@ -39,7 +39,7 @@ void Planet::Serialize(DataNode* data) const {
         DataNode* dn = data->InsertIntoChildArray("module_production_queue", i);
         dn->SetI("worker", module_production_queue[i].worker.AsInt());
         dn->SetI("product", module_production_queue[i].product.AsInt());
-    }
+    }*/
     //data->SetF("mass", mu / G);
     //data->SetF("radius", radius);
 
@@ -69,7 +69,7 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
     base_independance_delta = data->GetI("base_independance_delta", 0);
     opinion = data->GetI("opinion", 0, true);
 
-    ship_production_queue.Resize(data->GetChildArrayLen("ship_production_queue", true));
+    /*ship_production_queue.Resize(data->GetChildArrayLen("ship_production_queue", true));
     for(int i=0; i < ship_production_queue.size; i++) {
         const DataNode* dn = data->GetChildArrayElem("ship_production_queue", i);
         ship_production_queue[i].worker = RID(dn->GetI("worker"));
@@ -80,7 +80,7 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
         const DataNode* dn = data->GetChildArrayElem("module_production_queue", i);
         module_production_queue[i].worker = RID(dn->GetI("worker"));
         module_production_queue[i].product = RID(dn->GetI("product"));
-    }
+    }*/
     RID index = planets->GetIdByName(name);
     if (!IsIdValid(index)) {
         return;
@@ -235,7 +235,7 @@ void Planet::RemoveShipModuleInInventory(int index) {
     ship_module_inventory[index] = GetInvalidId();
 }
 
-Planet::ProductionOrder Planet::MakeProductionOrder(RID id) const {
+/*Planet::ProductionOrder Planet::MakeProductionOrder(RID id) const {
     // TODO: untested
     int current_order_count = INT32_MAX;
     ProductionOrder res;
@@ -262,7 +262,7 @@ Planet::ProductionOrder Planet::MakeProductionOrder(RID id) const {
         }
     }
     return res;
-}
+}*/
 
 bool Planet::HasMouseHover(double* min_distance) const {
     // TODO: proximity approximation is pretty shit at flat angles

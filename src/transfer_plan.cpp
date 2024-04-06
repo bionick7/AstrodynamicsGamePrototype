@@ -409,7 +409,6 @@ int TransferPlanTests() {
     return 0;
 }
 
-
 TransferPlanUI::TransferPlanUI() { 
     Reset();
     departure_time_automatic = false;
@@ -657,14 +656,7 @@ void TransferPlanUI::DrawUI() {
     
     Ship* ship_instance = GetShip(ship);
     
-    const int y_margin = 5+50;
-    ui::CreateNew(
-        GetScreenWidth() - 20*DEFAULT_FONT_SIZE - 5, y_margin,
-        20*DEFAULT_FONT_SIZE, MinInt(200, GetScreenHeight()) - 2*5 - y_margin, 
-        DEFAULT_FONT_SIZE, Palette::ally, Palette::bg, false
-    );
-
-    ui::EncloseEx(4, Palette::bg, is_valid ? Palette::ally : Palette::red, 4);
+    ui::Enclose();
     
     StringBuilder sb = StringBuilder();
     sb.Add("Departs in ").AddTime(plan->departure_time - time_bounds[0]);
@@ -674,7 +666,7 @@ void TransferPlanUI::DrawUI() {
     ui::WriteEx(sb.c_str, text_alignment::CONFORM, false);
     ui::Fillline(
         fmin(timemath::Time::SecDiff(plan->arrival_time, time_bounds[0]) / timemath::Time::SecDiff(plan->hohmann_arrival_time, time_bounds[0]), 1.0), 
-        Palette::ally, Palette::bg
+        Palette::ui_main, Palette::bg
     );
     ui::Pop();  // Inset
     sb.Clear();
@@ -699,7 +691,7 @@ void TransferPlanUI::DrawUI() {
 
     ui::PushInset((DEFAULT_FONT_SIZE) * sb.CountLines() + 1);
     ui::WriteEx(sb.c_str, text_alignment::CONFORM, false);
-    ui::Fillline(fmax(0, capacity_ratio), capacity >= 0 ? Palette::ally : Palette::red, Palette::bg);
+    ui::Fillline(fmax(0, capacity_ratio), capacity >= 0 ? Palette::ui_main : Palette::red, Palette::bg);
     ui::Pop();  // Inset
 
     int w = ui::Current()->width;

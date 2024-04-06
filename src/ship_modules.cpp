@@ -296,81 +296,84 @@ void ModuleConfiguration::Load(const DataNode *data, const char* ship_id) {
 }
 
 Rectangle module_config_popup_rect = {0};
-void ModuleConfiguration::Draw(Ship* ship) const {
+void ModuleConfiguration::Draw(Ship* ship, Vector2 anchor_point, text_alignment::T alignment) const {
     const int ADJUST_MARGIN = 10;
 
     ShipModules* sms = GetShipModules();
 
-    int width = ui::Current()->width;
+    //int width = ui::Current()->width;
 
-    Rectangle adjusted_draw_space = mesh_draw_space;
     int upper_border = 20;
     int lower_border = SHIP_MODULE_HEIGHT + 10;
-    adjusted_draw_space.height += upper_border + lower_border;
-    int height = adjusted_draw_space.height;
-    ui::PushInset(height);
-    Rectangle bounding = ui::Current()->GetRect();
+    //Rectangle bounding = ui::Current()->GetRect();
 
     WireframeMesh mesh = assets::GetWirframe(mesh_resource_path);
     float size_x = mesh.bounding_box.max.x - mesh.bounding_box.min.x;
     float size_y = mesh.bounding_box.max.z - mesh.bounding_box.min.z;
-    Rectangle draw_rect = {
-        mesh.bounding_box.min.x, mesh.bounding_box.min.z,
-        size_x, size_y
+    Rectangle adjusted_draw_space = {
+        mesh.bounding_box.min.x*100, mesh.bounding_box.min.z*100,
+        size_x*100, size_y*100
     };
+    adjusted_draw_space.height += upper_border + lower_border;
+    int height = adjusted_draw_space.height;
 
-    Vector2 center = {
-        bounding.x + bounding.width/2,
-        bounding.y + bounding.height/2,
-    };
+    //Vector2 center = {
+    //    bounding.x + bounding.width/2,
+    //    bounding.y + bounding.height/2,
+    //};
 
     // Adjust drawing box on mousehover
 
-    adjusted_draw_space.x = bounding.x + (bounding.width-adjusted_draw_space.width) / 2;
-    adjusted_draw_space.y = bounding.y + 1;
-    bool fits_naturally = CheckEnclosingRecs(bounding, adjusted_draw_space);
-    bool show_popup = !fits_naturally && 
-        (CheckCollisionPointRec(GetMousePosition(), bounding) || 
-        CheckCollisionPointRec(GetMousePosition(), module_config_popup_rect));
-    if (show_popup) {
-        adjusted_draw_space.width += ADJUST_MARGIN * 2;
-        adjusted_draw_space.height += ADJUST_MARGIN * 2;
-        if (adjusted_draw_space.x > GetScreenWidth() - adjusted_draw_space.width - ADJUST_MARGIN * 2)
-            adjusted_draw_space.x = GetScreenWidth() - adjusted_draw_space.width - ADJUST_MARGIN * 2;
-        if (adjusted_draw_space.y > GetScreenHeight() - adjusted_draw_space.height - ADJUST_MARGIN * 2)
-            adjusted_draw_space.y = GetScreenHeight() - adjusted_draw_space.height - ADJUST_MARGIN * 2;
-        ui::PushGlobal(
-            adjusted_draw_space.x, adjusted_draw_space.y,
-            adjusted_draw_space.width, adjusted_draw_space.height,
-            DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, ui::Current()->z_layer + 10
-        );
-        module_config_popup_rect = adjusted_draw_space;
+    //bool fits_naturally = CheckEnclosingRecs(bounding, adjusted_draw_space);
+    //bool show_popup = !fits_naturally && 
+    //    (CheckCollisionPointRec(GetMousePosition(), bounding) || 
+    //    CheckCollisionPointRec(GetMousePosition(), module_config_popup_rect));
+    //if (show_popup) {
+    adjusted_draw_space.width += ADJUST_MARGIN * 2;
+    adjusted_draw_space.height += ADJUST_MARGIN * 2;
+    if (adjusted_draw_space.x > GetScreenWidth() - adjusted_draw_space.width - ADJUST_MARGIN * 2)
+        adjusted_draw_space.x = GetScreenWidth() - adjusted_draw_space.width - ADJUST_MARGIN * 2;
+    if (adjusted_draw_space.y > GetScreenHeight() - adjusted_draw_space.height - ADJUST_MARGIN * 2)
+        adjusted_draw_space.y = GetScreenHeight() - adjusted_draw_space.height - ADJUST_MARGIN * 2;
 
-        ui::Enclose();
-    } else {
-        module_config_popup_rect = {0};
-    }
-    center = {
+    
+    Vector2 pos = ApplyAlignment(anchor_point, {adjusted_draw_space.width, adjusted_draw_space.height}, alignment);
+    adjusted_draw_space.x = pos.x;
+    adjusted_draw_space.y = pos.y;
+
+    ui::CreateNew(
+        adjusted_draw_space.x, adjusted_draw_space.y,
+        adjusted_draw_space.width, adjusted_draw_space.height,
+        DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, false
+    );
+    module_config_popup_rect = adjusted_draw_space;
+
+    ui::Enclose();
+
+    //} else {
+    //    module_config_popup_rect = {0};
+    //}
+    Vector2 center = {
         adjusted_draw_space.x + adjusted_draw_space.width/2,
         adjusted_draw_space.y + adjusted_draw_space.height/2,
     };
     ui::WriteEx(GetShipClassByRID(ship->ship_class)->name, text_alignment::HCENTER | text_alignment::TOP, false);
 
-    bool use_scissor = !CheckEnclosingRecs(ui::Current()->render_rec, bounding);
-    if (use_scissor) {
-        BeginScissorMode(ui::Current()->render_rec.x, ui::Current()->render_rec.y, ui::Current()->render_rec.width, ui::Current()->render_rec.height);
-    }
+    //bool use_scissor = !CheckEnclosingRecs(ui::Current()->render_rec, bounding);
+    //if (use_scissor) {
+    //    BeginScissorMode(ui::Current()->render_rec.x, ui::Current()->render_rec.y, ui::Current()->render_rec.width, ui::Current()->render_rec.height);
+    //}
 
     // Draw mesh
 
     if (IsWireframeReady(mesh)) {
         Rectangle wf_draw_rect = adjusted_draw_space;
-        if (show_popup) {
-            wf_draw_rect.x += ADJUST_MARGIN;
-            wf_draw_rect.y += ADJUST_MARGIN;
-            wf_draw_rect.width -= ADJUST_MARGIN * 2;
-            wf_draw_rect.height -= ADJUST_MARGIN * 2;
-        }
+        //if (show_popup) {
+        wf_draw_rect.x += ADJUST_MARGIN;
+        wf_draw_rect.y += ADJUST_MARGIN;
+        wf_draw_rect.width -= ADJUST_MARGIN * 2;
+        wf_draw_rect.height -= ADJUST_MARGIN * 2;
+        //}
         // Make the mesh fit (and adjust to keep the modules aligned)
         center.x -= (mesh.bounding_box.min.x + mesh.bounding_box.max.x) * 50;
         center.y -= (mesh.bounding_box.min.z + mesh.bounding_box.max.z) * 50;
@@ -455,9 +458,9 @@ void ModuleConfiguration::Draw(Ship* ship) const {
         free_module_index++;
     }
 
-    if (use_scissor) {
-        EndScissorMode();
-    }
+    //if (use_scissor) {
+    //    EndScissorMode();
+    //}
     EndRenderInUILayer();
     //BeginRenderInUILayer(50);
     //DrawRectangleLinesEx(adjusted_draw_space, 1, WHITE);
@@ -478,10 +481,10 @@ void ModuleConfiguration::Draw(Ship* ship) const {
         ui::Pop();
     }
     ui::HelperText(GetUI()->GetConceptDescription("module"));
-    if (show_popup) {
-        ui::Pop();
-    }
-    ui::Pop(); // Inset
+    //if (show_popup) {
+    ui::Pop();
+    //}
+    //ui::Pop(); // Inset
 }
 
 int ShipModules::Load(const DataNode* data) {

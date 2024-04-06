@@ -343,7 +343,7 @@ void RenderServer::Draw() {
     PopAndReadTimer("UI rendering", true);
 
     // Postprocessing etc.
-    ClearBackground(MAGENTA);  // Clear coat to notice 'holes'
+    ClearBackground(Palette::bg);  // There are transperent areas when skipping postprocessing
     RenderDeferred(render_targets[0]);
     RenderDeferred(render_targets[1]);
 }

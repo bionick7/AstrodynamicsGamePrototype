@@ -53,8 +53,8 @@ Ship::Ship() {
     for (int i=0; i < SHIP_MAX_MODULES; i++) {
         modules[i] = GetInvalidId();
     }
-    ship_production_process = 0;
-    module_production_process = 0;
+    production_process = 0;
+    production_queue.Clear();
 }
 
 Ship::~Ship() {
@@ -121,8 +121,8 @@ void Ship::Serialize(DataNode *data) const {
     data->SerializeBuffer("transporting", transporting, resources::names, resources::MAX);
     data->SerializeBuffer("dammage_taken", dammage_taken, ship_variables::names, ship_variables::MAX);
     
-    data->SetI("ship_production_process", ship_production_process);
-    data->SetI("module_production_process", module_production_process);
+    data->SetI("production_process", production_process);
+    production_queue.SerializeTo(data, "production_queue");
 
     data->CreateArray("modules", SHIP_MAX_MODULES);
     for(int i=0; i < SHIP_MAX_MODULES; i++) {
@@ -150,8 +150,8 @@ void Ship::Deserialize(const DataNode* data) {
 
     data->DeserializeBuffer("dammage_taken", dammage_taken, ship_variables::names, ship_variables::MAX);
     
-    ship_production_process = data->GetI("ship_production_process", 0, true);
-    module_production_process = data->GetI("module_production_process", 0, true);
+    production_process = data->GetI("ship_production_process", 0, true);
+    production_queue.DeserializeFrom(data, "production_queue", true);
 
     data->DeserializeBuffer("transporting", transporting, resources::names, resources::MAX);
 
@@ -320,6 +320,13 @@ Color Ship::GetColor() const {
 
 bool Ship::IsStatic() const {
     return GetShipClassByRID(ship_class)->max_dv == 0;
+}
+
+bool Ship::CanProduce() const {
+    for (int i = ship_stats::INDUSTRIAL_ADMIN; i < ship_stats::MAX; i++) {
+        if (stats[i]) return true;
+    }
+    return false;
 }
 
 bool Ship::IsParked() const {

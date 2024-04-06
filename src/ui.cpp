@@ -180,11 +180,9 @@ void TextBox::EnclosePartial(int inset, Color background_color, Color line_color
 }
 
 void TextBox::EncloseDynamic(int inset, int corner_radius, Color background_color, Color line_color) {
-    Rectangle rect;
-    rect.x = x;
-    rect.y = y;
-    rect.width = extend_x + 2 * text_margin_x;
-    rect.height = extend_y + 2 * text_margin_y;
+    width = extend_x + 2 * text_margin_x;
+    height = extend_y + 2 * text_margin_y;
+    Rectangle rect = GetRect();
 
     if (!flexible)
         rect = GetCollisionRec(rect, render_rec);
@@ -229,17 +227,18 @@ void TextBox::WriteLayout(const text::Layout* layout, bool advance_cursor) {
     } else {
         layout->DrawTextLayout(GetCustomDefaultFont(), text_size, text_color, text_background, render_rec, z_layer);
     }
-    if (GetSettingBool("draw_textrects", false)) {
-        BeginRenderInUILayer(z_layer);
-        DrawRectangleLinesEx(rect, 1, RED);
-        EndRenderInUILayer();
-    }
     if (advance_cursor) {
         line_size_y = 20;
         x_cursor = rect.x + rect.width - (x + text_margin_x);
         y_cursor = rect.y + rect.height - (y + text_margin_y) - line_size_y;
         if (x_cursor > extend_x) extend_x = x_cursor;
-        if (rect.y + rect.height - y > extend_y) extend_y = rect.y + rect.height - y;
+        if (y_cursor + line_size_y > extend_y) extend_y = y_cursor + line_size_y;
+    }
+    if (GetSettingBool("draw_textrects", false)) {
+        BeginRenderInUILayer(z_layer);
+        DrawRectangleLinesEx(rect, 1, RED);
+        DrawCircle(x + text_margin_x + x_cursor, y + text_margin_y + y_cursor + line_size_y, 3, RED);
+        EndRenderInUILayer();
     }
 }
 
@@ -422,7 +421,7 @@ void ui::PushFree(int x, int y, int w, int h) {
 }
 
 void _FlexibleInsetPopAction(TextBox* parent, TextBox* child) {
-    parent->y_cursor += child->extend_x + 2 * child->text_margin_x;
+    parent->y_cursor += child->height;
     parent->RecalculateExtends();
 }
 
@@ -451,6 +450,7 @@ int ui::PushInset(int h) {
 
     if (is_flexible) {
         new_text_box.flexible = true;
+        new_text_box.extend_x = new_text_box.width - 2 * new_text_box.text_margin_x;  // Keep width
         new_text_box.on_pop_action = _FlexibleInsetPopAction;
     } else {
         tb->y_cursor += h;
@@ -648,15 +648,20 @@ Rectangle ui::MeasureTextEx(const char *text, text_alignment::T alignemnt) {
 
 void ui::Fillline(double value, Color fill_color, Color background_color) {
     TextBox* tb = ui::Current();
-    int y = tb->y + tb->y_cursor + 20;    
-    int x_start = ClampInt(tb->x, tb->render_rec.x, tb->render_rec.x + tb->render_rec.width);
-    int x_end = ClampInt(tb->x + tb->width, tb->render_rec.x, tb->render_rec.x + tb->render_rec.width);
+    int y = tb->y + tb->y_cursor + tb->line_size_y;
+    int x_start = tb->x;
+    int x_end = tb->x + tb->width;
+    if (!tb->flexible) {
+        x_start = ClampInt(x_start, tb->render_rec.x, tb->render_rec.x + tb->render_rec.width);
+        x_end = ClampInt(x_end, tb->render_rec.x, tb->render_rec.x + tb->render_rec.width);
+    }
     ui::FilllineEx(x_start, x_end, y, value, fill_color, background_color);
 }
 
+// Ignores render-rect
 void ui::FilllineEx(int x_start, int x_end, int y, double value, Color fill_color, Color background_color) {
     TextBox* tb = ui::Current();
-    if (y > tb->render_rec.y + tb->render_rec.height || y < tb->render_rec.y)
+    if (!tb->flexible && (y > tb->render_rec.y + tb->render_rec.height || y < tb->render_rec.y))
         return;
     
     int x_mid_point = ClampInt(x_start + (x_end - x_start) * value, tb->render_rec.x, tb->render_rec.x + tb->render_rec.width);

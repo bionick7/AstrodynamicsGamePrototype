@@ -43,9 +43,6 @@ struct Planet {
     PlanetaryEconomy economy;
 
     RID ship_module_inventory[MAX_PLANET_INVENTORY];
-    struct ProductionOrder { RID worker, product; };
-    List<ProductionOrder> ship_production_queue;
-    List<ProductionOrder> module_production_queue;
 
     IDList cached_ship_list;  // Cached for quicka access (renewed every frame)
 
@@ -75,7 +72,7 @@ struct Planet {
 
     ShipModuleSlot GetFreeModuleSlot() const;
     void RemoveShipModuleInInventory(int index);
-    ProductionOrder MakeProductionOrder(RID id) const;
+    //ProductionOrder MakeProductionOrder(RID id) const;
 
     bool HasMouseHover(double* distance) const;
     void Update();

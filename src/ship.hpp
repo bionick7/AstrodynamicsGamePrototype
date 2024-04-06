@@ -96,7 +96,8 @@ struct Ship {
     // UI/visual state
     Vector2 draw_pos;
     bool mouse_hover;
-    int ui_scroll = 0;
+    bool ui_submenu_toggles[3] = { false, false, false };
+
     // 3D references
     RID icon3d;
     RID text3d;
@@ -108,9 +109,9 @@ struct Ship {
     resource_count_t transporting[resources::MAX];
     ShipModuleSlot current_slot;
 
-    // Construction
-    int ship_production_process;
-    int module_production_process;
+    // Production
+    int production_process;
+    IDList production_queue;
 
     Ship();
     ~Ship();
@@ -154,6 +155,7 @@ struct Ship {
     ship_type::T GetShipType() const;
     Color GetColor() const;
     bool IsStatic() const;
+    bool CanProduce() const;
 
     // Transfer plans
     TransferPlan* GetEditedTransferPlan();

@@ -8,7 +8,7 @@ show_help: y
 # Graphics
 sdf_text: y
 skip_postprocessing: n
-fps_cap: -1
+fps_cap: 60
 v_sync: y
 
 # Debug info
@@ -16,6 +16,7 @@ show_fps: n
 draw_renderrects: n
 draw_textrects: n
 suppress_datanode_warnings: y
+show_preformance_stats: n
 
 # Gameplay variables
 base_tech_progress: 10

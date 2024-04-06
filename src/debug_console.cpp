@@ -400,6 +400,7 @@ double PopTimer() {
 
 double PopAndReadTimer(const char *label, bool to_screen) {
     double ms = PopTimer();
+    if (!GetSettingBool("show_preformance_stats")) return 0;
     if (to_screen) {
         DebugPrintText("%s: %f ms", label, ms);
     } else {

@@ -34,7 +34,7 @@ void main() {
     vec2 uv = fragTexCoord*2. -1.0;
 
     float edge_dist = 1. + sdf_box(uv, vec2(1.));
-    float fade_factor_color = smoothstep(0.8, 1.0, edge_dist) * 0.07;
+    float fade_factor_color = smoothstep(0.8, 1.0, edge_dist) * 0.04;
     float fade_factor_distortion = edge_dist * edge_dist * 0.01;
 
     uv.y *= 1. + fade_factor_distortion;

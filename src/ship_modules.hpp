@@ -181,12 +181,12 @@ struct ModuleConfiguration {
     int neighbours[SHIP_MAX_MODULES*MODULE_CONFIG_MAX_NEIGHBOURS];
     Vector2 draw_offset[SHIP_MAX_MODULES];
 
-    // Rendering cahced
+    // Rendering cached
     Rectangle mesh_draw_space;
     char mesh_resource_path[ASSET_PATH_MAX_LENGTH];
 
     void Load(const DataNode* data, const char* ship_id);
-    void Draw(Ship* ship) const;
+    void Draw(Ship* ship, Vector2 anchor_point, text_alignment::T alignment) const;
     bool IsAdjacent(ShipModuleSlot lhs, ShipModuleSlot rhs) const;
 };
 
