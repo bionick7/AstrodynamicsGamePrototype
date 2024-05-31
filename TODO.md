@@ -14,7 +14,7 @@
 - Quests drop modules & Ships (Done)
 - Drag & Drop (Done)
 - Dialogue (Done)
-- Actual quests
+- Actual quests (Not really)
 - Build ships in shipyard (Done)
 - Group ships and form fleets (Done)
 - Let player choose faction (Done)
@@ -24,6 +24,10 @@
 - Dynamic Free module slots (Done)
 - Sort modules by síze (Done)
 - Unlock modules / ship classes (Done)
+- Production stats (Done)
+- Show inactive modules (Done)
+- 3D preview
+- Name generation
 - AI shits :(
 
 ## Known Bugs
@@ -35,9 +39,14 @@
 - QUESTS: First planning a maneuver, then picking up the quest will bypass payload check (Done)
 - SAVING: Ships don't reload correctly (Done)
 - ASTRO: Transfer plan cancels wen it shouldn't (Done)
+
 - QUESTS: Accepting more than one quest fucks up the order
 - UI: measuring inline (conforming) text cannot rely on raylibs MeassureTextEx
 - SAVING: planets get loaded twice
+- ASTRO: Prograde and retrograde trajectories sometimes get confused
+- SHIPS: canceling top of queue resets production progress (Done)
+- SHIPS: carrying capacity can exceed max capacity (Done)
+- ASTRO: Crash when selecting transfer plan
 
 ## Necessary Incomplete features
 - save wren quest state (Done)
@@ -110,7 +119,7 @@ Regardless of implementability
 - V Implement way to show icons within text/at arbitrary positions  >> ???
     V 3D
     V 2D
-- Mesh loading  >> ???
+- V Mesh loading  >> ???
     preview small 3D models for flavor >> partially implemented by raylib
 - V global settings (with push_override etc.) / debug console >> known code
 - V Renderlayers?  >> ???

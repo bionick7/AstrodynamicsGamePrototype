@@ -52,6 +52,7 @@ shipmodules:
   type: medium
   add:
     power: -1
+    ground_connection: -1
   construction_reqirements:
     ground_connection: 1
     industrial_storage: 1
@@ -76,6 +77,7 @@ shipmodules:
   type: large
   add:
     power: -1
+    ground_connection: -1
   construction_reqirements:
     ground_connection: 1
     industrial_manufacturing: 1
@@ -97,6 +99,7 @@ shipmodules:
   type: large
   add:
     power: -1
+    ground_connection: -2
   construction_reqirements:
     ground_connection: 1
     industrial_storage: 1
@@ -139,9 +142,12 @@ shipmodules:
   type: large
   add:
     power: -1
+    ground_connection: -1
+    cryogenics_facility: -1
   construction_reqirements:
     ground_connection: 1
     industrial_manufacturing: 1
+    cryogenics_facility: 1
 - id: shpmod_electrolyser
   name: Electrolyser
   description: Splits water into hydrogen and oxygen by applying a voltage.
@@ -160,6 +166,7 @@ shipmodules:
   type: medium
   add:
     power: -2
+    cryogenics_facility: -1
   construction_reqirements:
     industrial_manufacturing: 1
     cryogenics_facility: 1
@@ -181,6 +188,7 @@ shipmodules:
   type: medium
   add:
     power: 1
+    cryogenics_facility: -1
   construction_reqirements:
     industrial_manufacturing: 1
     cryogenics_facility: 1
@@ -201,10 +209,9 @@ shipmodules:
   type: large
   add:
     power: -3
+    thermal_control: -2
   construction_reqirements:
-    thermal_control: 2
     industrial_manufacturing: 1
-    cryogenics_facility: 1
   construction_time: 30
 - id: shpmod_aluminium_smelter
   name: Aluminium Smelter
@@ -224,8 +231,8 @@ shipmodules:
   type: large
   add:
     power: -4
+    thermal_control: -2
   construction_reqirements:
-    thermal_control: 2
     industrial_manufacturing: 1
   construction_time: 45
 - id: shpmod_rock_habitat
@@ -387,7 +394,7 @@ shipmodules:
   construction_reqirements:
     thermal_control: 2
     industrial_admin: 1
-    industrial_manufacturing: 2
+    industrial_manufacturing: 1
 - id: shpmod_electronics
   name: Semiconductor Laboratory
   description: TBD (warrants a large desription)
@@ -449,7 +456,6 @@ shipmodules:
   - 26
   type: large
   construction_reqirements:
-    industrial_storage: 1
     industrial_manufacturing: 1
   produce: {}
   construction_time: 10
@@ -669,7 +675,7 @@ shipmodules:
     electronics: 5
   construction_reqirements:
     thermal_control: 2
-    industrial_admin: 2
+    industrial_admin: 1
     industrial_manufacturing: 1
     clean_room: 1
     precision_manufacturing: 1
@@ -686,6 +692,7 @@ shipmodules:
     thides directly
   add:
     power: 4
+    ground_connection: -2
   mass: 58
   construction_resources:
     steel: 50
@@ -794,6 +801,7 @@ shipmodules:
   - 31
   type: large
   construction_reqirements:
+    industrial_admin: 2
     industrial_manufacturing: 1
   produce: {}
 - id: shpmod_boost_init
@@ -875,7 +883,7 @@ shipmodules:
     power: 10
     thermal_control: -4
   construction_reqirements:
-    industrial_admin: 2
+    industrial_admin: 1
     industrial_manufacturing: 1
     precision_manufacturing: 1
     nuclear_enrichment: 2
@@ -913,7 +921,164 @@ shipmodules:
   produce: {}
   name: Industrial Heatpump
   description: TODO
-  type: ''
+  type: large
   mass: 20
   construction_time: 30
+- id: shpmod_shuttles
+  name: Small shuttles
+  description: Small shuttles suited for establishing a ground connection with small,
+    airless bodies
+  type: medium
+  mass: 30
+  construction_time: 30
+  construction_resources:
+    steel: 20
+  produce:
+    water: -5
+  construction_reqirements:
+    industrial_manufacturing: 1
+  add:
+    ground_connection: 1
+- id: shpmod_atmos_shuttles
+  name: Spaceplanes
+  description: TODO
+  type: medium
+  mass: 30
+  construction_time: 30
+  construction_reqirements:
+    industrial_manufacturing: 1
+    industrial_dock: 1
+    precision_manufacturing: 1
+  construction_resources:
+    aluminium: 15
+    polymers: 10
+    electronics: 5
+  produce:
+    water: -15
+  add:
+    power: -1
+    ground_connection: 2
+- id: shpmod_large_shuttles
+  name: Launch vehicles
+  description: TODO
   type: large
+  mass: 60
+  construction_time: 40
+  construction_reqirements:
+    ground_connection: 1
+    industrial_manufacturing: 1
+    industrial_dock: 2
+  construction_resources:
+    aluminium: 40
+    polymers: 13
+    electronics: 7
+  produce:
+    water: -20
+  add:
+    power: -2
+    ground_connection: 3
+- id: shpmod_launch_structure
+  name: Launch loop
+  description: A large structure that exists seperatly to the station, connected to
+    the ground
+  type: large
+  mass: 0
+  construction_time: 180
+  construction_reqirements:
+    ground_connection: 3
+    industrial_manufacturing: 2
+    industrial_dock: 1
+  construction_resources:
+    steel: 200
+    aluminium: 100
+  add:
+    power: -3
+    ground_connection: 10
+  produce: {}
+- id: shpmod_barracks
+  name: Barracks
+  description: TODO
+  type: large
+  mass: 50
+  construction_reqirements:
+    industrial_admin: 2
+    industrial_manufacturing: 1
+  add:
+    boarding_offense: 5
+    boarding_defense: 10
+    military_training: 2
+  construction_resources: {}
+  produce: {}
+- id: shpmod_windtunnel
+  name: Windtunnel
+  description: TODO
+  type: large
+  mass: 50
+  construction_time: 30
+  construction_reqirements:
+    industrial_admin: 1
+    industrial_storage: 1
+    industrial_manufacturing: 1
+    cryogenics_facility: 1
+  add:
+    power: -2
+  construction_resources: {}
+  produce: {}
+- id: shpmod_ballistics_lab
+  name: Ballistics lab
+  description: TODO
+  type: large
+  mass: 50
+  construction_time: 40
+  construction_reqirements:
+    industrial_admin: 2
+    industrial_manufacturing: 1
+  produce:
+    polymers: -1
+  construction_resources: {}
+  add:
+    power: -1
+    arms_manufacturing: 1
+- id: shpmod_biolab
+  name: Bio lab
+  description: TODO
+  type: large
+  mass: 50
+  construction_time: 40
+  construction_reqirements:
+    industrial_admin: 2
+    industrial_manufacturing: 1
+  produce:
+    biomass: -2
+  construction_resources: {}
+  add:
+    power: -1
+    bio_manufacturing: 1
+- id: shpmod_enrichment_facility
+  name: Nuclear Enrichment Facility
+  description: TODO
+  type: large
+  mass: 50
+  construction_time: 60
+  construction_reqirements:
+    industrial_admin: 1
+    industrial_manufacturing: 2
+  construction_resources: {}
+  produce: {}
+  add:
+    power: -1
+    nuclear_enrichment: 1
+- id: shpmod_precision_workshop
+  name: Precision Workshp
+  description: TODO
+  type: large
+  mass: 40
+  construction_time: 40
+  construction_reqirements:
+    industrial_admin: 1
+    industrial_manufacturing: 2
+    clean_room: 1
+  add:
+    precision_manufacturing: 1
+  construction_resources: {}
+  produce: {}

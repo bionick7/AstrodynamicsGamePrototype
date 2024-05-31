@@ -75,7 +75,7 @@ def save_yaml_data(data: yaml_t):
 
 
 def load_csv_data(category: str) -> csv_t:
-    with open(f"resources/data/spreadsheets/ship_modules_{category}.csv", "rt") as f:
+    with open(f"resources/data/spreadsheets/ship_modules-{category}.csv", "rt") as f:
         csv_reader = csv.reader(f)
         data: csv_t = list(csv_reader)
         for row in data:
@@ -86,7 +86,7 @@ def load_csv_data(category: str) -> csv_t:
 
 
 def save_csv_data(data: csv_t, category: str):
-    with open(f"resources/data/spreadsheets/ship_modules_{category}.csv", "wt") as f:
+    with open(f"resources/data/spreadsheets/ship_modules-{category}.csv", "wt") as f:
         csv_writer = csv.writer(f, lineterminator="\n")
         csv_writer.writerows(data)
 

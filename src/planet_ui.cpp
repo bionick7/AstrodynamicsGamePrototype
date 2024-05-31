@@ -43,7 +43,7 @@ void Planet::_UIDrawInventory() {
         //ui::BeginDirectDraw();
         //DrawRectangleLinesEx(ui::Current()->GetRect(), 1, Palette::ui_alt);
         //ui::EndDirectDraw();
-        sms->DrawShipModule(ship_module_inventory[i]);
+        sms->DrawShipModule(ship_module_inventory[i], false);
         ui::Pop();  // GridCell
     }
     ui::Pop();  // Inset

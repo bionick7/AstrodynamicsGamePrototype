@@ -152,6 +152,7 @@ struct Ship {
     bool IsLeading() const;
     RID GetParentPlanet() const;
     int CountModulesOfClass(RID module_class) const;
+    int CountWorkingDroptanks() const;
     ship_type::T GetShipType() const;
     Color GetColor() const;
     bool IsStatic() const;
@@ -166,8 +167,7 @@ struct Ship {
 
     // Production
     bool CanProduce(RID object, bool check_resources, bool check_stats) const;
-    void AdvanceShipProductionQueue();
-    void AdvanceModuleProductionQueue();
+    void AdvanceProductionQueue();
 
     void _OnDeparture(const TransferPlan *tp);
     void _OnArrival(const TransferPlan *tp);

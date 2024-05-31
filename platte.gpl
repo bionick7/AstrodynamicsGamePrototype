@@ -1,0 +1,15 @@
+GIMP Palette
+Name: retroscreen
+Columns: 1
+255 255 160 ui_main
+45 47 41 ui_dark
+79 80 58 ui_alt
+35 149 169 interactable_main
+23 36 42 interactable_dark
+22 53 61 interactable_alt
+35 149 169 ally
+23 36 42 ally_dark
+22 53 61 ally_alt
+255 81 85 enemy
+45 29 33 enemy_dark
+79 36 39 enemy_alt

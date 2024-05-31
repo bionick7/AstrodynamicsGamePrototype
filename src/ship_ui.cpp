@@ -36,7 +36,7 @@ int ship_stats_current_tab;
 
 void _UIDrawStats(const Ship* ship) {
     const int combat_stat_block_height = 4 * 20;
-    const int industry_stat_block_height = 1 * 20;
+    const int industry_stat_block_height = 3 * 20;
 
     // Power
     if (ship->power() > 0) {
@@ -111,7 +111,19 @@ void _UIDrawStats(const Ship* ship) {
     } else {
         ui::PushInset(industry_stat_block_height);
 
-        // TOD: industry stats
+        int count = 0;
+        for(int i=ship_stats::GROUND_CONNECTION; i < ship_stats::MAX; i++) {
+            if (ship->stats[i] != 0) {
+                const char* text = TextFormat("%s %d ", ship_stats::icons[i], ship->stats[i]);
+                text::Layout layout = ui::Current()->GetTextLayout(text, text_alignment::CONFORM);
+                ui::Current()->WriteLayout(&layout, true);
+                if (count++ % 6 == 5) ui::Current()->LineBreak();
+                int char_index = layout.GetCharacterIndex(GetMousePosition());
+                if (char_index >= 0 && char_index < 2) {
+                    ui::SetMouseHint(ship_stats::names[i]);
+                }
+            }
+        }
 
         ui::HelperText(GetUI()->GetConceptDescription("stat"));
         ui::Pop();  // Inset
@@ -507,8 +519,8 @@ void _UIDrawProduction(Ship* ship) {
             ui::Shrink(4, 4);
         }
         if (button_state & button_state_flags::JUST_PRESSED) {
+            if (i == 0) ship->production_process = 0;
             ship->production_queue.EraseAt(i);
-            ship->production_process = 0;
             i--;
         }
         ui::DrawIconSDF(atlas_pos, Palette::ui_main, ui::Current()->height);

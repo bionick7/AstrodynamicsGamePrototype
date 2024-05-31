@@ -458,7 +458,13 @@ void ModuleConfiguration::Draw(Ship* ship, Vector2 anchor_point, text_alignment:
         ui::PushFree(module_rect.x, module_rect.y, module_rect.width, module_rect.height);
         ui::Shrink(3, 3);
         ShipModuleSlot(ship->id, i, ShipModuleSlot::DRAGGING_FROM_SHIP, module_types::FREE).Draw();
-        sms->DrawShipModule(ship->modules[i]);
+
+        if (IsIdValid(ship->modules[i])) {
+            const ShipModuleClass* smc = GetModule(ship->modules[i]);
+            sms->DrawShipModule(ship->modules[i], !smc->IsEnabled(ship));
+        } else {
+            sms->DrawShipModule(ship->modules[i], false);
+        }
         ui::Pop();
 
         free_module_index++;
@@ -483,7 +489,12 @@ void ModuleConfiguration::Draw(Ship* ship, Vector2 anchor_point, text_alignment:
         ui::PushFree(rectangles[i].x, rectangles[i].y, rectangles[i].width, rectangles[i].height);
         ui::Shrink(3, 3);
         ShipModuleSlot(ship->id, i, ShipModuleSlot::DRAGGING_FROM_SHIP, types[i]).Draw();
-        sms->DrawShipModule(ship->modules[i]);
+        if (IsIdValid(ship->modules[i])) {
+            const ShipModuleClass* smc = GetModule(ship->modules[i]);
+            sms->DrawShipModule(ship->modules[i], !smc->IsEnabled(ship));
+        } else {
+            sms->DrawShipModule(ship->modules[i], false);
+        }
         ui::Pop();
     }
     ui::HelperText(GetUI()->GetConceptDescription("module"));
@@ -569,7 +580,8 @@ int ShipModules::Load(const DataNode* data) {
         //CHECK_FOR_ID(small_yard_3)
         //CHECK_FOR_ID(small_yard_4)
         CHECK_FOR_ID(heatshield)
-        CHECK_FOR_ID(droptank)
+        CHECK_FOR_ID(droptank_water)
+        CHECK_FOR_ID(droptank_hydrogen)
         //CHECK_FOR_ID(shpmod_research_lab)
         #undef CHECK_FOR_ID
     }
@@ -591,7 +603,7 @@ const ShipModuleClass* ShipModules::GetModuleByRID(RID index) const {
     return &ship_modules[IdGetIndex(index)];
 }
 
-void ShipModules::DrawShipModule(RID index) const {
+void ShipModules::DrawShipModule(RID index, bool inactive) const {
     if(!IsIdValidTyped(index, EntityType::MODULE_CLASS)) {  // empty
         return;
         //ui::EncloseEx(4, Palette::bg, Palette::ui_dark, 4);
@@ -610,7 +622,11 @@ void ShipModules::DrawShipModule(RID index) const {
         }*/
         ui::VSpace((ui::Current()->height - 40) / 2);
         ui::HSpace((ui::Current()->width - 40) / 2);
-        ui::DrawIconSDF(smc->icon_index, Palette::ui_main, 40);
+        if (inactive) {
+            ui::DrawIconSDF(smc->icon_index, Palette::red, 40);
+        } else {
+            ui::DrawIconSDF(smc->icon_index, Palette::ui_main, 40);
+        }
         //ui::Write(smc->name);
     }
 }
@@ -633,7 +649,8 @@ void ShipModules::DirectSwap(ShipModuleSlot slot) {
         && IsIdValidTyped(GetGlobalState()->focused_planet, EntityType::PLANET)
     ) {
         const Planet* planet = GetPlanet(GetGlobalState()->focused_planet);
-        available = planet->GetFreeModuleSlot();
+        module_types::T search_type = GetModule(slot.GetSlot())->type;
+        available = planet->GetFreeModuleSlot(search_type);
     }
     if (slot.origin_type == ShipModuleSlot::DRAGGING_FROM_PLANET
         && IsIdValidTyped(GetGlobalState()->focused_ship, EntityType::SHIP)
@@ -661,7 +678,7 @@ void ShipModules::UpdateDragging() {
         pos.x, pos.y, SHIP_MODULE_WIDTH, SHIP_MODULE_HEIGHT, 
         DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, 200
     );
-    DrawShipModule(_dragging);
+    DrawShipModule(_dragging, false);
     ui::Pop();  // Global
 
     ShipModuleSlot release_slot = _dragging_origin;
@@ -683,6 +700,12 @@ void ShipModules::UpdateDragging() {
         release_slot.SetSlot(_dragging);
         _dragging = GetInvalidId();
     }
+}
+
+bool ShipModules::IsDropTank(RID module, resources::T rsc) const {
+    if ((rsc == resources::WATER    || rsc == resources::NONE) && module == expected_modules.droptank_water) return true;
+    if ((rsc == resources::HYDROGEN || rsc == resources::NONE) && module == expected_modules.droptank_hydrogen) return true;
+    return false;
 }
 
 int LoadShipModules(const DataNode* data) {

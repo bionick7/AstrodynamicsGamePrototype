@@ -21,6 +21,8 @@ namespace Palette {
     extern Color enemy;
     extern Color enemy_dark;
     extern Color enemy_alt;
+
+    void ExportToFile(const char* filename);
 }
 
 #define ICON_EMPTY "\u04ff"  // lower-right corner

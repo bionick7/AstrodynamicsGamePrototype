@@ -202,15 +202,17 @@ struct ShipModules {
     int Load(const DataNode* data);
     const ShipModuleClass* GetModuleByRID(RID index) const;
 
-    void DrawShipModule(RID index) const;
+    void DrawShipModule(RID index, bool inactive) const;
 
     void InitDragging(ShipModuleSlot slot, Rectangle current_draw_rect);
     void DirectSwap(ShipModuleSlot slot);
     void UpdateDragging();
+    bool IsDropTank(RID module, resources::T rsc) const;
     
     struct{
-        RID heatshield;
-        RID droptank;
+        RID heatshield = RID(0);
+        RID droptank_water = RID(0);
+        RID droptank_hydrogen = RID(0);
     } expected_modules;
 };
 

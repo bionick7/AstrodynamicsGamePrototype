@@ -43,11 +43,11 @@ void VLogImpl(const char* file, int line, LogType level, const char* format, va_
         print_size += printf("\n");
     } else {
         // Just count the length
-        char c = '1';
+        static char c[1000];
         if (line > 0) {
-            print_size += snprintf(&c, 1, "%s:%d :: ", file, line);
+            print_size += snprintf(c, 1, "%s:%d :: ", file, line);
         }
-        print_size += vsnprintf(&c, 1, format, args_copy);
+        print_size += vsnprintf(c, 1, format, args_copy);
         print_size += 1;  // '\n'
     }
 

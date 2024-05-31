@@ -222,9 +222,10 @@ void Planet::RecalcStats() {
     }
 }
 
-ShipModuleSlot Planet::GetFreeModuleSlot() const {
+ShipModuleSlot Planet::GetFreeModuleSlot(module_types::T type) const {
     for (int index = 0; index < MAX_PLANET_INVENTORY; index++) {
-        if(!IsIdValid(ship_module_inventory[index])) {
+        module_types::T slot_type = module_types::ANY;  // For now
+        if(!IsIdValid(ship_module_inventory[index]) && module_types::IsCompatible(type, slot_type)) {
             return ShipModuleSlot(id, index, ShipModuleSlot::DRAGGING_FROM_PLANET, module_types::ANY);
         }
     }

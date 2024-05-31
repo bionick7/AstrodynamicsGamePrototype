@@ -57,9 +57,7 @@ Ship::Ship() {
     production_queue.Clear();
 }
 
-Ship::~Ship() {
-    GetRenderServer()->icons.EraseAt(icon3d);
-}
+Ship::~Ship() {}
 
 bool Ship::HasMouseHover(double* min_distance) const {
     double dist = Vector2Distance(GetMousePosition(), draw_pos);
@@ -189,7 +187,7 @@ double Ship::GetOperationalMass() const {  // Without resources
     }
 
     for(int i=0; i < SHIP_MAX_MODULES; i++) {
-        if (IsIdValid(modules[i]) && modules[i] != GetShipModules()->expected_modules.droptank) {
+        if (IsIdValid(modules[i]) && modules[i] != GetShipModules()->expected_modules.droptank_water) {
             res += GetModule(modules[i])->mass;
         }
     }
@@ -203,14 +201,14 @@ resource_count_t Ship::GetMaxCapacity() const {
 
 resource_count_t Ship::GetRemainingPayloadCapacity(double dv) const {
     const ShipClass* sc = GetShipClassByRID(ship_class);
-    int drop_tanks = CountModulesOfClass(GetShipModules()->expected_modules.droptank);
+    int drop_tanks = CountWorkingDroptanks();
     double capacity = sc->GetPayloadCapacityMass(dv, drop_tanks);
     return KGToResourceCounts(capacity - GetOperationalMass());
 }
 
 resource_count_t Ship::GetFuelRequiredFull(double dv) const {
     const ShipClass* sc = GetShipClassByRID(ship_class);
-    int drop_tanks = CountModulesOfClass(GetShipModules()->expected_modules.droptank);
+    int drop_tanks = CountWorkingDroptanks();
     const resource_count_t fuel_per_droptank = 10;
     double extra_fuel = fuel_per_droptank * drop_tanks;
     return sc->max_capacity + extra_fuel - KGToResourceCounts(sc->GetPayloadCapacityMass(dv, extra_fuel));
@@ -218,7 +216,7 @@ resource_count_t Ship::GetFuelRequiredFull(double dv) const {
 
 resource_count_t Ship::GetFuelRequired(double dv, resource_count_t payload) const {
     const ShipClass* sc = GetShipClassByRID(ship_class);
-    int drop_tanks = CountModulesOfClass(GetShipModules()->expected_modules.droptank);
+    int drop_tanks = CountWorkingDroptanks();
     const resource_count_t fuel_per_droptank = 10;
     double extra_fuel = fuel_per_droptank * drop_tanks;
     double dry_mass = sc->oem + GetOperationalMass() + ResourceCountsToKG(payload);
@@ -227,7 +225,7 @@ resource_count_t Ship::GetFuelRequired(double dv, resource_count_t payload) cons
 
 double Ship::GetCapableDV() const {
     const ShipClass* sc = GetShipClassByRID(ship_class);
-    int drop_tanks = CountModulesOfClass(GetShipModules()->expected_modules.droptank);
+    int drop_tanks = CountWorkingDroptanks();
 
     const resource_count_t fuel_per_droptank = 10;
     
@@ -361,6 +359,15 @@ int Ship::CountModulesOfClass(RID module_class) const {
     return res;
 }
 
+int Ship::CountWorkingDroptanks() const {
+    int res = 0;
+    resources::T rsc = GetShipClassByRID(ship_class)->fuel_resource;
+    for(int i=0; i < SHIP_MAX_MODULES; i++) {
+        if (GetShipModules()->IsDropTank(modules[i], rsc)) res++;
+    }
+    return res;
+}
+
 ship_type::T Ship::GetShipType() const {
     if (IsStatic()) return ship_type::SHIPYARD;
     for(int i=0; i < SHIP_MAX_MODULES; i++) {
@@ -476,23 +483,11 @@ void Ship::Update() {
     }
 
     _UpdateModules();
-    //_UpdateShipyard();
+    _UpdateShipyard();
 }
 
-/*void Ship::_UpdateShipyard() {
-    int collected_components[4] = {0};
-    for (int i=0; i < SHIP_MAX_MODULES; i++) {
-        //if(modules[i] == GetShipModules()->expected_modules.small_yard_1) collected_components[0]++;
-        //if(modules[i] == GetShipModules()->expected_modules.small_yard_2) collected_components[1]++;
-        //if(modules[i] == GetShipModules()->expected_modules.small_yard_3) collected_components[2]++;
-        //if(modules[i] == GetShipModules()->expected_modules.small_yard_4) collected_components[3]++;
-    }
-    int module_factories = MinInt(collected_components[1], collected_components[2]);
-    int repair_stations = MinInt(collected_components[2], collected_components[3]);
-    int ship_yards = MinInt(
-        MinInt(collected_components[0], collected_components[1]),
-        repair_stations
-    );
+void Ship::_UpdateShipyard() {
+    int repair_stations = MinInt(industrial_dock(), industrial_manufacturing());
     if (GetCalendar()->IsNewDay() && IsParked()) {
         for(int i=0; i < repair_stations; i++) {
             IDList available_ships;
@@ -511,14 +506,9 @@ void Ship::Update() {
                 if (hp_pool <= 0) break;
             }
         }
-        for(int i=0; i < module_factories; i++) {
-            GetPlanet(GetParentPlanet())->AdvanceModuleProductionQueue();
-        }
-        for(int i=0; i < ship_yards; i++) {
-            GetPlanet(GetParentPlanet())->AdvanceShipProductionQueue();
-        }
+        AdvanceProductionQueue();
     }
-}*/
+}
 
 void Ship::_UpdateModules() {
     // Recalculate every frame
@@ -772,41 +762,72 @@ bool Ship::CanProduce(RID object, bool check_resources, bool check_stats) const 
 
     ship_production_queue.EraseAt(0);
     ship_production_process = 0;
-}
+}*/
 
-void Ship::AdvanceModuleProductionQueue() {
+void Ship::AdvanceProductionQueue() {
     if (!IsParked()) return;
-    IDList* module_production_queue = &GetPlanet(GetParentPlanet())->module_production_queue;
-    if (module_production_queue->size == 0) return;
+    if (production_queue.size == 0) return;
     RID candidate = GetInvalidId();
-    for (int i=0; i < module_production_queue->size; i++) {
-        candidate = module_production_queue->Get(i);
-        if (CanProduce(candidate)) break;
+    for (int i=0; i < production_queue.size; i++) {
+        if (CanProduce(production_queue.Get(i), true, true)) {
+            candidate = production_queue.Get(i);
+            break;
+        }
     }
     
     if (candidate == GetInvalidId()) {
         // TODO: notify the player
-        ERROR("CANNOT PRODUCE %s on %s", GetModule(module_production_queue->Get(0))->name, name)
+        ERROR("CANNOT PRODUCE '%s' ON '%s'", GetModule(production_queue.Get(0))->name, name)
         return;
     }
-    module_production_process++;
-    const ShipModuleClass* smc = GetModule(module_production_queue->Get(0));
-    if (module_production_process < smc->GetConstructionTime()) return;
-    
-    ShipModuleSlot free_slot = GetFreeModuleSlot();
-    if (free_slot.IsValid()) {
-        free_slot.SetSlot(candidate);
+    production_process++;
+
+    Planet* planet = GetPlanet(GetParentPlanet());
+    const resource_count_t* construction_resources = NULL;
+
+    RID product_id = production_queue.Get(0);
+    if (IsIdValidTyped(product_id, EntityType::MODULE_CLASS)) {
+        const ShipModuleClass* smc = GetModule(product_id);
+        if (production_process < smc->GetConstructionTime()) return;
+        
+        ShipModuleSlot free_slot = GetFreeModuleSlot(smc->type);
+        if (!free_slot.IsValid()) {
+            free_slot = planet->GetFreeModuleSlot(smc->type);
+        }
+        if (free_slot.IsValid()) {
+            free_slot.SetSlot(candidate);
+        }
+        construction_resources = smc->construction_resources;
+    }
+    else if (IsIdValidTyped(product_id, EntityType::SHIP_CLASS)) {
+        const ShipClass* sc = GetShipClassByRID(product_id);
+        if (production_process < sc->construction_time) return;
+
+        IDList list;
+        GetShips()->GetOnPlanet(&list, id, ship_selection_flags::ALL);
+
+        DataNode ship_data;
+        ship_data.Set("name", "TODO: random name");
+        ship_data.Set("class_id", sc->id);
+        ship_data.SetI("allegiance", allegiance); 
+        ship_data.Set("planet", planet->name);
+        ship_data.CreateArray("tf_plans", 0);
+        ship_data.CreateArray("modules", 0);
+        GetShips()->AddShip(&ship_data);
+        construction_resources = sc->construction_resources;
     }
 
-    for (int i=0; i < resources::MAX; i++) {
-        if (smc->construction_resources[i] != 0) {
-            economy.TakeResource((resources::T) i, smc->construction_resources[i]);
+    if (construction_resources != NULL) {
+        for (int i=0; i < resources::MAX; i++) {
+            if (construction_resources[i] != 0) {
+                planet->economy.TakeResource((resources::T) i, construction_resources[i]);
+            }
         }
     }
 
-    module_production_queue.EraseAt(0);
-    module_production_process = 0;
-}*/
+    production_queue.EraseAt(0);
+    production_process = 0;
+}
 
 void Ship::_OnDeparture(const TransferPlan* tp) {
     // Make sure this is called first on the leading ship
@@ -948,7 +969,7 @@ void Ship::_OnArrival(const TransferPlan* tp) {
     }
 
     for(int i=0; i < SHIP_MAX_MODULES; i++) {
-        if (modules[i] == GetShipModules()->expected_modules.droptank) {
+        if (GetShipModules()->IsDropTank(modules[i], GetShipClassByRID(ship_class)->fuel_resource)) {
             RemoveShipModuleAt(i);
         }
     }
@@ -1133,6 +1154,7 @@ void Ships::KillShip(RID uuid, bool notify_callback) {
     if (notify_callback) {
         GetWrenInterface()->NotifyShipEvent(uuid, "die");
     }
+    GetRenderServer()->icons.EraseAt(GetShip(uuid)->icon3d);  // Destroy it here, since GetRenderServer() may not exist in destructor
     alloc.EraseAt(uuid);
 }
 

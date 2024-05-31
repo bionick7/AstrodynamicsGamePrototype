@@ -52,6 +52,7 @@ planets:
     resource_stock:
       water: 1000
       steel: 20
+      aluminium: 20
       electronics: 6
     resource_delta: {}
     inventory:
@@ -73,10 +74,8 @@ planets:
       rock: 300
     inventory:
     - shpmod_heatshield
-    - shpmod_armory
-    - shpmod_armory
-    - shpmod_armory
-    - shpmod_armory
+    - shpmod_reactor
+    - shpmod_reactor
     base_independance_delta: 5
 
   - name: Titan
@@ -103,6 +102,9 @@ planets:
       electronics: 6
     resource_delta:
       water: 20
+    inventory:
+    - shpmod_railgun
+    - shpmod_acs
     base_independance_delta: 20
 
   - name: Phoebe
@@ -115,65 +117,29 @@ planets:
     base_independance_delta: 3
 
 ships:
-- name: Mimas station
-  class_id: shp_spacestation
-  allegiance: 0
-  planet: Mimas
-  tf_plans: []
-  modules: []
-  
 - name: Light transport
   class_id: shp_light_transport
   allegiance: 0
   planet: Tethys
   tf_plans: []
 
-- name: Extractor
-  class_id: shp_light_transport
-  allegiance: 0
-  planet: Encelladus
-  tf_plans: []
-  modules:
-  - shpmod_water_extractor
-  - shpmod_water_extractor
-
-- name: Tethys Shipyard
+- name: Anna Kowalsky knot
   class_id: shp_spacestation
   allegiance: 0
   planet: Tethys
   tf_plans: []
   modules:
   - shpmod_manufacture_offices
-  - shpmod_large_storage
   - shpmod_workshop
-  - shpmod_wetdock
-  
-- name: Express
-  class_id: shp_express
-  allegiance: 0
-  planet: Tethys
-  tf_plans: []
-  
-- name: Light transport III
-  class_id: shp_light_transport
-  allegiance: 0
-  planet: Rhea
-  tf_plans: []
-  modules:
-  - shpmod_armory
-
-- name: Light transport IV
-  class_id: shp_light_transport
-  allegiance: 0
-  planet: Rhea
-  tf_plans: []
+  - shpmod_large_storage
+  - shpmod_drydock
 
 - name: Titan Shipyard
   class_id: shp_spacestation
   allegiance: 0
   planet: Titan
   tf_plans: []
-  modules: [shpmod_aircraft]
+  modules: []
 
 - name: Rhea Shipyard
   class_id: shp_spacestation
@@ -181,14 +147,34 @@ ships:
   planet: Rhea
   tf_plans: []
   modules:
-  - shpmod_manufacture_offices
-  - shpmod_large_storage
   - shpmod_workshop
-  - shpmod_wetdock
   
-- name: Iaeptus Shipyard
+- name: Enclave station
   class_id: shp_spacestation
-  allegiance: 0
+  allegiance: 2
   planet: Iaeptus
   tf_plans: []
-  modules: []
+  modules:
+  - shpmod_workshop
+
+- name: Military ship 1
+  class_id: shp_express
+  allegiance: 2
+  planet: Iaeptus
+  tf_plans: []
+  modules:
+  - shpmod_missiles
+  - shpmod_missiles
+  - shpmod_light_armor
+  - shpmod_acs
+  
+- name: Military ship 2
+  class_id: shp_express
+  allegiance: 2
+  planet: Iaeptus
+  tf_plans: []
+  modules:
+  - shpmod_missiles
+  - shpmod_missiles
+  - shpmod_light_armor
+  - shpmod_acs

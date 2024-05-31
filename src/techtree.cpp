@@ -289,7 +289,7 @@ void TechTree::DrawUI() {
             if (IsIdValidTyped(component_id, EntityType::SHIP_CLASS)) {
                 GetShips()->DrawShipClassUI(component_id);
             } else if (IsIdValidTyped(component_id, EntityType::MODULE_CLASS)) {
-                GetShipModules()->DrawShipModule(component_id);
+                GetShipModules()->DrawShipModule(component_id, false);
             }
             ui::Pop();  // GridCell
         }

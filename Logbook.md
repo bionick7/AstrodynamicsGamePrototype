@@ -376,3 +376,6 @@ Opinion is influenced by
 
 ## Status 30 Mar 24
 Instead of techtree, regulate progress over construction modules
+
+## Status 23 Apr 24
+Deperatly need objective list to guide the player

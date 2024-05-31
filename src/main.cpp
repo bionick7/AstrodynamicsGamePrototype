@@ -41,6 +41,9 @@ void Load(int argc, const char** argv) {
     if (GetCmdSettingBool(argc, argv, "-unbake")) {
         assets::UnBakeAllResources();
     }
+    if (GetCmdSettingBool(argc, argv, "-export_palette")) {
+        Palette::ExportToFile("platte.gpl");
+    }
 
     GlobalState* app = GetGlobalState();
     //GetAudioServer()->StartMusic();

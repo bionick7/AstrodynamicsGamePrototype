@@ -57,6 +57,8 @@ ship_classes:
     energy_hp: 10
     crew: 200
     boarding_defense: 5
+    power: 2
+    ground_connection: 2
   construction_time: 50
   construction_resources:
     steel: 200

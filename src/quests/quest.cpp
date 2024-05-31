@@ -305,7 +305,7 @@ void Quest::_NextTask() {
             const char* module_string_id = GetWrenInterface()->GetStringFromMap("module", "");
             int planet_index = GetWrenInterface()->GetNumFromMap("location", 0);
             RID module_id = GetGlobalState()->GetFromStringIdentifier(module_string_id);
-            ShipModuleSlot free_slot = GetPlanetByIndex(planet_index)->GetFreeModuleSlot();
+            ShipModuleSlot free_slot = GetPlanetByIndex(planet_index)->GetFreeModuleSlot(GetModule(module_id)->type);
             if (free_slot.IsValid()) {
                 free_slot.SetSlot(module_id);
             }

@@ -70,7 +70,7 @@ struct Planet {
 
     void RecalcStats();
 
-    ShipModuleSlot GetFreeModuleSlot() const;
+    ShipModuleSlot GetFreeModuleSlot(module_types::T type) const;
     void RemoveShipModuleInInventory(int index);
     //ProductionOrder MakeProductionOrder(RID id) const;
 
