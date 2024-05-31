@@ -1,0 +1,278 @@
+player_faction: 0
+factions:
+- money: 2e6
+- money: 1e6
+- money: 0
+
+planets:
+  - name: Mimas
+    trading_accessible: n
+    allegiance: 0
+    resource_stock:
+      water: 1000
+    resource_delta:
+      water: 50
+      metal: 1
+  - name: Encelladus
+    trading_accessible: n
+    allegiance: 0
+    resource_stock:
+      water: 1000
+    resource_delta:
+      metal: 2
+  - name: Tethys
+    trading_accessible: y
+    allegiance: 0
+    resource_stock:
+      water: 1000
+      electronics: 6
+    resource_delta:
+      electronics: 1
+  - name: Rhea
+    trading_accessible: n
+    allegiance: 1
+    resource_stock:
+      water: 1000
+    resource_delta:
+      metal: 4
+      water: 50
+    inventory:
+    - shpmod_heatshield
+  - name: Titan
+    trading_accessible: y
+    allegiance: 1
+    resource_stock:
+      water: 1000
+    resource_delta:
+      metal: 2
+      water: 80
+    inventory:
+    - shpmod_droptank
+    - shpmod_droptank
+  - name: Iaeptus
+    trading_accessible: n
+    allegiance: 2
+    resource_stock:
+      water: 1000
+    resource_delta: 
+      electronics: 1
+      metal: 1
+      water: 40
+  - name: Phoebe
+    trading_accessible: n
+    allegiance: 2
+    resource_stock:
+      water: 1000
+
+ships:
+- name: Mimas station
+  class_id: shp_spacestation
+  allegiance: 0
+  planet: Mimas
+  tf_plans: []
+  modules: []
+# THADCON
+- name: Light transport
+  class_id: shp_light_transport
+  allegiance: 0
+  planet: Tethys
+  tf_plans: []
+
+- name: Extractor
+  class_id: shp_light_transport
+  allegiance: 0
+  planet: Encelladus
+  tf_plans: []
+  modules:
+  - shpmod_water_extractor
+  - shpmod_water_extractor
+
+- name: Tethys Shipyard
+  class_id: shp_spacestation
+  allegiance: 0
+  planet: Tethys
+  tf_plans: []
+  modules:
+  - shpmod_manufacture_offices
+  - shpmod_large_storage
+  - shpmod_workshop
+  - shpmod_wetdock
+
+- name: Military ship 1
+  class_id: shp_light_transport
+  allegiance: 0
+  planet: Tethys
+  tf_plans: []
+  modules:
+  - shpmod_railgun
+  - shpmod_railgun
+  - shpmod_armor
+  - shpmod_reactor
+  
+- name: Military ship 2
+  class_id: shp_light_transport
+  allegiance: 0
+  planet: Tethys
+  tf_plans: []
+  modules:
+  - shpmod_railgun
+  - shpmod_railgun
+  - shpmod_armor
+  - shpmod_reactor
+  
+- name: Express
+  class_id: shp_express
+  allegiance: 0
+  planet: Tethys
+  tf_plans: []
+  modules: []
+  
+- name: Heavy Transport 1
+  class_id: shp_bulk_transport
+  allegiance: 0
+  planet: Encelladus
+  tf_plans: []
+  modules: []
+  
+- name: Heavy Transport 2
+  class_id: shp_bulk_transport
+  allegiance: 0
+  planet: Encelladus
+  tf_plans: []
+  modules: []
+  
+# Alexandria
+- name: Light transport I
+  class_id: shp_light_transport
+  allegiance: 1
+  planet: Titan
+  tf_plans: []
+
+- name: Light transport II
+  class_id: shp_light_transport
+  allegiance: 1
+  planet: Titan
+  tf_plans: []
+  
+- name: Light transport III
+  class_id: shp_light_transport
+  allegiance: 1
+  planet: Rhea
+  tf_plans: []
+
+- name: Light transport IV
+  class_id: shp_light_transport
+  allegiance: 1
+  planet: Rhea
+  tf_plans: []
+
+- name: Titan Shipyard
+  class_id: shp_spacestation
+  allegiance: 1
+  planet: Titan
+  tf_plans: []
+  modules:
+  - shpmod_manufacture_offices
+  - shpmod_large_storage
+  - shpmod_workshop
+  - shpmod_wetdock
+  - shpmod_pdc
+  - shpmod_pdc
+
+- name: Rhea Shipyard
+  class_id: shp_spacestation
+  allegiance: 1
+  planet: Rhea
+  tf_plans: []
+  modules:
+  - shpmod_manufacture_offices
+  - shpmod_large_storage
+  - shpmod_workshop
+  - shpmod_wetdock
+
+- name: Military ship I
+  class_id: shp_express
+  allegiance: 1
+  planet: Titan
+  tf_plans: []
+  modules:
+  - shpmod_missiles
+  - shpmod_missiles
+  - shpmod_light_armor
+  - shpmod_acs
+  
+- name: Military ship II
+  class_id: shp_express
+  allegiance: 1
+  planet: Titan
+  tf_plans: []
+  modules:
+  - shpmod_missiles
+  - shpmod_missiles
+  - shpmod_light_armor
+  - shpmod_acs
+  
+- name: Heavy Transport 1
+  class_id: shp_bulk_transport
+  allegiance: 1
+  planet: Titan
+  tf_plans: []
+  modules: []
+
+# Enclave
+- name: Military ship 1
+  class_id: shp_express
+  allegiance: 2
+  planet: Iaeptus
+  tf_plans: []
+  modules:
+  - shpmod_missiles
+  - shpmod_missiles
+  - shpmod_light_armor
+  - shpmod_acs
+  
+- name: Military ship 2
+  class_id: shp_express
+  allegiance: 2
+  planet: Iaeptus
+  tf_plans: []
+  modules:
+  - shpmod_missiles
+  - shpmod_missiles
+  - shpmod_light_armor
+  - shpmod_acs
+  
+- name: Transport ship 1
+  class_id: shp_express
+  allegiance: 2
+  planet: Iaeptus
+  tf_plans: []
+  modules:
+  - shpmod_missiles
+  - shpmod_missiles
+  - shpmod_light_armor
+  - shpmod_acs
+  
+- name: Transport ship 2
+  class_id: shp_express
+  allegiance: 2
+  planet: Phoebe
+  tf_plans: []
+  modules:
+  - shpmod_missiles
+  - shpmod_missiles
+  - shpmod_light_armor
+  - shpmod_acs
+  
+- name: Iaeptus Shipyard
+  class_id: shp_spacestation
+  allegiance: 2
+  planet: Iaeptus
+  tf_plans: []
+  modules:
+  - shpmod_manufacture_offices
+  - shpmod_large_storage
+  - shpmod_workshop
+  - shpmod_wetdock
+  - shpmod_workshop
+  - shpmod_wetdock

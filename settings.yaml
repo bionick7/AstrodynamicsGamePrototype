@@ -1,0 +1,26 @@
+# Gameplay features
+allow_fullscreen: n
+enable_ai: y
+enable_player_ai: y
+show_unconstructable_products: n
+show_help: y
+
+# Graphics
+sdf_text: y
+skip_postprocessing: n
+fps_cap: 60
+v_sync: y
+
+# Debug info
+show_fps: n
+draw_renderrects: n
+draw_textrects: n
+suppress_datanode_warnings: y
+show_preformance_stats: n
+
+# Gameplay variables
+base_tech_progress: 10
+tech_progress_per_lab: 10
+
+#default_savefile: year_2
+default_savefile: industry

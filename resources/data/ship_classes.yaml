@@ -1,0 +1,367 @@
+ship_classes:
+- id: shp_bulk_transport
+  name: C1K-998++
+  description: >
+    A larger variant that carries tripple the fuel and triple the engines
+    of a traditional C1K-998. 
+  dv: 6  # km/s
+  Isp: 4.5  # km/s
+  capacity: 300  # t
+  icon_index: [2, 28]
+  stats:
+    kinetic_hp: 1
+    energy_hp: 1
+    crew: 10
+  construction_time: 45
+  construction_resources:
+    steel: 90
+    electronics: 4
+  
+- id: shp_light_transport
+  name: C1K-998
+  description: >
+    Despite beeing nowadays classified as a light freightship, the C1K was
+    the largest cargo ship at the time of its construction. With
+    simple Hydrolox combustion engines, this design was ideal to haul large
+    ammount of cargo with cislunar space. After loosing popularity around the 
+    2060s, some modified version made it to the outer planets and found some 
+    popularity due to their large maintenance ecosystem and their independance 
+    of nuclear fuel.
+  dv: 6
+  Isp: 4.5
+  capacity: 100
+  icon_index: [2, 28]
+  stats:
+    kinetic_hp: 3
+    energy_hp: 3
+    crew: 17
+  construction_time: 15
+  construction_resources:
+    steel: 30
+    electronics: 2
+  
+- id: shp_spacestation
+  name: Station 10M
+  description: >
+    General Cosmonautics space station bus is a structural, thermal and power
+    framework that can hold 10 metric kilotonns of cargo. It is often used for 
+    medium sized habitats, shipyards and logistics points. 
+    The station has just enough propulsion to maintain orbit and attitude 
+    and cannot be used to transport equipment between points
+  dv: 0
+  Isp: 1
+  capacity: 1000
+  icon_index: [1, 28]
+  stats:
+    kinetic_hp: 10
+    energy_hp: 10
+    crew: 200
+    boarding_defense: 5
+    power: 2
+    ground_connection: 2
+  construction_time: 50
+  construction_resources:
+    steel: 200
+    electronics: 2
+
+- id: shp_express
+  name: Express
+  description: >
+    TBD
+  dv: 12
+  Isp: 10
+  fuel: hydrogen
+  capacity: 100
+  icon_index: [6, 25]
+  stats:
+    kinetic_hp: 2
+    energy_hp: 2
+    crew: 20
+  construction_time: 40
+  construction_resources:
+    steel: 30
+    electronics: 12
+    uranium: 4
+
+- id: shp_cruiser
+  name: Cruiser
+  description: >
+    TBD
+  dv: 12
+  Isp: 10
+  fuel: hydrogen
+  capacity: 40
+  icon_index: [6, 25]
+  stats:
+    kinetic_hp: 2
+    energy_hp: 2
+    crew: 20
+  construction_time: 40
+  construction_resources:
+    steel: 30
+    electronics: 12
+    uranium: 4
+
+
+ # MODULE CONFIGURATIONS AUTO-GENERATED
+module_configurations:
+  shp_bulk_transport:
+  - neighbours: []
+    offset:
+    - -60.0
+    - 68.30000000000001
+    type: medium
+  - neighbours: []
+    offset:
+    - 0.0
+    - 68.30000000000001
+    type: medium
+  - neighbours: []
+    offset:
+    - 150.0
+    - 18.3
+    type: medium
+  - neighbours: []
+    offset:
+    - 210.0
+    - 18.3
+    type: medium
+  - neighbours: []
+    offset:
+    - -160.0
+    - -15.9
+    type: drop_tank
+  - neighbours: []
+    offset:
+    - -100.0
+    - -15.9
+    type: drop_tank
+  - neighbours: []
+    offset:
+    - -40.0
+    - -15.9
+    type: drop_tank
+  - neighbours: []
+    offset:
+    - 20.0
+    - -15.9
+    type: drop_tank
+  - neighbours: []
+    offset:
+    - -120.0
+    - 70.0
+    type: large
+  - neighbours: []
+    offset:
+    - -180.0
+    - 70.0
+    type: large
+  shp_cruiser:
+  - neighbours: []
+    offset:
+    - 90.0
+    - 0.0
+    type: small
+  - neighbours: []
+    offset:
+    - 30.0
+    - 0.0
+    type: small
+  - neighbours: []
+    offset:
+    - -30.0
+    - 0.0
+    type: small
+  - neighbours: []
+    offset:
+    - -90.0
+    - 0.0
+    type: small
+  - neighbours: []
+    offset:
+    - -220.00000000000003
+    - 0.0
+    type: small
+  - neighbours: []
+    offset:
+    - -160.0
+    - 0.0
+    type: medium
+  - neighbours: []
+    offset:
+    - -350.0
+    - 0.0
+    type: armor
+  - neighbours: []
+    offset:
+    - -290.0
+    - 0.0
+    type: armor
+  - neighbours: []
+    offset:
+    - -90.0
+    - 61.6
+    type: drop_tank
+  - neighbours: []
+    offset:
+    - -30.0
+    - 61.6
+    type: drop_tank
+  - neighbours: []
+    offset:
+    - -90.0
+    - -61.1
+    type: drop_tank
+  - neighbours: []
+    offset:
+    - -30.0
+    - -61.1
+    type: drop_tank
+  shp_express:
+  - neighbours: []
+    offset:
+    - 0.0
+    - 0.0
+    type: medium
+  - neighbours: []
+    offset:
+    - -60.0
+    - 0.0
+    type: medium
+  - neighbours: []
+    offset:
+    - -120.0
+    - 0.0
+    type: medium
+  - neighbours: []
+    offset:
+    - -200.0
+    - 0.0
+    type: armor
+  - neighbours: []
+    offset:
+    - 160.0
+    - 65.0
+    type: drop_tank
+  - neighbours: []
+    offset:
+    - 160.0
+    - -65.0
+    type: drop_tank
+  shp_light_transport:
+  - neighbours: []
+    offset:
+    - 110.00000000000001
+    - 65.8
+    type: drop_tank
+  - neighbours: []
+    offset:
+    - 110.00000000000001
+    - -66.9
+    type: drop_tank
+  - neighbours: []
+    offset:
+    - -170.0
+    - 0.0
+    type: medium
+  - neighbours: []
+    offset:
+    - -60.0
+    - 60.0
+    type: medium
+  - neighbours: []
+    offset:
+    - -70.0
+    - -60.0
+    type: medium
+  - neighbours: []
+    offset:
+    - -120.0
+    - 60.0
+    type: small
+  - neighbours: []
+    offset:
+    - -229.99999999999997
+    - 0.0
+    type: armor
+  - neighbours: []
+    offset:
+    - -130.0
+    - -60.0
+    type: small
+  shp_spacestation:
+  - neighbours: []
+    offset:
+    - 0.0
+    - 120.0
+    type: large
+  - neighbours: []
+    offset:
+    - -60.0
+    - 120.0
+    type: large
+  - neighbours: []
+    offset:
+    - -120.0
+    - 30.0
+    type: large
+  - neighbours: []
+    offset:
+    - 120.0
+    - 30.0
+    type: large
+  - neighbours: []
+    offset:
+    - 60.0
+    - 120.0
+    type: large
+  - neighbours: []
+    offset:
+    - -0.0
+    - -120.0
+    type: large
+  - neighbours: []
+    offset:
+    - 60.0
+    - -120.0
+    type: large
+  - neighbours: []
+    offset:
+    - 120.0
+    - -30.0
+    type: large
+  - neighbours: []
+    offset:
+    - -120.0
+    - -30.0
+    type: large
+  - neighbours: []
+    offset:
+    - -60.0
+    - -120.0
+    type: large
+  - neighbours: []
+    offset:
+    - -60.0
+    - 0.0
+    type: large
+  - neighbours: []
+    offset:
+    - 60.0
+    - 0.0
+    type: large
+  - neighbours: []
+    offset:
+    - 0.0
+    - 60.0
+    type: large
+  - neighbours: []
+    offset:
+    - 0.0
+    - -60.0
+    type: large
+  - neighbours: []
+    offset:
+    - 0.0
+    - 0.0
+    type: large

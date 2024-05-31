@@ -1,0 +1,39 @@
+dependencies/wren/src/vm/wren_core.c:  if (map->count == 0) RETURN_FALSE;
+dependencies/wren/src/vm/wren_core.c:    if (index >= map->capacity) RETURN_FALSE;
+dependencies/wren/src/vm/wren_core.c:  for (; index < map->capacity; index++)
+dependencies/wren/src/vm/wren_core.c:    if (!IS_UNDEFINED(map->entries[index].key)) RETURN_NUM(index);
+dependencies/wren/src/vm/wren_core.c:  uint32_t index = validateIndex(vm, args[1], map->capacity, "Iterator");
+dependencies/wren/src/vm/wren_core.c:  MapEntry* entry = &map->entries[index];
+dependencies/wren/src/vm/wren_core.c:  uint32_t index = validateIndex(vm, args[1], map->capacity, "Iterator");
+dependencies/wren/src/vm/wren_core.c:  MapEntry* entry = &map->entries[index];
+dependencies/wren/src/vm/wren_value.c:  initObj(vm, &map->obj, OBJ_MAP, vm->mapClass);
+dependencies/wren/src/vm/wren_value.c:  map->capacity = 0;
+dependencies/wren/src/vm/wren_value.c:  map->count = 0;
+dependencies/wren/src/vm/wren_value.c:  map->entries = NULL;
+dependencies/wren/src/vm/wren_value.c:  if (map->capacity > 0)
+dependencies/wren/src/vm/wren_value.c:    for (uint32_t i = 0; i < map->capacity; i++)
+dependencies/wren/src/vm/wren_value.c:      MapEntry* entry = &map->entries[i];
+dependencies/wren/src/vm/wren_value.c:  DEALLOCATE(vm, map->entries);
+dependencies/wren/src/vm/wren_value.c:  map->entries = entries;
+dependencies/wren/src/vm/wren_value.c:  map->capacity = capacity;
+dependencies/wren/src/vm/wren_value.c:  if (findEntry(map->entries, map->capacity, key, &entry)) return entry->value;
+dependencies/wren/src/vm/wren_value.c:  if (map->count + 1 > map->capacity * MAP_LOAD_PERCENT / 100)
+dependencies/wren/src/vm/wren_value.c:    uint32_t capacity = map->capacity * GROW_FACTOR;
+dependencies/wren/src/vm/wren_value.c:  if (insertEntry(map->entries, map->capacity, key, value))
+dependencies/wren/src/vm/wren_value.c:    map->count++;
+dependencies/wren/src/vm/wren_value.c:  DEALLOCATE(vm, map->entries);
+dependencies/wren/src/vm/wren_value.c:  map->entries = NULL;
+dependencies/wren/src/vm/wren_value.c:  map->capacity = 0;
+dependencies/wren/src/vm/wren_value.c:  map->count = 0;
+dependencies/wren/src/vm/wren_value.c:  if (!findEntry(map->entries, map->capacity, key, &entry)) return NULL_VAL;
+dependencies/wren/src/vm/wren_value.c:  map->count--;
+dependencies/wren/src/vm/wren_value.c:  if (map->count == 0)
+dependencies/wren/src/vm/wren_value.c:  else if (map->capacity > MIN_CAPACITY &&
+dependencies/wren/src/vm/wren_value.c:           map->count < map->capacity / GROW_FACTOR * MAP_LOAD_PERCENT / 100)
+dependencies/wren/src/vm/wren_value.c:    uint32_t capacity = map->capacity / GROW_FACTOR;
+dependencies/wren/src/vm/wren_value.c:  for (uint32_t i = 0; i < map->capacity; i++)
+dependencies/wren/src/vm/wren_value.c:    MapEntry* entry = &map->entries[i];
+dependencies/wren/src/vm/wren_value.c:  vm->bytesAllocated += sizeof(MapEntry) * map->capacity;
+dependencies/wren/src/vm/wren_vm.c:  return map->count;
+dependencies/wren/src/vm/wren_vm.c:  uint32_t usedIndex = wrenValidateIndex(map->count, index);
+dependencies/wren/src/vm/wren_vm.c:  MapEntry* entry = &map->entries[index];

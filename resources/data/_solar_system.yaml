@@ -1,0 +1,261 @@
+name: Sun
+body_size: Solar
+# source:
+# https://ssd.jpl.nasa.gov/sats/elem/
+# https://ssd.jpl.nasa.gov/planets/approx_pos.html
+radius: 696.34e+6
+mass: 1.989e+30
+satellites:
+- name: Mercury
+  body_size: Rocky
+  Ecc: 0.20564
+  SMA: 58.065e+9
+  Inc: 7.00
+  LoA: 48.33
+  AoP: 29.13
+  Ann: 174.79
+  radius: 2.4394e+6
+  mass: 330.114e+21
+  tilt: 0.03
+  day_length: 5067360
+  
+- name: Venus
+  body_size: Rocky
+  Ecc: 0.00678
+  SMA: 108.5e+9
+  Inc: 3.39
+  LoA: 76.68
+  AoP: 54.92
+  Ann: 50.38
+  radius: 6.0518e+6
+  mass: 4.867470e+24
+  tilt: 2.64
+  day_length: -20997360
+  
+- name: Earth
+  body_size: Rocky
+  Ecc: 0.01671
+  SMA: 150.e+9
+  Inc: 0
+  LoA: 0
+  AoP: 102.93
+  Ann: -2.43
+  radius: 6.371e+6
+  mass: 5.97237e+24
+  tilt: 23.44
+  day_length: 81480
+
+  satellites: 
+  - name: Luna
+    body_size: Minor
+    Ecc: 0.0554
+    SMA: 384.e+6
+    Inc: 0
+    LoA: 125.08
+    AoP: 318.15
+    Ann: 135.27
+    radius: 1.8e+6
+    mass: 73.420e+21
+    tilt: 0
+    day_length: 2360628
+
+- name: Mars
+  body_size: Rocky
+  Ecc: 0.09339
+  SMA: 228.557e+9
+  Inc: 1.85
+  LoA: 49.56
+  AoP: -73.5
+  Ann: 19.39
+  radius: 3.3895e+6
+  mass: 641.712e+21
+  
+  #satellites:
+  #- name: Phobos
+  #  body_size: Minor
+  #  Ecc: 0.2
+  #  SMA: 9.3772e+6
+  #  Inc: 1.1
+  #  LoA: 169.2
+  #  AoP: 216.3
+  #  Ann: 189.6
+  #  radius: 11100
+  #  mass: 10.8e+15
+  #
+  #- name: Deimos
+  #  body_size: Minor
+  #  Ecc: 0.2
+  #  SMA: 23.4632e+6
+  #  Inc: 1.8
+  #  LoA: 54.4
+  #  AoP: 205.0
+  #  Ann: 330.9
+  #  radius: 6200
+  #  mass: 1.8e+15
+
+- name: Ceres
+  body_size: Minor
+  Ecc: 0.078
+  SMA: 414.87e+9
+  Inc: 10.59
+  LoA: 80.26
+  AoP: 73.47
+  Ann: 0.0 # TBD
+  radius: 2.0e+6
+  mass: 9.384e+20
+
+- name: Jupiter
+  body_size: Giant
+  Ecc: 0.0484
+  SMA: 780.435e+9
+  Inc: 1.30
+  LoA: 100.47
+  AoP: -85.75
+  Ann: 19.67
+  radius: 69.911e+6
+  mass: 1868.187e+24
+  
+  satellites:
+  - name: IO
+    body_size: Minor
+    Ecc: 0.0041
+    SMA: 421.7e+6
+    Inc: 0.0
+    LoA: 0.0
+    AoP: 49.1
+    Ann: 330.9
+    radius: 1.821e+6
+    mass: 89.3192e+21
+  
+  - name: Europa
+    body_size: Minor
+    Ecc: 0.0094
+    SMA: 671.0e+6
+    Inc: 0.5
+    LoA: 184
+    AoP: 45
+    Ann: 345
+    radius: 1.56e+6
+    mass: 48.0e+21
+  
+  - name: Ganemyde
+    body_size: Minor
+    Ecc: 0.0011
+    SMA: 1070.0e+6
+    Inc: 0.2
+    LoA: 58.5
+    AoP: 198.3
+    Ann: 324.8
+    radius: 2.631e+6
+    mass: 148.19e+21
+  
+  - name: Callisto
+    body_size: Minor
+    Ecc: 0.0074
+    SMA: 1882.709e+6
+    Inc: 0.3
+    LoA: 309.1
+    AoP: 43.8
+    Ann: 87.4
+    radius: 2.41e+6
+    mass: 107.59e+21
+
+- name: Saturn
+  body_size: Giant
+  Ecc: 0.05386179
+  Inc: 2.48599187
+  SMA: 1.426666e+12
+  LoA: 113.66242448
+  AoP: -21.06
+  Ann: -42.64463408
+  radius: 58.232e+6
+  mass: 568.336e+24
+
+  rings:
+  - from: 74.0e+6
+    to: 92.0e+6
+    AoP: 0
+  - from: 94.0e+6
+    to: 117.58e+6
+    AoP: 90
+  - from: 122.17e+6
+    to: 136.775e+6
+    AoP: 0
+
+  satellites:
+  - name: Mimas
+    body_size: Minor
+    Ecc: 0.02
+    Inc: 1.6
+    SMA: 198.2e+6
+    Ann: 275
+    LoA: 40.6
+    AoP: 160
+    radius: 198.0e+3
+    mass: 1.8022e+21
+
+  - name: Encelladus
+    body_size: Minor
+    Ecc: 0.005
+    SMA: 237.905e+6
+    Inc: 0
+    Ann: 57
+    LoA: 40.6
+    AoP: 119.5
+    radius: 252.0e+3
+    mass: 1.8022e+21
+
+  - name: Tethys
+    body_size: Minor
+    Ecc: 0.001
+    SMA: 294.619e+6
+    Inc: 1.1
+    Ann: 0
+    LoA: 40.6
+    AoP: 335.3
+    radius: 533e+3
+    mass: 6.17449e+21
+
+  - name: Rhea
+    body_size: Minor
+    Ecc: 0.001
+    SMA: 527.108e+6
+    Inc: 0.3
+    Ann: 31.5
+    LoA: 40.6
+    AoP: 44.3
+    radius: 764.0e+3
+    mass: 6.17449e+21
+
+  - name: Titan
+    body_size: Minor
+    Ecc: 0.029
+    SMA: 1221.93e+6
+    Inc: 0.3
+    Ann: 11.7
+    LoA: 36.4
+    AoP: 78.3
+    radius: 2574.0e+3
+    mass: 1345.2e+21
+
+  - name: Iaeptus
+    body_size: Minor
+    Ecc: 0.028
+    SMA: 3560.82e+6
+    Inc: 7.6
+    Ann: 74.8
+    LoA: 288.7
+    AoP: 254.5
+    radius: 252.0e+3
+    mass: 14.686e+21
+
+  - name: Phoebe
+    body_size: Minor
+    Ecc: 0.164
+    SMA: 12929.4e+6
+    Inc: 175.2
+    Ann: 308.0
+    LoA: 276.0
+    AoP: 240.3
+    radius: 106.0e+3
+    mass: 8.3129e+18

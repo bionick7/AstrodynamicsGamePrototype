@@ -1,0 +1,67 @@
+water:
+  description: Stay hydrated! :)
+  min_cost: 1.e+4
+  max_cost: 2.e+4
+  default_cost : 1.e+4
+  cost_volatility: 0.1e+4  # Frequency of "noise"
+  max_noise: 0.5.e+4  # Amplitude of "noise"
+
+food:
+  description: ...
+  min_cost: 2.e+5
+  max_cost: 10.e+5
+  default_cost : 3.e+5
+  cost_volatility: 0.5
+  max_noise: 2
+
+steel:
+  description: ...
+  min_cost: 5.e+5
+  max_cost: 8.e+5
+  default_cost : 7.e+5
+  cost_volatility: 0.5e+5
+  max_noise: 8.e+5
+
+electronics:
+  description: ...
+  min_cost: 10.e+5
+  max_cost: 30.e+5
+  default_cost : 15.e+5
+  cost_volatility: 5.e+5
+  max_noise: 10.e+5
+
+# Not yet implemented
+
+hydrogen:
+  description: ...
+
+oxygen:
+  description: ...
+
+co2:
+  description: ...
+
+carbon:
+  description: ...
+
+iron_ore:
+  description: ...
+
+aluminium_ore:
+  description: It's called 'Bauxite' actually
+
+aluminium:
+  description: ...
+
+rock:
+  description: ...
+
+biomass:
+  description: ...
+  
+waste:
+  description: ...
+
+polymers:
+  description: ...
+  

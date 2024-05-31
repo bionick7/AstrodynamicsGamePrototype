@@ -1,0 +1,180 @@
+player_faction: 0
+factions:
+- money: 0  # Player
+- money: 0
+
+planets:
+  - name: Low Saturn Orbit
+    trading_accessible: n
+    allegiance: 0
+    resource_stock:
+      water: 1000
+    resource_delta:
+      hydrogen: 10
+      water: 50
+    base_independance_delta: 0
+
+  - name: Rings 
+    trading_accessible: n
+    allegiance: 0
+    resource_stock:
+      water: 1000
+      steel: 20
+      electronics: 6
+    resource_delta:
+      water: 50
+      rocks: 50
+    base_independance_delta: 0
+
+  - name: Mimas
+    trading_accessible: n
+    allegiance: 0
+    resource_stock:
+      water: 1000
+      steel: 20
+      electronics: 6
+    resource_delta:
+      water: 50
+    base_independance_delta: 0
+
+  - name: Encelladus
+    trading_accessible: n
+    allegiance: 0
+    resource_stock:
+      water: 1000
+      steel: 20
+      electronics: 6
+    base_independance_delta: 0
+
+  - name: Tethys
+    trading_accessible: n
+    allegiance: 0
+    resource_stock:
+      water: 1000
+      steel: 20
+      aluminium: 20
+      electronics: 6
+    resource_delta: {}
+    inventory:
+    - shpmod_electrolyser
+    - shpmod_reactor
+    - shpmod_boost_init
+    base_independance_delta: -10
+
+  - name: Rhea
+    trading_accessible: n
+    allegiance: 0
+    resource_stock:
+      water: 1000
+      rock: 100
+      steel: 20
+      electronics: 6
+    resource_delta:
+      water: 50
+      rock: 300
+    inventory:
+    - shpmod_heatshield
+    - shpmod_reactor
+    - shpmod_reactor
+    base_independance_delta: 5
+
+  - name: Titan
+    trading_accessible: n
+    allegiance: 0
+    resource_stock:
+      water: 1000
+      steel: 20
+      electronics: 6
+    resource_delta:
+      water: 20
+      carbon: 10
+    inventory:
+    - shpmod_droptank
+    - shpmod_droptank
+    base_independance_delta: 8
+
+  - name: Iaeptus
+    trading_accessible: n
+    allegiance: 0
+    resource_stock:
+      water: 1000
+      steel: 20
+      electronics: 6
+    resource_delta:
+      water: 20
+    inventory:
+    - shpmod_railgun
+    - shpmod_acs
+    base_independance_delta: 20
+
+  - name: Phoebe
+    trading_accessible: n
+    allegiance: 0
+    resource_stock:
+      water: 1000
+      steel: 20
+      electronics: 6
+    base_independance_delta: 3
+
+ships:
+- name: Light transport
+  class_id: shp_light_transport
+  allegiance: 0
+  planet: Tethys
+  tf_plans: []
+
+- name: Anna Kowalsky knot
+  class_id: shp_spacestation
+  allegiance: 0
+  planet: Tethys
+  tf_plans: []
+  modules:
+  - shpmod_manufacture_offices
+  - shpmod_workshop
+  - shpmod_large_storage
+  - shpmod_drydock
+
+- name: Titan Shipyard
+  class_id: shp_spacestation
+  allegiance: 0
+  planet: Titan
+  tf_plans: []
+  modules: []
+
+- name: Rhea Shipyard
+  class_id: shp_spacestation
+  allegiance: 0
+  planet: Rhea
+  tf_plans: []
+  modules:
+  - shpmod_workshop
+  
+- name: Enclave station
+  class_id: shp_spacestation
+  allegiance: 2
+  planet: Iaeptus
+  tf_plans: []
+  modules:
+  - shpmod_workshop
+
+- name: Military ship 1
+  class_id: shp_express
+  allegiance: 2
+  planet: Iaeptus
+  tf_plans: []
+  modules:
+  - shpmod_missiles
+  - shpmod_missiles
+  - shpmod_light_armor
+  - shpmod_acs
+  
+- name: Military ship 2
+  class_id: shp_express
+  allegiance: 2
+  planet: Iaeptus
+  tf_plans: []
+  modules:
+  - shpmod_missiles
+  - shpmod_missiles
+  - shpmod_light_armor
+  - shpmod_acs

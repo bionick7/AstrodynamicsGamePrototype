@@ -1,0 +1,206 @@
+techtree:
+- name: Spacecraft Basics
+  id: tech_sc_basics
+  start_condition: unlocked
+  prerequisites: []
+  effort: 200
+  unlocks:
+  - shpmod_droptank_water
+  - shp_light_transport
+  icon_index: [2, 28]
+
+- name: Basic Weaponery
+  id: tech_weapon_basics
+  start_condition: unlocked
+  prerequisites: []
+  effort: 200
+  unlocks:
+  - shpmod_light_armor
+  - shpmod_railgun
+  - shpmod_missiles
+  icon_index: [9, 27]
+
+- name: Administration
+  id: tech_admin
+  start_condition: available
+  prerequisites: []
+  effort: 200
+  unlocks:
+  - shpmod_manufacture_offices
+  - shpmod_embassy
+  icon_index: [15, 31]
+
+- name: Higher education
+  id: tech_research
+  start_condition: available
+  prerequisites: [tech_admin, tech_semiconductors]
+  effort: 450
+  unlocks:
+  - shpmod_research_lab
+  icon_index: [15, 31]
+
+- name: Cryogenics
+  id: tech_cryo
+  start_condition: available
+  prerequisites: []
+  effort: 200
+  unlocks:
+  - shpmod_electrolyser
+  - shpmod_fuel_cell
+  - shpmod_droptank_hydrogen
+  icon_index: [1, 17]
+
+- name: Nuclear-thermal Engines
+  id: tech_ntr
+  start_condition: available
+  prerequisites: [tech_cryo, tech_nuclear_power]
+  effort: 1000
+  unlocks:
+  - shp_express
+  icon_index: [6, 25]
+
+- name: Basic resource extraction
+  id: tech_basic_extraction
+  start_condition: unlocked
+  prerequisites: []
+  effort: 150
+  unlocks:
+  - shpmod_rock_extractor
+  - shpmod_water_extractor
+  - shpmod_ore_extractor
+  icon_index: [11, 24]
+
+- name: Atmospheric extraction
+  id: tech_atmo_extraction
+  start_condition: unavailable
+  prerequisites: [tech_cryo]
+  effort: 100
+  unlocks:
+  - shpmod_carbon_extractor
+  icon_index: [10, 24]
+
+- name: Metallurgy
+  id: tech_metallurgy
+  start_condition: available
+  prerequisites: [tech_cryo]
+  effort: 300
+  unlocks:
+  - shpmod_steel_smelter
+  icon_index: [5, 17]
+
+- name: Basic habitation
+  id: tech_habs_basic
+  start_condition: unlocked
+  prerequisites: []
+  effort: 200
+  unlocks:
+  - shpmod_rock_habitat
+  - shpmod_farms
+  icon_index: [8, 23]
+
+- name: Advanced habitation
+  id: tech_habs_advanced
+  start_condition: available
+  prerequisites: [tech_habs_basic]
+  effort: 500
+  unlocks:
+  - shpmod_habitat
+  - shpmod_waste_treatment
+  icon_index: [8, 23]
+
+- name: Chemical industry
+  id: tech_chem_industry
+  start_condition: available
+  prerequisites: [tech_manufacturing]
+  effort: 300
+  unlocks:
+  - shpmod_carbon_splitter
+  - shpmod_polymers
+  icon_index: [11, 17]
+
+- name: 0g Manufacturing
+  id: tech_manufacturing
+  start_condition: available
+  prerequisites: [tech_metallurgy]
+  effort: 300
+  unlocks:
+  - shpmod_workshop
+  icon_index: [10, 26]
+
+- name: Bulk storage
+  id: tech_bulk_storage
+  start_condition: available
+  prerequisites: [tech_metallurgy]
+  effort: 250
+  unlocks:
+  - shp_bulk_transport
+  - shpmod_large_storage
+  icon_index: [11, 26]
+  
+- name: Large-scale construction
+  id: tech_largescale_construction
+  start_condition: available
+  prerequisites: [tech_bulk_storage]
+  effort: 250
+  unlocks:
+  - shp_spacestation
+  - shpmod_armor
+  - shpmod_wetdock
+  icon_index: [10, 26]
+
+- name: Military electronics
+  id: tech_military_electronics
+  start_condition: available
+  prerequisites: [tech_semiconductors]
+  effort: 450
+  unlocks:
+  - shpmod_pdc
+  - shpmod_acs
+  icon_index: [14, 27]
+
+- name: Advanced military industry
+  id: tech_advanced_military
+  start_condition: unavailable
+  prerequisites: [tech_military_electronics, tech_ntr]
+  effort: 800
+  unlocks:
+  - shp_cruiser
+  icon_index: [14, 27]
+
+- name: Nuclear Power
+  id: tech_nuclear_power
+  start_condition: available
+  prerequisites: [tech_semiconductors]
+  effort: 800
+  unlocks:
+  - shpmod_reactor
+  icon_index: [6, 25]
+
+- name: Semiconductor industy
+  id: tech_semiconductors
+  start_condition: available
+  prerequisites: [tech_manufacturing, tech_chem_industry]
+  effort: 500
+  unlocks:
+  - shpmod_electronics
+  icon_index: [17, 12]
+
+- name: Small arms manufacturing
+  id: tech_small_arms
+  start_condition: available
+  prerequisites: [tech_manufacturing]
+  effort: 80
+  unlocks:
+  - shpmod_armory
+  - shpmod_invasion_equipment
+  icon_index: [3, 26]
+
+- name: Aeronautics
+  id: tech_aeronautics
+  start_condition: unavailable
+  prerequisites: [tech_manufacturing, tech_advanced_military]
+  effort: 700
+  unlocks:
+  - shpmod_heatshield
+  - shpmod_aircraft
+  icon_index: [15, 31]

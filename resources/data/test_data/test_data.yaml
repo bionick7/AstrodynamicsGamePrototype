@@ -1,0 +1,26 @@
+key1: value1
+key  2 : value2
+float_val: 5.67e-8
+int_val: -589
+child1:
+  key1: child_value1
+  key  2 : >
+    child
+    value
+    2
+array1:
+- item2
+- item1
+- 5.67e-8
+- -589
+child_array1:
+- child_item1: child_value1-1
+  child_item2: child_value2-1
+- child_item1: child_value1-2
+  child_item2: child_value2-2
+
+dual_array:
+- a
+- x: y
+
+key3: value3

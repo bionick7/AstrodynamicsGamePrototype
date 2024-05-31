@@ -1,0 +1,246 @@
+player_faction: 0
+factions:
+- money: 0  # Player
+- money: 0
+
+calendar: { time: 315360000 }
+
+techtree_status:
+  tech_admin: 1000
+  tech_advanced_military: 0
+  tech_aeronautics: 0
+  tech_atmo_extraction: 0
+  tech_basic_extraction: 1000
+  tech_bulk_storage: 1000
+  tech_chem_industry: 1000
+  tech_cryo: 1000
+  tech_habs_advanced: 1000
+  tech_habs_basic: 1000
+  tech_largescale_construction: 1000
+  tech_manufacturing: 1000
+  tech_metallurgy: 1000
+  tech_military_electronics: 1000
+  tech_ntr: 1000
+  tech_nuclear_power: 1000
+  tech_research: 1000
+  tech_sc_basics: 1000
+  tech_semiconductors: 1000
+  tech_small_arms: 1000
+  tech_weapon_basics: 1000
+
+planets:
+  - name: Low Saturn Orbit
+    trading_accessible: n
+    allegiance: 0
+    resource_stock:
+      water: 1000
+    resource_delta:
+      hydrogen: 10
+      water: 50
+    base_independance_delta: 0
+
+  - name: Rings 
+    trading_accessible: n
+    allegiance: 0
+    resource_stock:
+      water: 1000
+      steel: 20
+      electronics: 6
+    resource_delta:
+      water: 50
+      rocks: 50
+    base_independance_delta: 0
+
+  - name: Mimas
+    trading_accessible: n
+    allegiance: 0
+    resource_stock:
+      water: 1000
+      steel: 0
+      electronics: 6
+    resource_delta:
+      water: 50
+    base_independance_delta: 0
+
+  - name: Encelladus
+    trading_accessible: n
+    allegiance: 0
+    resource_stock:
+      water: 1000
+      steel: 0
+      electronics: 6
+    base_independance_delta: 0
+
+  - name: Tethys
+    trading_accessible: n
+    allegiance: 0
+    resource_stock:
+      water: 1000
+      steel: 20
+      electronics: 6
+      food: 100
+      waste: 100
+      biomass: 100
+      oxygen: 100
+      co2: 100
+    resource_delta: {}
+    inventory:
+    - shpmod_electrolyser
+    base_independance_delta: -10
+
+  - name: Rhea
+    trading_accessible: n
+    allegiance: 0
+    resource_stock:
+      hydrogen: 300
+      water: 1000
+      rock: 100
+      steel: 200
+      electronics: 6
+      carbon: 300
+    resource_delta:
+      water: 50
+      rock: 300
+    inventory:
+    - shpmod_heatshield
+    base_independance_delta: 5
+
+  - name: Titan
+    trading_accessible: n
+    allegiance: 2
+    resource_stock:
+      water: 1000
+      steel: 20
+      electronics: 6
+    resource_delta:
+      water: 20
+      carbon: 10
+    inventory:
+    - shpmod_droptank
+    - shpmod_droptank
+    base_independance_delta: 8
+
+  - name: Iaeptus
+    trading_accessible: n
+    allegiance: 1
+    resource_stock:
+      water: 1000
+      steel: 20
+      electronics: 6
+    resource_delta:
+      water: 20
+    base_independance_delta: 20
+
+  - name: Phoebe
+    trading_accessible: n
+    allegiance: 0
+    resource_stock:
+      water: 1000
+      steel: 20
+      electronics: 6
+    base_independance_delta: 3
+
+ships:
+- name: Mimas station
+  class_id: shp_spacestation
+  allegiance: 0
+  planet: Mimas
+  tf_plans: []
+  modules: []
+  
+- name: Light transport
+  class_id: shp_light_transport
+  allegiance: 0
+  planet: Tethys
+  tf_plans: []
+
+- name: Extractor
+  class_id: shp_light_transport
+  allegiance: 0
+  planet: Encelladus
+  tf_plans: []
+  modules:
+  - shpmod_water_extractor
+  - shpmod_water_extractor
+
+- name: Tethys Shipyard
+  class_id: shp_spacestation
+  allegiance: 0
+  planet: Tethys
+  tf_plans: []
+  modules:
+  - shpmod_manufacture_offices
+  - shpmod_large_storage
+  - shpmod_workshop
+  - shpmod_wetdock
+  - shpmod_research_lab
+  - shpmod_waste_treatment
+  - shpmod_habitat
+  - shpmod_farms
+  - shpmod_farms
+  
+- name: Express
+  class_id: shp_express
+  allegiance: 0
+  planet: Tethys
+  tf_plans: []
+  
+- name: Light transport III
+  class_id: shp_light_transport
+  allegiance: 0
+  planet: Rhea
+  tf_plans: []
+  modules:
+  - shpmod_armory
+
+- name: Light transport IV
+  class_id: shp_light_transport
+  allegiance: 0
+  planet: Rhea
+  tf_plans: []
+  
+- name: Cruiser
+  class_id: shp_cruiser
+  allegiance: 0
+  planet: Rhea
+  tf_plans: []
+  modules:
+  - shpmod_reactor
+  - shpmod_missiles
+  - shpmod_railgun
+  - shpmod_armor
+
+- name: Titan Shipyard
+  class_id: shp_spacestation
+  allegiance: 0
+  planet: Titan
+  tf_plans: []
+  modules: [shpmod_aircraft]
+
+- name: Rhea Shipyard
+  class_id: shp_spacestation
+  allegiance: 0
+  planet: Rhea
+  tf_plans: []
+  modules:
+  - shpmod_manufacture_offices
+  - shpmod_large_storage
+  - shpmod_workshop
+  - shpmod_wetdock
+  - shpmod_aluminium_smelter
+  - shpmod_steel_smelter
+  - shpmod_ore_extractor
+  - shpmod_ore_extractor
+  - shpmod_ore_extractor
+  - shpmod_ore_extractor
+  - shpmod_ore_extractor
+  - shpmod_rock_extractor
+  - shpmod_rock_extractor
+  - shpmod_rock_extractor
+  
+- name: Iaeptus Shipyard
+  class_id: shp_spacestation
+  allegiance: 0
+  planet: Iaeptus
+  tf_plans: []
+  modules: []
