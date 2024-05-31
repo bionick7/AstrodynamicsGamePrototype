@@ -1,6 +1,0 @@
-scons: Reading SConscript files ...
-scons: done reading SConscript files.
-scons: Building targets ...
-g++ -o src/planet_ui.o -c -Wall -Wno-narrowing -Wno-sign-compare -Wno-unused-variable -ggdb -DWREN_OPT_RANDOM -Isrc -Isrc/core -Isrc/quests -Iinclude src/planet_ui.cpp
-g++ -o app src/ai.o src/app_meta.o src/assets.o src/astro.o src/audio_server.o src/combat.o src/constants.o src/coordinate_transform.o src/datanode.o src/debug_console.o src/debug_drawing.o src/factions.o src/global_state.o src/main.o src/planet.o src/planet_ui.o src/planetary_economy.o src/render_server.o src/render_utils.o src/ship.o src/ship_modules.o src/tests.o src/text_rendering.o src/time.o src/timeline.o src/transfer_plan.o src/ui.o src/wireframe_mesh.o src/core/basic.o src/core/dvector3.o src/core/id_allocator.o src/core/id_system.o src/core/list.o src/core/logging.o src/core/string_builder.o src/core/utils.o src/quests/dialogue.o src/quests/quest.o src/quests/quest_manager.o src/quests/task.o src/quests/wren_interface.o -Llib/linux lib/linux/libraylib.a lib/linux/libyaml.a lib/linux/libwren.a -lm
-scons: done building targets.
