@@ -49,11 +49,11 @@ void Calendar::DrawUI() const {
     const int font_size = DEFAULT_FONT_SIZE;
 
     const char* text = TextFormat("%s Time x %.1f", paused ? ICON_PAUSE : ICON_PLAY, time_scale);
-    Vector2 pos = { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(), text, font_size, 1).x - 10, 10 };
+    Vector2 pos = { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(font_size), text, font_size, 1).x - 10, 10 };
     text::DrawText(text, pos, Palette::ui_main);
     char text_date[100];
     GlobalGetNow().FormatAsDate(text_date, 100);
-    pos = { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(), text_date, font_size, 1).x - 10, 30 };
+    pos = { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(font_size), text_date, font_size, 1).x - 10, 30 };
     text::DrawText(text_date, pos, Palette::ui_main);
 }
 
@@ -95,12 +95,12 @@ void GameCamera::HandleInput() {
     float dist = Vector3Distance(rl_camera.position, rl_camera.target);
     Vector3 view_dir = Vector3Scale(Vector3Subtract(rl_camera.target, rl_camera.position), 1/dist);
 
-    /*if (IsIdValidTyped(focus_object, EntityType::PLANET)) {
+    if (IsIdValidTyped(focus_object, EntityType::PLANET)) {
         rl_camera.target = (Vector3) (GetPlanet(focus_object)->position.cartesian / space_scale);
     }
     if (IsIdValidTyped(focus_object, EntityType::SHIP)) {
         rl_camera.target = (Vector3) (GetShip(focus_object)->position.cartesian / space_scale);
-    }*/
+    }
     
     float scroll_ratio = 1 - 0.1 * GetMouseWheelMove();
     if (scroll_ratio != 1 && !GetUI()->IsPointBlocked(GetMousePosition(), 0)) {
@@ -109,6 +109,7 @@ void GameCamera::HandleInput() {
 
     bool translating = IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT);
     if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE) && !translating) {
+        // Camera Translation
         double elevation = asin(view_dir.y);
         double azimuth = atan2(view_dir.z / cos(elevation), view_dir.x / cos(elevation));
 
@@ -119,8 +120,10 @@ void GameCamera::HandleInput() {
         view_dir.x = cos(elevation) * cos(azimuth);
         view_dir.y = sin(elevation);
         view_dir.z = cos(elevation) * sin(azimuth);
+        focus_object = GetInvalidId();
     }
     if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE) && translating) {
+        // Camera Rotation
         Ray prev_pos = GetMouseRay(Vector2Subtract(GetMousePosition(), GetMouseDelta()), rl_camera);
         Ray current_pos = GetMouseRay(GetMousePosition(), rl_camera);
         if (current_pos.position.y * current_pos.direction.y < 0) {
@@ -133,8 +136,18 @@ void GameCamera::HandleInput() {
             }
         }
     }
+
+    if (IsKeyPressed(KEY_F)) {
+        // Enable camera track ( F ocus) on currently selected object
+        if (IsIdValid(GetGlobalState()->focused_ship)) {
+            focus_object = GetGlobalState()->focused_planet;
+        } else if (IsIdValid(GetGlobalState()->focused_planet)) {
+            focus_object = GetGlobalState()->focused_planet;
+        }
+    }
     
     if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_HOME)) {
+        // Reset Camera
         rl_camera.target = Vector3Zero();
         rl_camera.position = Vector3Subtract(rl_camera.target, Vector3Scale(view_dir, dist));
         //rl_camera.position = { 0.001f, 3.0f, 0.0f };

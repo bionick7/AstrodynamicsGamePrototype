@@ -24,12 +24,12 @@ int GetPlanetCoord(const TimeLineCoordinateData* tcd, RID planet) {
 
 int GetTimeCoord(const TimeLineCoordinateData* tcd, timemath::Time t) {
     timemath::Time ref_time = GlobalGetNow();
-    return tcd->y0 + 24 + (t - ref_time).Seconds() * pixels_per_day_vscale / 86400;
+    return tcd->y0 + 24 + (t - ref_time).Seconds() * pixels_per_day_vscale / timemath::SECONDS_IN_DAY;
 }
 
 timemath::Time GetEndTime(const TimeLineCoordinateData* tcd) {
     timemath::Time ref_time = GlobalGetNow();
-    return ref_time + timemath::Time(((float)tcd->h - 24.f) / (float) pixels_per_day_vscale * 86400);
+    return ref_time + timemath::Time(((float)tcd->h - 24.f) / (float) pixels_per_day_vscale * timemath::SECONDS_IN_DAY);
 }
 
 void _DrawHohmanTFs(const TimeLineCoordinateData* tcd, RID from, RID to) {
@@ -96,7 +96,7 @@ void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
     // Draw 'y-backticks'
     int t_indx = 0;
     StringBuilder sb;
-    timemath::Time day_start = timemath::Time(((int)GlobalGetNow().Days() + 1) * 86400);
+    timemath::Time day_start = timemath::Time(((int)GlobalGetNow().Days() + 1) * timemath::SECONDS_IN_DAY);
     int time_interval = 1;
     if (pixels_per_day_vscale < 40) time_interval = 7;
     if (pixels_per_day_vscale < 4) time_interval = 31;

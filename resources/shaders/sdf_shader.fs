@@ -16,9 +16,11 @@ out vec4 finalColor;
 // NOTE: Add here your custom variables
 
 void main() {
+    // Ensure that d_dist_d_frag is consistent
+    float sdf_sample = (texture(texture0, vec2(0.1, 0.1)).a - 0.5) * 2.0;
+    float d_dist_d_frag = length(vec2(dFdx(sdf_sample), dFdy(sdf_sample)));
 
     float sdf = (texture(texture0, fragTexCoord).a - 0.5) * 2.0;
-    float d_dist_d_frag = length(vec2(dFdx(sdf), dFdy(sdf)));
     float alpha = smoothstep(d_dist_d_frag*.5, -d_dist_d_frag*.5, sdf);
     //alpha *= smoothstep(d_dist_d_frag*2.0, d_dist_d_frag*1.0, -sdf);
     finalColor = mix(background_color, fragColor, alpha);

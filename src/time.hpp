@@ -5,6 +5,8 @@
 struct DataNode;
 
 namespace timemath {
+    const int SECONDS_IN_DAY = 86400;
+
     struct Time {
         double __t;
         Time() : Time(0.0) {};
@@ -36,7 +38,7 @@ namespace timemath {
         static Time Latest(Time lhs, Time rhs);
         static Time GetInvalid();
 
-        static Time Day() { return Time(86400); };
+        static Time Day() { return Time(SECONDS_IN_DAY); };
     };
 
 }

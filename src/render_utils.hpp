@@ -21,7 +21,8 @@ bool ShaderNeedReload(Shader shader);
 void DrawTextureSDF(Texture2D texture, Rectangle source, Rectangle dest, 
                     Vector2 origin, float rotation, Color tint, uint8_t z_layer);
 
-void BeginRenderSDFInUIMode(uint8_t z_layer, Color background);
+void BeginRenderSDFInUILayer(uint8_t z_layer, Color background);
+void BeginRenderInUILayer(uint8_t z_layer, Color background);
 void BeginRenderInUILayer(uint8_t z_layer);
 void EndRenderInUILayer();
 
@@ -36,7 +37,7 @@ void RenderDeferred(RenderTexture render_target);
 
 struct AtlasPos;
 
-#define RELOAD_IF_NECAISSARY(shader_name) if (!assets::IsShaderLoaded(shader_name::shader)) { shader_name::Load(); }
+#define RELOAD_IF_NECESSARY(shader_name) if (!assets::IsShaderLoaded(shader_name::shader)) { shader_name::Load(); }
 #define LOAD_SHADER(shader_name) shader_name::shader = assets::GetShader("resources/shaders/"#shader_name);
 #define LOAD_SHADER_UNIFORM(shader_name, uniform_name) shader_name::uniform_name = GetShaderLocation(shader_name::shader, #uniform_name);
 #define LOAD_SHADER_ATTRIB(shader_name, uniform_name) shader_name::uniform_name = GetShaderLocationAttrib(shader_name::shader, #uniform_name);

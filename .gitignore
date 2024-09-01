@@ -10,8 +10,8 @@ src/baked_data.hpp
 
 .vscode/*
 
-app
-app.exe
+#app
+#app.exe
 log.txt
 gf2
 palette.gpl

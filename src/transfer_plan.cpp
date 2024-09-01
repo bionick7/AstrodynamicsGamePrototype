@@ -214,12 +214,11 @@ void TransferPlanSolve(TransferPlan* tp) {
     TransferPlanRankSolutions(tp);
 }
 
-double TransferPlanSolveWithDeptartureTime(TransferPlan* tp, timemath::Time departure) {
-    timemath::Time t = tp->departure_time;
-    tp->departure_time = departure;
-    TransferPlanSolve(tp);
-    double res = tp->tot_dv;
-    tp->departure_time = t;
+double TransferPlanSolveWithTimes(TransferPlan tp, timemath::Time departure, timemath::Time arrival) {
+    tp.departure_time = departure;
+    tp.arrival_time = arrival;
+    TransferPlanSolve(&tp);
+    double res = tp.tot_dv;
     return res;
 }
 
@@ -241,9 +240,9 @@ void TransferPlanSetBestDeparture(TransferPlan* tp, timemath::Time t0, timemath:
     double diff_seconds;
     int counter = 0;
     do {
-        double dv_0 = TransferPlanSolveWithDeptartureTime(tp, x);
-        double dv_plus = TransferPlanSolveWithDeptartureTime(tp, x + H);
-        double dv_minus = TransferPlanSolveWithDeptartureTime(tp, x - H);
+        double dv_0 = TransferPlanSolveWithTimes(*tp, x, tp->arrival_time);
+        double dv_plus = TransferPlanSolveWithTimes(*tp, x + H, tp->arrival_time);
+        double dv_minus = TransferPlanSolveWithTimes(*tp, x - H, tp->arrival_time);
 
         double deriv = (dv_plus - dv_minus) / (2 * H);
         double deriv2 = (dv_plus - 2 * dv_0 + dv_minus) / (H*H);
@@ -263,16 +262,16 @@ void TransferPlanSetBestDeparture(TransferPlan* tp, timemath::Time t0, timemath:
     if (x < t0 + 1) x = t0 + 1;
     tp->departure_time = x;
 
-    //double dv_plus = TransferPlanSolveWithDeptartureTime(tp, x + H);
-    //double dv_minus = TransferPlanSolveWithDeptartureTime(tp, x - H);
+    //double dv_plus = TransferPlanSolveWithDepartureTime(tp, x + H);
+    //double dv_minus = TransferPlanSolveWithDepartureTime(tp, x - H);
     //double deriv = (dv_plus - dv_minus) / (2 * H);
     //SHOW_F(deriv)
 #else
     timemath::Time xl = t0;
     timemath::Time xr = t1;
     
-    double yl = TransferPlanSolveWithDeptartureTime(tp, xl);
-    double yr = TransferPlanSolveWithDeptartureTime(tp, xr);
+    double yl = TransferPlanSolveWithDepartureTime(tp, xl);
+    double yr = TransferPlanSolveWithDepartureTime(tp, xr);
 
     const double CONVERGANCE_DELTA = 1e-10;
     const int MAX_ITER = 100;
@@ -280,10 +279,10 @@ void TransferPlanSetBestDeparture(TransferPlan* tp, timemath::Time t0, timemath:
     for (int i = 0; /*yr - yl > CONVERGANCE_DELTA &&*/ i < MAX_ITER; i++) {
         if (yl < yr) {
             xr = xl + (PHI_INV) * (xr - xl).Seconds();
-            yr = TransferPlanSolveWithDeptartureTime(tp, xr);
+            yr = TransferPlanSolveWithDepartureTime(tp, xr);
         } else {
             xl = xl + (1 - PHI_INV) * (xr - xl).Seconds();
-            yl = TransferPlanSolveWithDeptartureTime(tp, xl);
+            yl = TransferPlanSolveWithDepartureTime(tp, xl);
         }
     }
 
@@ -301,6 +300,60 @@ void TransferPlanSetBestDeparture(TransferPlan* tp, timemath::Time t0, timemath:
 void TransferPlanSoonest(TransferPlan* tp, double dv_limit) {
     // TODO
     // least arrival time in departure_time x arrival_time where (dv = dvlimit)
+    // https://en.wikipedia.org/wiki/Lagrange_multiplier
+
+    // f(x) inputs: arrival and departure time
+    // f(x) outputs: arrival time
+    // h(x) inputs: arrival and departure time
+    // h(x) outputs: delta V
+
+    timemath::Time now = GlobalGetNow();
+
+    double t1 = timemath::Time::SecDiff(tp->departure_time, now) / timemath::SECONDS_IN_DAY;
+    double t2 = timemath::Time::SecDiff(tp->arrival_time, now) / timemath::SECONDS_IN_DAY;
+    const double EPSILON_T = 120.0;  // Seconds
+    double lagrange_multiplier = 1;
+    
+    /*for (int i=0; i < 10; i++) {
+        timemath::Time t1_seconds = now + t1 * timemath::SECONDS_IN_DAY;
+        timemath::Time t2_seconds = now + t2 * timemath::SECONDS_IN_DAY;
+
+        double dv = TransferPlanSolveWithTimes(*tp, t1_seconds, t2_seconds);
+        double dv_plus1 = TransferPlanSolveWithTimes(*tp, t1_seconds + EPSILON_T, t2_seconds);
+        double dv_minus1 = TransferPlanSolveWithTimes(*tp, t1_seconds - EPSILON_T, t2_seconds);
+        double dv_plus2 = TransferPlanSolveWithTimes(*tp, t1_seconds, t2_seconds + EPSILON_T);
+        double dv_minus2 = TransferPlanSolveWithTimes(*tp, t1_seconds, t2_seconds - EPSILON_T);
+        double dv_plus12 = TransferPlanSolveWithTimes(*tp, t1_seconds + EPSILON_T, t2_seconds + EPSILON_T);
+
+        double dh_dt1 = (dv_plus1 - dv_minus1) / (2*EPSILON_T) * timemath::SECONDS_IN_DAY / 1000;
+        double dh_dt2 = (dv_plus2 - dv_minus2) / (2*EPSILON_T) * timemath::SECONDS_IN_DAY / 1000;
+        double d2h_dt1_2 = (dv_plus1 - 2*dv + dv_minus1) / (EPSILON_T*EPSILON_T) * timemath::SECONDS_IN_DAY*timemath::SECONDS_IN_DAY / 1000;
+        double d2h_dt2_2 = (dv_plus2 - 2*dv + dv_minus2) / (EPSILON_T*EPSILON_T) * timemath::SECONDS_IN_DAY*timemath::SECONDS_IN_DAY / 1000;
+        double d2h_dt2_2 = (dv_plus12 - dv_plus1 - dv_plus2 + dv) / (EPSILON_T*EPSILON_T) * timemath::SECONDS_IN_DAY*timemath::SECONDS_IN_DAY / 1000;
+
+        double h = (dv - dv_limit) / 1000;
+        double f = t2;
+        double L = f + lagrange_multiplier * h;
+        
+        double dL_dt1 = lagrange_multiplier * dh_dt1;
+        double dL_dt2 = lagrange_multiplier * dh_dt2 + 1;
+        double dL_dlambda = h;  // Huh?
+
+        double d2L_dt1_2 = lagrange_multiplier * d2h_dt1_2;
+        double d2L_dt2_2 = lagrange_multiplier * d2h_dt2_2;
+        double d2L_dlambda_2 = 0;
+
+        t1 -= dL_dt1 / d2L_dt1_2;
+        t2 -= dL_dt2 / d2L_dt2_2;
+        lagrange_multiplier -= dL_dlambda * 0.1;
+
+        INFO("%f %f %f", dL_dt1, dL_dt2, dL_dlambda)
+    }
+    
+    tp->departure_time = now + t1 * timemath::SECONDS_IN_DAY;
+    tp->arrival_time = now + t2 * timemath::SECONDS_IN_DAY;
+
+    //TransferPlanSolveWithTimes(*tp, dv_limit);*/
 }
 
 void TransferPlan::Serialize(DataNode* data) const {
@@ -355,11 +408,10 @@ int TransferPlanTests() {
         }
     }
 
-    // build profile
-#if false
+    // Construct sample transfer
     TransferPlan tp;
-    tp.departure_planet = 1;  // Encelladus
-    tp.arrival_planet = 2;    // Thetys
+    tp.departure_planet = RID(1, EntityType::PLANET);  // Enceladus
+    tp.arrival_planet = RID(2, EntityType::PLANET);    // Thetys
 
     Orbit orbit1 = Orbit(
        237.905e+6,
@@ -378,18 +430,23 @@ int TransferPlanTests() {
     double best_dv1 = 0;
     double best_dv2 = 0;
     HohmannTransfer(&orbit1, &orbit2, start, &opt_departure, &opt_arrival, &best_dv1, &best_dv2);
-    FILE* f = fopen("dev_output/encelladus_thetys_landscape.csv", "w");
-    fprintf(f, "departure, arrival, dv\n");
+    
+    //TransferPlanSoonest(&tp, 2e3);
+
+    // build profile
+#if false
+    FILE* f = fopen("dev/encelladus_thetys_landscape.csv", "w");
+    fprintf(f, "departure,arrival,dv\n");
     for (tp.departure_time = start; tp.departure_time < opt_departure + 1; tp.departure_time = tp.departure_time + (opt_departure - start) / timemath::Time(30.0)) {
         for (tp.arrival_time = tp.departure_time; tp.arrival_time < opt_arrival + 1; tp.arrival_time = tp.arrival_time + (opt_arrival - start) / timemath::Time(30.0)) {
             TransferPlanSolveInputImpl(&tp, &orbit1, &orbit2);
             for (int i=0; i < tp.num_solutions; i++) {
-                tp.dv1[i] = Vector2Length(tp.departure_dvs[i]);
-                tp.dv2[i] = Vector2Length(tp.arrival_dvs[i]);
+                tp.dv1[i] = tp.departure_dvs[i].Length();
+                tp.dv2[i] = tp.arrival_dvs[i].Length();
             }
             TransferPlanRankSolutions(&tp);
 
-            fprintf(f, "%f, %f, %f\n", 
+            fprintf(f, "%f,%f,%f\n", 
                 tp.departure_time.Seconds(), 
                 tp.arrival_time.Seconds(),
                 tp.tot_dv

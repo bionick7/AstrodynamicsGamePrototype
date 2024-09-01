@@ -190,7 +190,6 @@ namespace ui {
     void Shrink(int dx, int dy);
 
     void DrawIcon(AtlasPos atlas_index, Color tint, int height);
-    void DrawIconSDF(AtlasPos atlas_index, Color tint, int height);
     void Write(const char* text);
     void WriteEx(const char* text, text_alignment::T alignemnt, bool linebreak);
     void DecorateEx(const text::Layout* layout, const TokenList* tokens);
@@ -214,7 +213,7 @@ namespace ui {
 }
 
 void HandleButtonSound(button_state_flags::T button_state_flags);
-Font GetCustomDefaultFont();
+Font GetCustomDefaultFont(int size);
 
 button_state_flags::T DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color);
 button_state_flags::T DrawCircleButton(Vector2 midpoint, double radius, Color color);

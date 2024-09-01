@@ -19,7 +19,7 @@ void Icon3D::Draw() const {
     Vector2 draw_pos = GetCamera()->GetScreenPos(world_pos);
     draw_pos = Vector2Add(draw_pos, offset);
     
-    if (draw_pos.y < -20 || draw_pos.x < -20) {
+    if (draw_pos.y < -20 || draw_pos.x < -20) {  // TODO: Un-hardcode
         return;
     }
 
@@ -105,7 +105,7 @@ void Text3D::Draw() const {
     Vector2 screen_pos;
     screen_pos.x = (ndcPos.x + 1.0f)/2.0f * GetScreenWidth() + offset.x;
     screen_pos.y = (ndcPos.y + 1.0f)/2.0f * GetScreenHeight() + offset.y;
-    Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), text, text_h, 1);
+    Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(text_h), text, text_h, 1);
     screen_pos = ApplyAlignment(screen_pos, text_size, alignment);
     
     if (GetSettingBool("draw_textrects", false)) {
@@ -118,7 +118,7 @@ void Text3D::Draw() const {
 
     // Cannot render in a single batch, because of the ndcPos.z uniform
     BeginShaderMode(text3d_shader::shader);
-    DrawTextEx(GetCustomDefaultFont(), text, screen_pos, text_h, 1, color);
+    DrawTextEx(GetCustomDefaultFont(text_h), text, screen_pos, text_h, 1, color);
     EndShaderMode();
 }
 
@@ -309,7 +309,7 @@ void RenderServer::Draw() {
             _DrawTrajectories();
             _UpdateShipIcons();
             // Draw icons
-            RELOAD_IF_NECAISSARY(icon_shader)
+            RELOAD_IF_NECESSARY(icon_shader)
             BeginShaderMode(icon_shader::shader);
             for (auto it = icons.GetIter(); it; it++) {
                 icons[it.GetId()]->Draw();
@@ -320,7 +320,7 @@ void RenderServer::Draw() {
 
         // Pseudo-3d
         rlEnableDepthTest();    
-            RELOAD_IF_NECAISSARY(text3d_shader)
+            RELOAD_IF_NECESSARY(text3d_shader)
             for (auto it = text_labels_3d.GetIter(); it; it++) {
                 text_labels_3d[it.GetId()]->Draw();
             }

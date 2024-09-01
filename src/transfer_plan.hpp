@@ -41,7 +41,7 @@ struct TransferPlan {
 };
 
 void TransferPlanSolve(TransferPlan* tp);
-void TransferPlanSetBestDeparture(TransferPlan* tp);
+void TransferPlanSetBestDeparture(TransferPlan* tp, timemath::Time t0, timemath::Time t1);
 void TransferPlanSoonest(TransferPlan* tp, double dv_limit);
 int TransferPlanTests();
 

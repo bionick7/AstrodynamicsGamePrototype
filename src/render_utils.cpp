@@ -88,6 +88,7 @@ void _RenderDoubleQuad(Color color) {
 }
 
 void _ColorToFloat4Buffer(float buffer[], Color color) {
+    // Assumes the buffer has at least 4 floats allocated to it
     buffer[0] = (float)color.r / 255.0f;
     buffer[1] = (float)color.g / 255.0f;
     buffer[2] = (float)color.b / 255.0f;
@@ -109,16 +110,18 @@ namespace sdf_shader {
 namespace ui_shader {
     Shader shader;
     int depth = -1;
+    int background_color = -1;
 
     void Load() {
         LOAD_SHADER(ui_shader)
         LOAD_SHADER_UNIFORM(ui_shader, depth)
+        LOAD_SHADER_UNIFORM(ui_shader, background_color)
     }
 }
 
 void DrawTextureSDF(Texture2D texture, Rectangle source, Rectangle dest, 
                     Vector2 origin, float rotation, Color tint, uint8_t z_layer) {
-    RELOAD_IF_NECAISSARY(sdf_shader)
+    RELOAD_IF_NECESSARY(sdf_shader)
     BeginShaderMode(sdf_shader::shader);
     float z_layer_f = 1.0f - z_layer / 256.0f;
     float bg_color_4[4];
@@ -129,8 +132,8 @@ void DrawTextureSDF(Texture2D texture, Rectangle source, Rectangle dest,
     EndShaderMode();
 }
 
-void BeginRenderSDFInUIMode(uint8_t z_layer, Color background) {
-    RELOAD_IF_NECAISSARY(sdf_shader)
+void BeginRenderSDFInUILayer(uint8_t z_layer, Color background) {
+    RELOAD_IF_NECESSARY(sdf_shader)
     BeginShaderMode(sdf_shader::shader);
     float z_layer_f = 1.0f - z_layer / 256.0f;
     float bg_color_4[4];
@@ -139,11 +142,18 @@ void BeginRenderSDFInUIMode(uint8_t z_layer, Color background) {
     SetShaderValue(sdf_shader::shader, sdf_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT);
 }
 
-void BeginRenderInUILayer(uint8_t z_layer) {
-    RELOAD_IF_NECAISSARY(ui_shader)
+void BeginRenderInUILayer(uint8_t z_layer, Color background) {
+    RELOAD_IF_NECESSARY(ui_shader)
     BeginShaderMode(ui_shader::shader);
     float z_layer_f = 1.0f - z_layer / 256.0f;
+    float bg_color_4[4];
+    _ColorToFloat4Buffer(bg_color_4, background);  // Hardcoded for now
+    SetShaderValue(ui_shader::shader, ui_shader::background_color, bg_color_4, SHADER_UNIFORM_VEC4);
     SetShaderValue(ui_shader::shader, ui_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT);
+}
+
+void BeginRenderInUILayer(uint8_t z_layer) {
+    BeginRenderInUILayer(z_layer, BLANK);
 }
 
 void EndRenderInUILayer() {
@@ -170,7 +180,7 @@ namespace wireframe_shader {
 }
 
 void RenderWireframeMesh(WireframeMesh mesh, Matrix transform, Color background, Color foreground) {
-    RELOAD_IF_NECAISSARY(wireframe_shader)
+    RELOAD_IF_NECESSARY(wireframe_shader)
 
     static float bg_color[4];
     static float fg_color[4];
@@ -211,7 +221,7 @@ void RenderWireframeMesh(WireframeMesh mesh, Matrix transform, Color background,
 
 void RenderWireframeMesh2DEx(WireframeMesh mesh, Vector2 origin, float scale, 
                              Color background, Color foreground, uint8_t z_layer) {
-    RELOAD_IF_NECAISSARY(wireframe_shader)
+    RELOAD_IF_NECESSARY(wireframe_shader)
 
     static float bg_color[4];
     static float fg_color[4];
@@ -301,7 +311,7 @@ namespace orbit_shader {
 }
 
 void RenderOrbit(const OrbitSegment *segment, orbit_render_mode::T render_mode, Color color) {
-    RELOAD_IF_NECAISSARY(orbit_shader)
+    RELOAD_IF_NECESSARY(orbit_shader)
     default_buffers::ReloadIfNecaissary();
 
     const Orbit* orbit = segment->orbit;
@@ -400,7 +410,7 @@ namespace planet_shader {
 }
 
 void RenderPerfectSphere(DVector3 world_position, double radius, Color color) {
-    RELOAD_IF_NECAISSARY(planet_shader)
+    RELOAD_IF_NECESSARY(planet_shader)
 
     Vector3 render_position = GameCamera::WorldToRender(world_position);
     float render_radius = GameCamera::WorldToRender(radius);
@@ -475,7 +485,7 @@ namespace rings_shader {
 }
 
 void RenderRings(DVector3 normal, double min_rad, double max_rad, Color color) {
-    RELOAD_IF_NECAISSARY(rings_shader)
+    RELOAD_IF_NECESSARY(rings_shader)
     
     float inner_rad_float = min_rad / max_rad;
 	SetShaderValue(rings_shader::shader, rings_shader::innerRad, &inner_rad_float, SHADER_ATTRIB_FLOAT);
@@ -525,7 +535,7 @@ namespace skybox_shader {
 }
 
 void RenderSkyBox() {
-    RELOAD_IF_NECAISSARY(skybox_shader)
+    RELOAD_IF_NECESSARY(skybox_shader)
 
     Vector2 resolution = { GetScreenWidth(), GetScreenHeight() };
     
@@ -574,7 +584,7 @@ void RenderDeferred(RenderTexture render_target) {
     };
 
     if (!GetSettingBool("skip_postprocessing", false)) {
-        RELOAD_IF_NECAISSARY(postprocessing_shader)
+        RELOAD_IF_NECESSARY(postprocessing_shader)
 
         BeginShaderMode(postprocessing_shader::shader);
         SetShaderValueTexture(postprocessing_shader::shader, postprocessing_shader::depthMap, render_target.depth);

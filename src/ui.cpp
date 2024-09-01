@@ -22,11 +22,11 @@ Vector2 ApplyAlignment(Vector2 anchorpoint, Vector2 size, text_alignment::T alig
 }
 
 Rectangle DrawTextAligned(const char* text, Vector2 pos, text_alignment::T alignment, Color c, uint8_t z_layer) {
-    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, DEFAULT_FONT_SIZE, 1);
+    Vector2 size = MeasureTextEx(GetCustomDefaultFont(DEFAULT_FONT_SIZE), text, DEFAULT_FONT_SIZE, 1);
     pos = ApplyAlignment(pos, size, alignment);
     //Vector2 bottom_left = Vector2Subtract(pos, Vector2Scale(size, 0.5));
     Rectangle rect = { pos.x, pos.y, size.x, size.y };
-    text::DrawTextEx(GetCustomDefaultFont(), text, pos, DEFAULT_FONT_SIZE, 1, c, GetScreenRect(), z_layer);
+    text::DrawTextEx(GetCustomDefaultFont(DEFAULT_FONT_SIZE), text, pos, DEFAULT_FONT_SIZE, 1, c, GetScreenRect(), z_layer);
     return rect;
 }
 
@@ -80,7 +80,7 @@ TextBox::TextBox(int p_x, int p_y, int w, int h, int ptext_size, Color color, Co
 
     text_size = ptext_size;
     text_color = color;
-    text_background = ColorAlpha(color, 0);
+    text_background = pbackground_color;
     background_color = pbackground_color;
 
     x_cursor = 0;
@@ -97,7 +97,7 @@ TextBox::TextBox(const TextBox *parent, int x, int y, int w, int h) :
     }
 
 int TextBox::GetCharWidth() {
-    Font font = GetCustomDefaultFont();
+    Font font = GetCustomDefaultFont(text_size);
     const char* test_string = "abcdefghiJKLMNOP0123";
     return MeasureTextEx(font, test_string, text_size, 1).x / strlen(test_string);
 }
@@ -223,9 +223,9 @@ void TextBox::WriteLine(const char* text, text_alignment::T align) {
 void TextBox::WriteLayout(const text::Layout* layout, bool advance_cursor) {
     Rectangle rect = layout->bounding_box;
     if (flexible) {
-        layout->DrawTextLayout(GetCustomDefaultFont(), text_size, text_color, text_background, GetScreenRect(), z_layer);
+        layout->DrawTextLayout(GetCustomDefaultFont(text_size), text_size, text_color, text_background, GetScreenRect(), z_layer);
     } else {
-        layout->DrawTextLayout(GetCustomDefaultFont(), text_size, text_color, text_background, render_rec, z_layer);
+        layout->DrawTextLayout(GetCustomDefaultFont(text_size), text_size, text_color, text_background, render_rec, z_layer);
     }
     if (advance_cursor) {
         line_size_y = 20;
@@ -283,7 +283,7 @@ void TextBox::DrawTexture(Texture2D texture, Rectangle source, int texture_heigh
 
 button_state_flags::T TextBox::WriteButton(const char* text, int inset) {
     Vector2 pos = {x + text_margin_x + x_cursor, y + text_margin_y + y_cursor};
-    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
+    Vector2 size = MeasureTextEx(GetCustomDefaultFont(text_size), text, text_size, 1);
     // text fully in render rectangle
     if (
         (!CheckCollisionPointRec(pos, render_rec)
@@ -302,7 +302,7 @@ button_state_flags::T TextBox::WriteButton(const char* text, int inset) {
     button_state_flags::T res = GetButtonState(is_in_area, was_in_area);
     Color c = is_in_area ? Palette::ui_main : Palette::interactable_main;
     DrawRectangleLines(pos.x - inset, pos.y - inset, size.x, size.y, c);
-    text::DrawTextEx(GetCustomDefaultFont(), text, pos, text_size, 1, text_color, render_rec, z_layer);
+    text::DrawTextEx(GetCustomDefaultFont(text_size), text, pos, text_size, 1, text_color, render_rec, z_layer);
     _Advance(pos, size);
     return res;
 }
@@ -328,16 +328,15 @@ int TextBox::GetLineHeight() const {
 }
 
 text::Layout TextBox::GetTextLayout(const char *text, text_alignment::T alignemnt) {
-    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
-    Vector2 anchor = GetAnchorPointText(alignemnt);
+    Vector2 size = MeasureTextEx(GetCustomDefaultFont(text_size), text, text_size, 1);
     Vector2 pos = ApplyAlignment(GetAnchorPointText(alignemnt), size, alignemnt);
     text::Layout text_layout;
-    text::GetLayout(&text_layout, pos, GetCustomDefaultFont(), text, text_size, 1);
+    text::GetLayout(&text_layout, pos, GetCustomDefaultFont(text_size), text, text_size, 1);
     return text_layout;
 }
 
 Rectangle TextBox::TbMeasureText(const char* text, text_alignment::T alignemnt) const {
-    Vector2 size = MeasureTextEx(GetCustomDefaultFont(), text, text_size, 1);
+    Vector2 size = MeasureTextEx(GetCustomDefaultFont(text_size), text, text_size, 1);
     Vector2 pos = ApplyAlignment(GetAnchorPointText(alignemnt), size, alignemnt);
     return {pos.x, pos.y, size.x, size.y};
 }
@@ -618,11 +617,11 @@ void ui::EncloseDynamic(int shrink, Color background_color, Color line_color, in
 }
 
 void ui::DrawIcon(AtlasPos atlas_index, Color tint, int height) {
-    ui::Current()->DrawTexture(GetUI()->GetIconAtlas(), atlas_index.GetRect(ATLAS_SIZE), height, tint, false);
-}
-
-void ui::DrawIconSDF(AtlasPos atlas_index, Color tint, int height) {
-    ui::Current()->DrawTexture(GetUI()->GetIconAtlasSDF(), atlas_index.GetRect(ATLAS_SIZE), height, tint, true);
+    if (GetSettingBool("sdf_icons", false)) {
+        ui::Current()->DrawTexture(GetUI()->GetIconAtlasSDF(), atlas_index.GetRect(ATLAS_SIZE), height, tint, true);
+    } else {
+        ui::Current()->DrawTexture(GetUI()->GetIconAtlas(), atlas_index.GetRect(ATLAS_SIZE), height, tint, false);
+    }
 }
 
 void ui::Write(const char *text) {
@@ -751,7 +750,7 @@ void ui::HelperText(const char* description) {
     //BeginRenderInUILayer(tb->z_layer);
     //DrawRectangleLinesEx(tb->render_rec, 1, GREEN);
     //EndRenderInUILayer();
-    text::DrawTextEx(GetCustomDefaultFont(), "??", { button_pos.x, button_pos.y }, tb->text_size, 1, 
+    text::DrawTextEx(GetCustomDefaultFont(tb->text_size), "??", { button_pos.x, button_pos.y }, tb->text_size, 1, 
         Palette::interactable_main, tb->render_rec, tb->z_layer
     );
 
@@ -795,7 +794,7 @@ void ui::SetMouseHint(const char* text) {
     text::Layout layout;
     text::GetLayout(&layout, 
         Vector2Add(GetMousePosition(), {-4,-4}),
-        GetCustomDefaultFont(), text, 
+        GetCustomDefaultFont(DEFAULT_FONT_SIZE), text, 
         DEFAULT_FONT_SIZE, 1
     );
 
@@ -809,7 +808,8 @@ void ui::SetMouseHint(const char* text) {
 }
 
 void UIGlobals::UIInit() {
-    SetTextureFilter(assets::GetFont("resources/fonts/space_mono_small_sdf.fnt").texture, TEXTURE_FILTER_BILINEAR);  // Very important step
+    SetTextureFilter(assets::GetFont("resources/fonts/space_mono_extended_sdf.fnt").texture, TEXTURE_FILTER_BILINEAR);  // Very important step
+    SetTextureFilter(assets::GetFont("resources/fonts/space_mono_extended_20_sdf.fnt").texture, TEXTURE_FILTER_BILINEAR);  // Very important step
     SetTextLineSpacing(20);
 }
 
@@ -842,7 +842,7 @@ void UIGlobals::_HandleMouseTips() {
         StringBuilder sb_substr = sb.GetSubstring(0, sb.length - trailing_newlines - 1);
 
         // Push Textbox
-        Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(), sb_substr.c_str, DEFAULT_FONT_SIZE, 1);
+        Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(DEFAULT_FONT_SIZE), sb_substr.c_str, DEFAULT_FONT_SIZE, 1);
         mousehints.hint_rects[i].width = text_size.x;
         mousehints.hint_rects[i].height = text_size.y;
         Vector2 anchor = { mousehints.hint_rects[i].x, mousehints.hint_rects[i].y};
@@ -975,11 +975,11 @@ const char* UIGlobals::GetConceptDescription(const char* key) {
 }
 
 Texture2D UIGlobals::GetIconAtlas() {
-    return assets::GetFont("resources/fonts/space_mono_small.fnt").texture;
+    return assets::GetFont("resources/fonts/space_mono_extended.fnt").texture;
 }
 
 Texture2D UIGlobals::GetIconAtlasSDF() {
-    return assets::GetFont("resources/fonts/space_mono_small_sdf.fnt").texture;
+    return assets::GetFont("resources/fonts/space_mono_extended_sdf.fnt").texture;
 }
 
 void UIGlobals::MouseHints::AddHint(Rectangle origin_button, Vector2 anchor, const char *hint) {
@@ -1011,12 +1011,20 @@ int UIGlobals::MouseHints::Hash(Rectangle origin_button) {
     return (int)origin_button.x * 10000 + (int)origin_button.y;
 }
 
-Font GetCustomDefaultFont() {
+Font GetCustomDefaultFont(int size) {
     Font font;
     if (GetSettingBool("sdf_text", false)) {
-        font = assets::GetFont("resources/fonts/space_mono_small_sdf.fnt");
+        if (size <= 20) {
+            font = assets::GetFont("resources/fonts/space_mono_extended_20_sdf.fnt");
+        } else {
+            font = assets::GetFont("resources/fonts/space_mono_extended_sdf.fnt");
+        }
     } else  {
-        font = assets::GetFont("resources/fonts/space_mono_small.fnt");
+        if (size <= 20) {
+            font = assets::GetFont("resources/fonts/space_mono_extended_20.fnt");
+        } else {
+            font = assets::GetFont("resources/fonts/space_mono_extended.fnt");
+        }
     }
     return font;
 }

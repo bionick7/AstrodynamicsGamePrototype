@@ -159,17 +159,19 @@ void text::Layout::GetTextRects(List<Rectangle>* buffer, const TokenList *tokens
             }
         }
 
-        i += codepointByteCount;   // (Raylib cmt) Move text bytes counter to next codepoint
+        i += codepointByteCount;
     }
 }
 
 void text::Layout::DrawTextLayout(Font font, float fontSize, Color tint, Color background, Rectangle render_rect, uint8_t z_layer) const {
+    // Modified Raylib function '(Raylib cmt)' refers to original documentation
+
     if (font.texture.id == 0) font = GetFontDefault();  // (Raylib cmt) Security check in case of not valid font
 
     if (GetSettingBool("sdf_text", false)) {
-        BeginRenderSDFInUIMode(z_layer, background);
+        BeginRenderSDFInUILayer(z_layer, background);
     } else {
-        BeginRenderInUILayer(z_layer);
+        BeginRenderInUILayer(z_layer, background);
     }
 
     for (int i = 0; i < size;) {
@@ -186,7 +188,7 @@ void text::Layout::DrawTextLayout(Font font, float fontSize, Color tint, Color b
                 (codepoint != ' ') && (codepoint != '\t')
                 && CheckCollisionRecs(rects[i], render_rect)
             ) {
-                Vector2 char_pos = { rects[i].x, rects[i].y };
+                Vector2 char_pos = { roundf(rects[i].x), roundf(rects[i].y) };
                 DrawTextCodepoint(font, codepoint, char_pos, fontSize, tint);
             }
         }
@@ -198,7 +200,7 @@ void text::Layout::DrawTextLayout(Font font, float fontSize, Color tint, Color b
 }
 
 void text::DrawText(const char *text, Vector2 position, Color color) {
-    text::DrawTextEx(GetCustomDefaultFont(), text, position, DEFAULT_FONT_SIZE, 1, color, GetScreenRect(), 0);
+    text::DrawTextEx(GetCustomDefaultFont(DEFAULT_FONT_SIZE), text, position, DEFAULT_FONT_SIZE, 1, color, GetScreenRect(), 0);
 }
 
 void text::DrawTextEx(Font font, const char *text, Vector2 position, float fontSize, float spacing, Color tint) {

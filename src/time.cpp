@@ -53,7 +53,7 @@ double Time::Seconds() const {
 }
 
 double Time::Days() const {
-    return __t / 86400;
+    return __t / SECONDS_IN_DAY;
 }
 
 void Time::Serialize(DataNode* data, const char* key) const {

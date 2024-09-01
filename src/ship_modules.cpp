@@ -213,7 +213,8 @@ void ShipModuleSlot::Draw() const {
     // Center
     ui::Current()->x_cursor = (ui::Current()->width - 40) / 2;
     ui::Current()->y_cursor = (ui::Current()->height - 40) / 2;
-    ui::DrawIconSDF(module_types::icons[module_type], Palette::ui_dark, 40);
+    
+    ui::DrawIcon(module_types::icons[module_type], Palette::ui_dark, 40);
     ui::Current()->x_cursor = x_cursor;
     ui::Current()->y_cursor = y_cursor;
 
@@ -623,9 +624,9 @@ void ShipModules::DrawShipModule(RID index, bool inactive) const {
         ui::VSpace((ui::Current()->height - 40) / 2);
         ui::HSpace((ui::Current()->width - 40) / 2);
         if (inactive) {
-            ui::DrawIconSDF(smc->icon_index, Palette::red, 40);
+            ui::DrawIcon(smc->icon_index, Palette::red, 40);
         } else {
-            ui::DrawIconSDF(smc->icon_index, Palette::ui_main, 40);
+            ui::DrawIcon(smc->icon_index, Palette::ui_main, 40);
         }
         //ui::Write(smc->name);
     }

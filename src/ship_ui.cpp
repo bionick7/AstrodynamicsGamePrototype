@@ -165,8 +165,8 @@ int _UIDrawTransferplans(Ship* ship) {
         StringBuilder sb;
         sb.AddFormat(
             "- %s (%3d D %2d H)\n", resource_name,
-            (int) (ship->prepared_plans[i].arrival_time - now).Seconds() / 86400,
-            ((int) (ship->prepared_plans[i].arrival_time - now).Seconds() % 86400) / 3600
+            (int) (ship->prepared_plans[i].arrival_time - now).Seconds() / timemath::SECONDS_IN_DAY,
+            ((int) (ship->prepared_plans[i].arrival_time - now).Seconds() % timemath::SECONDS_IN_DAY) / 3600
         );
         sb.AddFormat("  %s >> %s", departure_planet_name, arrival_planet_name);
 
@@ -298,6 +298,8 @@ void _UIDrawQuests(Ship* ship) {
 void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_array) {
     if (!IsIdValid(id)) return;
     // Assuming monospace font
+    // TODO: ^ Assumption is no longer true
+
     int char_width = ui::Current()->GetCharWidth();
     StringBuilder sb;
     const resource_count_t* construction_resources = NULL;
@@ -335,6 +337,8 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
     if (planet_resource_array == NULL) {
         return;
     }
+
+    // Build requirements
 
     ui::VSpace(6);
     ui::Write("To build:");
@@ -400,9 +404,9 @@ void _UIDrawProduction(Ship* ship) {
             }
             options_index = tabs-1;
         }
-        if (!ship->CanProduce(id, false, true) && !GetSettingBool("show_unconstructable_products")) {
-            continue;
-        }
+        //if (!ship->CanProduce(id, false, true) && !GetSettingBool("show_unconstructable_products")) {
+        //    continue;
+        //}
         options[options_index].Append(id);
     }
 
@@ -416,29 +420,29 @@ void _UIDrawProduction(Ship* ship) {
     int margin = 3;
     int columns = ui::Current()->width / (SHIP_MODULE_WIDTH + margin) - 1;
     int rows = std::ceil(max_display_options / (double)columns);
-    int height = MaxInt((SHIP_MODULE_HEIGHT + margin)*rows, 40*tabs);
+    int height = MaxInt((SHIP_MODULE_HEIGHT + margin)*rows, 50*tabs);
     rows = height / (SHIP_MODULE_HEIGHT + margin);
-    ui::PushInset(MaxInt(50*rows, 40*tabs));
+    ui::PushInset(MaxInt(50*rows, 50*tabs));
     ui::Shrink(5, 5);
 
     RID hovered_id = GetInvalidId();
 
     // Draw Selection Tabs
     int panel_width = ui::Current()->width;
-    ui::PushHSplit(0, 48);
+    ui::PushHSplit(0, 50);
     int tabs_x = ui::Current()->x + ui::Current()->width;
     int tabs_y = ui::Current()->y;
 
     for(int i=0; i < tabs; i++) {
         Color tab_draw_color = (module_class_ui_tab == i) ? Palette::ui_main : Palette::ui_alt;
-        ui::PushInset(40);
+        ui::PushInset(48);
         ui::Shrink(4, 4);
         ui::EncloseEx(0, Palette::bg, tab_draw_color, 0);
         if (i < module_types::ANY) {
-            ui::DrawIconSDF(module_types::icons[i], tab_draw_color, 40);
+            ui::DrawIcon(module_types::icons[i], tab_draw_color, 40);
         } else {  // Ship classes
-            // Just draws the questionmark for now
-            ui::DrawIconSDF(AtlasPos(15, 31), tab_draw_color, 40);
+            // Just draws the '?' for now
+            ui::DrawIcon(AtlasPos(15, 31), tab_draw_color, 40);
         }
         button_state_flags::T button_state = ui::AsButton();
         HandleButtonSound(button_state);
@@ -466,7 +470,7 @@ void _UIDrawProduction(Ship* ship) {
         ui::PushGridCell(columns, rows, draw_index % columns, draw_index / columns);
         ui::Shrink(margin, margin);
         
-        // Possible since Shipclasses get loaded once in continuous mempry
+        // Possible since Shipclasses get loaded once in continuous memory
         button_state_flags::T button_state = ui::AsButton();
         if (button_state & button_state_flags::HOVER) {
             ui::EncloseEx(0, Palette::bg, Palette::interactable_main, 4);
@@ -478,7 +482,13 @@ void _UIDrawProduction(Ship* ship) {
         if ((button_state & button_state_flags::JUST_PRESSED)) {
             ship->production_queue.Append(id);
         }
-        ui::DrawIcon(atlas_pos, Palette::ui_main, ui::Current()->height);
+
+        bool constructable = ship->CanProduce(id, false, true);
+        if (constructable) {
+            ui::DrawIcon(atlas_pos, Palette::ui_main, ui::Current()->height);
+        } else {
+            ui::DrawIcon(atlas_pos, Palette::ui_alt, ui::Current()->height);
+        }
         //ui::Fillline(1.0, Palette::ui_main, Palette::bg);
         //ui::Write(ship_class->description);
         ui::Pop();  // GridCell
@@ -486,7 +496,6 @@ void _UIDrawProduction(Ship* ship) {
     }
 
     ui::Pop();  // HSplit from tabs
-
     ui::Pop();  // Inset
 
     // Draw queue
@@ -523,7 +532,7 @@ void _UIDrawProduction(Ship* ship) {
             ship->production_queue.EraseAt(i);
             i--;
         }
-        ui::DrawIconSDF(atlas_pos, Palette::ui_main, ui::Current()->height);
+        ui::DrawIcon(atlas_pos, Palette::ui_main, ui::Current()->height);
         double progress = ship->production_process / (double) total_construction_time;
         if (i == 0) {
             ui::FilllineEx(

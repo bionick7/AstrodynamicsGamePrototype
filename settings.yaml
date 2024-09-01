@@ -6,7 +6,8 @@ show_unconstructable_products: n
 show_help: y
 
 # Graphics
-sdf_text: y
+sdf_text: n
+sdf_icons: n
 skip_postprocessing: n
 fps_cap: 60
 v_sync: y

@@ -229,7 +229,7 @@ void TechTree::DrawUI() {
         }
 
         ui::Enclose();
-        ui::DrawIconSDF(nodes[i].icon_index, color, 40);
+        ui::DrawIcon(nodes[i].icon_index, color, 40);
         ui::Pop();  // Global
         if (node_progress[i] > 0 && node_progress[i] < nodes[i].research_effort) {
             ui::FilllineEx(

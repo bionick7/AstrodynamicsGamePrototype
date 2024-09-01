@@ -139,4 +139,4 @@ def main(base_font, new_font, base_size, downsampled_size):
     im_font.save(new_img_file)
 
 if __name__ == "__main__":
-    main("space_mono.fnt", "space_mono_small.fnt", 128, 40)
+    main("space_mono_20.fnt", "space_mono_extended_20.fnt", 20, 20)
