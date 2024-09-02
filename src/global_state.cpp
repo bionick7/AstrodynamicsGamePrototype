@@ -72,7 +72,7 @@ void GlobalState::LoadData() {
 
     #define NUM 5
     const char* loading_paths[NUM] = {
-        "resources/data/ephemerides.yaml",
+        "resources/data/ephemeris.yaml",
         "resources/data/resources.yaml",
         "resources/data/ship_modules.yaml",
         "resources/data/ship_classes.yaml",
@@ -80,7 +80,7 @@ void GlobalState::LoadData() {
     };
 
     int (*load_funcs[NUM])(const DataNode*) = { 
-        LoadEphemerides,
+        LoadEphemeris,
         LoadResources,
         LoadShipModules,
         LoadShipClasses,
@@ -345,7 +345,7 @@ void GlobalState::SaveGame(const char* file_path) const {
 }
 
 void GlobalState::Serialize(DataNode* data) const {
-    // TODO: refer to the ephemerides used
+    // TODO: refer to the ephemeris used
     
     // Serialize Camera
     camera.Serialize(data->SetChild("camera"));
@@ -398,15 +398,15 @@ void GlobalState::Deserialize(const DataNode* data) {
     factions.Deserialize(data);
     techtree.Deserialize(data);
 
-    ships.alloc.Clear(); 
-    planets = Planets();
+    ships.Clear();
+    planets.Clear();
 
     DataNode ephem_data;
-    const char* ephemerides_path = "resources/data/ephemerides.yaml";
+    const char* ephemerides_path = "resources/data/ephemeris.yaml";
     if (DataNode::FromFile(&ephem_data, ephemerides_path, FileFormat::YAML, true) != 0) {
         FAIL("Could not load save %s", ephemerides_path);
     }
-    planets.LoadEphemerides(&ephem_data);  // if necaissary
+    planets.LoadEphemeris(&ephem_data);  // if necaissary
 
     focused_planet = RID(data->GetI("focused_planet", -1, true));
     focused_ship = RID(data->GetI("focused_ship", -1, true));

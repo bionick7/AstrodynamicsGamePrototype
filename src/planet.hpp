@@ -85,7 +85,7 @@ struct Planet {
 };
 
 struct Planets {
-    PlanetNature* ephemerides;
+    PlanetNature* ephemeris;
     PlanetNature parent;
     Planet* planet_array;
     int planet_count;
@@ -100,12 +100,13 @@ struct Planets {
     int GetPlanetCount() const;
 
     const PlanetNature* GetParentNature() const;
-    int LoadEphemerides(const DataNode* data);
+    int LoadEphemeris(const DataNode* data);
+    void Clear();
 };
 
 Planet* GetPlanet(RID id);
 Planet* GetPlanetByIndex(int index);
 double PlanetsMinDV(RID from, RID to, bool aerobrake);
-int LoadEphemerides(const DataNode* data);
+int LoadEphemeris(const DataNode* data);
 
 #endif  // PLANET_H

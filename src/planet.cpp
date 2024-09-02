@@ -56,7 +56,7 @@ void Planet::Serialize(DataNode* data) const {
         }
     }
 
-    // We assume the orbital info is stored in the ephemerides
+    // We assume the orbital info is stored in the ephemeris
 }
 
 void Planet::Deserialize(Planets* planets, const DataNode *data) {
@@ -378,13 +378,13 @@ void Planet::AdvanceModuleProductionQueue() {
 
 Planets::Planets() {
     planet_array = NULL;
-    ephemerides = NULL;
+    ephemeris = NULL;
     planet_count = 0;
 }
 
 Planets::~Planets() {
     delete[] planet_array;
-    delete[] ephemerides;
+    delete[] ephemeris;
 }
 
 RID Planets::AddPlanet(const DataNode* data) {
@@ -408,7 +408,7 @@ const PlanetNature* Planets::GetPlanetNature(RID id) const {
     if (IdGetIndex(id) >= planet_count) {
         FAIL("Invalid planet id (%d)", id)
     }
-    return &ephemerides[IdGetIndex(id)];
+    return &ephemeris[IdGetIndex(id)];
 }
 
 int Planets::GetPlanetCount() const {
@@ -418,7 +418,7 @@ int Planets::GetPlanetCount() const {
 RID Planets::GetIdByName(const char* planet_name) const {
     // Returns NULL if planet_name not found
     for(int i=0; i < planet_count; i++) {
-        if (strcmp(ephemerides[i].name, planet_name) == 0) {
+        if (strcmp(ephemeris[i].name, planet_name) == 0) {
             return RID(i, EntityType::PLANET);
         }
     }
@@ -430,19 +430,19 @@ const PlanetNature* Planets::GetParentNature() const {
     return &parent;
 }
 
-int Planets::LoadEphemerides(const DataNode* data) {
+int Planets::LoadEphemeris(const DataNode* data) {
     // Init planets
     parent = {0};
     parent.radius = data->GetF("radius");
     parent.mu = data->GetF("mass") * G;
     planet_count = data->GetChildArrayLen("satellites");
-    ephemerides = new PlanetNature[planet_count];
+    ephemeris = new PlanetNature[planet_count];
     planet_array = new Planet[planet_count];
     //if (num_planets > 100) num_planets = 100;
     //RID planets[100];
     for(int i=0; i < planet_count; i++) {
         const DataNode* planet_data = data->GetChildArrayElem("satellites", i);
-        PlanetNature* nature = &ephemerides[i];
+        PlanetNature* nature = &ephemeris[i];
         strcpy(nature->name, planet_data->Get("name"));
         
         double sma = planet_data->GetF("SMA");
@@ -466,6 +466,21 @@ int Planets::LoadEphemerides(const DataNode* data) {
         nature->has_atmosphere = strcmp(planet_data->Get("has_atmosphere", "n", true), "y") == 0;
     }
     return planet_count;
+}
+
+void Planets::Clear() {
+    // Clean up everything associated with the planets
+    for (int i=0; i < planet_count; i++) {
+        GetRenderServer()->text_labels_3d.EraseAt(planet_array[i].text3d);
+    }
+
+    // Code duplication from constructor/destructor :(
+    delete[] planet_array;
+    delete[] ephemeris;
+
+    planet_array = NULL;
+    ephemeris = NULL;
+    planet_count = 0;
 }
 
 Planet* GetPlanet(RID id) { return GetPlanets()->GetPlanet(id); }
@@ -496,4 +511,4 @@ double PlanetsMinDV(RID planet_a, RID planet_b, bool aerobrake) {
     return aerobrake ? dv1 : dv1 + dv2;
 }
 
-int LoadEphemerides(const DataNode* data) { return GetPlanets()->LoadEphemerides(data); }
+int LoadEphemeris(const DataNode* data) { return GetPlanets()->LoadEphemeris(data); }

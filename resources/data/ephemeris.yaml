@@ -1,0 +1,124 @@
+name: Saturn
+body_size: Giant
+Ecc: 0.05386179
+Inc: 2.48599187
+SMA: 1.426666e+12
+LoA: 113.66242448
+AoP: -21.06
+Ann: -42.64463408
+radius: 58.232e+6
+mass: 568.336e+24
+has_atmosphere: y
+
+rings:
+- from: 74.0e+6
+  to: 92.0e+6
+  AoP: 0
+- from: 94.0e+6
+  to: 117.58e+6
+  AoP: 90
+- from: 122.17e+6
+  to: 136.775e+6
+  AoP: 0
+
+satellites:
+- name: Low Saturn Orbit
+  body_size: Minor
+  Ecc: 0
+  Inc: 0
+  SMA: 60.0e+6
+  Ann: 275
+  LoA: 40.6
+  AoP: 160
+  radius: 0
+  mass: 0
+  has_atmosphere: y
+  
+- name: Rings
+  body_size: Minor
+  Ecc: 0
+  Inc: 0.5
+  SMA: 120.0e+6
+  Ann: 275
+  LoA: 40.6
+  AoP: 160
+  radius: 0
+  mass: 0
+
+- name: Mimas
+  body_size: Minor
+  Ecc: 0.02
+  Inc: 1.6
+  SMA: 198.2e+6
+  Ann: 275
+  LoA: 40.6
+  AoP: 160
+  radius: 198.0e+3
+  mass: 1.8022e+21
+
+- name: Encelladus
+  body_size: Minor
+  Ecc: 0.005
+  SMA: 237.905e+6
+  Inc: 0
+  Ann: 57
+  LoA: 40.6
+  AoP: 119.5
+  radius: 252.0e+3
+  mass: 1.8022e+21
+
+- name: Tethys
+  body_size: Minor
+  Ecc: 0.001
+  SMA: 294.619e+6
+  Inc: 1.1
+  Ann: 0
+  LoA: 40.6
+  AoP: 335.3
+  radius: 533e+3
+  mass: 6.17449e+21
+
+- name: Rhea
+  body_size: Minor
+  Ecc: 0.001
+  SMA: 527.108e+6
+  Inc: 0.3
+  Ann: 31.5
+  LoA: 40.6
+  AoP: 44.3
+  radius: 764.0e+3
+  mass: 6.17449e+21
+
+- name: Titan
+  body_size: Minor
+  Ecc: 0.029
+  SMA: 1221.93e+6
+  Inc: 0.3
+  Ann: 11.7
+  LoA: 36.4
+  AoP: 78.3
+  radius: 2574.0e+3
+  mass: 1345.2e+21
+  has_atmosphere: y
+
+- name: Iaeptus
+  body_size: Minor
+  Ecc: 0.028
+  SMA: 3560.82e+6
+  Inc: 7.6
+  Ann: 74.8
+  LoA: 288.7
+  AoP: 254.5
+  radius: 252.0e+3
+  mass: 14.686e+21
+
+- name: Phoebe
+  body_size: Minor
+  Ecc: 0.164
+  SMA: 12929.4e+6
+  Inc: 175.2
+  Ann: 308.0
+  LoA: 276.0
+  AoP: 240.3
+  radius: 106.0e+3
+  mass: 8.3129e+18

@@ -42,8 +42,8 @@
 
 - QUESTS: Accepting more than one quest fucks up the order (Became irrelevant)
 - UI: measuring inline (conforming) text cannot rely on raylibs MeassureTextEx
-- SAVING: planets get loaded twice
-- ASTRO: Prograde and retrograde trajectories sometimes get confused
+- SAVING: planets get loaded twice (Done)
+- ASTRO: Prograde and retrograde trajectories sometimes get confused (Maybe fixed)
 - SHIPS: canceling top of queue resets production progress (Done)
 - SHIPS: carrying capacity can exceed max capacity (Done)
 - ASTRO: Crash when selecting transfer plan
@@ -80,7 +80,7 @@ Near-term, realizable only
 - highlight more important statistics
 
 ## Graphics improvements wishlist
-- Post-processing shader
+- Post-processing shader (Done)
 - preview small 3D models for flavor
 - Render to different buffers/layers  (Done)
 - UI labels as underlined by thin lines pointing to the thing
@@ -102,6 +102,7 @@ Regardless of implementability
 - tanker fleets (share dv among fleet)
 - aerobreaking (Done)
 - expand to 3D (Done)
+- resources and modules are the same thing
 - gravity assists
 - crew & population morale
 - "policies"

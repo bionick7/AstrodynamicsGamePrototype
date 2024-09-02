@@ -1189,6 +1189,7 @@ void Ships::KillShip(RID uuid, bool notify_callback) {
         GetWrenInterface()->NotifyShipEvent(uuid, "die");
     }
     GetRenderServer()->icons.EraseAt(GetShip(uuid)->icon3d);  // Destroy it here, since GetRenderServer() may not exist in destructor
+    GetRenderServer()->text_labels_3d.EraseAt(GetShip(uuid)->text3d);
     alloc.EraseAt(uuid);
 }
 
@@ -1208,6 +1209,14 @@ void Ships::DrawShipClassUI(RID uuid) const {
         ui::HSpace((ui::Current()->width - 40) / 2);
         ui::DrawIcon(sc->icon_index, Palette::ui_main, 40);
     }
+}
+
+void Ships::Clear() {
+    for (auto it = alloc.GetIter(); it; it++) {
+        // Make sure icons are destroyed etc.
+        KillShip(it.GetId(), false);
+    }
+    alloc.Clear();
 }
 
 const ShipClass* Ships::GetShipClassByRID(RID id) const {

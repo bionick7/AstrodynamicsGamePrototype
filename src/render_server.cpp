@@ -146,6 +146,8 @@ void _UpdateShipIcons() {
     for(int i=0; i < GetPlanets()->GetPlanetCount(); i++) {
         Planet* planet = GetPlanetByIndex(i);
 
+        // Update planet text3d
+
         Text3D* text3d;
         if (!IsIdValidTyped(planet->text3d, EntityType::TEXT3D)) {
             planet->text3d = GetRenderServer()->text_labels_3d.Allocate(&text3d);
@@ -293,10 +295,8 @@ void RenderServer::Draw() {
         BeginMode3D(GetCamera()->rl_camera);
             RenderSkyBox();
 
-            // Draw Saturn
+            // Saturn and rings are hardcoded for now
             RenderPerfectSphere(DVector3::Zero(), GetPlanets()->GetParentNature()->radius, Palette::ui_main);
-
-            // Rings are hardcoded, because why not?
             RenderRings(DVector3::Up(), 74.0e+6, 92.0e+6, Palette::ui_main);
             RenderRings(DVector3::Up(), 94.0e+6, 117.58e+6, Palette::ui_main);
             RenderRings(DVector3::Up(), 122.17e+6, 136.775e+6, Palette::ui_main);
