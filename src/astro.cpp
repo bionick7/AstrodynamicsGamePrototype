@@ -430,25 +430,28 @@ void HohmannTransfer(const Orbit* from, const Orbit* to,
     double p1_mean_motion = from->GetMeanMotion() * Sign(normal.Dot(from->normal));
     double p2_mean_motion = to->GetMeanMotion() * Sign(normal.Dot(to->normal));
     double relative_mean_motion = p2_mean_motion - p1_mean_motion;
-    double current_relative_annomaly = from->GetPosition(t0).cartesian.SignedAngleTo(to->GetPosition(t0).cartesian, normal);
+    double current_relative_anomaly = from->GetPosition(t0).cartesian.SignedAngleTo(to->GetPosition(t0).cartesian, normal);
     double target_relative_anomaly = PosMod(PI - p2_mean_motion * hohmann_flight_time, 2*PI);
-    double departure_wait_time = (target_relative_anomaly - current_relative_annomaly) / relative_mean_motion;
+    double departure_wait_time = (target_relative_anomaly - current_relative_anomaly) / relative_mean_motion;
     double relative_period = fabs(2 * PI / relative_mean_motion);
     departure_wait_time = PosMod(departure_wait_time, relative_period);
     if (departure != NULL) *departure = t0 + departure_wait_time;
     if (arrival   != NULL) *arrival = t0 + departure_wait_time + hohmann_flight_time;
-    if (dv1       != NULL) *dv1 = fabs(sqrt(mu * (2 / from->sma - 1 / hohmann_a)) - sqrt(mu / from->sma));
-    if (dv2       != NULL) *dv2 = fabs(sqrt(mu / to->sma) - sqrt(mu * (2 / to->sma - 1 / hohmann_a)));
+
+    double from_circ_vel = sqrt(mu / from->sma) * Sign(normal.Dot(from->normal));
+    double to_circ_vel = sqrt(mu / to->sma) * Sign(normal.Dot(from->normal));
+    if (dv1       != NULL) *dv1 = fabs(sqrt(mu * (2 / from->sma - 1 / hohmann_a)) - from_circ_vel);
+    if (dv2       != NULL) *dv2 = fabs(to_circ_vel - sqrt(mu * (2 / to->sma - 1 / hohmann_a)));
 }
 
 void GetDVTable(StringBuilder* sb, bool include_arobreaks) {
     sb->Add("|          ");
     for(int j=0; j < GetPlanets()->GetPlanetCount(); j++) {
-        sb->AddFormat("|%10s", GetPlanetByIndex(j)->name);
+        sb->AddFormat("|%10.10s", GetPlanetByIndex(j)->name);
     }
     sb->Add("|\n");
     for(int i=0; i < GetPlanets()->GetPlanetCount(); i++) {
-        sb->AddFormat("|%10s", GetPlanetByIndex(i)->name);
+        sb->AddFormat("|%10.10s", GetPlanetByIndex(i)->name);
         for(int j=0; j < GetPlanets()->GetPlanetCount(); j++) {
             if (i == j) {
                 sb->Add("|          ");

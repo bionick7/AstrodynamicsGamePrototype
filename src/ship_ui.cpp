@@ -353,6 +353,8 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
 
     ui::VSpace(6);
     ui::Write("To build:");
+    // TODO: 
+
     // Resources
     for (int i=0; i < resources::MAX; i++) {
         if (construction_resources[i] == 0) {

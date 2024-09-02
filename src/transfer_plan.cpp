@@ -247,8 +247,8 @@ void TransferPlanSetBestDeparture(TransferPlan* tp, timemath::Time t0, timemath:
         double deriv = (dv_plus - dv_minus) / (2 * H);
         double deriv2 = (dv_plus - 2 * dv_0 + dv_minus) / (H*H);
         
-        //diff_seconds = deriv / deriv2 * 0.1;
-        diff_seconds = deriv * 1000;
+        diff_seconds = deriv / deriv2 * 0.5;
+        //diff_seconds = deriv * 1000;
         //DebugPrintText("%f, D %f, D2 %f => dt: %f", dv_0, deriv, deriv2, diff_seconds);
         if (std::abs(diff_seconds) > (t1 - t0).Seconds() / 10.0) {
             diff_seconds = (t1 - t0).Seconds() / 10.0 * (diff_seconds > 0 ? 1 : -1);

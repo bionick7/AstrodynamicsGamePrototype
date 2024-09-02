@@ -482,8 +482,13 @@ double PlanetsMinDV(RID planet_a, RID planet_b, bool aerobrake) {
     
     double mu = orbit_a->mu;
     double a_hohmann = (orbit_a->sma + orbit_b->sma) * 0.5;
-    double raw_dv1 = fabs(sqrt(mu * (2 / orbit_a->sma - 1 / a_hohmann)) - sqrt(mu / orbit_a->sma));
-    double raw_dv2 = fabs(sqrt(mu / orbit_b->sma) - sqrt(mu * (2 / orbit_b->sma - 1 / a_hohmann)));
+    
+    DVector3 normal = DVector3::Up();  // TODO: how do we know?
+
+    double circ_vel_a = sqrt(mu / orbit_a->sma) * Sign(normal.Dot(orbit_a->normal));
+    double circ_vel_b = sqrt(mu / orbit_b->sma) * Sign(normal.Dot(orbit_b->normal));
+    double raw_dv1 = fabs(sqrt(mu * (2 / orbit_a->sma - 1 / a_hohmann)) - circ_vel_a);
+    double raw_dv2 = fabs(circ_vel_b - sqrt(mu * (2 / orbit_b->sma - 1 / a_hohmann)));
 
     double dv1 = GetPlanet(planet_a)->GetDVFromExcessVelocity(raw_dv1);
     double dv2 = GetPlanet(planet_b)->GetDVFromExcessVelocity(raw_dv2);
