@@ -79,7 +79,9 @@ struct Ship {
     int prepared_plans_count;
     TransferPlan prepared_plans[SHIP_MAX_PREPARED_PLANS];
     RID modules[SHIP_MAX_MODULES];
-    // stats are more or less constat for the same ammount of modules
+    // Replace with struct in case more stuff has be be tracked
+    bool modules_enabled[SHIP_MAX_MODULES];  
+    // stats are more or less constant for the same amount of modules
     int stats[ship_stats::MAX];
     // variables vary
     int dammage_taken[ship_variables::MAX];

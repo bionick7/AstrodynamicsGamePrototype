@@ -6,7 +6,11 @@
 
 void TechTree::Serialize(DataNode *data) const {
     data->SerializeBuffer("techtree_status", node_progress, node_names_ptrs, nodes_count, false);
-    data->Set("tech_focus", nodes[research_focus].str_id);
+    if (research_focus < 0) {
+        data->Set("tech_focus", "none");
+    } else {
+        data->Set("tech_focus", nodes[research_focus].str_id);
+    }
 }
 
 void TechTree::Deserialize(const DataNode *data) {
@@ -16,7 +20,8 @@ void TechTree::Deserialize(const DataNode *data) {
             node_progress[i] = nodes[i].research_effort;
         //INFO("%s: %d", node_names_ptrs[i], node_progress[i])
     }
-    research_focus = IdGetIndex(GetGlobalState()->GetFromStringIdentifier(data->Get("tech_focus")));
+    RID research_focus_id = GetGlobalState()->GetFromStringIdentifier(data->Get("tech_focus"));
+    research_focus = IsIdValid(research_focus_id) ? IdGetIndex(research_focus_id) : -1;
 }
 
 int _SetNodeLayer(TechTreeNode* nodes, int index) {

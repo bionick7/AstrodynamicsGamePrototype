@@ -33,14 +33,14 @@
 ## Known Bugs
 - Deleting a transfer plan while editing it is a problem  (Done)
 - GetCapableDV does not align with GetAvailablePayload (which is prob. right)  (Done)
-- Loadsaving loads default ephemerides (Done)
+- Loadsaving loads default ephemeris (Done)
 - DATANODE: Can't distinguish between empty child array and empty string array
 - ASTRO: departure time optimization is reliable, but not accurate (found A solution)
 - QUESTS: First planning a maneuver, then picking up the quest will bypass payload check (Done)
 - SAVING: Ships don't reload correctly (Done)
 - ASTRO: Transfer plan cancels wen it shouldn't (Done)
 
-- QUESTS: Accepting more than one quest fucks up the order
+- QUESTS: Accepting more than one quest fucks up the order (Became irrelevant)
 - UI: measuring inline (conforming) text cannot rely on raylibs MeassureTextEx
 - SAVING: planets get loaded twice
 - ASTRO: Prograde and retrograde trajectories sometimes get confused

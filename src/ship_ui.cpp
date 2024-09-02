@@ -295,10 +295,12 @@ void _UIDrawQuests(Ship* ship) {
     }
 }
 
-void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_array, const int* ship_stats) {
+void _ProductionQueueMouseHint(RID id, const Ship* ship, bool is_in_production_queue) {
     if (!IsIdValid(id)) return;
     // Assuming monospace font
     // TODO: ^ Assumption is no longer true
+    
+    const Planet* planet = GetPlanet(ship->GetParentPlanet());
 
     int char_width = ui::Current()->GetCharWidth();
     StringBuilder sb;
@@ -306,6 +308,7 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
     const int* construction_requirements = NULL;
     int build_time = 0;
     int batch_size = 0;
+    bool is_planet_invalid = false;
     switch (IdGetType(id)) {
         case EntityType::SHIP_CLASS: {
             const ShipClass* ship_class = GetShipClassByRID(id);
@@ -324,9 +327,11 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
             module_class->MouseHintWrite(&sb);
             sb.AutoBreak(ui::Current()->width / char_width);
             construction_resources = &module_class->construction_resources[0];
-            construction_requirements =  &module_class->construction_reqirements[0];
+            construction_requirements =  &module_class->construction_requirements[0];
             build_time = module_class->GetConstructionTime();
             batch_size = module_class->construction_batch_size;
+            module_class->planets_restriction;
+            is_planet_invalid = module_class->IsPlanetRestricted(planet->id);
             break;
         }
         default: break;
@@ -353,7 +358,6 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
 
     ui::VSpace(6);
     ui::Write("To build:");
-    // TODO: 
 
     // Resources
     for (int i=0; i < resources::MAX; i++) {
@@ -363,7 +367,7 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
         sb.Clear();
         sb.AddFormat("%s: %d  ", GetResourceUIRep(i), construction_resources[i]);
         
-        if (planet_resource_array == NULL || construction_resources[i] <= planet_resource_array[i]) {
+        if (construction_resources[i] <= planet->economy.resource_stock[i]) {
             ui::WriteEx(sb.c_str, text_alignment::CONFORM, false);
         } else {
             ui::Current()->text_color = Palette::red;
@@ -374,6 +378,12 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
 
     ui::Current()->LineBreak();
 
+    if (is_planet_invalid) {
+        ui::Current()->text_color = Palette::red;
+        ui::Write("Not working on this planet");
+        ui::Current()->text_color = Palette::ui_main;
+    }
+
     // Stats
     for (int i=0; i < ship_stats::MAX; i++) {
         if (construction_requirements[i] == 0) {
@@ -381,7 +391,7 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
         }
         sb.Clear();
         sb.AddFormat("%s: %d  ", ship_stats::icons[i], construction_requirements[i]);
-        if (ship_stats == NULL || construction_requirements[i] <= ship_stats[i]) {
+        if (construction_requirements[i] <= ship->stats[i]) {
             ui::WriteEx(sb.c_str, text_alignment::CONFORM, false);
         } else {
             ui::Current()->text_color = Palette::red;
@@ -393,7 +403,12 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
     ui::Current()->LineBreak();
 
     sb.Clear();
-    sb.AddFormat("Takes %dD", build_time);
+    
+    if (is_in_production_queue) {
+        sb.AddFormat("Productions: %d/%dD", ship->production_process, build_time);
+    } else {
+        sb.AddFormat("Takes %dD", build_time);
+    }
     if(batch_size > 1) {
         sb.AddFormat(" (x%d)", batch_size);
     }
@@ -583,11 +598,7 @@ void _UIDrawProduction(Ship* ship) {
         ui::Current()->text_background = Palette::bg;
         ui::Current()->flexible = true;
         Planet* planet = GetPlanet(ship->GetParentPlanet());
-        if (hover_over_queue) {
-            _ProductionQueueMouseHint(hovered_id, planet->economy.resource_stock, ship->stats);
-        } else {
-            _ProductionQueueMouseHint(hovered_id, planet->economy.resource_stock, ship->stats);
-        }
+        _ProductionQueueMouseHint(hovered_id, ship, hover_over_queue);
         ui::EncloseDynamic(5, Palette::bg, Palette::ui_main, 4);
         ui::Pop();
     }

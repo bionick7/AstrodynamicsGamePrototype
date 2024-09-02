@@ -516,19 +516,52 @@ void Ship::_UpdateModules() {
     // Gotta exist a more efficient way
     // And robust. Dependency graph (also a way to find circular dependencies)
 
+
     for (int i=0; i < ship_stats::MAX; i++) {
         stats[i] = GetShipClassByRID(ship_class)->stats[i];
     }
-    for (int j=0; j < SHIP_MAX_MODULES; j++) {
-        if (IsIdValid(modules[j]) && !GetModule(modules[j])->HasDependencies()) {
-            GetModule(modules[j])->UpdateStats(this);
+
+    List<int> uncertain_module_indices = List<int>(SHIP_MAX_MODULES);  // Could be put on the stack, since we know the max capacity
+
+    // Collect modules that need to be re-updated
+    for (int mod_idx=0; mod_idx < SHIP_MAX_MODULES; mod_idx++) {
+        modules_enabled[mod_idx] = false;
+        if (!IsIdValid(modules[mod_idx])) continue;
+
+        const ShipModuleClass* smc = GetModule(modules[mod_idx]);
+        if (smc->HasStatDependencies()) {
+            uncertain_module_indices.Append(mod_idx);
+        } else {
+            modules_enabled[mod_idx] = true;
+            for (int stat_idx=0; stat_idx < (int) ship_stats::MAX; stat_idx++) {
+                stats[stat_idx] += smc->delta_stats[stat_idx];
+            }
         }
     }
-    for (int j=0; j < SHIP_MAX_MODULES; j++) {
-        if (IsIdValid(modules[j]) && GetModule(modules[j])->HasDependencies()) {
-            GetModule(modules[j])->UpdateStats(this);
+
+    // Over 5 iterations ...
+    for (int iter = 0; iter < 5 && uncertain_module_indices.Count() > 0; iter++) {
+        // Lock in modules that can be activated
+        for (int i = uncertain_module_indices.Count() - 1; i >= 0; i--) {
+            int mod_idx = uncertain_module_indices[i];
+
+            const ShipModuleClass* smc = GetModule(modules[mod_idx]);
+            bool is_activated = true;
+            for (int stat_idx=0; stat_idx < (int) ship_stats::MAX; stat_idx++) {
+                if (stats[stat_idx] < smc->required_stats[stat_idx]) {
+                    is_activated = false;
+                }
+            }
+            if (is_activated) {
+                uncertain_module_indices.EraseAt(i);
+                modules_enabled[mod_idx] = true;
+                for (int stat_idx=0; stat_idx < (int) ship_stats::MAX; stat_idx++) {
+                    stats[stat_idx] += smc->delta_stats[stat_idx];
+                }
+            }
         }
     }
+
     for (int i=0; i < SHIP_MAX_MODULES; i++) {
         if (IsIdValid(modules[i])) {
             GetModule(modules[i])->UpdateCustom(this);
@@ -704,7 +737,7 @@ bool Ship::CanProduce(RID object, bool check_resources, bool check_stats) const 
         case EntityType::MODULE_CLASS: {
             const ShipModuleClass* module_class = GetModule(object);
             construction_resources = module_class->construction_resources;
-            construction_required = module_class->construction_reqirements;
+            construction_required = module_class->construction_requirements;
             break;
         }
         default: break;
@@ -1045,6 +1078,7 @@ RID Ships::AddShip(const DataNode* data) {
 
     ship->id = ship_entity;
     ship->Update();
+        
     // If data doesn't specify variables, reset them to default (needs to be done after Update)
     if (!data->HasArray("variables")) {
         ship->Repair(1e6);
@@ -1085,8 +1119,8 @@ int Ships::LoadShipClasses(const DataNode* data) {
             sc_data->GetArrayElemI("icon_index", 1, 31));
         sc.module_config.Load(module_configurations, ship_id);
 
-        if (sc_data->HasChild("construction_reqirements")) {
-            sc_data->DeserializeBuffer("construction_reqirements", sc.construction_requirements, ship_stats::names, ship_stats::MAX);
+        if (sc_data->HasChild("construction_requirements")) {
+            sc_data->DeserializeBuffer("construction_requirements", sc.construction_requirements, ship_stats::names, ship_stats::MAX);
         } else {  // Set default requirements
             for (int j=0; j < ship_stats::MAX; j++) {
                 sc.construction_requirements[j] = 0;

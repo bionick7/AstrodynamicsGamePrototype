@@ -138,10 +138,10 @@ namespace module_types {
 struct ShipModuleClass {
     int delta_stats[ship_stats::MAX];
     int required_stats[ship_stats::MAX];
-    int construction_reqirements[ship_stats::MAX];
+    int construction_requirements[ship_stats::MAX];
     resource_count_t production[resources::MAX];
     resource_count_t construction_resources[resources::MAX];
-    int independance_delta;
+    int independence_delta;
     int opinion_delta;
     int construction_batch_size;
     uint64_t planets_restriction;
@@ -149,7 +149,7 @@ struct ShipModuleClass {
     double mass;  // kg
     char name[100];
     char description[512];
-    bool has_activation_requirements;
+    bool has_stat_dependencies;
     int construction_time;
     bool is_hidden;
     module_types::T type;
@@ -158,10 +158,9 @@ struct ShipModuleClass {
 
     ShipModuleClass();
     void MouseHintWrite(StringBuilder* sb) const;
-    bool IsEnabled(const Ship* ship) const;
-    void UpdateStats(Ship* ship) const;
+    bool IsPlanetRestricted(RID planet) const;
     void UpdateCustom(Ship* ship) const;
-    bool HasDependencies() const;
+    bool HasStatDependencies() const;
     int GetConstructionTime() const;
     const char* id;
 };

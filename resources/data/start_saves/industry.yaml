@@ -123,12 +123,6 @@ ships:
   planet: Tethys
   tf_plans: []
   
-- name: Test ship
-  class_id: shp_light_transport
-  allegiance: 0
-  planet: Encelladus
-  tf_plans: []
-
 - name: Anna Kowalsky knot
   class_id: shp_spacestation
   allegiance: 0
@@ -140,14 +134,23 @@ ships:
   - shpmod_large_storage
   - shpmod_drydock
 
-- name: Titan Shipyard
+- name: TEST
+  class_id: shp_spacestation
+  allegiance: 0
+  planet: Tethys
+  tf_plans: []
+  modules:
+  - shpmod_heatpump
+  - shpmod_sail_medium
+
+- name: Oldblaze
   class_id: shp_spacestation
   allegiance: 0
   planet: Titan
   tf_plans: []
   modules: []
 
-- name: Rhea Shipyard
+- name: Baghdad knot
   class_id: shp_spacestation
   allegiance: 0
   planet: Rhea
@@ -155,7 +158,7 @@ ships:
   modules:
   - shpmod_workshop
   
-- name: Enclave station
+- name: Enclave
   class_id: shp_spacestation
   allegiance: 2
   planet: Iaeptus

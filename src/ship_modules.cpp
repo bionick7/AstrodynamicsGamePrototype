@@ -14,7 +14,7 @@ ShipModuleClass::ShipModuleClass() {
     mass = 0.0;
     name[0] = '\0';
     description[0] = '\0';
-    has_activation_requirements = false;
+    has_stat_dependencies = false;
 
     for (int i=0; i < (int) ship_stats::MAX; i++) {
         delta_stats[i] = 0;
@@ -27,28 +27,15 @@ ShipModuleClass::ShipModuleClass() {
     }
 }
 
-bool ShipModuleClass::IsEnabled(const Ship* ship) const {
-    for (int i=0; i < (int) ship_stats::MAX; i++) {
-        if (ship->stats[i] < required_stats[i]) {
-            return false;
-        }
-    }
-    return true;
-}
-
-void ShipModuleClass::UpdateStats(Ship* ship) const {
-    if (!IsEnabled(ship)) return;
-    for (int i=0; i < (int) ship_stats::MAX; i++) {
-        ship->stats[i] += delta_stats[i];
-    }
+bool ShipModuleClass::IsPlanetRestricted(RID planet) const {
+    return ((1ull << IdGetIndex(planet)) & planets_restriction) == 0;
 }
 
 void ShipModuleClass::UpdateCustom(Ship* ship) const {
-    if (!IsEnabled(ship)) return;
     bool new_day = GetCalendar()->IsNewDay();
     if (ship->IsParked()) {
         Planet* planet = GetPlanet(ship->GetParentPlanet());
-        if (((1ull << IdGetIndex(planet->id)) & planets_restriction) == 0) {
+        if (IsPlanetRestricted(planet->id)) {
             return;
         }
         for (int i=0; i < resources::MAX; i++) {
@@ -62,12 +49,12 @@ void ShipModuleClass::UpdateCustom(Ship* ship) const {
             }
         }
         planet->module_opinion_delta += opinion_delta;
-        planet->module_independance_delta += independance_delta;
+        planet->module_independance_delta += independence_delta;
     }
 }
 
-bool ShipModuleClass::HasDependencies() const {
-    return has_activation_requirements;
+bool ShipModuleClass::HasStatDependencies() const {
+    return has_stat_dependencies;
 }
 
 int ShipModuleClass::GetConstructionTime() const {
@@ -116,8 +103,8 @@ void ShipModuleClass::MouseHintWrite(StringBuilder* sb) const {
     if (delta_stats_num > 0) {
         sb->Add(" Adds").Add(sb2.c_str).Add("\n");
     }
-    if (independance_delta != 0) 
-        sb->AddFormat("Independance %+3d\n", independance_delta);
+    if (independence_delta != 0) 
+        sb->AddFormat("Independance %+3d\n", independence_delta);
     if (opinion_delta != 0)
         sb->AddFormat("Opinion %+3d\n", opinion_delta);
 
@@ -426,17 +413,17 @@ void ModuleConfiguration::Draw(Ship* ship, Vector2 anchor_point, text_alignment:
 
     // Draw free modules
 
-    int first_free_freemodule_slot = -1;
+    int first_free_module_slot = -1;
     for(int i=module_count; i < SHIP_MAX_MODULES; i++) {
         if (!IsIdValid(ship->modules[i])) {
-            first_free_freemodule_slot = i;
+            first_free_module_slot = i;
             break;
         }
     }
 
     int free_module_index = 0;
     for(int i=module_count; i < SHIP_MAX_MODULES; i++) {
-        if (!IsIdValid(ship->modules[i]) && i != first_free_freemodule_slot) {
+        if (!IsIdValid(ship->modules[i]) && i != first_free_module_slot) {
             continue;
         }
         Rectangle module_rect = { 
@@ -462,7 +449,7 @@ void ModuleConfiguration::Draw(Ship* ship, Vector2 anchor_point, text_alignment:
 
         if (IsIdValid(ship->modules[i])) {
             const ShipModuleClass* smc = GetModule(ship->modules[i]);
-            sms->DrawShipModule(ship->modules[i], !smc->IsEnabled(ship));
+            sms->DrawShipModule(ship->modules[i], !ship->modules_enabled[i]);
         } else {
             sms->DrawShipModule(ship->modules[i], false);
         }
@@ -492,7 +479,7 @@ void ModuleConfiguration::Draw(Ship* ship, Vector2 anchor_point, text_alignment:
         ShipModuleSlot(ship->id, i, ShipModuleSlot::DRAGGING_FROM_SHIP, types[i]).Draw();
         if (IsIdValid(ship->modules[i])) {
             const ShipModuleClass* smc = GetModule(ship->modules[i]);
-            sms->DrawShipModule(ship->modules[i], !smc->IsEnabled(ship));
+            sms->DrawShipModule(ship->modules[i], !ship->modules_enabled[i]);
         } else {
             sms->DrawShipModule(ship->modules[i], false);
         }
@@ -529,17 +516,17 @@ int ShipModules::Load(const DataNode* data) {
             ship_modules[i].planets_restriction = UINT64_MAX;
         }
 
-        if (module_data->HasChild("construction_reqirements")) {
-            module_data->DeserializeBuffer("construction_reqirements", ship_modules[i].construction_reqirements, ship_stats::names, ship_stats::MAX);
-            //module_data->GetChild("construction_reqirements")->Inspect();
-            //SHOW_I(ship_modules[i].construction_reqirements[ship_stats::INDUSTRIAL_DOCK])
-            //SHOW_I(ship_modules[i].construction_reqirements[ship_stats::INDUSTRIAL_ADMIN])
+        if (module_data->HasChild("construction_requirements")) {
+            module_data->DeserializeBuffer("construction_requirements", ship_modules[i].construction_requirements, ship_stats::names, ship_stats::MAX);
+            //module_data->GetChild("construction_requirements")->Inspect();
+            //SHOW_I(ship_modules[i].construction_requirements[ship_stats::INDUSTRIAL_DOCK])
+            //SHOW_I(ship_modules[i].construction_requirements[ship_stats::INDUSTRIAL_ADMIN])
         } else {  // Set default requirements
             for (int j=0; j < ship_stats::MAX; j++) {
-                ship_modules[i].construction_reqirements[j] = 0;
+                ship_modules[i].construction_requirements[j] = 0;
             }
-            ///ship_modules[i].construction_reqirements[ship_stats::INDUSTRIAL_ADMIN] = 1;
-            ship_modules[i].construction_reqirements[ship_stats::INDUSTRIAL_MANUFACTURING] = 1;
+            ///ship_modules[i].construction_requirements[ship_stats::INDUSTRIAL_ADMIN] = 1;
+            ship_modules[i].construction_requirements[ship_stats::INDUSTRIAL_MANUFACTURING] = 1;
         }
         module_data->DeserializeBuffer("add", ship_modules[i].delta_stats, ship_stats::names, ship_stats::MAX);
         module_data->DeserializeBuffer("require", ship_modules[i].required_stats, ship_stats::names, ship_stats::MAX);
@@ -547,16 +534,17 @@ int ShipModules::Load(const DataNode* data) {
         for (int j=0; j < ship_stats::MAX; j++) {
             if (ship_modules[i].delta_stats[j] < 0) {
                 ship_modules[i].required_stats[j] = -ship_modules[i].delta_stats[j];
+                ship_modules[i].has_stat_dependencies = true;
             }
         }
         if (module_data->HasChild("add")) {
-            ship_modules[i].independance_delta = module_data->GetChild("add")->GetI("independance", 0, true);
+            ship_modules[i].independence_delta = module_data->GetChild("add")->GetI("independance", 0, true);
             ship_modules[i].opinion_delta = module_data->GetChild("add")->GetI("opinion", 0, true);
         } else {
-            ship_modules[i].independance_delta = 0;
+            ship_modules[i].independence_delta = 0;
             ship_modules[i].opinion_delta = 0;
         }
-        ship_modules[i].has_activation_requirements = module_data->HasChild("require");
+        
         ship_modules[i].type = module_types::FromString(module_data->Get("type"));
 
         module_data->DeserializeBuffer("construction_resources", ship_modules[i].construction_resources, resources::names, resources::MAX);

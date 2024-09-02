@@ -71,6 +71,7 @@ shipmodules:
     rock: 30
   planets_restriction:
   - Rhea
+  - Iaeptus
   icon_index:
   - 9
   - 24
