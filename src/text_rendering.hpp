@@ -12,6 +12,7 @@ namespace text {
         const char* text;  // Does not own
         int size;
         
+        Layout();
         ~Layout();
 
         void Offset(int x, int y);

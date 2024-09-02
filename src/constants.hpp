@@ -44,6 +44,14 @@ namespace Palette {
 #define ICON_ALUMINIUM       "\u032D"
 #define ICON_ALUMINIUM_ORE   "\u032E"
 
+#define ICON_MODULE_TYPE_LARGE  "\u03E0"
+#define ICON_MODULE_TYPE_MEDIUM "\u03E1"
+#define ICON_MODULE_TYPE_SMALL  "\u03E2"
+#define ICON_MODULE_TYPE_FREE   "\u03E3"
+#define ICON_MODULE_TYPE_ARMOR  "\u03E4"
+#define ICON_MODULE_TYPE_DROP   "\u03E5"
+#define ICON_MODULE_TYPE_ANY    "\u03E6"
+
 #define ICON_HEART           "\u0400"
 #define ICON_HEART_ORDNANCE  "\u0401"
 #define ICON_HEART_ENERGY    "\u0402"

@@ -474,4 +474,21 @@ Planet* GetPlanetByIndex(int index) {
     return GetPlanets()->GetPlanet(RID(index, EntityType::PLANET)); 
 }
 
+double PlanetsMinDV(RID planet_a, RID planet_b, bool aerobrake) {
+    timemath::Time departure, arrival;
+
+    const Orbit* orbit_a = &GetPlanet(planet_a)->orbit;
+    const Orbit* orbit_b = &GetPlanet(planet_b)->orbit;
+    
+    double mu = orbit_a->mu;
+    double a_hohmann = (orbit_a->sma + orbit_b->sma) * 0.5;
+    double raw_dv1 = fabs(sqrt(mu * (2 / orbit_a->sma - 1 / a_hohmann)) - sqrt(mu / orbit_a->sma));
+    double raw_dv2 = fabs(sqrt(mu / orbit_b->sma) - sqrt(mu * (2 / orbit_b->sma - 1 / a_hohmann)));
+
+    double dv1 = GetPlanet(planet_a)->GetDVFromExcessVelocity(raw_dv1);
+    double dv2 = GetPlanet(planet_b)->GetDVFromExcessVelocity(raw_dv2);
+
+    return aerobrake ? dv1 : dv1 + dv2;
+}
+
 int LoadEphemerides(const DataNode* data) { return GetPlanets()->LoadEphemerides(data); }

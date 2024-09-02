@@ -14,7 +14,7 @@ ship_classes:
     crew: 10
   construction_time: 45
   construction_resources:
-    steel: 90
+    aluminium: 90
     electronics: 4
   
 - id: shp_light_transport
@@ -37,7 +37,7 @@ ship_classes:
     crew: 17
   construction_time: 15
   construction_resources:
-    steel: 30
+    aluminium: 30
     electronics: 2
   
 - id: shp_spacestation
@@ -61,7 +61,8 @@ ship_classes:
     ground_connection: 2
   construction_time: 50
   construction_resources:
-    steel: 200
+    aluminium: 100
+    steel: 100
     electronics: 2
 
 - id: shp_express
@@ -79,7 +80,7 @@ ship_classes:
     crew: 20
   construction_time: 40
   construction_resources:
-    steel: 30
+    aluminium: 30
     electronics: 12
     uranium: 4
 
@@ -98,7 +99,7 @@ ship_classes:
     crew: 20
   construction_time: 40
   construction_resources:
-    steel: 30
+    aluminium: 30
     electronics: 12
     uranium: 4
 

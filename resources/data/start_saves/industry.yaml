@@ -122,6 +122,12 @@ ships:
   allegiance: 0
   planet: Tethys
   tf_plans: []
+  
+- name: Test ship
+  class_id: shp_light_transport
+  allegiance: 0
+  planet: Encelladus
+  tf_plans: []
 
 - name: Anna Kowalsky knot
   class_id: shp_spacestation

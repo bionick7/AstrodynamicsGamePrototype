@@ -110,9 +110,9 @@ DVector3 DVector3::AnyOrthogonalDirection() const {
 DVector3 DVector3::Vector3Transform(DVector3 col1, DVector3 col2, DVector3 col3, DVector3 offs) const {
     DVector3 result;
 
-    result.x = col1.x*x + col2.x*x + col3.x*x + offs.x;
-    result.y = col1.y*y + col2.y*y + col3.y*y + offs.y;
-    result.z = col1.z*z + col2.z*z + col3.z*z + offs.z;
+    result.x = col1.x*x + col2.x*y + col3.x*z + offs.x;
+    result.y = col1.y*x + col2.y*y + col3.y*z + offs.y;
+    result.z = col1.z*x + col2.z*y + col3.z*z + offs.z;
 
     return result;
 }

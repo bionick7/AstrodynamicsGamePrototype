@@ -566,7 +566,7 @@ shipmodules:
   construction_time: 15
 - id: shpmod_missiles
   name: Missiles
-  description: Tactical non-nuclear missiles. Basic ordonance used in combat
+  description: Tactical non-nuclear missiles. Basic ordnance used in combat
   add:
     ordnance_offense: 2
   mass: 5
@@ -623,8 +623,8 @@ shipmodules:
   construction_time: 10
 - id: shpmod_pdc
   name: Point-defence cannons
-  description: High-volume machine cannons provide a good defence against missiles,
-    torpedos and drones.
+  description: High-volume machine cannons provide a good defense against missiles,
+    torpedoes and drones.
   add:
     ordnance_defense: 1
   mass: 5
@@ -645,7 +645,7 @@ shipmodules:
   construction_time: 25
 - id: shpmod_acs
   name: High-fi Attitude Control System
-  description: A high-accuracy attitude controle system ensuring precise targeting
+  description: A high-accuracy attitude control system ensuring precise targeting
     is crucial to strike before anybody else does.
   add:
     initiative: 1
@@ -688,8 +688,8 @@ shipmodules:
   construction_time: 40
 - id: shpmod_geothermal
   name: Geothermal power plant
-  description: On tidally active worlds, it can be usefull to harvest the power of
-    thides directly
+  description: On tidally active worlds, it can be useful to harvest the power of
+    tides directly
   add:
     power: 4
     ground_connection: -2
@@ -701,7 +701,6 @@ shipmodules:
     thermal_control: 2
     industrial_admin: 1
     industrial_manufacturing: 1
-    clean_room: 1
   planets_restriction:
   - Encelladus
   icon_index:

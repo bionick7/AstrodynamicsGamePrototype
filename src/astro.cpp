@@ -224,7 +224,7 @@ OrbitPos Orbit::GetPosition(timemath::Time time) const {
 DVector3 Orbit::GetVelocity(OrbitPos pos) const {
     double cot_ɣ = -ecc * sin(pos.θ) / (1 + ecc * cos(pos.θ));
     double v = sqrt((2*mu) / pos.r - mu/sma);
-    DVector3 local_vel = DVector3(cot_ɣ, 0, 1).Normalized() * v;
+    DVector3 local_vel = DVector3(1, 0, cot_ɣ).Normalized() * v;
     return RadialToGlobal(local_vel, pos.cartesian / pos.r);
 }
 

@@ -75,7 +75,7 @@ int ShipModuleClass::GetConstructionTime() const {
 }
 
 void ShipModuleClass::MouseHintWrite(StringBuilder* sb) const {
-    sb->Add(name).Add("\n");
+    sb->Add(name).Add(" ").Add(module_types::str_icons[type]).Add("\n");
     sb->Add(description).Add("\n");
 
     int consumptions_count = 0;
@@ -98,7 +98,7 @@ void ShipModuleClass::MouseHintWrite(StringBuilder* sb) const {
             production_rsc_count++;
         }
     }
-    if (consumptions_count * production_rsc_count > 0) {
+    if (consumptions_count + production_rsc_count > 0) {
         sb->Add(sb2.c_str).Add("\n");
     }
 

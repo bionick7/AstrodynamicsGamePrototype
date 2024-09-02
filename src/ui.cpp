@@ -98,8 +98,11 @@ TextBox::TextBox(const TextBox *parent, int x, int y, int w, int h) :
 
 int TextBox::GetCharWidth() {
     Font font = GetCustomDefaultFont(text_size);
-    const char* test_string = "abcdefghiJKLMNOP0123";
-    return MeasureTextEx(font, test_string, text_size, 1).x / strlen(test_string);
+    int _;
+    int W_codepoint = GetCodepointNext("W", &_);
+    int width = font.recs[W_codepoint].width + font.glyphs[W_codepoint].offsetX;
+    float scaling = (text_size / font.baseSize);
+    return (int) (width * scaling);
 }
 
 void TextBox::_Advance(Vector2 pos, Vector2 size) {
@@ -327,17 +330,17 @@ int TextBox::GetLineHeight() const {
     return text_size;
 }
 
-text::Layout TextBox::GetTextLayout(const char *text, text_alignment::T alignemnt) {
+text::Layout TextBox::GetTextLayout(const char *text, text_alignment::T alignment) {
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(text_size), text, text_size, 1);
-    Vector2 pos = ApplyAlignment(GetAnchorPointText(alignemnt), size, alignemnt);
+    Vector2 pos = ApplyAlignment(GetAnchorPointText(alignment), size, alignment);
     text::Layout text_layout;
     text::GetLayout(&text_layout, pos, GetCustomDefaultFont(text_size), text, text_size, 1);
     return text_layout;
 }
 
-Rectangle TextBox::TbMeasureText(const char* text, text_alignment::T alignemnt) const {
+Rectangle TextBox::TbMeasureText(const char* text, text_alignment::T alignment) const {
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(text_size), text, text_size, 1);
-    Vector2 pos = ApplyAlignment(GetAnchorPointText(alignemnt), size, alignemnt);
+    Vector2 pos = ApplyAlignment(GetAnchorPointText(alignment), size, alignment);
     return {pos.x, pos.y, size.x, size.y};
 }
 
@@ -628,12 +631,12 @@ void ui::Write(const char *text) {
     ui::WriteEx(text, text_alignment::CONFORM, true);
 }
 
-void ui::WriteEx(const char *text, text_alignment::T alignemnt, bool linebreak) {
+void ui::WriteEx(const char *text, text_alignment::T alignment, bool linebreak) {
     TextBox* tb = ui::Current();
     if (linebreak) {
-        tb->WriteLine(text, alignemnt);
+        tb->WriteLine(text, alignment);
     } else {
-        tb->Write(text, alignemnt);
+        tb->Write(text, alignment);
     }
 }
 
@@ -641,8 +644,8 @@ void ui::DecorateEx(const text::Layout* layout, const TokenList* tokens) {
     ui::Current()->Decorate(layout, tokens);
 }
 
-Rectangle ui::MeasureTextEx(const char *text, text_alignment::T alignemnt) {
-    return ui::Current()->TbMeasureText(text, alignemnt);
+Rectangle ui::MeasureTextEx(const char *text, text_alignment::T alignment) {
+    return ui::Current()->TbMeasureText(text, alignment);
 }
 
 void ui::Fillline(double value, Color fill_color, Color background_color) {

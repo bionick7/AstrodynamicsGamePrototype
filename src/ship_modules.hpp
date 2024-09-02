@@ -91,16 +91,27 @@ namespace module_types {
         "drop_tank",
         "any",
     };
+    
+    static const char* str_icons[] = {
+        ICON_MODULE_TYPE_LARGE,
+        ICON_MODULE_TYPE_MEDIUM,
+        ICON_MODULE_TYPE_SMALL,
+        ICON_MODULE_TYPE_FREE,
+        ICON_MODULE_TYPE_ARMOR,
+        ICON_MODULE_TYPE_DROP,
+        ICON_MODULE_TYPE_ANY,
+    };
 
     static AtlasPos icons[] = {
-        {  8, 23},
-        {  8, 24},
-        { 12, 27},
-        {  3, 30},
-        { 11, 27},
-        {  9, 25},
-        { 15, 31},
+        {  0, 23},
+        {  1, 23},
+        {  2, 23},
+        {  3, 23},
+        {  4, 23},
+        {  5, 23},
+        {  6, 23},
     };
+
 
     enum T {
         INVALID = -1,
@@ -115,10 +126,11 @@ namespace module_types {
         MAX,
     };
     static_assert(sizeof(names) / sizeof(char*) == MAX);
+    static_assert(sizeof(str_icons) / sizeof(char*) == MAX);
     static_assert(sizeof(icons) / sizeof(AtlasPos) == MAX);
 
-    module_types::T FromString(const char* name);
-    bool IsCompatible(module_types::T from, module_types::T to);
+    T FromString(const char* name);
+    bool IsCompatible(T from, T to);
 };
 
 #define MODULE_CONFIG_MAX_NEIGHBOURS 4

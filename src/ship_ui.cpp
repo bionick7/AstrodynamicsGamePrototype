@@ -295,7 +295,7 @@ void _UIDrawQuests(Ship* ship) {
     }
 }
 
-void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_array) {
+void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_array, const int* ship_stats) {
     if (!IsIdValid(id)) return;
     // Assuming monospace font
     // TODO: ^ Assumption is no longer true
@@ -303,16 +303,16 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
     int char_width = ui::Current()->GetCharWidth();
     StringBuilder sb;
     const resource_count_t* construction_resources = NULL;
+    const int* construction_requirements = NULL;
     int build_time = 0;
     int batch_size = 0;
     switch (IdGetType(id)) {
         case EntityType::SHIP_CLASS: {
             const ShipClass* ship_class = GetShipClassByRID(id);
             ship_class->MouseHintWrite(&sb);
-            sb.AutoBreak(ui::Current()->width / char_width);
-            ui::Write(sb.c_str);
-            sb.Clear();
+            sb.AutoBreak(ui::Current()->width / char_width - 10);
             construction_resources = &ship_class->construction_resources[0];
+            construction_requirements =  &ship_class->construction_requirements[0];
             build_time = ship_class->construction_time;
             batch_size = ship_class->construction_batch_size;
             break;
@@ -323,32 +323,45 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
             //sb.Add(module_class->description);
             module_class->MouseHintWrite(&sb);
             sb.AutoBreak(ui::Current()->width / char_width);
-            ui::Write(sb.c_str);
-            sb.Clear();
             construction_resources = &module_class->construction_resources[0];
+            construction_requirements =  &module_class->construction_reqirements[0];
             build_time = module_class->GetConstructionTime();
             batch_size = module_class->construction_batch_size;
             break;
         }
         default: break;
     }
+    
+    // Adjust textbox if text doesn't fit
+    text::Layout description_layout = ui::Current()->GetTextLayout(sb.c_str, text_alignment::CONFORM);
+    int overshoot = description_layout.bounding_box.x + description_layout.bounding_box.width - GetScreenWidth();
+    if (overshoot > 0) {
+        description_layout.Offset(-overshoot, 0);
+    }
+    if (ui::Current()->x > description_layout.bounding_box.x) {
+        ui::Current()->x = description_layout.bounding_box.x;
+    }
+    ui::Current()->WriteLayout(&description_layout, true);
+    sb.Clear();
+
+    ui::Current()->LineBreak();
 
     if (construction_resources == NULL) return;
-    if (planet_resource_array == NULL) {
-        return;
-    }
+    if (construction_requirements == NULL) return;
 
     // Build requirements
 
     ui::VSpace(6);
     ui::Write("To build:");
+    // Resources
     for (int i=0; i < resources::MAX; i++) {
         if (construction_resources[i] == 0) {
             continue;
         }
         sb.Clear();
         sb.AddFormat("%s: %d  ", GetResourceUIRep(i), construction_resources[i]);
-        if (construction_resources[i] <= planet_resource_array[i]) {
+        
+        if (planet_resource_array == NULL || construction_resources[i] <= planet_resource_array[i]) {
             ui::WriteEx(sb.c_str, text_alignment::CONFORM, false);
         } else {
             ui::Current()->text_color = Palette::red;
@@ -356,7 +369,27 @@ void _ProductionQueueMouseHint(RID id, const resource_count_t* planet_resource_a
             ui::Current()->text_color = Palette::ui_main;
         }
     }
-    ui::Current()->EnsureLineBreak();
+
+    ui::Current()->LineBreak();
+
+    // Stats
+    for (int i=0; i < ship_stats::MAX; i++) {
+        if (construction_requirements[i] == 0) {
+            continue;
+        }
+        sb.Clear();
+        sb.AddFormat("%s: %d  ", ship_stats::icons[i], construction_requirements[i]);
+        if (ship_stats == NULL || construction_requirements[i] <= ship_stats[i]) {
+            ui::WriteEx(sb.c_str, text_alignment::CONFORM, false);
+        } else {
+            ui::Current()->text_color = Palette::red;
+            ui::WriteEx(sb.c_str, text_alignment::CONFORM, false);
+            ui::Current()->text_color = Palette::ui_main;
+        }
+    }
+    
+    ui::Current()->LineBreak();
+
     sb.Clear();
     sb.AddFormat("Takes %dD", build_time);
     if(batch_size > 1) {
@@ -441,8 +474,8 @@ void _UIDrawProduction(Ship* ship) {
         if (i < module_types::ANY) {
             ui::DrawIcon(module_types::icons[i], tab_draw_color, 40);
         } else {  // Ship classes
-            // Just draws the '?' for now
-            ui::DrawIcon(AtlasPos(15, 31), tab_draw_color, 40);
+            // Hardcoded to draw transport ship icon
+            ui::DrawIcon(AtlasPos(2, 28), tab_draw_color, 40);
         }
         button_state_flags::T button_state = ui::AsButton();
         HandleButtonSound(button_state);
@@ -547,11 +580,11 @@ void _UIDrawProduction(Ship* ship) {
         ui::PushMouseHint(GetMousePosition(), 400, 400, 255 - MAX_TOOLTIP_RECURSIONS);
         ui::Current()->text_background = Palette::bg;
         ui::Current()->flexible = true;
+        Planet* planet = GetPlanet(ship->GetParentPlanet());
         if (hover_over_queue) {
-            _ProductionQueueMouseHint(hovered_id, NULL);
+            _ProductionQueueMouseHint(hovered_id, planet->economy.resource_stock, ship->stats);
         } else {
-            Planet* planet = GetPlanet(ship->GetParentPlanet());
-            _ProductionQueueMouseHint(hovered_id, planet->economy.resource_stock);
+            _ProductionQueueMouseHint(hovered_id, planet->economy.resource_stock, ship->stats);
         }
         ui::EncloseDynamic(5, Palette::bg, Palette::ui_main, 4);
         ui::Pop();

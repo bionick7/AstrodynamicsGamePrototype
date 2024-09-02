@@ -119,14 +119,14 @@ def main(base_font, new_font, base_size, downsampled_size):
     for i, l in enumerate(lines[4:]):
         x1, x2, y1, y2 = base_retangles[i]
         phi_local = phi[y1:y2,x1:x2]
-        if np.count_nonzero(phi_local) == 0:
+        phi_local = np.where(phi_local > 0.5, 0.5, -0.5)
+        if len(phi_local) == 0 or np.min(phi_local) == np.max(phi_local):
             continue
-        phi_local = np.where(phi_local, 0, -1) + 0.5
         try:
             sdf_out = skfmm.distance(-phi_local, dx = 1 / base_size)
             sdf_in = skfmm.distance(phi_local, dx = 1 / base_size)
         except ValueError as e:
-            print(f"Error in line {i+5}: {l}")
+            print(f"SDF Error for char in line {i+5}: '{l}'")
             #raise
         else:
             sdf_final[y1:y2,x1:x2] = (1 + sdf_out - sdf_in) * 0.5
@@ -140,3 +140,4 @@ def main(base_font, new_font, base_size, downsampled_size):
 
 if __name__ == "__main__":
     main("space_mono_20.fnt", "space_mono_extended_20.fnt", 20, 20)
+    main("space_mono.fnt", "space_mono_extended.fnt", 40, 40)

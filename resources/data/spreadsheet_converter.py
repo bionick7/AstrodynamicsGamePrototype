@@ -12,12 +12,12 @@ csv_t = list[list[Any]]
 keys = ["id", "name", "description", "type", "mass"]
 construction_stats = [
     "ground_connection",         # Required to build and run resource extraction
-    "thermal_control",           # Required to build stuff makeing tonns of heat
+    "thermal_control",           # Required to build stuff making tonns of heat
     "industrial_admin",          # Required to build 'complex' stuff in the early game
     "industrial_storage",        # Required to build big stuff and ships
     "industrial_manufacturing",  # Required to build anything
     "industrial_dock",           # Required to build ships and armor
-    "cryogenics_facility",       # Required to handle anything invloving hydrogen
+    "cryogenics_facility",       # Required to handle anything invloving hydrogen/cryogenics
     "clean_room",                # Required to build anything related to semiconductors/optics
     "bio_manufacturing",         # Required to build life support stuff
     "arms_manufacturing",        # Required to build boarding stuff and invasion equipment

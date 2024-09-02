@@ -111,10 +111,10 @@ struct TextBox {
     Vector2 GetAnchorPoint(text_alignment::T align) const;
     Vector2 GetAnchorPointText(text_alignment::T align) const;
     int GetLineHeight() const;
-    text::Layout GetTextLayout(const char *text, text_alignment::T alignemnt);
-    //int TbGetCharacterIndex(Vector2 collision_pos, const char* text, TextAlignment::T alignemnt) const;
-    //Rectangle TbGetTextRect(const char* text, TextAlignment::T alignemnt, int token_start, int token_end, int token_from) const;
-    Rectangle TbMeasureText(const char* text, text_alignment::T alignemnt) const;
+    text::Layout GetTextLayout(const char *text, text_alignment::T alignment);
+    //int TbGetCharacterIndex(Vector2 collision_pos, const char* text, TextAlignment::T alignment) const;
+    //Rectangle TbGetTextRect(const char* text, TextAlignment::T alignment, int token_start, int token_end, int token_from) const;
+    Rectangle TbMeasureText(const char* text, text_alignment::T alignment) const;
 
     void _Advance(Vector2 pos, Vector2 size);
     void RecalculateExtends();
@@ -191,9 +191,9 @@ namespace ui {
 
     void DrawIcon(AtlasPos atlas_index, Color tint, int height);
     void Write(const char* text);
-    void WriteEx(const char* text, text_alignment::T alignemnt, bool linebreak);
+    void WriteEx(const char* text, text_alignment::T alignment, bool linebreak);
     void DecorateEx(const text::Layout* layout, const TokenList* tokens);
-    Rectangle MeasureTextEx(const char* text, text_alignment::T alignemnt);
+    Rectangle MeasureTextEx(const char* text, text_alignment::T alignment);
     void Fillline(double value, Color fill_color, Color background_color);
     void FilllineEx(int x_start, int x_end, int y, double value, Color fill_color, Color background_color);
     button_state_flags::T DirectButton(const char* text, int inset);

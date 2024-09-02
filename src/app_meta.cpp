@@ -47,7 +47,7 @@ void AppMetaInit() {
     SetTraceLogLevel(LOG_INFO);
     SetTraceLogCallback(CustomRaylibLog);
 
-    LogSetOutput("log.txt");
+    //LogSetOutput("log.txt");
     LogToStdout(true);
 
     int fps_cap = GetSettingNum("fps_cap");  // negative cap means unlimited

@@ -103,10 +103,9 @@ struct Planets {
     int LoadEphemerides(const DataNode* data);
 };
 
-
 Planet* GetPlanet(RID id);
 Planet* GetPlanetByIndex(int index);
+double PlanetsMinDV(RID from, RID to, bool aerobrake);
 int LoadEphemerides(const DataNode* data);
-
 
 #endif  // PLANET_H

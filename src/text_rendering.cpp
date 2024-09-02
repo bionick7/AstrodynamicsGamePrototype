@@ -46,6 +46,13 @@ void text::GetLayout(Layout* layout, Vector2 start, Font font, const char *text,
     layout->bounding_box.height = textOffsetY + 20 - layout->bounding_box.y;
 }
 
+text::Layout::Layout() {
+    int size = 0;
+    Rectangle* rects = new Rectangle[size];
+    Rectangle bounding_box = Rectangle();
+    const char* text = NULL;  // Does not own
+}
+
 text::Layout::~Layout() {
     delete[] rects;
 }
@@ -189,6 +196,7 @@ void text::Layout::DrawTextLayout(Font font, float fontSize, Color tint, Color b
                 && CheckCollisionRecs(rects[i], render_rect)
             ) {
                 Vector2 char_pos = { roundf(rects[i].x), roundf(rects[i].y) };
+                //Vector2 char_pos = { rects[i].x, rects[i].y };
                 DrawTextCodepoint(font, codepoint, char_pos, fontSize, tint);
             }
         }

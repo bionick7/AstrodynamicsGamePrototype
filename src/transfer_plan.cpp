@@ -688,12 +688,8 @@ void TransferPlanUI::DrawUI() {
         StringBuilder sb = StringBuilder("Select Destination [RMB to cancel]");
         if (IsIdValidTyped(GetGlobalState()->hover, EntityType::PLANET)) {
             const Planet* hover_planet = GetPlanet(GetGlobalState()->hover);
-            double dv1, dv2;
-            HohmannTransfer(
-                &GetPlanet(plan->departure_planet)->orbit, &hover_planet->orbit, 
-                GlobalGetNow(), NULL, NULL, &dv1, &dv2
-            );
-            sb.AddFormat("\n[LMB to select %s] (\u2265 %4.2f km/s \u0394V)", hover_planet->name, (dv1+dv2) / 1e3);
+            double dv = PlanetsMinDV(plan->departure_planet, GetGlobalState()->hover, false);
+            sb.AddFormat("\n[LMB to select %s] (> %4.2f km/s \u0394V)", hover_planet->name, dv / 1e3);
         }
         //ui::SetMouseHint(sb.c_str);
 
