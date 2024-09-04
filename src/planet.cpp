@@ -25,8 +25,8 @@ void Planet::Serialize(DataNode* data) const {
     data->Set("name", name);
     data->Set("trading_accessible", economy.trading_accessible ? "y" : "n");
     data->SetI("allegiance", allegiance);
-    data->SetI("independance", independance);
-    data->SetI("base_independance_delta", base_independance_delta);
+    data->SetI("independence", independence);
+    data->SetI("base_independence_delta", base_independence_delta);
     data->SetI("opinion", opinion);
     /*data->CreatChildArray("ship_production_queue", ship_production_queue.size);
     for(int i=0; i < ship_production_queue.size; i++) {
@@ -65,8 +65,8 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
     strcpy(name, data->Get("name", name, true));
     allegiance = data->GetI("allegiance", 0);
 
-    independance = data->GetI("independance", 0, true);
-    base_independance_delta = data->GetI("base_independance_delta", 0);
+    independence = data->GetI("independence", 0, true);
+    base_independence_delta = data->GetI("base_independence_delta", 0);
     opinion = data->GetI("opinion", 0, true);
 
     /*ship_production_queue.Resize(data->GetChildArrayLen("ship_production_queue", true));
@@ -108,8 +108,8 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
         }
     }
     
-    RecalcStats();
-    economy.RecalcEconomy();
+    RecalculateStats();
+    economy.RecalculateEconomy();
     for (int i=0; i < PRICE_TREND_SIZE; i++) {
         economy.AdvanceEconomy();
     }
@@ -183,10 +183,10 @@ void Planet::Conquer(int faction, bool include_ships) {
     allegiance = faction;
 }
 
-void Planet::RecalcStats() {
+void Planet::RecalculateStats() {
     // Just call this every frame tbh
-    independance_delta_log.Clear();
-    independance_delta = base_independance_delta;
+    independence_delta_log.Clear();
+    independence_delta = base_independence_delta;
     int delta_from_delivery = 0;
     for(int i=0; i < resources::MAX; i++) {
         if (economy.delivered_resources_today[i] != 0) {
@@ -199,14 +199,14 @@ void Planet::RecalcStats() {
     }
 
 
-    independance_delta += delta_from_delivery;
-    independance_delta += module_independance_delta;
-    independance_delta_log.AddFormat("Base: %+d\n", base_independance_delta);
+    independence_delta += delta_from_delivery;
+    independence_delta += module_independence_delta;
+    independence_delta_log.AddFormat("Base: %+d\n", base_independence_delta);
     if (delta_from_delivery != 0)
-        independance_delta_log.AddFormat("From delivry: %+d\n", delta_from_delivery);
-    if (module_independance_delta != 0)
-        independance_delta_log.AddFormat("From modules: %+d\n", module_independance_delta);
-    module_independance_delta = 0;
+        independence_delta_log.AddFormat("From delivery: %+d\n", delta_from_delivery);
+    if (module_independence_delta != 0)
+        independence_delta_log.AddFormat("From modules: %+d\n", module_independence_delta);
+    module_independence_delta = 0;
 
     opinion_delta_log.Clear();
     opinion_delta_log.Add("Base: +0");
@@ -272,7 +272,7 @@ bool Planet::HasMouseHover(double* min_distance) const {
     Ray mouse_ray = GetMouseRay(GetMousePosition(), GetCamera()->rl_camera);
     Matrix orbit_transform = MatrixFromColumns((Vector3) orbit.periapsis_dir, (Vector3) orbit.normal, (Vector3) orbit.periapsis_dir.Cross(orbit.normal));
     Matrix inv_orbit_transform = MatrixInvert(orbit_transform);
-    //Vector3 mouse_repr = Vector3Add(mouse_ray.position, mouse_ray.direction);
+    //Vector3 mouse_representation = Vector3Add(mouse_ray.position, mouse_ray.direction);
     mouse_ray.position = Vector3Transform(mouse_ray.position, inv_orbit_transform);
     mouse_ray.direction = Vector3Transform(mouse_ray.direction, inv_orbit_transform);
     
@@ -286,7 +286,7 @@ bool Planet::HasMouseHover(double* min_distance) const {
     //float scale = GameCamera::WorldToRender(orbit.sma);
     //DebugDrawTransform(MatrixMultiply(MatrixScale(scale, scale, scale), orbit_transform));
     Vector2 closest_on_screen = GetWorldToScreen(Vector3Transform(local_pos, orbit_transform), GetCamera()->rl_camera);
-    //DebugDrawLineRenderSpace(Vector3Transform(local_pos, orbit_transform), mouse_repr);
+    //DebugDrawLineRenderSpace(Vector3Transform(local_pos, orbit_transform), mouse_mouse_representation);
 
     if (Vector2Distance(closest_on_screen, GetMousePosition()) <= 2.0f && distance < *min_distance) {
         *min_distance = distance;
@@ -302,14 +302,14 @@ void Planet::Update() {
     cached_ship_list.Clear();
     GetShips()->GetOnPlanet(&cached_ship_list, id, ship_selection_flags::ALL);
     //int index = IdGetIndex(id);
-    //position = orbit.FromRightAscention(-PI/2 * index);
-    //position = orbit.FromRightAscention(-PI/2);
-    RecalcStats();
+    //position = orbit.FromRightAscension(-PI/2 * index);
+    //position = orbit.FromRightAscension(-PI/2);
+    RecalculateStats();
     if (GetCalendar()->IsNewDay()) {
-        independance += independance_delta;
-        if (independance > 150) independance = 150;
-        if (independance < 0) independance = 0;
-        if (independance >= 100 && allegiance != 0) {
+        independence += independence_delta;
+        if (independence > 150) independence = 150;
+        if (independence < 0) independence = 0;
+        if (independence >= 100 && allegiance != 0) {
             Conquer(1, true);
         }
     }

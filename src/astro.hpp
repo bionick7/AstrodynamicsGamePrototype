@@ -42,7 +42,7 @@ struct Orbit {
     void Update(timemath::Time time, DVector3* position, DVector3* velocity) const;
 
     OrbitPos FromFocal(double focal) const;
-    OrbitPos FromRightAscention(double ra) const;
+    OrbitPos FromRightAscension(double ra) const;
     DVector3 RadialToGlobal(DVector3 inp, DVector3 z) const;
     timemath::Time GetTimeUntilFocalAnomaly(double θ, timemath::Time start_time) const;
 

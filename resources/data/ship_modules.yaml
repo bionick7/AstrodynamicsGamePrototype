@@ -5,7 +5,7 @@ shipmodules:
   mass: 10
   construction_resources:
     steel: 10
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 1
     industrial_manufacturing: 1
     industrial_dock: 1
@@ -24,7 +24,7 @@ shipmodules:
   construction_resources:
     hydrogen: 10
     aluminium: 3
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 1
     industrial_storage: 1
     industrial_manufacturing: 1
@@ -53,7 +53,7 @@ shipmodules:
   add:
     power: -1
     ground_connection: -1
-  construction_reqirements:
+  construction_requirements:
     ground_connection: 1
     industrial_storage: 1
     industrial_manufacturing: 1
@@ -79,7 +79,7 @@ shipmodules:
   add:
     power: -1
     ground_connection: -1
-  construction_reqirements:
+  construction_requirements:
     ground_connection: 1
     industrial_manufacturing: 1
 - id: shpmod_rock_extractor
@@ -102,7 +102,7 @@ shipmodules:
   add:
     power: -1
     ground_connection: -2
-  construction_reqirements:
+  construction_requirements:
     ground_connection: 1
     industrial_storage: 1
     industrial_manufacturing: 1
@@ -123,7 +123,7 @@ shipmodules:
   type: large
   add:
     power: -1
-  construction_reqirements:
+  construction_requirements:
     ground_connection: 1
     industrial_manufacturing: 1
 - id: shpmod_carbon_extractor
@@ -146,7 +146,7 @@ shipmodules:
     power: -1
     ground_connection: -1
     cryogenics_facility: -1
-  construction_reqirements:
+  construction_requirements:
     ground_connection: 1
     industrial_manufacturing: 1
     cryogenics_facility: 1
@@ -169,7 +169,7 @@ shipmodules:
   add:
     power: -2
     cryogenics_facility: -1
-  construction_reqirements:
+  construction_requirements:
     industrial_manufacturing: 1
     cryogenics_facility: 1
 - id: shpmod_fuel_cell
@@ -191,7 +191,7 @@ shipmodules:
   add:
     power: 1
     cryogenics_facility: -1
-  construction_reqirements:
+  construction_requirements:
     industrial_manufacturing: 1
     cryogenics_facility: 1
 - id: shpmod_steel_smelter
@@ -212,7 +212,7 @@ shipmodules:
   add:
     power: -3
     thermal_control: -2
-  construction_reqirements:
+  construction_requirements:
     industrial_manufacturing: 1
   construction_time: 30
 - id: shpmod_aluminium_smelter
@@ -234,7 +234,7 @@ shipmodules:
   add:
     power: -4
     thermal_control: -2
-  construction_reqirements:
+  construction_requirements:
     industrial_manufacturing: 1
   construction_time: 45
 - id: shpmod_rock_habitat
@@ -256,7 +256,7 @@ shipmodules:
   - 23
   hidden: y
   type: large
-  construction_reqirements:
+  construction_requirements:
     ground_connection: 1
     industrial_manufacturing: 1
 - id: shpmod_habitat
@@ -281,7 +281,7 @@ shipmodules:
   - 8
   - 23
   type: large
-  construction_reqirements:
+  construction_requirements:
     thermal_control: 1
     industrial_admin: 1
     industrial_manufacturing: 1
@@ -304,7 +304,7 @@ shipmodules:
   - 23
   hidden: y
   type: large
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 1
     industrial_manufacturing: 1
     cryogenics_facility: 1
@@ -326,7 +326,7 @@ shipmodules:
   type: medium
   add:
     power: -1
-  construction_reqirements:
+  construction_requirements:
     industrial_manufacturing: 1
 - id: shpmod_waste_treatment
   name: Waste Treatment
@@ -347,7 +347,7 @@ shipmodules:
   type: medium
   add:
     power: -1
-  construction_reqirements:
+  construction_requirements:
     industrial_manufacturing: 1
     bio_manufacturing: 1
 - id: shpmod_farms
@@ -370,7 +370,7 @@ shipmodules:
   type: medium
   add:
     power: -2
-  construction_reqirements:
+  construction_requirements:
     industrial_manufacturing: 1
     bio_manufacturing: 1
 - id: shpmod_polymers
@@ -393,7 +393,7 @@ shipmodules:
   type: large
   add:
     power: -3
-  construction_reqirements:
+  construction_requirements:
     thermal_control: 2
     industrial_admin: 1
     industrial_manufacturing: 1
@@ -411,7 +411,7 @@ shipmodules:
   construction_resources:
     steel: 10
     polymers: 20
-  construction_reqirements:
+  construction_requirements:
     thermal_control: 3
     industrial_admin: 2
     industrial_storage: 1
@@ -440,7 +440,7 @@ shipmodules:
   - 8
   - 26
   type: medium
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 1
     industrial_manufacturing: 1
   produce: {}
@@ -457,7 +457,7 @@ shipmodules:
   - 9
   - 26
   type: large
-  construction_reqirements:
+  construction_requirements:
     industrial_manufacturing: 1
   produce: {}
   construction_time: 10
@@ -476,7 +476,7 @@ shipmodules:
   - 10
   - 26
   type: large
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 1
     industrial_manufacturing: 1
   produce: {}
@@ -496,7 +496,7 @@ shipmodules:
   - 11
   - 26
   type: large
-  construction_reqirements:
+  construction_requirements:
     industrial_storage: 1
     industrial_manufacturing: 1
   produce: {}
@@ -521,7 +521,7 @@ shipmodules:
   - 12
   - 26
   type: large
-  construction_reqirements:
+  construction_requirements:
     industrial_storage: 2
     industrial_manufacturing: 2
   construction_time: 45
@@ -540,7 +540,7 @@ shipmodules:
   - 12
   - 30
   type: large
-  construction_reqirements:
+  construction_requirements:
     thermal_control: 1
     industrial_admin: 1
     industrial_manufacturing: 1
@@ -560,7 +560,7 @@ shipmodules:
   - 8
   - 27
   type: small
-  construction_reqirements:
+  construction_requirements:
     industrial_manufacturing: 1
     arms_manufacturing: 1
     precision_manufacturing: 1
@@ -580,7 +580,7 @@ shipmodules:
   - 9
   - 27
   type: small
-  construction_reqirements:
+  construction_requirements:
     industrial_manufacturing: 1
     arms_manufacturing: 1
   produce: {}
@@ -593,7 +593,7 @@ shipmodules:
   mass: 10
   construction_resources:
     steel: 10
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 1
     industrial_manufacturing: 1
     industrial_dock: 1
@@ -610,7 +610,7 @@ shipmodules:
     kinetic_hp: 20
     energy_hp: 10
     kinetic_defense: 1
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 1
     industrial_manufacturing: 1
     industrial_dock: 1
@@ -638,7 +638,7 @@ shipmodules:
   - 12
   - 27
   type: small
-  construction_reqirements:
+  construction_requirements:
     industrial_manufacturing: 1
     clean_room: 1
     arms_manufacturing: 1
@@ -658,7 +658,7 @@ shipmodules:
   - 14
   - 27
   type: small
-  construction_reqirements:
+  construction_requirements:
     industrial_manufacturing: 1
     clean_room: 1
     precision_manufacturing: 1
@@ -675,7 +675,7 @@ shipmodules:
     water: 10
     steel: 30
     electronics: 5
-  construction_reqirements:
+  construction_requirements:
     thermal_control: 2
     industrial_admin: 1
     industrial_manufacturing: 1
@@ -699,7 +699,7 @@ shipmodules:
   construction_resources:
     steel: 50
     electronics: 8
-  construction_reqirements:
+  construction_requirements:
     thermal_control: 2
     industrial_admin: 1
     industrial_manufacturing: 1
@@ -725,7 +725,7 @@ shipmodules:
   - 31
   type: free
   construction_time: 60
-  construction_reqirements:
+  construction_requirements:
     arms_manufacturing: 1
     military_training: 2
   construction_resources: {}
@@ -746,7 +746,7 @@ shipmodules:
   - 2
   - 30
   type: medium
-  construction_reqirements:
+  construction_requirements:
     industrial_manufacturing: 1
     arms_manufacturing: 2
   produce: {}
@@ -768,7 +768,7 @@ shipmodules:
   - 11
   - 29
   type: medium
-  construction_reqirements:
+  construction_requirements:
     industrial_manufacturing: 1
     arms_manufacturing: 1
   produce: {}
@@ -784,7 +784,7 @@ shipmodules:
   - 3
   - 25
   type: free
-  construction_reqirements:
+  construction_requirements:
     industrial_manufacturing: 1
     arms_manufacturing: 1
   construction_resources: {}
@@ -801,7 +801,7 @@ shipmodules:
   - 15
   - 31
   type: large
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 2
     industrial_manufacturing: 1
   produce: {}
@@ -816,7 +816,7 @@ shipmodules:
   - 15
   - 31
   type: free
-  construction_reqirements: {}
+  construction_requirements: {}
   construction_resources: {}
   produce: {}
 - id: shpmod_droptank_water
@@ -825,7 +825,7 @@ shipmodules:
     during flight
   type: drop_tank
   mass: 12
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 1
     industrial_storage: 1
     industrial_manufacturing: 1
@@ -843,7 +843,7 @@ shipmodules:
   description: TODO
   type: small
   mass: 4
-  construction_reqirements:
+  construction_requirements:
     industrial_manufacturing: 1
   add:
     thermal_control: 1
@@ -859,7 +859,7 @@ shipmodules:
   description: TODO
   type: medium
   mass: 8
-  construction_reqirements:
+  construction_requirements:
     industrial_manufacturing: 1
   add:
     thermal_control: 2
@@ -875,7 +875,7 @@ shipmodules:
   description: TODO
   type: large
   mass: 15
-  construction_reqirements:
+  construction_requirements:
     industrial_manufacturing: 1
     industrial_dock: 1
   add:
@@ -895,7 +895,7 @@ shipmodules:
   add:
     power: 10
     thermal_control: -4
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 1
     industrial_manufacturing: 1
     precision_manufacturing: 1
@@ -914,7 +914,7 @@ shipmodules:
     power: -1
     thermal_control: -2
     cryogenics_facility: 1
-  construction_reqirements:
+  construction_requirements:
     thermal_control: 1
     industrial_manufacturing: 1
   construction_resources:
@@ -932,7 +932,7 @@ shipmodules:
     power: -2
     thermal_control: -2
     cryogenics_facility: 2
-  construction_reqirements:
+  construction_requirements:
     thermal_control: 2
     industrial_manufacturing: 1
   construction_resources:
@@ -957,7 +957,7 @@ shipmodules:
     steel: 20
   produce:
     water: -5
-  construction_reqirements:
+  construction_requirements:
     industrial_manufacturing: 1
   add:
     ground_connection: 1
@@ -970,7 +970,7 @@ shipmodules:
   type: medium
   mass: 30
   construction_time: 30
-  construction_reqirements:
+  construction_requirements:
     industrial_manufacturing: 1
     industrial_dock: 1
     precision_manufacturing: 1
@@ -992,7 +992,7 @@ shipmodules:
   type: large
   mass: 60
   construction_time: 40
-  construction_reqirements:
+  construction_requirements:
     ground_connection: 1
     industrial_manufacturing: 1
     industrial_dock: 2
@@ -1015,7 +1015,7 @@ shipmodules:
   type: large
   mass: 0
   construction_time: 180
-  construction_reqirements:
+  construction_requirements:
     ground_connection: 3
     industrial_manufacturing: 2
     industrial_dock: 1
@@ -1031,7 +1031,7 @@ shipmodules:
   description: TODO
   type: large
   mass: 50
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 2
     industrial_manufacturing: 1
   add:
@@ -1046,7 +1046,7 @@ shipmodules:
   type: large
   mass: 50
   construction_time: 30
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 1
     industrial_storage: 1
     industrial_manufacturing: 1
@@ -1061,7 +1061,7 @@ shipmodules:
   type: large
   mass: 50
   construction_time: 40
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 2
     industrial_manufacturing: 1
   produce:
@@ -1079,7 +1079,7 @@ shipmodules:
   type: large
   mass: 50
   construction_time: 40
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 2
     industrial_manufacturing: 1
   produce:
@@ -1097,7 +1097,7 @@ shipmodules:
   type: large
   mass: 50
   construction_time: 60
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 1
     industrial_manufacturing: 2
   construction_resources: {}
@@ -1114,7 +1114,7 @@ shipmodules:
   type: large
   mass: 40
   construction_time: 40
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 1
     industrial_manufacturing: 2
     clean_room: 1

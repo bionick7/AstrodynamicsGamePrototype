@@ -49,7 +49,7 @@ void ShipModuleClass::UpdateCustom(Ship* ship) const {
             }
         }
         planet->module_opinion_delta += opinion_delta;
-        planet->module_independance_delta += independence_delta;
+        planet->module_independence_delta += independence_delta;
     }
 }
 
@@ -104,7 +104,7 @@ void ShipModuleClass::MouseHintWrite(StringBuilder* sb) const {
         sb->Add(" Adds").Add(sb2.c_str).Add("\n");
     }
     if (independence_delta != 0) 
-        sb->AddFormat("Independance %+3d\n", independence_delta);
+        sb->AddFormat("Independence %+3d\n", independence_delta);
     if (opinion_delta != 0)
         sb->AddFormat("Opinion %+3d\n", opinion_delta);
 
@@ -538,7 +538,7 @@ int ShipModules::Load(const DataNode* data) {
             }
         }
         if (module_data->HasChild("add")) {
-            ship_modules[i].independence_delta = module_data->GetChild("add")->GetI("independance", 0, true);
+            ship_modules[i].independence_delta = module_data->GetChild("add")->GetI("independence", 0, true);
             ship_modules[i].opinion_delta = module_data->GetChild("add")->GetI("opinion", 0, true);
         } else {
             ship_modules[i].independence_delta = 0;

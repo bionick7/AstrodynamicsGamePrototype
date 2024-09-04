@@ -21,12 +21,12 @@ Vector2 ApplyAlignment(Vector2 anchorpoint, Vector2 size, text_alignment::T alig
     return anchorpoint;
 }
 
-Rectangle DrawTextAligned(const char* text, Vector2 pos, text_alignment::T alignment, Color c, uint8_t z_layer) {
+Rectangle DrawTextAligned(const char* text, Vector2 pos, text_alignment::T alignment, Color c, Color bg, uint8_t z_layer) {
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(DEFAULT_FONT_SIZE), text, DEFAULT_FONT_SIZE, 1);
     pos = ApplyAlignment(pos, size, alignment);
     //Vector2 bottom_left = Vector2Subtract(pos, Vector2Scale(size, 0.5));
     Rectangle rect = { pos.x, pos.y, size.x, size.y };
-    text::DrawTextEx(GetCustomDefaultFont(DEFAULT_FONT_SIZE), text, pos, DEFAULT_FONT_SIZE, 1, c, GetScreenRect(), z_layer);
+    text::DrawTextEx(GetCustomDefaultFont(DEFAULT_FONT_SIZE), text, pos, DEFAULT_FONT_SIZE, 1, c, bg, GetScreenRect(), z_layer);
     return rect;
 }
 
@@ -231,11 +231,7 @@ void TextBox::WriteLayout(const text::Layout* layout, bool advance_cursor) {
         layout->DrawTextLayout(GetCustomDefaultFont(text_size), text_size, text_color, text_background, render_rec, z_layer);
     }
     if (advance_cursor) {
-        line_size_y = 20;
-        x_cursor = rect.x + rect.width - (x + text_margin_x);
-        y_cursor = rect.y + rect.height - (y + text_margin_y) - line_size_y;
-        if (x_cursor > extend_x) extend_x = x_cursor;
-        if (y_cursor + line_size_y > extend_y) extend_y = y_cursor + line_size_y;
+        AdvanceLayout(layout);
     }
     if (GetSettingBool("draw_textrects", false)) {
         BeginRenderInUILayer(z_layer);
@@ -243,6 +239,15 @@ void TextBox::WriteLayout(const text::Layout* layout, bool advance_cursor) {
         DrawCircle(x + text_margin_x + x_cursor, y + text_margin_y + y_cursor + line_size_y, 3, RED);
         EndRenderInUILayer();
     }
+}
+
+void TextBox::AdvanceLayout(const text::Layout* layout) {
+    Rectangle rect = layout->bounding_box;
+    line_size_y = 20;
+    x_cursor = rect.x + rect.width - (x + text_margin_x);
+    y_cursor = rect.y + rect.height - (y + text_margin_y) - line_size_y;
+    if (x_cursor > extend_x) extend_x = x_cursor;
+    if (y_cursor + line_size_y > extend_y) extend_y = y_cursor + line_size_y;
 }
 
 void TextBox::Decorate(const text::Layout* layout, const TokenList* tokens) {
@@ -305,7 +310,8 @@ button_state_flags::T TextBox::WriteButton(const char* text, int inset) {
     button_state_flags::T res = GetButtonState(is_in_area, was_in_area);
     Color c = is_in_area ? Palette::ui_main : Palette::interactable_main;
     DrawRectangleLines(pos.x - inset, pos.y - inset, size.x, size.y, c);
-    text::DrawTextEx(GetCustomDefaultFont(text_size), text, pos, text_size, 1, text_color, render_rec, z_layer);
+    text::DrawTextEx(GetCustomDefaultFont(text_size), text, pos, text_size, 1, 
+                     text_color, text_background, render_rec, z_layer);
     _Advance(pos, size);
     return res;
 }
@@ -648,7 +654,7 @@ Rectangle ui::MeasureTextEx(const char *text, text_alignment::T alignment) {
     return ui::Current()->TbMeasureText(text, alignment);
 }
 
-void ui::Fillline(double value, Color fill_color, Color background_color) {
+void ui::FillLine(double value, Color fill_color, Color background_color) {
     TextBox* tb = ui::Current();
     int y = tb->y + tb->y_cursor + tb->line_size_y;
     int x_start = tb->x;
@@ -657,11 +663,11 @@ void ui::Fillline(double value, Color fill_color, Color background_color) {
         x_start = ClampInt(x_start, tb->render_rec.x, tb->render_rec.x + tb->render_rec.width);
         x_end = ClampInt(x_end, tb->render_rec.x, tb->render_rec.x + tb->render_rec.width);
     }
-    ui::FilllineEx(x_start, x_end, y, value, fill_color, background_color);
+    ui::FillLineEx(x_start, x_end, y, value, fill_color, background_color);
 }
 
 // Ignores render-rect
-void ui::FilllineEx(int x_start, int x_end, int y, double value, Color fill_color, Color background_color) {
+void ui::FillLineEx(int x_start, int x_end, int y, double value, Color fill_color, Color background_color) {
     TextBox* tb = ui::Current();
     if (!tb->flexible && (y > tb->render_rec.y + tb->render_rec.height || y < tb->render_rec.y))
         return;
@@ -754,8 +760,7 @@ void ui::HelperText(const char* description) {
     //DrawRectangleLinesEx(tb->render_rec, 1, GREEN);
     //EndRenderInUILayer();
     text::DrawTextEx(GetCustomDefaultFont(tb->text_size), "??", { button_pos.x, button_pos.y }, tb->text_size, 1, 
-        Palette::interactable_main, tb->render_rec, tb->z_layer
-    );
+                     Palette::interactable_main, Palette::bg, tb->render_rec, tb->z_layer);
 
     if (CheckCollisionCircleRec(GetMousePosition(), 2, rect) && !GetUI()->IsPointBlocked(GetMousePosition(), tb->z_layer)) {
         //GetUI()->mousehints.count = 0;
@@ -899,11 +904,12 @@ void UIGlobals::_HandleMouseTips() {
 
         // Draw 
         ui::Enclose();
+        ui::Current()->WriteLayout(&layout, false);
         ui::DecorateEx(&layout, &tokens);
-        ui::Current()->WriteLayout(&layout, true);
+        ui::Current()->AdvanceLayout(&layout);
         if (i == mousehints.count-1) {
             ui::VSpace(3);
-            ui::Fillline(mousehints.lock_progress, Palette::ui_main, Palette::bg);
+            ui::FillLine(mousehints.lock_progress, Palette::ui_main, Palette::bg);
         }
         ui::Pop();
     }

@@ -3,6 +3,64 @@
 #include "logging.hpp"
 #include "debug_drawing.hpp"
 #include "debug_console.hpp"
+#include "global_state.hpp"
+
+float _GetProgressFromComparison(int variable, int reference, ResearchCondition::Comparison comp) {
+    switch (comp) {
+        case ResearchCondition::GREATER:
+            return variable / (float)(reference + 1);
+        case ResearchCondition::LESS:
+            return variable < reference ? 1:0;
+        case ResearchCondition::GREATER_OR_EQUAL:
+            return variable / (float)reference;
+        case ResearchCondition::LESS_OR_EQUAL:
+            return variable <= reference ? 1:0;
+        case ResearchCondition::EQUAL :
+            return variable == reference ? 1:0;
+        case ResearchCondition::NONEQUAL:
+            return variable != reference ? 1:0;
+    }
+}
+
+float ResearchCondition::GetProgress() {
+    switch (type) {
+    case ANY:{
+        for (int i=0; i < cond.branch.count; i++) {
+            if (GetTechTree()->research_conditions[cond.branch.index + i].GetProgress() < 1) {
+                return 0;
+            }
+        }
+        return 1;
+    }
+    case ALL:{
+        for (int i=0; i < cond.branch.count; i++) {
+            if (GetTechTree()->research_conditions[cond.branch.index + i].GetProgress() >= 1) {
+                return 1;
+            }
+        }
+        return 0;
+    }
+    case STAT_CONDITION:{
+        int max_stat = 0;
+        for (auto it = GetShips()->alloc.GetIter(); it; it++) {
+            const Ship* ship = GetShip(it.GetId());
+            if (ship->stats[cond.leaf.variable] > max_stat) {
+                max_stat = ship->stats[cond.leaf.variable];
+            }
+        }
+        return _GetProgressFromComparison(max_stat, cond.leaf.value, cond.leaf.comp);
+    }
+    case PRODUCTION_COUNTER:{
+        // TODO: we need to keep track of a variable somewhere
+        resource_count_t production = 0;
+        return _GetProgressFromComparison(production, cond.leaf.value, cond.leaf.comp);
+    }
+    case FREE:{
+        return 1;
+    }
+    }
+    return 0;
+}
 
 void TechTree::Serialize(DataNode *data) const {
     data->SerializeBuffer("techtree_status", node_progress, node_names_ptrs, nodes_count, false);
@@ -38,14 +96,33 @@ int _SetNodeLayer(TechTreeNode* nodes, int index) {
     return nodes[index].layer;
 }
 
+int _CountResearchConditionsRecursive(const DataNode *condition_data) {
+    if (condition_data == NULL || !condition_data->Has("type")) {
+        return 0;  // Invalid condition
+    }
+    const char* condition_type = condition_data->Get("type");
+    if (!(strcmp(condition_type, "any") * strcmp(condition_type, "all"))) {
+        // Neither 'any', nor 'all'
+        return 1;
+    }
+    int res = 1;
+    for (int i=0; i < condition_data->GetChildArrayLen("elements"); i++) {
+        res += _CountResearchConditionsRecursive(condition_data->GetChildArrayElem("elements", i));
+    }
+    return res;
+}
+
 int TechTree::Load(const DataNode *data) {
     nodes_count = data->GetChildArrayLen("techtree");
     delete[] nodes;
     delete[] node_progress;
     delete[] node_names_ptrs;
+    delete[] research_conditions;
     nodes = new TechTreeNode[nodes_count];
     node_progress = new int[nodes_count];
     node_names_ptrs = new const char*[nodes_count];
+    research_condition_count = 0;
+
     // 1st pass: most data
     for(int i=0; i < nodes_count; i++) {
         const DataNode* node_data = data->GetChildArrayElem("techtree", i);
@@ -71,11 +148,18 @@ int TechTree::Load(const DataNode *data) {
             nodes[i].attached_components.Append(unlock);
         }
 
+        research_condition_count += _CountResearchConditionsRecursive(node_data->GetChild("condition"));
+
         RID rid = RID(i, EntityType::TECHTREE_NODE);
         nodes[i].str_id = GetGlobalState()->AddStringIdentifier(node_data->Get("id"), rid);
         node_names_ptrs[i] = nodes[i].str_id;
     }
-    // 2nd pass: prerequisites
+
+    research_conditions = new ResearchCondition[research_condition_count];
+
+    int research_condition_index = 0;
+
+    // 2nd pass: collect prerequisites and load research conditions
     for(int i=0; i < nodes_count; i++) {
         const DataNode* node_data = data->GetChildArrayElem("techtree", i);
         int prerequisite_count = node_data->GetArrayLen("prerequisites", true);
@@ -84,6 +168,11 @@ int TechTree::Load(const DataNode *data) {
             RID prereq = GetGlobalState()->GetFromStringIdentifier(node_data->GetArrayElem("prerequisites", j));
             nodes[i].prerequisites.Append(prereq);
         }
+
+        // Research conditions
+        const DataNode* research_condition_data = node_data->GetChild("condition");
+        research_condition_index += LoadResearchCondition(research_condition_data, 
+            research_condition_index, research_condition_index + 1) + 1;
     }
 
     layers = 1;
@@ -113,6 +202,60 @@ int TechTree::Load(const DataNode *data) {
     }
     delete[] layer_offsets;
     return nodes_count;
+}
+
+int TechTree::LoadResearchCondition(const DataNode* condition_data, int idx, int child_index) {
+    // Returns how many additional conditions are loaded
+    if (condition_data == NULL || !condition_data->Has("type")) {
+        return -1;
+    }
+    const char* type_id = condition_data->Get("type");
+    research_conditions[idx].type = ResearchCondition::INVALID;
+    for (int i=0; i < ResearchCondition::TYPE_MAX; i++){
+        if (strcmp(type_id, ResearchCondition::type_identifiers[i]) == 0) {
+            research_conditions[idx].type = (ResearchCondition::Type) i;
+            break;
+        }
+    }
+    if (research_conditions[idx].type == ResearchCondition::INVALID) {
+        ERROR("No such research-condition type '%s'", type_id)
+    }
+    switch (research_conditions[idx].type) {
+    case ResearchCondition::ANY:
+    case ResearchCondition::ALL:{
+        int elements_count = condition_data->GetChildArrayLen("elements");
+        int write_index = child_index + elements_count;
+        for (int i=0; i < elements_count; i++) {
+            write_index += LoadResearchCondition(condition_data->GetChildArrayElem("elements", i), child_index + i, write_index);
+        }
+        research_conditions[idx].cond.branch.index = child_index;
+        research_conditions[idx].cond.branch.count = elements_count;
+        return write_index - child_index;
+    }
+    case ResearchCondition::PRODUCTION_COUNTER:
+    case ResearchCondition::STAT_CONDITION:{
+        const char* comp_id = condition_data->Get("comp");
+        for (int i=0; i < ResearchCondition::COMPARISON_MAX; i++){
+            if (strcmp(comp_id, ResearchCondition::comparison_identifiers[i]) == 0) {
+                research_conditions[idx].cond.leaf.comp = (ResearchCondition::Comparison) i; break;
+            }
+        }
+        research_conditions[idx].cond.leaf.value = condition_data->GetI("value");
+        if (research_conditions[idx].type == ResearchCondition::PRODUCTION_COUNTER) {
+            for (int i=0; i < resources::MAX; i++)
+            if (strcmp(comp_id, resources::names[i]) == 0) {
+                research_conditions[idx].cond.leaf.variable = i; break; 
+            }
+        } else if (research_conditions[idx].type == ResearchCondition::STAT_CONDITION) {
+            for (int i=0; i < ship_stats::MAX; i++)
+            if (strcmp(comp_id, ship_stats::names[i]) == 0) {
+                research_conditions[idx].cond.leaf.variable = i; break; 
+            }
+        }
+        return 0;
+    }
+    default: return 0;
+    }
 }
 
 void TechTree::ForceUnlockTechnology(const char *tech_id) {
@@ -237,7 +380,7 @@ void TechTree::DrawUI() {
         ui::DrawIcon(nodes[i].icon_index, color, 40);
         ui::Pop();  // Global
         if (node_progress[i] > 0 && node_progress[i] < nodes[i].research_effort) {
-            ui::FilllineEx(
+            ui::FillLineEx(
                 node_pos.x, node_pos.x + 50, node_pos.y + 57, 
                 node_progress[i] / (double)nodes[i].research_effort, 
                 Palette::ui_main, Palette::ui_alt
@@ -325,4 +468,3 @@ void TechTree::DrawUI() {
 int LoadTechTree(const DataNode *data) {
     return GetTechTree()->Load(data);
 }
-

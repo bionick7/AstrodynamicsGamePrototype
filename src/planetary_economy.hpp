@@ -54,13 +54,13 @@ typedef int64_t cost_t;
 
 struct ResourceData {
     char name[RESOURCE_NAME_MAX_SIZE];
-    char descrption[RESOURCE_DESCRIPTION_MAX_SIZE];
+    char description[RESOURCE_DESCRIPTION_MAX_SIZE];
 
     cost_t min_cost;
     cost_t max_cost;
     cost_t default_cost;
     cost_t cost_volatility;  // Deviation of day-to-day change of error
-    cost_t max_noise;        // Allowable aplitude of error
+    cost_t max_noise;        // Allowable amplitude of error
 };
 
 struct PlanetaryEconomy {
@@ -81,7 +81,7 @@ struct PlanetaryEconomy {
 
     void Update();
     void AdvanceEconomy();
-    void RecalcEconomy();
+    void RecalculateEconomy();
     void UIDrawResources(RID planet);
     void UIDrawEconomy(RID planet);
 

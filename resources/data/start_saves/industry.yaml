@@ -134,15 +134,6 @@ ships:
   - shpmod_large_storage
   - shpmod_drydock
 
-- name: TEST
-  class_id: shp_spacestation
-  allegiance: 0
-  planet: Tethys
-  tf_plans: []
-  modules:
-  - shpmod_heatpump
-  - shpmod_sail_medium
-
 - name: Oldblaze
   class_id: shp_spacestation
   allegiance: 0
@@ -157,6 +148,7 @@ ships:
   tf_plans: []
   modules:
   - shpmod_workshop
+  - shpmod_shuttles
   
 - name: Enclave
   class_id: shp_spacestation

@@ -507,7 +507,7 @@ void assets::BakeAllResources() {
 }
 
 void assets::UnBakeAllResources() {
-    INFO("Unbake Resources")
+    INFO("Unbake Resources (Not implemented)")
 }
 
 int AssetTests() {

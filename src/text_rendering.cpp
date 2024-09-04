@@ -208,16 +208,16 @@ void text::Layout::DrawTextLayout(Font font, float fontSize, Color tint, Color b
 }
 
 void text::DrawText(const char *text, Vector2 position, Color color) {
-    text::DrawTextEx(GetCustomDefaultFont(DEFAULT_FONT_SIZE), text, position, DEFAULT_FONT_SIZE, 1, color, GetScreenRect(), 0);
+    text::DrawTextEx(GetCustomDefaultFont(DEFAULT_FONT_SIZE), text, position, DEFAULT_FONT_SIZE, 1, color, BLANK, GetScreenRect(), 0);
 }
 
 void text::DrawTextEx(Font font, const char *text, Vector2 position, float fontSize, float spacing, Color tint) {
-    text::DrawTextEx(font, text, position, fontSize, spacing, tint, GetScreenRect(), 0);
+    text::DrawTextEx(font, text, position, fontSize, spacing, tint, BLANK, GetScreenRect(), 0);
 }
 
 void text::DrawTextEx(Font font, const char *text, Vector2 position, float fontSize, float spacing, 
-                        Color tint, Rectangle render_rect, uint8_t z_layer) {
+                        Color tint, Color bg, Rectangle render_rect, uint8_t z_layer) {
     Layout layout;
     text::GetLayout(&layout, position, font, text, fontSize, spacing);
-    layout.DrawTextLayout(font, fontSize, tint, BLANK, render_rect, z_layer);
+    layout.DrawTextLayout(font, fontSize, tint, bg, render_rect, z_layer);
 }

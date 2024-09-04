@@ -78,7 +78,7 @@ void AppMetaStep() {
         InternalToggleFullScreen();
     }
     if (IsKeyPressed(KEY_F2)) {  // Disable when on steam
-        //DatedScreenShot();
+        DatedScreenShot();
     }
 }
 

@@ -29,11 +29,11 @@ struct Planet {
 
     int allegiance;
 
-    int independance;
-    int independance_delta;
-    int base_independance_delta;  // Tied to culture,politics, ... specify per planet
-    int module_independance_delta;
-    StringBuilder independance_delta_log;
+    int independence;
+    int independence_delta;
+    int base_independence_delta;  // Tied to culture,politics, ... specify per planet
+    int module_independence_delta;
+    StringBuilder independence_delta_log;
     int opinion;
     int opinion_delta;
     int module_opinion_delta;
@@ -68,7 +68,7 @@ struct Planet {
 
     void Conquer(int faction, bool include_ships);
 
-    void RecalcStats();
+    void RecalculateStats();
 
     ShipModuleSlot GetFreeModuleSlot(module_types::T type) const;
     void RemoveShipModuleInInventory(int index);
@@ -108,5 +108,7 @@ Planet* GetPlanet(RID id);
 Planet* GetPlanetByIndex(int index);
 double PlanetsMinDV(RID from, RID to, bool aerobrake);
 int LoadEphemeris(const DataNode* data);
+
+void SetPlanetTabIndex(int index);
 
 #endif  // PLANET_H

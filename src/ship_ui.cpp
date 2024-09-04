@@ -90,7 +90,7 @@ void _UIDrawStats(const Ship* ship) {
     }
     ui::Pop();
 
-    ui::Fillline(ship->GetOperationalMass() / ResourceCountsToKG(ship->GetMaxCapacity()), Palette::ui_main, Palette::bg);
+    ui::FillLine(ship->GetOperationalMass() / ResourceCountsToKG(ship->GetMaxCapacity()), Palette::ui_main, Palette::bg);
     ui::VSpace(15);
     StringBuilder sb;
     if (ship_stats_current_tab == 0) {
@@ -539,7 +539,7 @@ void _UIDrawProduction(Ship* ship) {
         } else {
             ui::DrawIcon(atlas_pos, Palette::ui_alt, ui::Current()->height);
         }
-        //ui::Fillline(1.0, Palette::ui_main, Palette::bg);
+        //ui::FillLine(1.0, Palette::ui_main, Palette::bg);
         //ui::Write(ship_class->description);
         ui::Pop();  // GridCell
         draw_index++;
@@ -585,7 +585,7 @@ void _UIDrawProduction(Ship* ship) {
         ui::DrawIcon(atlas_pos, Palette::ui_main, ui::Current()->height);
         double progress = ship->production_process / (double) total_construction_time;
         if (i == 0) {
-            ui::FilllineEx(
+            ui::FillLineEx(
                 ui::Current()->x,
                 ui::Current()->x + ui::Current()->width,
                 ui::Current()->y + ui::Current()->height,
@@ -651,7 +651,7 @@ void Ship::DrawUI() {
     ui::PushInset(-1);
         ui::VSpace(6);
         _UIDrawStats(this);
-        ui::Fillline(1, Palette::ui_alt, Palette::bg);
+        ui::FillLine(1, Palette::ui_alt, Palette::bg);
         _UIDrawFleet(this);
         ui::VSpace(6);
         ui::EncloseDynamic(0, Palette::bg, Palette::ui_main, 4);

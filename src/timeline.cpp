@@ -79,7 +79,7 @@ void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
         Rectangle rect = DrawTextAligned(
             planet->name, {(float)x, (float)tcd->y0 + 18}, 
             text_alignment::HCENTER | text_alignment::BOTTOM, 
-            Palette::ui_main, ui::Current()->z_layer
+            Palette::ui_main, Palette::bg, ui::Current()->z_layer
         );
         //DebugPrintText("%f, %f; %f, %f", rect.x, rect.y, rect.width, rect.height);
         //DrawRectangleRec(rect, RED);
@@ -108,7 +108,7 @@ void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
                 sb.AddDate(t, true).c_str, 
                 { (float) tcd->x0 + 20, (float) y },
                 text_alignment::BOTTOM | text_alignment::LEFT,
-                Palette::ui_alt,
+                Palette::ui_alt, Palette::bg,
                 ui::Current()->z_layer
             );
         }
@@ -166,7 +166,7 @@ float  _QuestDrawLine(TimeLineCoordinateData* tcd, const Task* q, bool active) {
         StringBuilder().AddI(KGToResourceCounts(q->payload_mass)).c_str, 
         Vector2Lerp(start_pos, end_pos, 0.15), 
         text_alignment::HCENTER | text_alignment::BOTTOM, 
-        c, z_layer
+        c, Palette::bg, z_layer
     );
     start_pos = Vector2Add(start_pos, scaled_unit);
     end_pos = Vector2Subtract(end_pos, scaled_unit);

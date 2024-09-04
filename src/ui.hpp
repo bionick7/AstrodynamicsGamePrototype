@@ -34,7 +34,7 @@ namespace text_alignment {
 };
 
 Vector2 ApplyAlignment(Vector2 pos, Vector2 size, text_alignment::T alignment);
-Rectangle DrawTextAligned(const char* text, Vector2 pos, text_alignment::T alignment, Color c, uint8_t z_layer);
+Rectangle DrawTextAligned(const char* text, Vector2 pos, text_alignment::T alignment, Color c, Color bg, uint8_t z_layer);
 
 namespace button_state_flags {
     typedef uint8_t T;
@@ -101,6 +101,7 @@ struct TextBox {
     void Write(const char* text, text_alignment::T align);
     void WriteLine(const char* text, text_alignment::T align);
     void WriteLayout(const text::Layout* layout, bool advance_cursor);
+    void AdvanceLayout(const text::Layout* layout);
     void Decorate(const text::Layout* layout, const TokenList* tokens);
     void DrawTexture(Texture2D texture, Rectangle source, int height, Color tint, bool sdf);
     button_state_flags::T WriteButton(const char* text, int inset);
@@ -194,8 +195,8 @@ namespace ui {
     void WriteEx(const char* text, text_alignment::T alignment, bool linebreak);
     void DecorateEx(const text::Layout* layout, const TokenList* tokens);
     Rectangle MeasureTextEx(const char* text, text_alignment::T alignment);
-    void Fillline(double value, Color fill_color, Color background_color);
-    void FilllineEx(int x_start, int x_end, int y, double value, Color fill_color, Color background_color);
+    void FillLine(double value, Color fill_color, Color background_color);
+    void FillLineEx(int x_start, int x_end, int y, double value, Color fill_color, Color background_color);
     button_state_flags::T DirectButton(const char* text, int inset);
     button_state_flags::T ToggleButton(bool on);
     int DrawLimitedSlider(int current, int min, int max, int limit, int width, int height, Color fg, Color bg);

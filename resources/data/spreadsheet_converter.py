@@ -94,7 +94,7 @@ def save_csv_data(data: csv_t, category: str):
 def export_csv_general(data: yaml_t) -> csv_t:
     csv_data = [[module.get(key, "") for key in keys] for module in data]
     for i in range(len(csv_data)):
-        requs = data[i].get("construction_reqirements", {"industrial_manufacturing": 1})
+        requs = data[i].get("construction_requirements", {"industrial_manufacturing": 1})
         for construction_stat in construction_stats:
             if construction_stat in requs:
                 csv_data[i].append(requs[construction_stat])
@@ -175,15 +175,15 @@ def fuse_genral_csv(data_csv_raw: csv_t, data_yaml: yaml_t) -> yaml_t:
 
         construction_requirements_are_default = sum(construction_requirements) == 1 and construction_requirements[4] == 1
 
-        if "construction_reqirements" not in yaml_row:
+        if "construction_requirements" not in yaml_row:
             if construction_requirements_are_default:
                 continue
             else:
-                yaml_row["construction_reqirements"] = {}
+                yaml_row["construction_requirements"] = {}
 
         for i, construction_stat in enumerate(construction_stats):
             if construction_requirements[i] != 0:
-                yaml_row["construction_reqirements"][construction_stat] = construction_requirements[i]
+                yaml_row["construction_requirements"][construction_stat] = construction_requirements[i]
 
     return data
 
@@ -244,7 +244,7 @@ def generate_module_spreadsheets():
 def fuse_module_spreadsheets():
     data_yaml = load_yaml_data()
     for row in data_yaml:
-        row["construction_reqirements"] = {}
+        row["construction_requirements"] = {}
         row["construction_resources"] = {}
         row["produce"] = {}
         row["add"] = {}

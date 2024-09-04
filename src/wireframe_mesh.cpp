@@ -80,13 +80,13 @@ WireframeMesh LoadWireframeMesh(const char* filepath) {
         else if (c == 'v') vertex_count++;
         else if (c == 'l') line_count++;
         else if (c == 'f') triangle_count++;
-        else if (c == 'o') continue;  // Ignorr object name
+        else if (c == 'o') continue;  // Ignore object name
         else if (c == 's') continue;  // Ignore surfaces
         else if (text_size - text_cursor >= 6 && strncmp("mtllib", &text[text_cursor], 6) == 0) ;  // Ignore material library
         else ERROR("Unexpected character ('%c'%u) when reading at %s:%d:0", c, c, filepath, line)
     } while (_GetNextLine(text, &text_cursor));
 
-    float* vertecies = new float[vertex_count*3];
+    float* vertices = new float[vertex_count*3];
     float* vertex_distances = new float[vertex_count];
     unsigned short* lines = new unsigned short[line_count*2];
     unsigned short* triangles = new unsigned short[triangle_count*3];
@@ -106,9 +106,9 @@ WireframeMesh LoadWireframeMesh(const char* filepath) {
         if (text[text_cursor] == 'v') {
             float x, y, z;
             sscanf(&text[text_cursor], "v %f %f %f", &x, &y, &z);
-            vertecies[3*vertex_cursor] = x;
-            vertecies[3*vertex_cursor+1] = y;
-            vertecies[3*vertex_cursor+2] = z;
+            vertices[3*vertex_cursor] = x;
+            vertices[3*vertex_cursor+1] = y;
+            vertices[3*vertex_cursor+2] = z;
 
             if (x > bounding_box.max.x) bounding_box.max.x = x;
             if (x < bounding_box.min.x) bounding_box.min.x = x;
@@ -120,9 +120,9 @@ WireframeMesh LoadWireframeMesh(const char* filepath) {
             if (vertex_cursor == 0) {
                 vertex_distances[vertex_cursor] = 0;
             } else {
-                float dx = x - vertecies[3*vertex_cursor - 3];
-                float dy = y - vertecies[3*vertex_cursor - 2];
-                float dz = z - vertecies[3*vertex_cursor - 1];
+                float dx = x - vertices[3*vertex_cursor - 3];
+                float dy = y - vertices[3*vertex_cursor - 2];
+                float dz = z - vertices[3*vertex_cursor - 1];
                 float distance_to_previous = sqrtf(dx*dx + dy*dy + dz*dz);
                 vertex_distances[vertex_cursor] = vertex_distances[vertex_cursor-1] + distance_to_previous;
             }
@@ -169,16 +169,16 @@ WireframeMesh LoadWireframeMesh(const char* filepath) {
         vertex_distances[i] = vertex_distances[i] / total_distance;
     }
 
-    // .obj starts indecies at 1, not 0
+    // .obj starts indices at 1, not 0
     for(int i=0; i < line_count*2; i++) lines[i]--;
     for(int i=0; i < triangle_count*3; i++) triangles[i]--;
 
     WireframeMesh mesh = MakeWireframeMeshFromBuffers(
         vertex_count, triangle_count, line_count,
-        vertecies, triangles, lines
+        vertices, triangles, lines
     );
 
-    delete[] vertecies;
+    delete[] vertices;
     delete[] vertex_distances;
     delete[] lines;
     delete[] triangles;

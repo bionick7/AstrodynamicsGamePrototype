@@ -272,7 +272,7 @@ void GlobalState::DrawUI() {
     DrawTextAligned(
         capital_str, {GetScreenWidth() / 2.0f, 10}, 
         text_alignment::HCENTER & text_alignment::TOP, 
-        Palette::ui_main, 0
+        Palette::ui_main, Palette::bg, 0
     );
 
     // planets

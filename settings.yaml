@@ -8,7 +8,7 @@ show_help: y
 # Graphics
 sdf_text: n
 sdf_icons: n
-skip_postprocessing: n
+skip_postprocessing: y
 fps_cap: 60
 v_sync: y
 

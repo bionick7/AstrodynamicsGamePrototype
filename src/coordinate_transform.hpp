@@ -10,8 +10,6 @@ struct Calendar {
     timemath::Time time;
     timemath::Time prev_time;
 
-    //RID migration_arrrival_planet;  // Doesn't really fit anywhere right now ...
-
     double time_scale;
     bool paused;
 

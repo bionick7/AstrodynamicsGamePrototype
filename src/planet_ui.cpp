@@ -142,25 +142,25 @@ void Planet::DrawUI() {
 
     ui::WriteEx(name, text_alignment::CONFORM, true);
 
-    // Independance slider
+    // Independence slider
     /*ui::PushInset(30);
     Vector2 cursor_pos = ui::Current()->GetTextCursor();
     Rectangle slider_rect = {cursor_pos.x, cursor_pos.y, 300, 20};
-    ui::HelperText(GetUI()->GetConceptDescription("independance"));
+    ui::HelperText(GetUI()->GetConceptDescription("independence"));
     if (GetButtonStateRec(slider_rect) & button_state_flags::HOVER) {
-        ui::SetMouseHint(independance_delta_log.c_str);
+        ui::SetMouseHint(independence_delta_log.c_str);
     }
-    if (independance > 100) {
-        ui::DrawLimitedSlider(independance, 0, 150, 100, 
+    if (independence > 100) {
+        ui::DrawLimitedSlider(independence, 0, 150, 100, 
             300, 20, Palette::red, Palette::ui_alt
         );
     } else {
-        ui::DrawLimitedSlider(independance, 0, 150, 100, 
+        ui::DrawLimitedSlider(independence, 0, 150, 100, 
             300, 20, Palette::ui_main, Palette::ui_alt
         );
     }
     StringBuilder sb;
-    sb.AddFormat("%3d/%d (%+2d)", independance, 150, independance_delta);
+    sb.AddFormat("%3d/%d (%+2d)", independence, 150, independence_delta);
     ui::WriteEx(sb.c_str, text_alignment::CONFORM, true);
     ui::Pop();*/
 
@@ -184,7 +184,7 @@ void Planet::DrawUI() {
     sb.Clear();
     sb.AddFormat("%3d (%+2d)", opinion, opinion_delta);
     ui::WriteEx(sb.c_str, text_alignment::CONFORM, false);
-    ui::Fillline(1, Palette::ui_main, Palette::ui_main);
+    ui::FillLine(1, Palette::ui_main, Palette::ui_main);
     ui::Pop();*/
 
     ui::Current()->EnsureLineBreak();
@@ -235,4 +235,10 @@ void Planet::DrawUI() {
         ui::Pop();
     }
     ui::Pop();  // Global
+}
+
+void SetPlanetTabIndex(int index) {
+    if (index >= 0 && index < 2) {
+        current_tab = index;
+    }
 }

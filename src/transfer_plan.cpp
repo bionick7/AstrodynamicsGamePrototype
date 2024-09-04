@@ -599,7 +599,8 @@ timemath::Time _DrawHandle(
     if (full_orbits > 0) {
         char text_content[4];
         sprintf(text_content, "%+3d", full_orbits);
-        DrawTextAligned(text_content, text_pos, text_alignment::HCENTER | text_alignment::RIGHT, c, 0);
+        DrawTextAligned(text_content, text_pos, text_alignment::HCENTER | text_alignment::RIGHT, 
+                        c, Palette::bg, 0);
     }
     if (DrawTriangleButton(pos, Vector2Scale(radial_dir, 20), 10, c) & button_state_flags::JUST_PRESSED) {
         *is_dragging = true;
@@ -717,7 +718,7 @@ void TransferPlanUI::DrawUI() {
     //DebugPrintText("%i", sb.CountLines());
     ui::PushInset((DEFAULT_FONT_SIZE) * sb.CountLines() + 1);
     ui::WriteEx(sb.c_str, text_alignment::CONFORM, false);
-    ui::Fillline(
+    ui::FillLine(
         fmin(timemath::Time::SecDiff(plan->arrival_time, time_bounds[0]) / timemath::Time::SecDiff(plan->hohmann_arrival_time, time_bounds[0]), 1.0), 
         Palette::ui_main, Palette::bg
     );
@@ -744,7 +745,7 @@ void TransferPlanUI::DrawUI() {
 
     ui::PushInset((DEFAULT_FONT_SIZE) * sb.CountLines() + 1);
     ui::WriteEx(sb.c_str, text_alignment::CONFORM, false);
-    ui::Fillline(fmax(0, capacity_ratio), capacity >= 0 ? Palette::ui_main : Palette::red, Palette::bg);
+    ui::FillLine(fmax(0, capacity_ratio), capacity >= 0 ? Palette::ui_main : Palette::red, Palette::bg);
     ui::Pop();  // Inset
 
     int w = ui::Current()->width;
@@ -830,6 +831,7 @@ void TransferPlanUI::SetPlan(TransferPlan* pplan, RID pship, timemath::Time pmin
     if (is_dragging_departure || is_dragging_arrival || !IsIdValid(ship) || !IsIdValid(plan->departure_planet)) {
         return;
     }
+    SetPlanetTabIndex(0);  // Force planets to show resources
     plan->arrival_planet = planet;
     if (
            plan->departure_planet != GetInvalidId() 

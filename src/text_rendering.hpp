@@ -28,7 +28,7 @@ namespace text {
     void DrawTextEx(Font font, const char *text, Vector2 position, 
                             float fontSize, float spacing, Color tint);
     void DrawTextEx(Font font, const char *text, Vector2 position, float fontSize, 
-                            float spacing, Color tint, Rectangle render_rect, uint8_t z_layer);
+                            float spacing, Color tint, Color bg, Rectangle render_rect, uint8_t z_layer);
 }
 
 #endif  // TEXTUTILS_H

@@ -48,13 +48,15 @@ void Calendar::DrawUI() const {
     // timemath::Time scale (top-right corner)
     const int font_size = DEFAULT_FONT_SIZE;
 
+    Font font = GetCustomDefaultFont(font_size);
+
     const char* text = TextFormat("%s Time x %.1f", paused ? ICON_PAUSE : ICON_PLAY, time_scale);
-    Vector2 pos = { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(font_size), text, font_size, 1).x - 10, 10 };
-    text::DrawText(text, pos, Palette::ui_main);
+    Vector2 pos = { GetScreenWidth() - MeasureTextEx(font, text, font_size, 1).x - 10, 10 };
+    text::DrawTextEx(font, text, pos, font_size, 1, Palette::ui_main, Palette::bg, GetScreenRect(), 0);
     char text_date[100];
     GlobalGetNow().FormatAsDate(text_date, 100);
-    pos = { GetScreenWidth() - MeasureTextEx(GetCustomDefaultFont(font_size), text_date, font_size, 1).x - 10, 30 };
-    text::DrawText(text_date, pos, Palette::ui_main);
+    pos = { GetScreenWidth() - MeasureTextEx(font, text_date, font_size, 1).x - 10, 30 };
+    text::DrawTextEx(font, text_date, pos, font_size, 1, Palette::ui_main, Palette::bg, GetScreenRect(), 0);
 }
 
 bool Calendar::IsNewDay() const {

@@ -268,7 +268,7 @@ timemath::Time Orbit::GetPeriod() const {
     return 2 * PI * sqrt(sma*sma*sma / mu);
 }
 
-OrbitPos Orbit::FromRightAscention(double ra) const {
+OrbitPos Orbit::FromRightAscension(double ra) const {
     DVector3 target_dir = DVector3(cos(ra), 0, sin(ra));
     //DebugDrawLine(DVector3::Zero(), periapsis_dir * sma);
     //DebugDrawLine(DVector3::Zero(), target_dir * 2e9);

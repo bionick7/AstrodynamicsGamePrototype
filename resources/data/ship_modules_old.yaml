@@ -14,7 +14,7 @@ shipmodules:
   construction_resources: 
     steel: 10
   construction_time: 10
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 1
     industrial_manufacturing: 1
     industrial_dock: 1
@@ -30,7 +30,7 @@ shipmodules:
   construction_resources:
     aluminium: 3
     water: 10
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 1
     industrial_manufacturing: 1
     industrial_storage: 1
@@ -48,7 +48,7 @@ shipmodules:
   construction_resources:
     aluminium: 3
     hydrogen: 10
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 1
     industrial_manufacturing: 1
     industrial_storage: 1
@@ -282,7 +282,7 @@ shipmodules:
   construction_resources:
     steel: 10
     polymers: 20
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 2
     industrial_manufacturing: 1
     industrial_storage: 1
@@ -449,7 +449,7 @@ shipmodules:
   construction_time: 5
   construction_resources:
     steel: 10
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 1
     industrial_manufacturing: 1
     industrial_dock: 1
@@ -463,7 +463,7 @@ shipmodules:
     kinetic_hp: 20
     energy_hp: 10
     kinetic_defense: 1
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 1
     industrial_manufacturing: 1
     industrial_dock: 1
@@ -519,7 +519,7 @@ shipmodules:
     steel: 30
     water: 10
     uranium: 1
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 2
     industrial_manufacturing: 1
     clean_room: 1
@@ -537,7 +537,7 @@ shipmodules:
   construction_resources:
     electronics: 8
     steel: 50
-  construction_reqirements:
+  construction_requirements:
     industrial_admin: 2
     industrial_manufacturing: 1
     clean_room: 1
