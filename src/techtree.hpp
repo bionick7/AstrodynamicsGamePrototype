@@ -4,6 +4,7 @@
 #include "datanode.hpp"
 #include "id_allocator.hpp"
 #include "ui.hpp"
+#include "planetary_economy.hpp"
 
 struct ResearchCondition {
     enum Type {
@@ -12,6 +13,9 @@ struct ResearchCondition {
         ALL,
         STAT_CONDITION,
         PRODUCTION_COUNTER,
+        VISIT,
+        PRODUCE_ITEM,
+        ARCHIEVEMENT,
         FREE,
 
         TYPE_MAX
@@ -37,11 +41,16 @@ struct ResearchCondition {
     };
 
     static constexpr const char* type_identifiers[TYPE_MAX] = {
-        "any", "all", "stat_archieved", "production_counter", "free"
+        "any", "all", "stat_archieved", "production_counter",
+        "visit", "produce_item", "archievement", "free"
     };
 
     static constexpr const char* comparison_identifiers[COMPARISON_MAX] = {
         "gt", "lt", "geq", "leq", "eq", "neq"
+    };
+
+    static constexpr const char* comparison_repr[COMPARISON_MAX] = {
+        ">", "<", "\u2265", "\u2264", "=", "\u2260"
     };
 
     Type type;
@@ -50,7 +59,12 @@ struct ResearchCondition {
         LeafCondition leaf;
     } cond;
 
-    float GetProgress();
+    int internal_counter = 0;  // Relevant now only for PRODUCTION_COUNTER
+
+    bool IsBranch() const;
+    float GetProgress() const;
+    int GetChildCount(bool include_branches) const;
+    void GetDescriptiveText(StringBuilder* sb) const;
 };
 
 struct TechTreeNode {
@@ -60,8 +74,8 @@ struct TechTreeNode {
     IDList attached_components;
     IDList prerequisites;
     double default_status = -1;
-    int research_effort = 1000;
     AtlasPos icon_index;
+    int condition_index;
 
     // Generated info (for drawing)
     int layer = -1;
@@ -72,30 +86,39 @@ struct TechTreeNode {
 struct TechTree {
     int nodes_count = 0;
     TechTreeNode* nodes = NULL;  // Static
-    int* node_progress = NULL;
-    const char** node_names_ptrs = NULL;  // Needed for serialization, not owning
-    int research_focus = -1;
-
-    int daily_progress = 0;
+    int* node_unlocked = NULL;
 
     int layers = 0;
-    int max_indecies_in_layer = 0;
+    int max_indices_in_layer = 0;
     int ui_selected_tech = -1;
     int ui_hovered_tech = -1;
 
     ResearchCondition* research_conditions;
     int research_condition_count;
 
-    void Serialize(DataNode* data) const;
-    void Deserialize(const DataNode* data);
+    bool* visited_planets = NULL;
+    int archievement_count = 0;
+    bool* archeivements = NULL;
 
     int Load(const DataNode* data);
     int LoadResearchCondition(const DataNode* data, int idx, int child_indices);
     void Update();
+    void UpdateTechProgress();
     bool IsUnlocked(RID entity_class) const;
-    void ForceUnlockTechnology(const char* tech_id);
+    void ForceUnlockTechnology(RID technode_id);
+
+    void Serialize(DataNode* data) const;
+    void Deserialize(const DataNode* data);
+
+    void ReportArchievement(int archievement);
+    void ReportVisit(RID planet);
+    void ReportProduction(RID item);
+    void ReportResourceProduction(const resource_count_t production[]);
+    
+    void GetAttachedConditions(int condition_index, List<int>* condition_indices) const;
 
     bool shown;
+    void DrawResearchProgressRecursive(int condition_index) const;
     void DrawUI();
 };
 

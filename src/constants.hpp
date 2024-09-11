@@ -115,6 +115,18 @@ namespace Palette {
 #define ICON_PDC                      "\u046C"
 #define ICON_ACS                      "\u046E"
 
+#define ICON_CLOCK_EMPTY          "\u04e0"
+#define ICON_CLOCK_BARELY         "\u04e1"
+#define ICON_CLOCK_1_8            "\u04e2"
+#define ICON_CLOCK_QUARTER        "\u04e3"
+#define ICON_CLOCK_3_8            "\u04e4"
+#define ICON_CLOCK_HALF           "\u04e5"
+#define ICON_CLOCK_5_8            "\u04e6"
+#define ICON_CLOCK_THREEQUARTERS  "\u04e7"
+#define ICON_CLOCK_7_8            "\u04e8"
+#define ICON_CLOCK_ALMOST         "\u04e9"
+#define ICON_CLOCK_FULL           "\u04ea"
+
 // Aliases for ship stats
 
 #define ICON_INITIATIVE       ICON_ACS

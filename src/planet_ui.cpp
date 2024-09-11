@@ -193,20 +193,8 @@ void Planet::DrawUI() {
     case 0:
         economy.UIDrawResources(id);
         break;
-    case 2:
-        //economy.UIDrawEconomy(id);
-        break;
     case 1:
         _UIDrawInventory();
-        break;
-    case 3:
-        // Quests
-        break;
-    case 4:
-        //_UIDrawProduction(this, EntityType::SHIP_CLASS);
-        break;
-    case 5:
-        //_UIDrawProduction(this, EntityType::MODULE_CLASS);
         break;
     }
 

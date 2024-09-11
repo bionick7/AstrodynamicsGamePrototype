@@ -24,23 +24,35 @@ void Calendar::Deserialize(const DataNode* data) {
     paused = strcmp(data->Get("paused", paused ? "y": "n"), "y") == 0;
 }
 
-timemath::Time Calendar::AdvanceTime(double delta_t) {
-    prev_time = time;
-    if (paused) return time;
-    
-    time = time + delta_t * time_scale;
-    return time;
+void Calendar::FastForward(timemath::Time target_delta) {
+    timelapse_origin = time;
+    timelapse_target = time + target_delta;
+    timelapse = true;
 }
 
-void Calendar::HandleInput(double delta_t) {
-    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_PERIOD)) {
-        time_scale *= 2;
+void Calendar::Update(double delta_t) {
+    if (!GetGlobalState()->IsKeyBoardFocused()) {
+        if (IsKeyPressed(KEY_PERIOD)) {
+            time_scale *= 2;
+        }
+        if (IsKeyPressed(KEY_COMMA)) {
+            time_scale /= 2;
+        }
+        if (IsKeyDown(KEY_SPACE) && !timelapse) {
+            //paused = !paused;
+            FastForward(timemath::Time::Day());
+        }
     }
-    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_COMMA)) {
-        time_scale /= 2;
-    }
-    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_SPACE)) {
-        paused = !paused;
+    
+    prev_time = time;
+    if (timelapse) {
+        time = time + (timelapse_target - timelapse_origin) * delta_t;
+        if (time >= timelapse_target) {
+            time = timelapse_target;
+            timelapse = false;
+        }
+    } else if (!paused) {
+        time = time + delta_t * time_scale;
     }
 }
 

@@ -247,7 +247,12 @@ void UnlockTech(const char* prompt) {
         return;
     }
     prompt = FetchArg(tech_id, prompt);
-    GetTechTree()->ForceUnlockTechnology(tech_id);
+    RID technode_id = GetGlobalState()->GetFromStringIdentifier(tech_id);
+    if (IsIdValidTyped(technode_id, EntityType::TECHTREE_NODE)) {
+        GetTechTree()->ForceUnlockTechnology(technode_id);
+    } else {
+        PushLine(TextFormat("Invalid tech id '%s'", tech_id));
+    }
 }
 
 void InterpreteResult(const char* prompt) {

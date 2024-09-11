@@ -13,12 +13,17 @@ struct Calendar {
     double time_scale;
     bool paused;
 
+    bool timelapse = false;
+    timemath::Time timelapse_origin;
+    timemath::Time timelapse_target;
+
     void Make(timemath::Time t0);
     void Serialize(DataNode* data) const;
     void Deserialize(const DataNode* data);
 
-    timemath::Time AdvanceTime(double delta_t);
-    void HandleInput(double delta_t);
+    void FastForward(timemath::Time target);
+
+    void Update(double delta_t);
     void DrawUI() const;
 
     bool IsNewDay() const;

@@ -49,10 +49,11 @@ void main() {
     vec3 col = tex_color.rgb;
     col = mix(fade_color * 0.1, col, screen_mask);
 
-    //finalColor.rgb = visualize_depth_map(texture(depthMap, fragTexCoord).r);
     //float fade_factor = smoothstep(0.6, 1.2, 1. - fragTexCoord.y) * 0.1;
     col = mix(col, fade_color, fade_factor_color);
     //col = vec3(1) * edge_dist;
+
+    //col = visualize_depth_map(texture(depthMap, fragTexCoord).r);
     
     finalColor.rgb = col;
 }

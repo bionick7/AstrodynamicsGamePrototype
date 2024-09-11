@@ -205,11 +205,14 @@ void _UpdateShipsPlanets(GlobalState* gs) {
         }
     }
     bool ship_selected = IsIdValidTyped(gs->hover, EntityType::SHIP);
+    double min_pixel_distance = 15;  // Threshhold
     for (int planet_id = 0; planet_id < gs->planets.GetPlanetCount(); planet_id++) {
         Planet* planet = GetPlanetByIndex(planet_id);
         planet->Update();
         planet->mouse_hover = false;
-        if (!ship_selected && planet->HasMouseHover(&min_distance)) {
+        double pixel_distance = planet->GetMousePixelDistance();
+        if (!ship_selected && pixel_distance < min_pixel_distance) {
+            min_pixel_distance = pixel_distance;
             gs->hover = planet->id;
         }
     }
@@ -235,12 +238,11 @@ void _UpdateShipsPlanets(GlobalState* gs) {
 
 // Update
 void GlobalState::UpdateState(double delta_t) {
-    calendar.HandleInput(delta_t);
+    calendar.Update(delta_t);
     audio_server.Update(delta_t);
     
     current_focus = _GetCurrentFocus(this);
     _HandleDeselect(this);
-    calendar.AdvanceTime(delta_t);
     active_transfer_plan.Update();
     wren_interface.Update();
     quest_manager.Update();
@@ -353,9 +355,9 @@ void GlobalState::Serialize(DataNode* data) const {
 
     calendar.Serialize(data->SetChild("calendar"));
     quest_manager.Serialize(data->SetChild("quests"));
+    techtree.Serialize(data->SetChild("tech"));
 
     factions.Serialize(data);
-    techtree.Serialize(data);
 
     // ignore transferplanui for now
     data->SetI("focused_planet", focused_planet.AsInt());
@@ -393,10 +395,12 @@ void GlobalState::Deserialize(const DataNode* data) {
     } else {
         calendar.Make(timemath::Time(data->GetF("start_time", 0, true)));
     }
+    if (data->HasChild("tech")) {
+        techtree.Deserialize(data->GetChild("tech"));
+    }
     // ignore transferplanui for now
 
     factions.Deserialize(data);
-    techtree.Deserialize(data);
 
     ships.Clear();
     planets.Clear();
@@ -406,7 +410,7 @@ void GlobalState::Deserialize(const DataNode* data) {
     if (DataNode::FromFile(&ephem_data, ephemerides_path, FileFormat::YAML, true) != 0) {
         FAIL("Could not load save %s", ephemerides_path);
     }
-    planets.LoadEphemeris(&ephem_data);  // if necaissary
+    planets.LoadEphemeris(&ephem_data);  // if necessary
 
     focused_planet = RID(data->GetI("focused_planet", -1, true));
     focused_ship = RID(data->GetI("focused_ship", -1, true));

@@ -265,7 +265,7 @@ void Planet::RemoveShipModuleInInventory(int index) {
     return res;
 }*/
 
-bool Planet::HasMouseHover(double* min_distance) const {
+double Planet::GetMousePixelDistance() const {
     // TODO: proximity approximation is pretty shit at flat angles
 
     OrbitSegment segment = OrbitSegment(&orbit);
@@ -286,14 +286,9 @@ bool Planet::HasMouseHover(double* min_distance) const {
     //float scale = GameCamera::WorldToRender(orbit.sma);
     //DebugDrawTransform(MatrixMultiply(MatrixScale(scale, scale, scale), orbit_transform));
     Vector2 closest_on_screen = GetWorldToScreen(Vector3Transform(local_pos, orbit_transform), GetCamera()->rl_camera);
+    float screen_distance = Vector2Distance(closest_on_screen, GetMousePosition());
     //DebugDrawLineRenderSpace(Vector3Transform(local_pos, orbit_transform), mouse_mouse_representation);
-
-    if (Vector2Distance(closest_on_screen, GetMousePosition()) <= 2.0f && distance < *min_distance) {
-        *min_distance = distance;
-        return true;
-    } else {
-        return false;
-    }
+    return screen_distance;
 }
 
 void Planet::Update() {

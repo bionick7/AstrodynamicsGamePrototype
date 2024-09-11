@@ -25,15 +25,15 @@
 
 #else
 
-#define INFO(...) LogImpl(__FILE__, __LINE__, LOGTYPE_INFO, __VA_ARGS__);
-#define WARNING(...) LogImpl(__FILE__, __LINE__, LOGTYPE_WARNING, __VA_ARGS__);
-#define ERROR(...) LogImpl(__FILE__, __LINE__, LOGTYPE_ERROR, __VA_ARGS__);
-#define USER_INFO(...) LogImpl(__FILE__, __LINE__, LOGTYPE_PLAYER, __VA_ARGS__);
+#define INFO(...)       LogImpl(__FILE__, __LINE__, LOGTYPE_INFO, __VA_ARGS__);
+#define WARNING(...)    LogImpl(__FILE__, __LINE__, LOGTYPE_WARNING, __VA_ARGS__);
+#define ERROR(...)      LogImpl(__FILE__, __LINE__, LOGTYPE_ERROR, __VA_ARGS__);
+#define USER_INFO(...)  LogImpl(__FILE__, __LINE__, LOGTYPE_PLAYER, __VA_ARGS__);
 #define USER_ERROR(...) LogImpl(__FILE__, __LINE__, LOGTYPE_USERERROR, __VA_ARGS__);
 
-#define SHOW_F(var) LogImpl(__FILE__, __LINE__, LOGTYPE_INFO, "%s = %f", #var, var);
-#define SHOW_I(var) LogImpl(__FILE__, __LINE__, LOGTYPE_INFO, "%s = %d", #var, var);
-#define SHOW_V2(var) LogImpl(__FILE__, __LINE__, LOGTYPE_INFO, "%s = (%f, %f)", #var, (var).x, (var).y);
+#define SHOW_F(var)   LogImpl(__FILE__, __LINE__, LOGTYPE_INFO, "%s = %f", #var, var);
+#define SHOW_I(var)   LogImpl(__FILE__, __LINE__, LOGTYPE_INFO, "%s = %d", #var, var);
+#define SHOW_V2(var)  LogImpl(__FILE__, __LINE__, LOGTYPE_INFO, "%s = (%f, %f)", #var, (var).x, (var).y);
 #define SHOW_REC(var) LogImpl(__FILE__, __LINE__, LOGTYPE_INFO, "%s = (%f, %f) : (%f, %f)", #var, (var).x, (var).y, (var).width, (var).height);
 
 //#define CRASH exit(1);

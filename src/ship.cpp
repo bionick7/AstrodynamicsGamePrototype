@@ -763,40 +763,6 @@ bool Ship::CanProduce(RID object, bool check_resources, bool check_stats) const 
     return true;
 }
 
-/*void Ship::AdvanceShipProductionQueue() {
-    // Update ship production
-    if (ship_production_queue.size == 0) return;
-    if (!CanProduce(ship_production_queue[0])) {
-        // TODO: notify the player
-        return;
-    }
-    ship_production_process++;
-    const ShipClass* sc = GetShipClassByRID(ship_production_queue[0]);
-    if (ship_production_process < sc->construction_time) return;
-
-    IDList list;
-    GetShips()->GetOnPlanet(&list, id, ship_selection_flags::ALL);
-    int allegiance = GetShip(list[0])->allegiance;// Assuming planets can't have split allegiance!
-
-    DataNode ship_data;
-    ship_data.Set("name", "TODO: random name");
-    ship_data.Set("class_id", sc->id);
-    ship_data.SetI("allegiance", allegiance); 
-    ship_data.Set("planet", name);
-    ship_data.CreateArray("tf_plans", 0);
-    ship_data.CreateArray("modules", 0);
-    GetShips()->AddShip(&ship_data);
-
-    for (int i=0; i < resources::MAX; i++) {
-        if (sc->construction_resources[i] != 0) {
-            economy.TakeResource((resources::T) i, sc->construction_resources[i]);
-        }
-    }
-
-    ship_production_queue.EraseAt(0);
-    ship_production_process = 0;
-}*/
-
 void Ship::AdvanceProductionQueue() {
     if (!IsParked()) return;
     if (production_queue.size == 0) return;
@@ -818,6 +784,7 @@ void Ship::AdvanceProductionQueue() {
     Planet* planet = GetPlanet(GetParentPlanet());
     const resource_count_t* construction_resources = NULL;
 
+    // Handle spawning in, if applicable (early return in case it's not ready)
     RID product_id = production_queue.Get(0);
     if (IsIdValidTyped(product_id, EntityType::MODULE_CLASS)) {
         const ShipModuleClass* smc = GetModule(product_id);
@@ -849,6 +816,7 @@ void Ship::AdvanceProductionQueue() {
         GetShips()->AddShip(&ship_data);
         construction_resources = sc->construction_resources;
     }
+    GetTechTree()->ReportProduction(product_id);
 
     if (construction_resources != NULL) {
         for (int i=0; i < resources::MAX; i++) {
@@ -991,6 +959,8 @@ void Ship::_OnArrival(const TransferPlan* tp) {
         GetPlanet(tp->arrival_planet)->economy.GiveResource((resources::T) i, transporting[i]);
         total_resources += transporting[i];
     }
+
+    GetTechTree()->ReportVisit(GetParentPlanet());
     position = GetPlanet(GetParentPlanet())->position;
 
     // Complete tasks
@@ -1001,6 +971,7 @@ void Ship::_OnArrival(const TransferPlan* tp) {
         }
     }
 
+    // Remove drop tanks
     for(int i=0; i < SHIP_MAX_MODULES; i++) {
         if (GetShipModules()->IsDropTank(modules[i], GetShipClassByRID(ship_class)->fuel_resource)) {
             RemoveShipModuleAt(i);

@@ -53,8 +53,6 @@ void Load(int argc, const char** argv) {
     //app->LoadGame("resources/data/start_saves/combat_waves.yaml");
     app->LoadGame(TextFormat("resources/data/start_saves/%s.yaml", GetSettingStr("default_savefile")));
     TestingSetup(app);
-
-    // Interpreting cmdline
 }
 
 void MainLoopStep(GlobalState* app) {

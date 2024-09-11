@@ -451,7 +451,7 @@ void assets::BakeAllResources() {
     fprintf(out_file, "#define BAKED_RESOURCE_COUNT %d\n\n", resource_count);
     fprintf(out_file, "assets::BakedResource resources[] = {\n");
     for(int i=0; i < resource_count; i++) {
-        fprintf(out_file, "    { 0x%016" LONG_STRID "X, %d, %10lu, %10lu }, // %s\n", 
+        fprintf(out_file, "    { 0x%016" LONG_STRID "X, %d, %10zu, %10zu }, // %s\n", 
             resources[i].path_hash, 
             resources[i].is_text,
             resources[i].offset,

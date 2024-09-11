@@ -41,6 +41,7 @@ struct StringBuilder {
     StringBuilder& AddTime(timemath::Time t);
     StringBuilder& AddDate(timemath::Time t, bool shorthand=false);
     StringBuilder& AddCost(int64_t cost);
+    StringBuilder& AddClock(float progress);
 };
 
 

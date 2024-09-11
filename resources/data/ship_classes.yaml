@@ -58,7 +58,7 @@ ship_classes:
     crew: 200
     boarding_defense: 5
     power: 2
-    #ground_connection: 2
+    ground_connection: 1
   construction_time: 50
   construction_resources:
     aluminium: 100

@@ -77,6 +77,7 @@ void PlanetaryEconomy::Update() {
         writable_resource_delta[i] = 0;
     }
     if (GetCalendar()->IsNewDay()) {
+        GetTechTree()->ReportResourceProduction(resource_delta);
         for (int i=0; i < resources::MAX; i++) {
             resource_stock[i] = Clamp(resource_stock[i] + resource_delta[i], 0, resource_capacity[i]);
             delivered_resources_today[i] = 0;

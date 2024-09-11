@@ -2,6 +2,7 @@
 #include "basic.hpp"
 #include "logging.hpp"
 #include "tests.hpp"
+#include "constants.hpp"
 
 
 TokenList::TokenList() {
@@ -180,10 +181,11 @@ StringBuilder& StringBuilder::AddLine(const char *add_str) {
 }
 
 StringBuilder& StringBuilder::AddFormat(const char* fmt, ...) {
-    char buffer[100];  // How much is enough?
+    
+    static char buffer[1024];  // How much is enough?
     va_list args;
     va_start(args, fmt);
-    vsprintf(buffer, fmt, args);
+    vsnprintf(buffer, 1024, fmt, args);
     va_end(args);
     return _AddBuffer(buffer);
 }
@@ -229,6 +231,16 @@ StringBuilder& StringBuilder::AddCost(int64_t cost) {
     return _AddBuffer(buffer);
 }
 
+StringBuilder &StringBuilder::AddClock(float progress) {
+    if (progress <= 0)
+        return Add(ICON_CLOCK_EMPTY);
+    if (progress >= 1)
+        return Add(ICON_CLOCK_FULL);
+    int l;
+    const char* clock_utf = CodepointToUTF8(0x04e1 + (int) roundf(progress * 8), &l);
+    return Add(clock_utf);
+}
+
 int StringBuilderTests() {
     StringBuilder sb;
     sb.Add("abcd").Add("01234").Add("ÄÄÖÜ").AddI(-175);
@@ -246,6 +258,11 @@ int StringBuilderTests() {
     sb.AutoBreak(21);
     const char* test_str_1 = "########## ##########\n###############\n########## ## ## ##\n##\n##############################\n##";
     TEST_ASSERT_STREQUAL(sb.c_str, test_str_1)
+
+    sb.Clear();
+    sb.AddClock(0).AddClock(1).AddClock(0.01).AddClock(0.4374).AddClock(0.4376).AddClock(0.99);
+    const char* test_str_clock = ICON_CLOCK_EMPTY ICON_CLOCK_FULL ICON_CLOCK_BARELY ICON_CLOCK_3_8 ICON_CLOCK_HALF ICON_CLOCK_ALMOST;
+    TEST_ASSERT_STREQUAL(sb.c_str, test_str_clock)
 
     return 0;
 }

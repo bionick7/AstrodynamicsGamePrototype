@@ -49,7 +49,7 @@ double AIBlackboard::CalcTransferUtility(AbstractTransfer atf) const {
     if (atf.fuel_consuption.quantity > GetPlanet(atf.departure_planet)->economy.resource_stock[atf.fuel_consuption.resource_id]) {
         return -1;
     }
-    //DebugPrintText("%d <= %d", atf.fuel, GetPlanet(atf.departure_planet)->economy.resource_stock[atf.fuel_consuption.resource_id]);
+    //DebugPrintText("%d \u2264 %d", atf.fuel, GetPlanet(atf.departure_planet)->economy.resource_stock[atf.fuel_consuption.resource_id]);
     int departure_planet_tensor_lookup = IdGetIndex(atf.departure_planet);
     int arrival_planet_tensor_lookup = IdGetIndex(atf.arrival_planet);
     int planets_count = GetPlanets()->GetPlanetCount();

@@ -18,7 +18,7 @@ planets:
     trading_accessible: n
     allegiance: 0
     resource_stock:
-      water: 1000
+      water: 500
       steel: 20
       electronics: 6
     resource_delta:
@@ -33,6 +33,7 @@ planets:
       water: 1000
       steel: 20
       electronics: 6
+      hydrogen: 5
     resource_delta:
       water: 50
     base_independance_delta: 0

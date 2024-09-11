@@ -20,6 +20,8 @@ namespace timemath {
         Time PosMod(Time mod) const;
         bool operator<(Time other) const;
         bool operator>(Time other) const;
+        bool operator<=(Time other) const;
+        bool operator>=(Time other) const;
         bool IsPos() const;
 
         double Seconds() const;

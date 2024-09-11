@@ -9,31 +9,14 @@ techtree:
   icon_index: [2, 28]
 
 - name: Metallurgy
-  id: tech_primitive_industry
+  id: tech_metallurgy
   start_condition: available
   prerequisites: [tech_start]
   condition:
-    type: any
-    elements:
-    - type: production_counter
-      rsc: water
-      comp: geq
-      value: 100
-    - type: any
-      elements:
-      - type: free
-      - type: any
-        elements:
-        - type: free
-        - type: free
-      - type: any
-        elements:
-        - type: free
-        - type: free
-    - type: stat_archieved
-      stat: thermal_control
-      comp: gt
-      value: 1
+    type: stat_archieved
+    stat: thermal_control
+    comp: geq
+    value: 1
   unlocks:
   - shpmod_ore_extractor
   - shpmod_rock_extractor_primitive
@@ -44,7 +27,12 @@ techtree:
 - name: Industry
   id: tech_industry
   start_condition: available
-  prerequisites: [tech_primitive_industry]
+  prerequisites: [tech_metallurgy]
+  condition:
+    type: production_counter
+    rsc: steel
+    comp: geq
+    value: 40
   unlocks:
   - shpmod_heatpump
   - shpmod_manufacture_offices
@@ -54,7 +42,12 @@ techtree:
 - name: Ships
   id: tech_ships
   start_condition: available
-  prerequisites: [tech_primitive_industry]
+  prerequisites: [tech_metallurgy]
+  condition:
+    type: production_counter
+    rsc: aluminium
+    comp: geq
+    value: 40
   unlocks:
   - shp_light_transport
   - shpmod_wetdock
@@ -64,6 +57,11 @@ techtree:
   id: tech_heavy_industry
   start_condition: available
   prerequisites: [tech_industry]
+  condition:
+    type: stat_archieved
+    stat: industrial_storage
+    comp: geq
+    value: 3
   unlocks:
   - shpmod_geothermal
   - shpmod_sail_large
@@ -73,6 +71,11 @@ techtree:
   id: tech_advanced_construction
   start_condition: available
   prerequisites: [tech_industry]
+  condition:
+    type: stat_archieved
+    stat: industrial_admin
+    comp: geq
+    value: 2
   unlocks:
   - shpmod_cleanroom
   - shpmod_workshop
@@ -82,16 +85,25 @@ techtree:
   id: tech_cryo
   start_condition: available
   prerequisites: [tech_industry]
+  condition:
+    type: stat_archieved
+    stat: cryogenics_facility
+    comp: geq
+    value: 1
   unlocks:
   - shpmod_electrolyser
   - shpmod_fuel_cell
-  - shpmod_droptank_hydrogen
   icon_index: [1, 17]
 
 - name: Ship equipment
   id: tech_equipment
   start_condition: available
   prerequisites: [tech_ships]
+  condition:
+    type: produce_item
+    item: shp_light_transport
+    comp: geq
+    value: 1
   unlocks:
   - shpmod_droptank_water
   - shpmod_droptank_hydrogen
@@ -109,14 +121,22 @@ techtree:
   id: tech_advanced_ship
   start_condition: available
   prerequisites: [tech_ships, tech_advanced_construction]
+  condition:
+    type: custom
+    description: Collect 3 ships in one place
   unlocks:
-  - shpmod_shuttles
+  - shp_bulk_transport
   icon_index: [1, 17]
   
 - name: Mega Engineering
   id: tech_mega_engineering
   start_condition: available
   prerequisites: [tech_heavy_industry]
+  condition:
+    type: production_counter
+    rsc: steel
+    comp: geq
+    value: 200
   unlocks:
   - shp_spacestation
   - shpmod_launch_structure
@@ -126,6 +146,17 @@ techtree:
   id: tech_large_extraction
   start_condition: available
   prerequisites: [tech_heavy_industry, tech_shuttles]
+  condition:
+    type: any
+    elements:
+    - type: production_counter
+      rsc: iron_ore
+      comp: geq
+      value: 100
+    - type: production_counter
+      rsc: aluminium_ore
+      comp: geq
+      value: 100
   unlocks:
   - shpmod_rock_extractor
   - shpmod_carbon_extractor
@@ -135,6 +166,13 @@ techtree:
   id: tech_chemical
   start_condition: available
   prerequisites: [tech_advanced_construction, tech_cryo]
+  condition:
+    type: all
+    elements:
+    - type: visit
+      planet: Titan
+    - type: visit
+      planet: Mimas
   unlocks:
   - shpmod_polymers
   - shpmod_carbon_splitter
@@ -145,14 +183,34 @@ techtree:
   id: tech_droptank_hydrogen
   start_condition: available
   prerequisites: [tech_cryo, tech_equipment]
+  condition:
+    type: all
+    elements:
+    - type: production_counter
+      rsc: hydrogen
+      comp: geq
+      value: 20
+    - type: custom
+      description: Use droptank
   unlocks:
   - shpmod_droptank_hydrogen
   icon_index: [1, 17]
   
-- name: High-tech manufacturing
+- name: Semiconductor manufacturing
   id: tech_hitech
   start_condition: available
-  prerequisites: [tech_cryo, tech_equipment]
+  prerequisites: [tech_chemical]
+  condition:
+    type: any
+    elements:
+    - type: production_counter
+      rsc: polymers
+      comp: geq
+      value: 10
+    - type: stat_archieved
+      stat: clean_room
+      comp: geq
+      value: 1
   unlocks:
   - shpmod_electronics
   icon_index: [1, 17]
@@ -161,6 +219,9 @@ techtree:
   id: tech_armor
   start_condition: available
   prerequisites: [tech_equipment]
+  condition:
+    type: custom
+    description: Engage in battle
   unlocks:
   - shpmod_light_armor
   - shpmod_armor
@@ -170,6 +231,11 @@ techtree:
   id: tech_launch_vehicles
   start_condition: available
   prerequisites: [tech_shuttles]
+  condition:
+    type: stat_archieved
+    stat: ground_connection
+    comp: geq
+    value: 3
   unlocks:
   - shpmod_large_shuttles
   icon_index: [1, 17]
@@ -178,6 +244,13 @@ techtree:
   id: tech_naval_weaponry
   start_condition: available
   prerequisites: [tech_hitech, tech_equipment]
+  condition:
+    type: all
+    elements:
+    - type: custom
+      description: Engage in battle
+    - type: custom
+      description: "???"
   unlocks:
   - shpmod_large_shuttles
   icon_index: [1, 17]
@@ -186,6 +259,9 @@ techtree:
   id: tech_rnd
   start_condition: available
   prerequisites: [tech_hitech]
+  condition:
+    type: custom
+    description: "???"
   unlocks:
   - shpmod_barracks
   - shpmod_windtunnel
@@ -199,6 +275,11 @@ techtree:
   id: tech_aeronautics
   start_condition: available
   prerequisites: [tech_rnd]
+  condition:
+    type: stat_archieved
+    stat: clean_room
+    comp: geq
+    value: 1
   unlocks:
   - shpmod_heatshield
   - shpmod_aircraft
@@ -209,6 +290,11 @@ techtree:
   id: tech_expeditionary_military
   start_condition: available
   prerequisites: [tech_rnd]
+  condition:
+    type: stat_archieved
+    stat: clean_room
+    comp: geq
+    value: 1
   unlocks:
   - shpmod_exp_brigade
   - shpmod_invasion_equipment

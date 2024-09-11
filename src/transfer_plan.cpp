@@ -690,7 +690,7 @@ void TransferPlanUI::DrawUI() {
         if (IsIdValidTyped(GetGlobalState()->hover, EntityType::PLANET)) {
             const Planet* hover_planet = GetPlanet(GetGlobalState()->hover);
             double dv = PlanetsMinDV(plan->departure_planet, GetGlobalState()->hover, false);
-            sb.AddFormat("\n[LMB to select %s] (> %4.2f km/s \u0394V)", hover_planet->name, dv / 1e3);
+            sb.AddFormat("\n[LMB to select %s] (\u2265 %4.2f km/s \u0394V)", hover_planet->name, dv / 1e3);
         }
         //ui::SetMouseHint(sb.c_str);
 

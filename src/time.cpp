@@ -35,7 +35,15 @@ bool Time::operator<(Time other) const {
 }
 
 bool Time::operator>(Time other) const {
-    return !(__t < other.__t);
+    return __t > other.__t;
+}
+
+bool Time::operator<=(Time other) const {
+    return !(*this > other);
+}
+
+bool Time::operator>=(Time other) const {
+    return !(*this < other);
 }
 
 Time Time::PosMod(Time mod) const {

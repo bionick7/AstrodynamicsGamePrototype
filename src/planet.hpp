@@ -74,7 +74,7 @@ struct Planet {
     void RemoveShipModuleInInventory(int index);
     //ProductionOrder MakeProductionOrder(RID id) const;
 
-    bool HasMouseHover(double* distance) const;
+    double GetMousePixelDistance() const;
     void Update();
     //void AdvanceShipProductionQueue();
     //void AdvanceModuleProductionQueue();

@@ -454,6 +454,9 @@ void _UIDrawProduction(Ship* ship) {
             }
             options_index = tabs-1;
         }
+        if (!GetTechTree()->IsUnlocked(id)) {
+            continue;
+        }
         //if (!ship->CanProduce(id, false, true) && !GetSettingBool("show_unconstructable_products")) {
         //    continue;
         //}
