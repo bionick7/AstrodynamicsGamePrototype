@@ -25,7 +25,8 @@ shpmod_workshop, , , , , ,40, , , , , , , ,15,15
 shpmod_wetdock, , , , , ,50, , , , , , , , , 
 shpmod_drydock, , , , , ,50, , , , , , , ,100, 
 shpmod_cleanroom, , , , , , , ,10, , , , , ,20, 
-shpmod_railgun, , , , , ,20, , , , , , , , , 
+shpmod_gun,,,,,,25,,,,,,,,,
+shpmod_railgun, , , , , ,, ,10, , , , , ,10, 
 shpmod_missiles,10, , , , ,10, , , , , , , , ,1
 shpmod_light_armor, , , , , ,10, , , , , , , , , 
 shpmod_armor, , , , , ,20, , , , , , , , , 

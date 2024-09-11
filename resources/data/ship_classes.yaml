@@ -1,9 +1,10 @@
 ship_classes:
 - id: shp_bulk_transport
-  name: C1K-998++
+  name: C3G-022 'Spermwhale'
   description: >
-    A larger variant that carries tripple the fuel and triple the engines
-    of a traditional C1K-998. 
+    A larger variant that carries triple the fuel and triple the engines pf the Hedgehog.
+    Notably, it has the capacity to transport module usually reserved for large stations, 
+    like shipyard docks.
   dv: 6  # km/s
   Isp: 4.5  # km/s
   capacity: 300  # t
@@ -13,20 +14,24 @@ ship_classes:
     energy_hp: 1
     crew: 10
   construction_time: 45
+  construction_requirements:
+    industrial_dock: 1
+    industrial_admin: 1
+    industrial_manufacturing: 1
   construction_resources:
     aluminium: 90
     electronics: 4
   
 - id: shp_light_transport
-  name: C1K-998
+  name: C1G-998 'Hedgehog'
   description: >
-    Despite beeing nowadays classified as a light freightship, the C1K was
+    Despite being nowadays classified as a light freightship, the C1K was
     the largest cargo ship at the time of its construction. With
     simple Hydrolox combustion engines, this design was ideal to haul large
-    ammount of cargo with cislunar space. After loosing popularity around the 
+    amount of cargo with cislunar space. After loosing popularity around the 
     2060s, some modified version made it to the outer planets and found some 
-    popularity due to their large maintenance ecosystem and their independance 
-    of nuclear fuel.
+    popularity due to their large maintenance ecosystem and their independence 
+    from nuclear fuel.
   dv: 6
   Isp: 4.5
   capacity: 100
@@ -36,6 +41,11 @@ ship_classes:
     energy_hp: 3
     crew: 17
   construction_time: 15
+  construction_requirements:
+    industrial_dock: 1
+    industrial_admin: 1
+    industrial_manufacturing: 1
+    industrial_storage: 1
   construction_resources:
     aluminium: 30
     electronics: 2
@@ -60,15 +70,23 @@ ship_classes:
     power: 2
     ground_connection: 1
   construction_time: 50
+  construction_requirements:
+    industrial_dock: 1
+    industrial_admin: 1
+    industrial_manufacturing: 2
+    industrial_storage: 2
   construction_resources:
     aluminium: 100
     steel: 100
     electronics: 2
 
 - id: shp_express
-  name: Express
+  name: N1Q-034 'Hawk'
   description: >
-    TBD
+    One of the earliest truly commercially successful nuclear thermal cargo spacecraft, 
+    the Hawk played a large role in making some interplanetary colonies financially successful.
+    The vessel is still useful today and its comparably low-complexity cheap nuclear engine makes its 
+    construction approachable.
   dv: 12
   Isp: 10
   fuel: hydrogen
@@ -79,10 +97,15 @@ ship_classes:
     energy_hp: 2
     crew: 20
   construction_time: 40
+  construction_requirements:
+    industrial_dock: 1
+    industrial_admin: 1
+    industrial_manufacturing: 1
+    precision_manufacturing: 1
+    nuclear_enrichment: 1
   construction_resources:
     aluminium: 30
     electronics: 12
-    uranium: 4
 
 - id: shp_cruiser
   name: Cruiser
@@ -98,10 +121,20 @@ ship_classes:
     energy_hp: 2
     crew: 20
   construction_time: 40
+  construction_requirements:
+    industrial_dock: 1
+    industrial_admin: 1
+    industrial_manufacturing: 2
+    bio_manufacturing: 1
+    precision_manufacturing: 1
+    nuclear_enrichment: 2
+    arms_manufacturing: 1
+    military_training: 1
   construction_resources:
     aluminium: 30
-    electronics: 12
-    uranium: 4
+    polymers: 15
+    electronics: 10
+    steel: 5
 
 
  # MODULE CONFIGURATIONS AUTO-GENERATED

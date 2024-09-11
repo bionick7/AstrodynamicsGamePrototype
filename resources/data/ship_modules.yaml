@@ -39,7 +39,7 @@ shipmodules:
   construction_time: 2
 - id: shpmod_water_extractor
   name: Water extractor
-  description: Extracts water from icey moons
+  description: Extracts water from icy moons
   produce:
     water: 10
   mass: 10
@@ -84,7 +84,7 @@ shipmodules:
     industrial_manufacturing: 1
 - id: shpmod_rock_extractor
   name: Rock extractor
-  description: A more advanced, more efficient rock excrevator, worthy of a self-sufficient
+  description: A more advanced, more efficient rock excavator, worthy of a self-sufficient
     industrial power
   produce:
     rock: 300
@@ -128,7 +128,7 @@ shipmodules:
     industrial_manufacturing: 1
 - id: shpmod_carbon_extractor
   name: Carbon Filter
-  description: Extracts carbon from the atmosphere. Performs suboptimally outside
+  description: Extracts carbon from the atmosphere. Performs sub-optimally outside
     of an atmosphere
   produce:
     carbon: 8
@@ -217,7 +217,7 @@ shipmodules:
   construction_time: 30
 - id: shpmod_aluminium_smelter
   name: Aluminium Smelter
-  description: Aluminium alloys are indespensible for high-strength, low-weight  products,
+  description: Aluminium alloys are indispensable for high-strength, low-weight  products,
     like ships.
   produce:
     aluminium_ore: -17
@@ -261,8 +261,8 @@ shipmodules:
     industrial_manufacturing: 1
 - id: shpmod_habitat
   name: Habitat
-  description: 'A collection of residential, commercial and service buildings that
-    can accomodate around 1500 people in total. '
+  description: A collection of residential, commercial and service buildings that
+    can accommodate around 1500 people in total.
   produce:
     water: -10
     oxygen: -10
@@ -287,7 +287,7 @@ shipmodules:
     industrial_manufacturing: 1
 - id: shpmod_research_lab
   name: Research Laboratory
-  description: ''
+  description: '---'
   produce:
     water: -10
     oxygen: -10
@@ -330,7 +330,7 @@ shipmodules:
     industrial_manufacturing: 1
 - id: shpmod_waste_treatment
   name: Waste Treatment
-  description: Part of the life support system, cleaning and repurposing water from
+  description: Part of the life support system, cleaning and re-purposing water from
     habitats
   produce:
     water: 10
@@ -352,7 +352,7 @@ shipmodules:
     bio_manufacturing: 1
 - id: shpmod_farms
   name: Farms
-  description: A combination of aquaponics and densly packed bean, fungus and fruit
+  description: A combination of aquaponics and densely packed bean, fungus and fruit
     plantages.
   produce:
     oxygen: 10
@@ -399,7 +399,11 @@ shipmodules:
     industrial_manufacturing: 1
 - id: shpmod_electronics
   name: Semiconductor Laboratory
-  description: TBD (warrants a large desription)
+  description: Semiconductors are simultaneously very hard to manufacture and essential
+    for most modern technology. Although we can never hope to match the computer technology
+    from Argentina or Mariner, basic electrical components and low-end integrated
+    circuits are within our reach given enough investment and the expertise of Mimas
+    polytechnic school.
   produce:
     water: -60
     rock: -30
@@ -429,7 +433,8 @@ shipmodules:
     power: -5
 - id: shpmod_manufacture_offices
   name: Small shipyard offices
-  description: Administrative and design offices. Needed in order to build ships
+  description: Administrative and design offices. Needed in order to build ships and
+    more complex technologies
   mass: 10
   construction_resources:
     steel: 10
@@ -441,7 +446,6 @@ shipmodules:
   - 26
   type: medium
   construction_requirements:
-    industrial_admin: 1
     industrial_manufacturing: 1
   produce: {}
 - id: shpmod_large_storage
@@ -505,7 +509,7 @@ shipmodules:
   name: Dry Dock
   description: Dock, where ships can be build and repaired. 'Dry' docks pressurize
     the entire area around the ship. Construction in dry-docks is much more efficient,
-    but the large volume of atmosphere leaks air at a significnat rate.
+    but the large volume of atmosphere leaks air at a significant rate.
   mass: 150
   produce:
     oxygen: -2
@@ -545,6 +549,24 @@ shipmodules:
     industrial_admin: 1
     industrial_manufacturing: 1
   produce: {}
+- id: shpmod_gun
+  name: Naval gun
+  description: Conventional chemical weapons sometimes still find uses on the modern
+    battlefield
+  add:
+    initiative: -1
+  require: []
+  mass: 3
+  construction_resources:
+    steel: 25
+  icon_index:
+  - 8
+  - 27
+  type: small
+  construction_requirements:
+    industrial_manufacturing: 1
+  produce: {}
+  construction_time: 25
 - id: shpmod_railgun
   name: Railgun
   description: High-velocity kinetic weapon that needs extra energy to fire.
@@ -555,7 +577,8 @@ shipmodules:
     power: 2
   mass: 2
   construction_resources:
-    steel: 20
+    aluminium: 10
+    polymers: 10
   icon_index:
   - 8
   - 27
@@ -791,7 +814,7 @@ shipmodules:
   produce: {}
 - id: shpmod_embassy
   name: Embassy
-  description: TODO
+  description: '---'
   add: {}
   mass: 20
   construction_resources:
@@ -807,7 +830,7 @@ shipmodules:
   produce: {}
 - id: shpmod_boost_init
   name: DEV - INITIAITVE BOOST
-  description: DEV - Free boost to initiativeTODO
+  description: DEV - Free boost to initiative
   add:
     initiative: 1
   mass: 0
@@ -840,7 +863,8 @@ shipmodules:
   - 25
 - id: shpmod_sail_small
   name: Tactical Sail
-  description: TODO
+  description: Tactical sails provide temperature control for smaller ships. Mostly
+    used by smaller military vessels
   type: small
   mass: 4
   construction_requirements:
@@ -856,7 +880,9 @@ shipmodules:
   - 28
 - id: shpmod_sail_medium
   name: Ship Sail
-  description: TODO
+  description: The name sail is colloquially given to the temperature control system
+    of a ship, because of their prominence in the appearance of the ship, giving it
+    facimilty to old seagoing vessels
   type: medium
   mass: 8
   construction_requirements:
@@ -872,7 +898,8 @@ shipmodules:
   - 28
 - id: shpmod_sail_large
   name: Industrial Sail
-  description: TODO
+  description: Larger sails that are almost exclusively used in industrial stations
+    to provide cooling for power-intensive processes or reactors.
   type: large
   mass: 15
   construction_requirements:
@@ -889,7 +916,7 @@ shipmodules:
   - 28
 - id: shpmod_reactor_industrial
   name: Industrial Reactor
-  description: TODO
+  description: Large nuclear reactor for industrial stations.
   type: medium
   mass: 20
   add:
@@ -921,7 +948,7 @@ shipmodules:
     steel: 20
   produce: {}
   name: Heatpump
-  description: TODO
+  description: Small heatpump to cool down other modules to cryogenic temperatures.
   type: medium
   mass: 10
   icon_index:
@@ -937,9 +964,11 @@ shipmodules:
     industrial_manufacturing: 1
   construction_resources:
     steel: 30
-  produce: {}
+  produce:
+    water: -5
   name: Industrial Heatpump
-  description: TODO
+  description: Larger heatpump to cool down other modules to cryogenic temperatures.
+    Useful for producing hydrogen at scale
   type: large
   mass: 20
   construction_time: 30
@@ -949,14 +978,20 @@ shipmodules:
 - id: shpmod_shuttles
   name: Small shuttles
   description: Small shuttles suited for establishing a ground connection with small,
-    airless bodies
+    airless bodies. Allows to bring primary resources up from space
   type: medium
   mass: 30
   construction_time: 30
   construction_resources:
     steel: 20
+  planets_restriction:
+  - Rings
+  - Mimas
+  - Encelladus
+  - Tethys
+  - Phoebe
   produce:
-    water: -5
+    water: -15
   construction_requirements:
     industrial_manufacturing: 1
   add:
@@ -966,7 +1001,8 @@ shipmodules:
   - 29
 - id: shpmod_atmos_shuttles
   name: Spaceplanes
-  description: TODO
+  description: Spaceplane can perform transport duties to the surface much more efficiently,
+    for planetary bodies with an atmosphere
   type: medium
   mass: 30
   construction_time: 30
@@ -978,8 +1014,10 @@ shipmodules:
     aluminium: 15
     polymers: 10
     electronics: 5
+  planets_restrictions:
+  - Titan
   produce:
-    water: -15
+    water: -20
   add:
     power: -1
     ground_connection: 2
@@ -988,7 +1026,8 @@ shipmodules:
   - 29
 - id: shpmod_large_shuttles
   name: Launch vehicles
-  description: TODO
+  description: Larger vehicles, that can service all moons at all conditions. Good
+    for large industrial applications
   type: large
   mass: 60
   construction_time: 40
@@ -1000,8 +1039,7 @@ shipmodules:
     aluminium: 40
     polymers: 13
     electronics: 7
-  produce:
-    water: -20
+  produce: {}
   add:
     power: -2
     ground_connection: 3
@@ -1010,8 +1048,8 @@ shipmodules:
   - 29
 - id: shpmod_launch_structure
   name: Launch loop
-  description: A large structure that exists seperatly to the station, connected to
-    the ground
+  description: A large structure that exists separately to the station, connected
+    to the ground
   type: large
   mass: 0
   construction_time: 180
@@ -1028,7 +1066,8 @@ shipmodules:
   produce: {}
 - id: shpmod_barracks
   name: Barracks
-  description: TODO
+  description: Training military personal is essential for the existence of any self-relying
+    organization since the beginning of history.
   type: large
   mass: 50
   construction_requirements:
@@ -1042,7 +1081,8 @@ shipmodules:
   produce: {}
 - id: shpmod_windtunnel
   name: Windtunnel
-  description: TODO
+  description: Essential installation to test aeronautical vessels. Also provides
+    a new way to increase the efficiency of space-faring vessels
   type: large
   mass: 50
   construction_time: 30
@@ -1054,28 +1094,12 @@ shipmodules:
   add:
     power: -2
   construction_resources: {}
-  produce: {}
-- id: shpmod_ballistics_lab
-  name: Ballistics lab
-  description: TODO
-  type: large
-  mass: 50
-  construction_time: 40
-  construction_requirements:
-    industrial_admin: 2
-    industrial_manufacturing: 1
   produce:
     polymers: -1
-  construction_resources: {}
-  add:
-    power: -1
-    arms_manufacturing: 1
-  icon_index:
-  - 9
-  - 30
-- id: shpmod_biolab
-  name: Bio lab
-  description: TODO
+- id: shpmod_ballistics_lab
+  name: Ballistics lab
+  description: Facility equipped to produce and test military equipment from small
+    arms and artillery to air-to-space missiles
   type: large
   mass: 50
   construction_time: 40
@@ -1087,13 +1111,33 @@ shipmodules:
   construction_resources: {}
   add:
     power: -1
+    arms_manufacturing: 1
+  icon_index:
+  - 9
+  - 30
+- id: shpmod_biolab
+  name: Bio lab
+  description: Laboratory working on testing life support, food processing and medical
+    technology and adapting them for our current application.
+  type: large
+  mass: 50
+  construction_time: 40
+  construction_requirements:
+    industrial_admin: 2
+    industrial_manufacturing: 1
+  produce: {}
+  construction_resources: {}
+  add:
+    power: -1
     bio_manufacturing: 1
   icon_index:
   - 8
   - 30
 - id: shpmod_enrichment_facility
   name: Nuclear Enrichment Facility
-  description: TODO
+  description: Uranium can be found in some quantities across the solar system, but
+    it must be enriched in facilities like this before it can be used in reactors
+    or weapons.
   type: large
   mass: 50
   construction_time: 60
@@ -1110,7 +1154,8 @@ shipmodules:
   - 30
 - id: shpmod_precision_workshop
   name: Precision Workshp
-  description: TODO
+  description: Some manufacturing requires tolerances that can only be achieved by
+    specially trained personal and special machinery
   type: large
   mass: 40
   construction_time: 40

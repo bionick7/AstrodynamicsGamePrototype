@@ -6,6 +6,7 @@ show_unconstructable_products: n
 show_help: y
 
 # Graphics
+fov_deg: 50
 sdf_text: n
 sdf_icons: n
 skip_postprocessing: y

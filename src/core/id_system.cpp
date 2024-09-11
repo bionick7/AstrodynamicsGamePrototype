@@ -54,8 +54,8 @@ bool IsIdValid(RID id) {
         return gs->render_server.text_labels_3d.ContainsID(id);
     case EntityType::TECHTREE_NODE:
         return index < gs->techtree.nodes_count;
-    case EntityType::ARCHIEVEMENT:
-        return index < gs->techtree.archievement_count;
+    case EntityType::ACHIEVEMENT:
+        return index < gs->techtree.achievement_count;
     default:
     case EntityType::INVALID:
         return false;

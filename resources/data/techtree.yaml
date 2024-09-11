@@ -1,4 +1,4 @@
-archievements:
+achievements:
 - id: archvmt_battle
   description: Engage another fleet in battle
 - id: archvmt_conveniat
@@ -21,7 +21,7 @@ techtree:
   start_condition: available
   prerequisites: [tech_start]
   condition:
-    type: stat_archieved
+    type: stat_achieved
     stat: thermal_control
     comp: geq
     value: 1
@@ -66,7 +66,7 @@ techtree:
   start_condition: available
   prerequisites: [tech_industry]
   condition:
-    type: stat_archieved
+    type: stat_achieved
     stat: industrial_storage
     comp: geq
     value: 3
@@ -80,7 +80,7 @@ techtree:
   start_condition: available
   prerequisites: [tech_industry]
   condition:
-    type: stat_archieved
+    type: stat_achieved
     stat: industrial_admin
     comp: geq
     value: 2
@@ -94,7 +94,7 @@ techtree:
   start_condition: available
   prerequisites: [tech_industry]
   condition:
-    type: stat_archieved
+    type: stat_achieved
     stat: cryogenics_facility
     comp: geq
     value: 1
@@ -114,7 +114,8 @@ techtree:
     value: 1
   unlocks:
   - shpmod_droptank_water
-  - shpmod_droptank_hydrogen
+  - shpmod_sail_small
+  - shpmod_gun
   special_unlocks:
   - combat
   icon_index: [1, 17]
@@ -125,6 +126,7 @@ techtree:
   prerequisites: [tech_ships]
   unlocks:
   - shpmod_shuttles
+  - shpmod_large_shuttles
   icon_index: [1, 17]
   
 - name: Advanced shipbuilding
@@ -132,7 +134,7 @@ techtree:
   start_condition: available
   prerequisites: [tech_ships, tech_advanced_construction]
   condition:
-    type: archievement
+    type: achievement
     id: archvmt_conveniat
   unlocks:
   - shp_bulk_transport
@@ -200,7 +202,7 @@ techtree:
       rsc: hydrogen
       comp: geq
       value: 20
-    - type: archievement
+    - type: achievement
       id: archvmt_droptank
   unlocks:
   - shpmod_droptank_hydrogen
@@ -217,7 +219,7 @@ techtree:
       rsc: polymers
       comp: geq
       value: 10
-    - type: stat_archieved
+    - type: stat_achieved
       stat: clean_room
       comp: geq
       value: 1
@@ -230,24 +232,11 @@ techtree:
   start_condition: available
   prerequisites: [tech_equipment]
   condition:
-    type: archievement
+    type: achievement
     id: archvmt_battle
   unlocks:
   - shpmod_light_armor
   - shpmod_armor
-  icon_index: [1, 17]
-
-- name: Launch vehicles
-  id: tech_launch_vehicles
-  start_condition: available
-  prerequisites: [tech_shuttles]
-  condition:
-    type: stat_archieved
-    stat: ground_connection
-    comp: geq
-    value: 3
-  unlocks:
-  - shpmod_large_shuttles
   icon_index: [1, 17]
   
 - name: Naval Weaponry
@@ -257,12 +246,15 @@ techtree:
   condition:
     type: all
     elements:
-    - type: archievement
+    - type: achievement
       id: archvmt_battle
-    - type: archievement
+    - type: achievement
       id: TBD
   unlocks:
-  - shpmod_large_shuttles
+  - shpmod_railgun
+  - shpmod_missiles
+  - shpmod_pdc
+  - shpmod_acs
   icon_index: [1, 17]
   
 - name: Research and Development
@@ -270,7 +262,7 @@ techtree:
   start_condition: available
   prerequisites: [tech_hitech]
   condition:
-    type: archievement
+    type: achievement
     id: TBD
   unlocks:
   - shpmod_barracks
@@ -301,7 +293,7 @@ techtree:
   start_condition: available
   prerequisites: [tech_rnd]
   condition:
-    type: stat_archieved
+    type: stat_achieved
     stat: military_training
     comp: geq
     value: 2
@@ -316,7 +308,7 @@ techtree:
   start_condition: available
   prerequisites: [tech_rnd]
   condition:
-    type: stat_archieved
+    type: stat_achieved
     stat: bio_manufacturing
     comp: geq
     value: 2
@@ -329,7 +321,7 @@ techtree:
   start_condition: available
   prerequisites: [tech_rnd]
   condition:
-    type: stat_archieved
+    type: stat_achieved
     stat: nuclear_enrichment
     comp: geq
     value: 1

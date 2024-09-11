@@ -15,7 +15,7 @@ struct ResearchCondition {
         PRODUCTION_COUNTER,
         VISIT,
         PRODUCE_ITEM,
-        ARCHIEVEMENT,
+        ACHIEVEMENT,
         FREE,
 
         TYPE_MAX
@@ -30,8 +30,8 @@ struct ResearchCondition {
     };
 
     static constexpr const char* type_identifiers[TYPE_MAX] = {
-        "any", "all", "stat_archieved", "production_counter",
-        "visit", "produce_item", "archievement", "free"
+        "any", "all", "stat_achieved", "production_counter",
+        "visit", "produce_item", "achievement", "free"
     };
 
     static constexpr const char* comparison_identifiers[COMPARISON_MAX] = {
@@ -65,11 +65,11 @@ struct ResearchCondition {
     void GetDescriptiveText(StringBuilder* sb) const;
 };
 
-struct Archievement{
+struct Achievement{
     char description[1024] = "NO DESCRIPTION";
     const char* str_id;  // Not owning. Is stored in the map GlobalState
 
-    Archievement();
+    Achievement();
 };
 
 struct TechTreeNode {
@@ -103,9 +103,9 @@ struct TechTree {
 
     bool* visited_planets = NULL;
 
-    int archievement_count = 0;
-    Archievement* archievements = NULL;
-    bool* archievement_states = NULL;
+    int achievement_count = 0;
+    Achievement* achievements = NULL;
+    bool* achievement_states = NULL;
 
     int Load(const DataNode* data);
     int LoadResearchCondition(const DataNode* data, int idx, int child_indices);
@@ -117,7 +117,7 @@ struct TechTree {
     void Serialize(DataNode* data) const;
     void Deserialize(const DataNode* data);
 
-    void ReportArchievement(const char* archievement_name);
+    void ReportAchievement(const char* achievement_name);
     void ReportVisit(RID planet);
     void ReportProduction(RID item);
     void ReportResourceProduction(const resource_count_t production[]);

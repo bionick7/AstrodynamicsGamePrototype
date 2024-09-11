@@ -18,7 +18,7 @@ enum class EntityType: uint8_t {
     TEXT3D,
 
     TECHTREE_NODE,
-    ARCHIEVEMENT,
+    ACHIEVEMENT,
 
     TEST = 0xFE,
     INVALID = 0xFF,

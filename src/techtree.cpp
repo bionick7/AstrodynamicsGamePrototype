@@ -50,8 +50,8 @@ bool ResearchCondition::IsValid() const {
     case VISIT:{
         maximum_variable_value = GetPlanets()->GetPlanetCount() - 1; break;
     }
-    case ARCHIEVEMENT:{
-        maximum_variable_value = GetTechTree()->archievement_count - 1; break;
+    case ACHIEVEMENT:{
+        maximum_variable_value = GetTechTree()->achievement_count - 1; break;
     }
     }
     if (cond.leaf.variable < 0 || cond.leaf.variable > maximum_variable_value) {
@@ -98,8 +98,8 @@ float ResearchCondition::GetProgress() const {
     case VISIT:{
         return GetTechTree()->visited_planets[cond.leaf.variable] ? 1 : 0;
     }
-    case ARCHIEVEMENT:{
-        return GetTechTree()->archievement_states[cond.leaf.variable] ? 1 : 0;
+    case ACHIEVEMENT:{
+        return GetTechTree()->achievement_states[cond.leaf.variable] ? 1 : 0;
     }
     case FREE:{
         return 1;
@@ -180,13 +180,13 @@ void ResearchCondition::GetDescriptiveText(StringBuilder *sb) const {
         sb->AddFormat("Visit %s", planet->name);
         break;
     }
-    case ARCHIEVEMENT:{
-        if (cond.leaf.variable < 0 || cond.leaf.variable > GetTechTree()->archievement_count) {
+    case ACHIEVEMENT:{
+        if (cond.leaf.variable < 0 || cond.leaf.variable > GetTechTree()->achievement_count) {
             sb->Add("Invalid stat condition");
             break;
         }
         sb->AddClock(GetProgress());
-        sb->Add(GetTechTree()->archievements[cond.leaf.variable].description);
+        sb->Add(GetTechTree()->achievements[cond.leaf.variable].description);
         break;
     }
     case FREE:{
@@ -197,7 +197,7 @@ void ResearchCondition::GetDescriptiveText(StringBuilder *sb) const {
     }
 }
 
-Archievement::Archievement() {
+Achievement::Achievement() {
     
 }
 
@@ -232,7 +232,7 @@ int _CountResearchConditionsRecursive(const DataNode *condition_data) {
 }
 
 int TechTree::Load(const DataNode *data) {
-    archievement_count = data->GetChildArrayLen("archievements");
+    achievement_count = data->GetChildArrayLen("achievements");
     nodes_count = data->GetChildArrayLen("techtree");
 
     delete[] nodes;
@@ -244,22 +244,22 @@ int TechTree::Load(const DataNode *data) {
     research_condition_count = 0;
 
     delete[] visited_planets;
-    delete[] archievement_states;
-    delete[] archievements;
+    delete[] achievement_states;
+    delete[] achievements;
 
     visited_planets = new bool[GetPlanets()->GetPlanetCount()];
-    archievement_states = new bool[archievement_count];
-    archievements = new Archievement[archievement_count];
+    achievement_states = new bool[achievement_count];
+    achievements = new Achievement[achievement_count];
 
     for (int i=0; i < GetPlanets()->GetPlanetCount(); i++) { visited_planets[i] = false; }
 
-    // Load Archievements
-    for (int i=0; i < archievement_count; i++) { 
-        const DataNode* archievement_data = data->GetChildArrayElem("archievements", i);
-        archievement_states[i] = false;
-        strcpy(archievements[i].description, archievement_data->Get("description"));
-        RID rid = RID(i, EntityType::ARCHIEVEMENT);
-        archievements[i].str_id = GetGlobalState()->AddStringIdentifier(archievement_data->Get("id"), rid);
+    // Load Achievements
+    for (int i=0; i < achievement_count; i++) { 
+        const DataNode* achievement_data = data->GetChildArrayElem("achievements", i);
+        achievement_states[i] = false;
+        strcpy(achievements[i].description, achievement_data->Get("description"));
+        RID rid = RID(i, EntityType::ACHIEVEMENT);
+        achievements[i].str_id = GetGlobalState()->AddStringIdentifier(achievement_data->Get("id"), rid);
     }
 
     // 1st pass: most data
@@ -403,7 +403,7 @@ int TechTree::LoadResearchCondition(const DataNode* condition_data, int idx, int
         case ResearchCondition::PRODUCE_ITEM:{
             const char* var_id = condition_data->Get("item");
             RID rid = GetGlobalState()->GetFromStringIdentifier(var_id);
-            if (!IsIdValidTyped(rid, EntityType::ARCHIEVEMENT)) {
+            if (!IsIdValidTyped(rid, EntityType::ACHIEVEMENT)) {
                 research_conditions[idx].cond.leaf.variable = GetInvalidId().AsInt();
                 ERROR("No such product '%s'", var_id);
             } else {
@@ -411,12 +411,12 @@ int TechTree::LoadResearchCondition(const DataNode* condition_data, int idx, int
             }
             break;
         }
-        case ResearchCondition::ARCHIEVEMENT:{
+        case ResearchCondition::ACHIEVEMENT:{
             const char* var_id = condition_data->Get("id");
             RID rid = GetGlobalState()->GetFromStringIdentifier(var_id);
-            if (!IsIdValidTyped(rid, EntityType::ARCHIEVEMENT)) {
+            if (!IsIdValidTyped(rid, EntityType::ACHIEVEMENT)) {
                 research_conditions[idx].cond.leaf.variable = -1;
-                ERROR("No such archievement '%s'", var_id);
+                ERROR("No such achievement '%s'", var_id);
             } else {
                 research_conditions[idx].cond.leaf.variable = IdGetIndex(rid);
             }
@@ -444,7 +444,7 @@ void TechTree::ForceUnlockTechnology(RID technode_id) {
       visited planets:
       - Tethys
       - Rhea
-      archievements:
+      achievements:
       - A
       - B
       conditions:
@@ -459,10 +459,10 @@ void TechTree::Serialize(DataNode *data) const {
             data->AppendToArray("visited_planets", GetPlanetByIndex(i)->name);
         }
     }
-    data->CreateArray("archievements", 0);
-    for (int i=0; i < archievement_count; i++) {
-        if (archievement_states[i]) {
-            data->AppendToArray("archievements", archievements[i].str_id);
+    data->CreateArray("achievements", 0);
+    for (int i=0; i < achievement_count; i++) {
+        if (achievement_states[i]) {
+            data->AppendToArray("achievements", achievements[i].str_id);
         }
     }
     data->CreateArray("condition_internals", research_condition_count);
@@ -489,10 +489,10 @@ void TechTree::Deserialize(const DataNode *data) {
         int planet_index = IdGetIndex(GetPlanets()->GetIdByName(data->GetArrayElem("visited_planets", i)));
         visited_planets[planet_index] = true;
     }
-    for (int i=0; i < archievement_count; i++) { archievement_states[i] = false; }
-    for (int i=0; i < data->GetArrayLen("archievements"); i++) {
-        int archievement_index = IdGetIndex(GetGlobalState()->GetFromStringIdentifier(data->GetArrayElem("archievements", i)));
-        archievement_states[archievement_index] = true;
+    for (int i=0; i < achievement_count; i++) { achievement_states[i] = false; }
+    for (int i=0; i < data->GetArrayLen("achievements"); i++) {
+        int achievement_index = IdGetIndex(GetGlobalState()->GetFromStringIdentifier(data->GetArrayElem("achievements", i)));
+        achievement_states[achievement_index] = true;
     }
     ASSERT_EQUAL_INT(data->GetArrayLen("condition_internals"), research_condition_count);
     for (int i=0; i < research_condition_count; i++) {
@@ -507,13 +507,13 @@ void TechTree::Deserialize(const DataNode *data) {
     }
 }
 
-void TechTree::ReportArchievement(const char* archievement_name) {
+void TechTree::ReportAchievement(const char* achievement_name) {
     // Not called
-    RID archievement_id = GetGlobalState()->GetFromStringIdentifier(archievement_name);
-    if (IsIdValidTyped(archievement_id, EntityType::ARCHIEVEMENT)) {
-        archievement_states[IdGetIndex(archievement_id)] = true;
+    RID achievement_id = GetGlobalState()->GetFromStringIdentifier(achievement_name);
+    if (IsIdValidTyped(achievement_id, EntityType::ACHIEVEMENT)) {
+        achievement_states[IdGetIndex(achievement_id)] = true;
     } else {
-        ERROR("No such archievement found: '%s'", archievement_name)
+        ERROR("No such achievement found: '%s'", achievement_name)
     }
 }
 

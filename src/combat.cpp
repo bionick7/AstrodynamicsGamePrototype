@@ -100,7 +100,7 @@ bool ShipBattle(const IDList* ships_aggressor, const IDList* ships_defender, dou
         }
     }
 
-    GetTechTree()->ReportArchievement("archvmt_battle");
+    GetTechTree()->ReportAchievement("archvmt_battle");
 
     //INFO("Party 1 (%d) received %d dammage. Party 2 (%d) received (%d) dammage", ships_1->size, dmg_received_1, ships_2->size, dmg_received_2)
 }

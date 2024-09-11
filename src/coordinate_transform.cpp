@@ -4,6 +4,7 @@
 #include "debug_drawing.hpp"
 #include "constants.hpp"
 #include "text_rendering.hpp"
+#include "debug_console.hpp"
 
 void Calendar::Make(timemath::Time t0) {
     time_scale = 2048*8;
@@ -80,7 +81,7 @@ timemath::Time Calendar::GetFrameElapsedGameTime() const {
 }
 
 void GameCamera::Make() {
-    rl_camera.fovy = 90;
+    rl_camera.fovy = GetSettingNum("fov_deg", 90);
     rl_camera.projection = CAMERA_PERSPECTIVE;
     rl_camera.position = { 0.001f, 3.0f, 0.0f };
     rl_camera.target = Vector3Zero();
