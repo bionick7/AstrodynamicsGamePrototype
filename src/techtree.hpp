@@ -29,17 +29,6 @@ struct ResearchCondition {
         COMPARISON_MAX
     };
 
-    struct BranchCondition {
-        int index;
-        int count;
-    };
-
-    struct LeafCondition {
-        int variable;
-        Comparison comp;
-        int value;
-    };
-
     static constexpr const char* type_identifiers[TYPE_MAX] = {
         "any", "all", "stat_archieved", "production_counter",
         "visit", "produce_item", "archievement", "free"
@@ -54,17 +43,33 @@ struct ResearchCondition {
     };
 
     Type type;
-    union {
-        BranchCondition branch;
-        LeafCondition leaf;
-    } cond;
-
     int internal_counter = 0;  // Relevant now only for PRODUCTION_COUNTER
 
+    union {
+        struct {
+            int index;
+            int count;
+        } branch;
+        
+        struct {
+            int variable;
+            int value;
+            Comparison comp;
+        } leaf;
+    } cond;
+
     bool IsBranch() const;
+    bool IsValid() const;
     float GetProgress() const;
     int GetChildCount(bool include_branches) const;
     void GetDescriptiveText(StringBuilder* sb) const;
+};
+
+struct Archievement{
+    char description[1024] = "NO DESCRIPTION";
+    const char* str_id;  // Not owning. Is stored in the map GlobalState
+
+    Archievement();
 };
 
 struct TechTreeNode {
@@ -97,8 +102,10 @@ struct TechTree {
     int research_condition_count;
 
     bool* visited_planets = NULL;
+
     int archievement_count = 0;
-    bool* archeivements = NULL;
+    Archievement* archievements = NULL;
+    bool* archievement_states = NULL;
 
     int Load(const DataNode* data);
     int LoadResearchCondition(const DataNode* data, int idx, int child_indices);
@@ -110,10 +117,12 @@ struct TechTree {
     void Serialize(DataNode* data) const;
     void Deserialize(const DataNode* data);
 
-    void ReportArchievement(int archievement);
+    void ReportArchievement(const char* archievement_name);
     void ReportVisit(RID planet);
     void ReportProduction(RID item);
     void ReportResourceProduction(const resource_count_t production[]);
+
+    bool IsMilestoneReached(const char* identifier);
     
     void GetAttachedConditions(int condition_index, List<int>* condition_indices) const;
 

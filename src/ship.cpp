@@ -907,6 +907,9 @@ void _OnFleetArrival(Ship* leading_ship, const TransferPlan* tp) {
     IDList allied_ships;
     GetShips()->GetFleet(&allied_ships, leading_ship->id);
     allied_ships.Append(leading_ship->id);
+    if (allied_ships.Count() >= 3) {
+        GetTechTree()->ReportArchievement("archvmt_conveniat");
+    }
     if (hostile_ships.size > 0) {
         // First, military ships vs. military ships
         bool victory = ShipBattle(&allied_ships, &hostile_ships, tp->arrival_dvs[tp->primary_solution].Length());
@@ -975,9 +978,9 @@ void Ship::_OnArrival(const TransferPlan* tp) {
     for(int i=0; i < SHIP_MAX_MODULES; i++) {
         if (GetShipModules()->IsDropTank(modules[i], GetShipClassByRID(ship_class)->fuel_resource)) {
             RemoveShipModuleAt(i);
+            GetTechTree()->ReportArchievement("archvmt_droptank");
         }
     }
-
 
     RemoveTransferPlan(0);
     Update();

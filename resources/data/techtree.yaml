@@ -1,3 +1,11 @@
+archievements:
+- id: archvmt_battle
+  description: Engage another fleet in battle
+- id: archvmt_conveniat
+  description: Collect 3 ships in one place
+- id: archvmt_droptank
+  description: Use a droptank
+
 techtree:
 - name: Start
   id: tech_start
@@ -107,6 +115,8 @@ techtree:
   unlocks:
   - shpmod_droptank_water
   - shpmod_droptank_hydrogen
+  special_unlocks:
+  - combat
   icon_index: [1, 17]
   
 - name: Surface shuttles
@@ -122,8 +132,8 @@ techtree:
   start_condition: available
   prerequisites: [tech_ships, tech_advanced_construction]
   condition:
-    type: custom
-    description: Collect 3 ships in one place
+    type: archievement
+    id: archvmt_conveniat
   unlocks:
   - shp_bulk_transport
   icon_index: [1, 17]
@@ -190,8 +200,8 @@ techtree:
       rsc: hydrogen
       comp: geq
       value: 20
-    - type: custom
-      description: Use droptank
+    - type: archievement
+      id: archvmt_droptank
   unlocks:
   - shpmod_droptank_hydrogen
   icon_index: [1, 17]
@@ -220,8 +230,8 @@ techtree:
   start_condition: available
   prerequisites: [tech_equipment]
   condition:
-    type: custom
-    description: Engage in battle
+    type: archievement
+    id: archvmt_battle
   unlocks:
   - shpmod_light_armor
   - shpmod_armor
@@ -247,10 +257,10 @@ techtree:
   condition:
     type: all
     elements:
-    - type: custom
-      description: Engage in battle
-    - type: custom
-      description: "???"
+    - type: archievement
+      id: archvmt_battle
+    - type: archievement
+      id: TBD
   unlocks:
   - shpmod_large_shuttles
   icon_index: [1, 17]
@@ -260,8 +270,8 @@ techtree:
   start_condition: available
   prerequisites: [tech_hitech]
   condition:
-    type: custom
-    description: "???"
+    type: archievement
+    id: TBD
   unlocks:
   - shpmod_barracks
   - shpmod_windtunnel
@@ -276,8 +286,8 @@ techtree:
   start_condition: available
   prerequisites: [tech_rnd]
   condition:
-    type: stat_archieved
-    stat: clean_room
+    type: produce_item
+    stat: shpmod_windtunnel
     comp: geq
     value: 1
   unlocks:
@@ -292,9 +302,9 @@ techtree:
   prerequisites: [tech_rnd]
   condition:
     type: stat_archieved
-    stat: clean_room
+    stat: military_training
     comp: geq
-    value: 1
+    value: 2
   unlocks:
   - shpmod_exp_brigade
   - shpmod_invasion_equipment
@@ -305,14 +315,24 @@ techtree:
   id: tech_bio
   start_condition: available
   prerequisites: [tech_rnd]
+  condition:
+    type: stat_archieved
+    stat: bio_manufacturing
+    comp: geq
+    value: 2
   unlocks:
-  - shpmod_biolab
+  - shpmod_habitat
   icon_index: [1, 17]
   
 - name: Nuclear Power
   id: tech_nuclear
   start_condition: available
   prerequisites: [tech_rnd]
+  condition:
+    type: stat_archieved
+    stat: nuclear_enrichment
+    comp: geq
+    value: 1
   unlocks:
   - shpmod_reactor
   - shpmod_reactor_industrial
@@ -322,6 +342,11 @@ techtree:
   id: tech_ntr
   start_condition: available
   prerequisites: [tech_nuclear, tech_advanced_ship]
+  condition:
+    type: produce_item
+    item: shpmod_reactor
+    comp: geq
+    value: 2
   unlocks:
   - shp_express
   icon_index: [6, 25]

@@ -8,11 +8,11 @@
 float _GetProgressFromComparison(int variable, int reference, ResearchCondition::Comparison comp) {
     switch (comp) {
         case ResearchCondition::GREATER:
-            return variable / (float)(reference + 1);
+            return Clamp(variable / (float)(reference + 1), 0, 1);
+        case ResearchCondition::GREATER_OR_EQUAL:
+            return Clamp(variable / (float)reference, 0, 1);
         case ResearchCondition::LESS:
             return variable < reference ? 1:0;
-        case ResearchCondition::GREATER_OR_EQUAL:
-            return variable / (float)reference;
         case ResearchCondition::LESS_OR_EQUAL:
             return variable <= reference ? 1:0;
         case ResearchCondition::EQUAL :
@@ -32,7 +32,36 @@ bool ResearchCondition::IsBranch() const {
     }
 }
 
+bool ResearchCondition::IsValid() const {
+    if (IsBranch()) return true;
+    int maximum_variable_value = INT32_MAX;
+    if (type == PRODUCE_ITEM) {
+        RID rid = RID(cond.leaf.variable);
+        EntityType rid_type = IdGetType(rid);
+        return IsIdValid(rid) && (rid_type == EntityType::SHIP_CLASS || rid_type == EntityType::MODULE_CLASS);
+    }
+    switch (type) {
+    case STAT_CONDITION:{
+        maximum_variable_value = ship_stats::MAX - 1; break;
+    }
+    case PRODUCTION_COUNTER:{
+        maximum_variable_value = resources::MAX - 1; break;
+    }
+    case VISIT:{
+        maximum_variable_value = GetPlanets()->GetPlanetCount() - 1; break;
+    }
+    case ARCHIEVEMENT:{
+        maximum_variable_value = GetTechTree()->archievement_count - 1; break;
+    }
+    }
+    if (cond.leaf.variable < 0 || cond.leaf.variable > maximum_variable_value) {
+        return false;
+    }
+    return true;
+}
+
 float ResearchCondition::GetProgress() const {
+    if (!IsValid()) return 1;
     switch (type) {
     case ANY:{
         for (int i=0; i < cond.branch.count; i++) {
@@ -70,7 +99,7 @@ float ResearchCondition::GetProgress() const {
         return GetTechTree()->visited_planets[cond.leaf.variable] ? 1 : 0;
     }
     case ARCHIEVEMENT:{
-        return 0;
+        return GetTechTree()->archievement_states[cond.leaf.variable] ? 1 : 0;
     }
     case FREE:{
         return 1;
@@ -95,6 +124,10 @@ int ResearchCondition::GetChildCount(bool include_branches) const {
 }
 
 void ResearchCondition::GetDescriptiveText(StringBuilder *sb) const {
+    if (!IsValid()) {
+        sb->Add("INVALID CONDITION");
+        return;
+    }
     switch (type) {
     case ANY:
     case ALL:{
@@ -148,12 +181,12 @@ void ResearchCondition::GetDescriptiveText(StringBuilder *sb) const {
         break;
     }
     case ARCHIEVEMENT:{
-        if (cond.leaf.variable < 0) {
+        if (cond.leaf.variable < 0 || cond.leaf.variable > GetTechTree()->archievement_count) {
             sb->Add("Invalid stat condition");
             break;
         }
         sb->AddClock(GetProgress());
-        sb->Add("TODO: archievment description");
+        sb->Add(GetTechTree()->archievements[cond.leaf.variable].description);
         break;
     }
     case FREE:{
@@ -162,6 +195,10 @@ void ResearchCondition::GetDescriptiveText(StringBuilder *sb) const {
         break;
     }
     }
+}
+
+Archievement::Archievement() {
+    
 }
 
 int _SetNodeLayer(TechTreeNode* nodes, int index) {
@@ -195,7 +232,9 @@ int _CountResearchConditionsRecursive(const DataNode *condition_data) {
 }
 
 int TechTree::Load(const DataNode *data) {
+    archievement_count = data->GetChildArrayLen("archievements");
     nodes_count = data->GetChildArrayLen("techtree");
+
     delete[] nodes;
     delete[] node_unlocked;
     delete[] research_conditions;
@@ -205,11 +244,23 @@ int TechTree::Load(const DataNode *data) {
     research_condition_count = 0;
 
     delete[] visited_planets;
-    delete[] archeivements;
+    delete[] archievement_states;
+    delete[] archievements;
+
     visited_planets = new bool[GetPlanets()->GetPlanetCount()];
-    archeivements = new bool[archievement_count];
+    archievement_states = new bool[archievement_count];
+    archievements = new Archievement[archievement_count];
+
     for (int i=0; i < GetPlanets()->GetPlanetCount(); i++) { visited_planets[i] = false; }
-    for (int i=0; i < archievement_count; i++) { archeivements[i] = false; }
+
+    // Load Archievements
+    for (int i=0; i < archievement_count; i++) { 
+        const DataNode* archievement_data = data->GetChildArrayElem("archievements", i);
+        archievement_states[i] = false;
+        strcpy(archievements[i].description, archievement_data->Get("description"));
+        RID rid = RID(i, EntityType::ARCHIEVEMENT);
+        archievements[i].str_id = GetGlobalState()->AddStringIdentifier(archievement_data->Get("id"), rid);
+    }
 
     // 1st pass: most data
     for(int i=0; i < nodes_count; i++) {
@@ -351,11 +402,24 @@ int TechTree::LoadResearchCondition(const DataNode* condition_data, int idx, int
         }
         case ResearchCondition::PRODUCE_ITEM:{
             const char* var_id = condition_data->Get("item");
-            research_conditions[idx].cond.leaf.variable = GetGlobalState()->GetFromStringIdentifier(var_id).AsInt();
+            RID rid = GetGlobalState()->GetFromStringIdentifier(var_id);
+            if (!IsIdValidTyped(rid, EntityType::ARCHIEVEMENT)) {
+                research_conditions[idx].cond.leaf.variable = GetInvalidId().AsInt();
+                ERROR("No such product '%s'", var_id);
+            } else {
+                research_conditions[idx].cond.leaf.variable = rid.AsInt();
+            }
             break;
         }
         case ResearchCondition::ARCHIEVEMENT:{
-            NOT_IMPLEMENTED
+            const char* var_id = condition_data->Get("id");
+            RID rid = GetGlobalState()->GetFromStringIdentifier(var_id);
+            if (!IsIdValidTyped(rid, EntityType::ARCHIEVEMENT)) {
+                research_conditions[idx].cond.leaf.variable = -1;
+                ERROR("No such archievement '%s'", var_id);
+            } else {
+                research_conditions[idx].cond.leaf.variable = IdGetIndex(rid);
+            }
             break;
         }
         default:{
@@ -397,8 +461,8 @@ void TechTree::Serialize(DataNode *data) const {
     }
     data->CreateArray("archievements", 0);
     for (int i=0; i < archievement_count; i++) {
-        if (visited_planets[i]) {
-            data->AppendToArray("visited_planets", GetPlanetByIndex(i)->name);
+        if (archievement_states[i]) {
+            data->AppendToArray("archievements", archievements[i].str_id);
         }
     }
     data->CreateArray("condition_internals", research_condition_count);
@@ -425,10 +489,10 @@ void TechTree::Deserialize(const DataNode *data) {
         int planet_index = IdGetIndex(GetPlanets()->GetIdByName(data->GetArrayElem("visited_planets", i)));
         visited_planets[planet_index] = true;
     }
-    for (int i=0; i < archievement_count; i++) { archeivements[i] = false; }
+    for (int i=0; i < archievement_count; i++) { archievement_states[i] = false; }
     for (int i=0; i < data->GetArrayLen("archievements"); i++) {
         int archievement_index = IdGetIndex(GetGlobalState()->GetFromStringIdentifier(data->GetArrayElem("archievements", i)));
-        archeivements[archievement_index] = true;
+        archievement_states[archievement_index] = true;
     }
     ASSERT_EQUAL_INT(data->GetArrayLen("condition_internals"), research_condition_count);
     for (int i=0; i < research_condition_count; i++) {
@@ -443,10 +507,14 @@ void TechTree::Deserialize(const DataNode *data) {
     }
 }
 
-void TechTree::ReportArchievement(int archievement) {
+void TechTree::ReportArchievement(const char* archievement_name) {
     // Not called
-
-    // TODO
+    RID archievement_id = GetGlobalState()->GetFromStringIdentifier(archievement_name);
+    if (IsIdValidTyped(archievement_id, EntityType::ARCHIEVEMENT)) {
+        archievement_states[IdGetIndex(archievement_id)] = true;
+    } else {
+        ERROR("No such archievement found: '%s'", archievement_name)
+    }
 }
 
 void TechTree::ReportVisit(RID planet) {
@@ -491,6 +559,9 @@ void TechTree::ReportResourceProduction(const resource_count_t production[]) {
             if (research_conditions[condition_index].type != ResearchCondition::PRODUCTION_COUNTER) {
                 continue;
             }
+            if (!research_conditions[condition_index].IsValid()) {
+                continue;
+            }
             resource_count_t resource_idx = research_conditions[condition_index].cond.leaf.variable;
             if (production[resource_idx] <= 0) {
                 continue;
@@ -498,6 +569,10 @@ void TechTree::ReportResourceProduction(const resource_count_t production[]) {
             research_conditions[condition_index].internal_counter += production[resource_idx];
         }
     }
+}
+
+bool TechTree::IsMilestoneReached(const char *identifier) {
+    return false;
 }
 
 void TechTree::GetAttachedConditions(int condition_index, List<int> *condition_indices) const {
@@ -530,8 +605,9 @@ void TechTree::Update() {
 void TechTree::UpdateTechProgress() {
     for (int i=0; i < nodes_count; i++) {
         // Recalculate 
-        if (node_unlocked[i] > 0)
+        if (node_unlocked[i] > 0) {
             continue;
+        }
         int min_parent_distance = 1;
         for(int j=0; j < nodes[i].prerequisites.size; j++) {
             int parent_index = IdGetIndex(nodes[i].prerequisites[j]);
@@ -539,6 +615,9 @@ void TechTree::UpdateTechProgress() {
                 min_parent_distance = node_unlocked[parent_index];
         }
         node_unlocked[i] = min_parent_distance - 1;
+        if (nodes[i].condition_index < 0) {
+            continue;
+        }
         if (node_unlocked[i] == 0 && research_conditions[nodes[i].condition_index].GetProgress() >= 1) {
             node_unlocked[i] = 1;
         }
@@ -575,14 +654,14 @@ void TechTree::DrawResearchProgressRecursive(int condition_index) const {
         ui::BeginDirectDraw();
             int line_x = ui::Current()->x + inset_width - 3;
             DrawLine(line_x, ui::Current()->y + 3,
-                     line_x, ui::Current()->y + ui::Current()->height - 3, Palette::ui_main);
+                     line_x, ui::Current()->y + ui::Current()->height - 3, ui::Current()->text_color);
 
         // Some lower-abstraction shenanigans to draw text vertically
         const int text_size = DEFAULT_FONT_SIZE;
         Vector2 text_draw_pos;
         text_draw_pos.x = ui::Current()->x + 2;
         text_draw_pos.y = ui::Current()->y + (ui::Current()->height + MeasureText(type_name, text_size)) / 2;
-        DrawTextPro(GetCustomDefaultFont(text_size), type_name, text_draw_pos, Vector2Zero(), -90, text_size, 1, Palette::ui_main);
+        DrawTextPro(GetCustomDefaultFont(text_size), type_name, text_draw_pos, Vector2Zero(), -90, text_size, 1, ui::Current()->text_color);
 
         ui::EndDirectDraw();
         ui::Pop();  // HSplit
@@ -626,7 +705,11 @@ void TechTree::DrawUI() {
             continue;
         }
 
-        Color connection_color = Palette::ui_alt;
+        Color connection_color = Palette::ui_dark;
+                    
+        if (node_unlocked[i] >= 0) {
+            connection_color = Palette::ui_alt;
+        }
 
         if (i == preview_tech) {
             connection_color = Palette::interactable_main;
@@ -646,10 +729,12 @@ void TechTree::DrawUI() {
             continue;
         }
         Vector2 node_pos = _GetNodePos(&nodes[i]);
-        Color color = Palette::ui_alt;
+        Color color = Palette::ui_dark;
             
         if (node_unlocked[i] == 1) {
             color = Palette::ui_main;
+        } else if (node_unlocked[i] == 0) {
+            color = Palette::ui_alt;
         }
 
         if (i == preview_tech) {
@@ -727,7 +812,12 @@ void TechTree::DrawUI() {
         // Draw Progress
         ui::Write("Unlock conditions: ");
         ui::VSpace(6);
+        if (node_unlocked[preview_tech] < 0) {
+            // Gray out if not active
+            ui::Current()->text_color = Palette::ui_alt;
+        }
         DrawResearchProgressRecursive(nodes[preview_tech].condition_index);
+        ui::Current()->text_color = Palette::ui_main;
 
         ui::Pop();  // Side-bar
     }

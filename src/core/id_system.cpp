@@ -20,7 +20,10 @@ RID::RID(uint32_t index, EntityType type) {
 }
 
 bool IsIdValid(RID id) {
-    if (id.AsInt() == UINT32_MAX) return false;
+    if (id.AsInt() == UINT32_MAX) {
+        // Shortcut for nominally invalid ID
+        return false;
+    }
     EntityType type = IdGetType(id);
     if (type == EntityType::UNINITIALIZED) {
         FAIL("Uninitialized");
@@ -51,6 +54,8 @@ bool IsIdValid(RID id) {
         return gs->render_server.text_labels_3d.ContainsID(id);
     case EntityType::TECHTREE_NODE:
         return index < gs->techtree.nodes_count;
+    case EntityType::ARCHIEVEMENT:
+        return index < gs->techtree.archievement_count;
     default:
     case EntityType::INVALID:
         return false;

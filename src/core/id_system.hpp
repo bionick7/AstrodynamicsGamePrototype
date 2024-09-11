@@ -8,13 +8,18 @@ enum class EntityType: uint8_t {
     SHIP,
     SHIP_CLASS,
     MODULE_CLASS,
+
     QUEST,
     ACTIVE_QUEST,
     TASK,
     DIALOGUE,
+
     ICON3D,
     TEXT3D,
+
     TECHTREE_NODE,
+    ARCHIEVEMENT,
+
     TEST = 0xFE,
     INVALID = 0xFF,
 };

@@ -32,7 +32,7 @@ void _UIDrawHeader(const Ship* ship) {
     ui::VSpace(10);
 }
 
-int ship_stats_current_tab;
+int ship_stats_current_tab = 0;
 
 void _UIDrawStats(const Ship* ship) {
     const int combat_stat_block_height = 4 * 20;
@@ -84,8 +84,8 @@ void _UIDrawStats(const Ship* ship) {
                 ui::EnclosePartial(0, Palette::bg, Palette::ui_main, direction::DOWN);
             else
                 ui::EnclosePartial(0, Palette::bg, Palette::ui_alt, direction::DOWN);
-            if (i == 0) ui::WriteEx("Combat", text_alignment::VCENTER | text_alignment::LEFT, false);
-            else ui::WriteEx("Production", text_alignment::VCENTER | text_alignment::RIGHT, false);
+            if (i == 0) ui::WriteEx("Production", text_alignment::VCENTER | text_alignment::LEFT, false);
+            else if (GetTechTree()->IsMilestoneReached("combat")) ui::WriteEx("Combat", text_alignment::VCENTER | text_alignment::RIGHT, false);
         ui::Pop();
     }
     ui::Pop();
@@ -94,21 +94,6 @@ void _UIDrawStats(const Ship* ship) {
     ui::VSpace(15);
     StringBuilder sb;
     if (ship_stats_current_tab == 0) {
-        ui::PushInset(combat_stat_block_height);
-        //sb.AddFormat(ICON_POWER "%2d" ICON_ACS "%2d\n", ship->power(), ship->initiative());
-        sb.AddFormat(" %2d/%2d" ICON_HEART_KINETIC "  %2d/%2d" ICON_HEART_ENERGY "  %3d/%3d" ICON_HEART_BOARDING "\n", 
-                    ship->kinetic_hp() - ship->dammage_taken[ship_variables::KINETIC_ARMOR], ship->kinetic_hp(),
-                    ship->energy_hp()  - ship->dammage_taken[ship_variables::ENERGY_ARMOR],  ship->energy_hp(),
-                    ship->crew()       - ship->dammage_taken[ship_variables::CREW],          ship->crew());
-        sb.AddFormat("   %2d " ICON_ATTACK_KINETIC "    %2d " ICON_ATTACK_ORDNANCE "     %3d " ICON_ATTACK_BOARDING "\n", 
-                    ship->kinetic_offense(), ship->ordnance_offense(), ship->boarding_offense());
-        sb.AddFormat("   %2d " ICON_SHIELD_KINETIC "    %2d " ICON_SHIELD_ORDNANCE "     %3d " ICON_SHIELD_BOARDING "\n", 
-                    ship->kinetic_defense(), ship->ordnance_defense(), ship->boarding_defense());
-        //sb.AddFormat("++++++++++++++++++");
-        ui::Write(sb.c_str);
-        ui::HelperText(GetUI()->GetConceptDescription("stat"));
-        ui::Pop();  // Inset
-    } else {
         ui::PushInset(industry_stat_block_height);
 
         int count = 0;
@@ -125,6 +110,21 @@ void _UIDrawStats(const Ship* ship) {
             }
         }
 
+        ui::HelperText(GetUI()->GetConceptDescription("stat"));
+        ui::Pop();  // Inset
+    } else {
+        ui::PushInset(combat_stat_block_height);
+        //sb.AddFormat(ICON_POWER "%2d" ICON_ACS "%2d\n", ship->power(), ship->initiative());
+        sb.AddFormat(" %2d/%2d" ICON_HEART_KINETIC "  %2d/%2d" ICON_HEART_ENERGY "  %3d/%3d" ICON_HEART_BOARDING "\n", 
+                    ship->kinetic_hp() - ship->dammage_taken[ship_variables::KINETIC_ARMOR], ship->kinetic_hp(),
+                    ship->energy_hp()  - ship->dammage_taken[ship_variables::ENERGY_ARMOR],  ship->energy_hp(),
+                    ship->crew()       - ship->dammage_taken[ship_variables::CREW],          ship->crew());
+        sb.AddFormat("   %2d " ICON_ATTACK_KINETIC "    %2d " ICON_ATTACK_ORDNANCE "     %3d " ICON_ATTACK_BOARDING "\n", 
+                    ship->kinetic_offense(), ship->ordnance_offense(), ship->boarding_offense());
+        sb.AddFormat("   %2d " ICON_SHIELD_KINETIC "    %2d " ICON_SHIELD_ORDNANCE "     %3d " ICON_SHIELD_BOARDING "\n", 
+                    ship->kinetic_defense(), ship->ordnance_defense(), ship->boarding_defense());
+        //sb.AddFormat("++++++++++++++++++");
+        ui::Write(sb.c_str);
         ui::HelperText(GetUI()->GetConceptDescription("stat"));
         ui::Pop();  // Inset
     }
