@@ -5,11 +5,20 @@
 #include "basic.hpp"
 #include "assets.hpp"
 #include "debug_drawing.hpp"
+#include "app_meta.hpp"
 
 #include "raylib.h"
 #include <sys/time.h>
 
 #define SETTINGS_FILE_PATH "settings.yaml"
+
+void _OnSettingsChanged() {
+    ReconfigureWindow();
+    
+    GlobalState* gs = GetGlobalState();
+    gs->camera.rl_camera.fovy = GetSettingNum("fov_deg", 90);
+    // ...
+}
 
 namespace settings {
     Setting* list = NULL;
@@ -58,6 +67,7 @@ double Setting::GetAsDouble() const {
 
 void Setting::Set(const char *value) {
     strcpy(overrides[0], value);
+    _OnSettingsChanged();
 }
 
 void Setting::PushOverride(const char *value) {

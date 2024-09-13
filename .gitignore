@@ -5,7 +5,7 @@ dependencies/libyaml/*
 dependencies/raylib/*
 dependencies/raylib_corrupted/*
 dependencies/glfw/*
-screenshots/*
+#screenshots/*
 src/baked_data.hpp
 
 .vscode/*

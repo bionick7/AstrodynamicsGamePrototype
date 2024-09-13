@@ -5,6 +5,7 @@
 void InternalToggleFullScreen();
 void DatedScreenShot();
 
+void ReconfigureWindow();
 void AppMetaInit();
 void AppMetaStep();
 void AppMetaClose();

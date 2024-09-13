@@ -124,12 +124,13 @@ void GameCamera::HandleInput() {
 
     bool translating = IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT);
     if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE) && !translating) {
-        // Camera Translation
+        // Camera Rotation
         double elevation = asin(view_dir.y);
         double azimuth = atan2(view_dir.z / cos(elevation), view_dir.x / cos(elevation));
 
-        elevation -= GetMouseDelta().y * GetFrameTime();
-        azimuth += GetMouseDelta().x * GetFrameTime();
+        double camera_sensitivity = GetSettingNum("camera_rotation_sensitivity");
+        elevation -= GetMouseDelta().y * camera_sensitivity;
+        azimuth += GetMouseDelta().x * camera_sensitivity;
         elevation = Clamp(elevation, -PI/2 + 1e-2, PI/2 - 1e-2);
 
         view_dir.x = cos(elevation) * cos(azimuth);
@@ -138,15 +139,15 @@ void GameCamera::HandleInput() {
         focus_object = GetInvalidId();
     }
     if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE) && translating) {
-        // Camera Rotation
+        // Camera Translation
         Ray prev_pos = GetMouseRay(Vector2Subtract(GetMousePosition(), GetMouseDelta()), rl_camera);
         Ray current_pos = GetMouseRay(GetMousePosition(), rl_camera);
-        if (current_pos.position.y * current_pos.direction.y < 0) {
-            if (fabs(prev_pos.direction.y) > 1e-3 && fabs(current_pos.direction.y) > 1e-3) {
+        if (current_pos.position.y * current_pos.direction.y < 0) {                          // Mouse 'grabs' the origin plane ...
+            if (fabs(prev_pos.direction.y) > 1e-3 && fabs(current_pos.direction.y) > 1e-3) { // ... not at the horizon
                 Vector3 prev_impact = Vector3Add(prev_pos.position, Vector3Scale(prev_pos.direction, prev_pos.position.y / prev_pos.direction.y));
                 Vector3 current_impact = Vector3Add(current_pos.position, Vector3Scale(current_pos.direction, current_pos.position.y / current_pos.direction.y));
                 Vector3 in_plane_delta = Vector3Subtract(current_impact, prev_impact);
-                in_plane_delta = Vector3ClampValue(in_plane_delta, 0, 10 * dist);
+                in_plane_delta = Vector3ClampValue(in_plane_delta, 0, 10 * GetFrameTime() * dist);
                 rl_camera.target = Vector3Add(rl_camera.target, in_plane_delta);
             }
         }

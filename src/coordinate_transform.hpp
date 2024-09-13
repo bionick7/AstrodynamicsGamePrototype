@@ -31,8 +31,7 @@ struct Calendar {
 };
 
 struct GameCamera {
-    // m per game unit
-    static constexpr double space_scale = 1e8;
+    static constexpr double space_scale = 1e8;  // m per game unit
     static Vector3 WorldToRender(DVector3 world) { return (Vector3) (world / space_scale); }
     static float WorldToRender(double world) { return (float) (world / space_scale); }
 

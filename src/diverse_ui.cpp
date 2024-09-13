@@ -112,6 +112,8 @@ void panel_management::DrawUIPanels(GlobalState* gs) {
         button_state_flags::T button_state = ui::AsButton();
         if ((button_state & button_state_flags::HOVER) || is_panel_shown[i]) {
             ui::EncloseEx(2, Palette::bg, Palette::interactable_main, 4);
+        }
+        if (button_state & button_state_flags::HOVER) {
             ui::SetMouseHint(panel_descriptions[i]);
         }
         
