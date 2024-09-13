@@ -28,6 +28,11 @@ namespace Palette {
 #define ICON_EMPTY "\u04ff"  // lower-right corner
 #define ICON_PLANET "\u0300"
 
+#define ICON_QUESTMANAGER   "\u0301"
+#define ICON_TIMELINE       "\u0302"
+#define ICON_BATTLELOG      "\u0303"
+#define ICON_RESEARCHSCREEN "\u0304"
+
 #define ICON_WATER           "\u0320"
 #define ICON_HYDROGEN        "\u0321"
 #define ICON_OXYGEN          "\u0322"

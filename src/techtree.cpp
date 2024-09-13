@@ -683,12 +683,6 @@ void TechTree::DrawResearchProgressRecursive(int condition_index) const {
 void TechTree::DrawUI() {
     const int min_node_vis = -1;
 
-    // Manage viewing
-    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_FOUR)) {
-        shown = !shown;
-    }
-    if (!shown) return;
-
     ui::CreateNew(
         20, 100, GetScreenWidth() - 40, GetScreenHeight() - 100, 
         DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, true

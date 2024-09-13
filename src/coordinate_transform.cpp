@@ -146,7 +146,7 @@ void GameCamera::HandleInput() {
                 Vector3 prev_impact = Vector3Add(prev_pos.position, Vector3Scale(prev_pos.direction, prev_pos.position.y / prev_pos.direction.y));
                 Vector3 current_impact = Vector3Add(current_pos.position, Vector3Scale(current_pos.direction, current_pos.position.y / current_pos.direction.y));
                 Vector3 in_plane_delta = Vector3Subtract(current_impact, prev_impact);
-                in_plane_delta = Vector3ClampValue(in_plane_delta, 0, 10 * GetFrameTime() * dist);
+                in_plane_delta = Vector3ClampValue(in_plane_delta, 0, 10 * dist);
                 rl_camera.target = Vector3Add(rl_camera.target, in_plane_delta);
             }
         }

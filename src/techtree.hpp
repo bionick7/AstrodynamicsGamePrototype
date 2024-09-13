@@ -126,7 +126,6 @@ struct TechTree {
     
     void GetAttachedConditions(int condition_index, List<int>* condition_indices) const;
 
-    bool shown;
     void DrawResearchProgressRecursive(int condition_index) const;
     void DrawUI();
 };

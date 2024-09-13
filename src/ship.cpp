@@ -814,7 +814,9 @@ void Ship::AdvanceProductionQueue() {
         GetShips()->GetOnPlanet(&list, id, ship_selection_flags::ALL);
 
         DataNode ship_data;
-        ship_data.Set("name", "TODO: random name");
+        char ship_name[SHIP_NAME_MAX_SIZE];
+        GetShips()->GetRandomShipName(sc, ship_name);
+        ship_data.Set("name", ship_name);
         ship_data.Set("class_id", sc->id);
         ship_data.SetI("allegiance", allegiance); 
         ship_data.Set("planet", planet->name);
@@ -1080,12 +1082,15 @@ int Ships::LoadShipClasses(const DataNode* data) {
     }
     const DataNode* module_configurations = data->GetChild("module_configurations");
     ship_classes = new ShipClass[ship_classes_count];
+    name_library = *data->GetChild("ship_names");
+
     for (int index=0; index < ship_classes_count; index++) {
         const DataNode* sc_data = data->GetChildArrayElem("ship_classes", index);
         ShipClass sc = {0};
 
         strncpy(sc.name, sc_data->Get("name", "[NAME MISSING]"), SHIPCLASS_NAME_MAX_SIZE);
         strncpy(sc.description, sc_data->Get("description", "[DESCRITION MISSING]"), SHIPCLASS_DESCRIPTION_MAX_SIZE);
+        strncpy(sc.naming_convention, sc_data->Get("naming_convention", "cargo"), SHIPCLASS_NAME_MAX_SIZE);
         const char* ship_id = sc_data->Get("id", "_");
 
         sc.max_capacity = sc_data->GetI("capacity", 0);
@@ -1191,6 +1196,18 @@ void Ships::DrawShipClassUI(RID uuid) const {
         ui::HSpace((ui::Current()->width - 40) / 2);
         ui::DrawIcon(sc->icon_index, Palette::ui_main, 40);
     }
+}
+
+void Ships::GetRandomShipName(const ShipClass* ship_class, char buffer[]) const {
+    const char* key = ship_class->naming_convention;
+    int choice_domain_size = name_library.GetArrayLen(key);
+    if (choice_domain_size == 0) {
+        ERROR("No such naming convention '%s'", key)
+        strncpy(buffer, "[INVALID NAMING CONVENTION]", SHIP_NAME_MAX_SIZE);
+        return;
+    }
+    int choice = rand() % choice_domain_size;
+    strcpy(buffer, name_library.GetArrayElem(key, choice));
 }
 
 void Ships::Clear() {

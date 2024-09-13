@@ -6,6 +6,7 @@
 #include "utils.hpp"
 #include "constants.hpp"
 #include "string_builder.hpp"
+#include "diverse_ui.hpp"
 
 QuestManager::QuestManager() {
 
@@ -36,8 +37,6 @@ void QuestManager::Make() {
 
 void QuestManager::Update() {
     timemath::Time now = GlobalGetNow();
-
-    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_ONE)) show_ui = !show_ui;
     
     // Remove all expired and completed quests
     for(auto it = active_quests.GetIter(); it; it++) {
@@ -101,9 +100,7 @@ void QuestManager::Update() {
 
 int current_available_quests_scroll = 0;
 int current_tab_qst;
-void QuestManager::Draw() {
-    if (!show_ui) return;
-    
+void QuestManager::Draw() {    
     int x_margin = MinInt(100, GetScreenWidth()*.1);
     int y_margin = MinInt(50, GetScreenWidth()*.1);
     int w = GetScreenWidth() - x_margin*2;
@@ -162,7 +159,7 @@ void QuestManager::Draw() {
             return;
         }
 
-        if (GetGlobalState()->current_focus == GlobalState::QUEST_MANAGER) {
+        if (panel_management::GetCurrentFocus() == Focusables::QUEST_MANAGER) {
             int max_scroll = MaxInt(TASK_PANEL_HEIGHT * GetAvailableQuests() - ui::Current()->height, 0);
             current_available_quests_scroll = ClampInt(current_available_quests_scroll - GetMouseWheelMove() * 20, 0, max_scroll);
         }

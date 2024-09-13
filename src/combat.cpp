@@ -3,6 +3,8 @@
 #include "global_state.hpp"
 #include "constants.hpp"
 
+#include "diverse_ui.hpp"
+
 bool ShipBattle(const IDList* ships_aggressor, const IDList* ships_defender, double relative_velocity) {
     // Returns true if aggressor wins
     int velocity_multiplier = relative_velocity / 3000 + 1;
@@ -73,7 +75,7 @@ bool ShipBattle(const IDList* ships_aggressor, const IDList* ships_defender, dou
                     }
                     // Force pause
                     GetCalendar()->paused = true;
-                    output_log->shown = true;
+                    panel_management::SetUIPanelVisibility(Focusables::COMBAT_LOG, true);
 
                     return is_agressor;
                 }
@@ -140,10 +142,6 @@ void BattleLog::Clear() {
 
 void BattleLog::DrawUI() {
     // Draws it's own box. Clears the ui stack
-    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_THREE)) {
-        shown = !shown;
-    }
-    if (!shown) return;
     int width = 800;
     int height = 800;
     if (GetScreenWidth() - 2 * 50 < width) width = GetScreenWidth() - 2 * 50;

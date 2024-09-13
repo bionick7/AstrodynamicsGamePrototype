@@ -7,53 +7,9 @@
 #include "quest.hpp"
 #include "timeline.hpp"
 #include "debug_console.hpp"
+#include "diverse_ui.hpp"
 
 GlobalState global_state;
-
-void GlobalState::_InspectState() {
-
-}
-
-bool _PauseMenuButton(const char* label) {
-    ui::PushInset(DEFAULT_FONT_SIZE+4);
-    ui::Enclose();
-    ui::Write(label);
-    button_state_flags::T button_state = ui::AsButton();
-    HandleButtonSound(button_state & button_state_flags::JUST_PRESSED);
-    ui::Pop();
-    return button_state & button_state_flags::JUST_PRESSED;
-}
-
-bool is_in_pause_menu;
-void _PauseMenu() {
-    const int menu_width = 200;
-    const int button_height = DEFAULT_FONT_SIZE+10;
-    const int menu_height = button_height * 3 + 8;
-    ui::CreateNew(
-        (GetScreenWidth() - menu_width)/2, 
-        (GetScreenHeight() - menu_height)/2, 
-        menu_width,
-        menu_height,
-        DEFAULT_FONT_SIZE,
-        Palette::ui_main,
-        Palette::bg,
-        true
-    );
-    ui::Enclose();
-    if (_PauseMenuButton("Save")) {
-        INFO("Save")
-        DataNode dn;
-        GetGlobalState()->Serialize(&dn);
-        dn.WriteToFile("save.yaml", FileFormat::YAML);
-    }
-    if (_PauseMenuButton("Load")) {
-        INFO("Load")
-        GetGlobalState()->LoadGame("save.yaml");
-    }
-    if (_PauseMenuButton("Exit")) {
-        exit(0);
-    }
-}
 
 void GlobalState::Make(timemath::Time p_time) {
     ui.UIInit();
@@ -119,77 +75,6 @@ void GlobalState::LoadData() {
     #undef NUM
 }
 
-GlobalState::FocusablesPanels _GetCurrentFocus(GlobalState* gs) {
-
-    // out of techtree
-    if (gs->techtree.shown) {
-        return GlobalState::TECHTREE;
-    }
-
-    // out of combat_log
-    if (gs->last_battle_log.shown) {
-        return GlobalState::COMBAT_LOG;
-    }
-
-    // out of quest menu
-    if (gs->quest_manager.show_ui) {
-        return GlobalState::QUEST_MANAGER;
-    }
-
-    // out of timeline
-    if (TimelineIsOpen()) {
-        return GlobalState::TIMELINE;
-    }
-
-    // transfer plan UI
-    if (gs->active_transfer_plan.IsActive() || gs->active_transfer_plan.IsSelectingDestination()) {
-        return GlobalState::TRANSFER_PLAN_UI;
-    } 
-    
-    // cancel out of focused planet and ship
-    if (IsIdValid(gs->focused_planet) || IsIdValid(gs->focused_ship)) {
-        return GlobalState::PLANET_SHIP_DETAILS;
-    } 
-    return GlobalState::MAP;
-}
-
-void _HandleDeselect(GlobalState* gs) {
-    if (!IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !IsKeyPressed(KEY_ESCAPE)) {
-        return;
-    }
-
-    // Cancel out of next layer
-    PlaySFX(SFX_CANCEL);
-
-    switch (gs->current_focus) {
-    case GlobalState::QUEST_MANAGER:{
-        gs->quest_manager.show_ui = false;
-        break;}
-    case GlobalState::TIMELINE:{
-        TimelineClose();
-        break;}
-    case GlobalState::TRANSFER_PLAN_UI:{
-        gs->active_transfer_plan.Abort();
-        break;}
-    case GlobalState::PLANET_SHIP_DETAILS:{
-        gs->focused_planet = GetInvalidId();
-        gs->focused_ship = GetInvalidId();
-        break;}
-    case GlobalState::MAP:{
-        is_in_pause_menu = !is_in_pause_menu;
-        if (is_in_pause_menu) 
-            gs->calendar.paused = true;
-        break;}
-    case GlobalState::COMBAT_LOG:{
-        gs->last_battle_log.shown = false;
-        break;}
-    case GlobalState::TECHTREE:{
-        gs->techtree.shown = false;
-        break;}
-    default: NOT_REACHABLE;
-    }
-}
-
 RID prev_hover = GetInvalidId();
 void _UpdateShipsPlanets(GlobalState* gs) {
     gs->hover = GetInvalidId();
@@ -241,8 +126,8 @@ void GlobalState::UpdateState(double delta_t) {
     calendar.Update(delta_t);
     audio_server.Update(delta_t);
     
-    current_focus = _GetCurrentFocus(this);
-    _HandleDeselect(this);
+    panel_management::HandleDeselect(this);
+
     active_transfer_plan.Update();
     wren_interface.Update();
     quest_manager.Update();
@@ -265,18 +150,6 @@ void GlobalState::DrawUI() {
     ui.UIStart();
     calendar.DrawUI();
     
-    // Money counter
-    char capital_str[21];
-    sprintf(capital_str, "M§M %6" LONG_STRID "d.%3" LONG_STRID "d .mil", 
-        factions.GetMoney(factions.player_faction) / (int)1e6, 
-        factions.GetMoney(factions.player_faction) % 1000000 / 1000
-    );
-    DrawTextAligned(
-        capital_str, {GetScreenWidth() / 2.0f, 10}, 
-        text_alignment::HCENTER & text_alignment::TOP, 
-        Palette::ui_main, Palette::bg, 0
-    );
-
     // planets
     for (int planet_id = 0; planet_id < planets.GetPlanetCount(); planet_id++) {
         Planet* planet = GetPlanetByIndex(planet_id);
@@ -287,21 +160,17 @@ void GlobalState::DrawUI() {
         Ship* ship = ships.alloc[it];
         ship->DrawUI();
     }
-    // Standalone UI Panels
-    //active_transfer_plan.DrawUI();
+
     ship_modules.UpdateDragging();
-    DrawTimeline();
-    quest_manager.Draw();
-    last_battle_log.DrawUI();
-    techtree.DrawUI();
+    panel_management::DrawUIPanels(this);
     DrawDebugConsole();
-    
-    if (is_in_pause_menu){
-        _PauseMenu();
-    }
+    DrawPauseMenu();
+
     ui.UIEnd();
 
     DebugFlushText();
+
+    // FPS
     if (GetSettingBool("show_fps", false)) {
         DrawText(TextFormat("%2.5f ms", GetFrameTime() * 1000), 0, 0, 20, LIME);
         DrawFPS(0, 20);

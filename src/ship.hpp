@@ -30,12 +30,24 @@ namespace ship_type {
         SHIPYARD,
         TRANSPORT,
         MILITARY,
+
+        MAX
     };
+
+    static const char* names[] = {
+        "utility",
+        "shipyard",
+        "transport",
+        "military",
+    };
+
+    static_assert(sizeof(names) / sizeof(names[0]) == MAX);
 };
 
 struct ShipClass {
     char name[SHIPCLASS_NAME_MAX_SIZE];
     char description[SHIPCLASS_DESCRIPTION_MAX_SIZE];
+    char naming_convention[SHIPCLASS_NAME_MAX_SIZE];
     const char* id = "INVALID ID - SHIP CLASS LOADING ERROR";
 
     double max_dv;  // m/s
@@ -196,6 +208,8 @@ struct Ships {
     ShipClass* ship_classes;
     uint32_t ship_classes_count;
 
+    DataNode name_library;
+
     Ships();
     RID AddShip(const DataNode* data);
     int LoadShipClasses(const DataNode* data);
@@ -208,6 +222,7 @@ struct Ships {
     void GetFleet(IDList* list, RID ship) const;
     void KillShip(RID uuid, bool notify_callback);
     void DrawShipClassUI(RID uuid) const;
+    void GetRandomShipName(const ShipClass* ship_class, char buffer[]) const;
     void Clear();
 };
 

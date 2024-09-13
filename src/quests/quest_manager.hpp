@@ -18,8 +18,6 @@ struct QuestManager {
     IDAllocatorList<Quest, EntityType::ACTIVE_QUEST> active_quests;
     IDAllocatorList<Task, EntityType::TASK> active_tasks;
     IDAllocatorList<Dialogue, EntityType::DIALOGUE> dialogues;
-
-    bool show_ui;
     
     QuestManager();
     ~QuestManager();

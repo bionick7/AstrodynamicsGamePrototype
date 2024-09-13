@@ -1,6 +1,93 @@
+ship_names:
+  military_small:
+  - Genghis
+  - Julius
+  - Belisarius
+  - Sargon
+  - Charles
+
+  military_large:
+  - Black Flame
+  - Shameless Admiral
+  - Pleasing Fire
+  - Double Goal
+  - Second Wave
+  - Trustful Bovine
+  - Unapologetic
+  - Essence of War
+
+  cargo:
+  - Good One
+  - Job Well Done
+  - Calendar
+  - Bi-weekly
+  - Windhound
+  - Usurper
+  - Fine Lad
+  - Underdog
+  - Bridge of Dione
+  - Well-meaning Gift
+  - King of Spades
+  - Kind-spirited Parasite
+
+  - Tokyo
+  - Osaka
+  - Beijing
+  - Shanghai
+  - Seoul
+  - Vladivostok
+  - Hong Kong
+  - Singapore
+  - Sydney
+  - Canberra
+  - Honolulu
+  - San Francisco
+  - Los Angeles
+  - Vancouver
+  - Panama
+  - Montreal
+  - New York
+  - Havana
+  - Rio de Janeiro
+  - Edinburgh
+  - Plymouth
+  - Rotterdam
+  - Calais
+  - Bordeaux
+  - Porto
+  - Barcelona
+  - Naples
+  - Venice
+  - Constantinople
+  - Odessa
+  - Leningrad
+  - Dakar
+  - Mumbai
+
+  interplanetary_cargo:
+  - The Merovingian Dynasty
+  - The Habsburg Dynasty
+  - The Isaurian Dynasty
+  - The Ptolemaic Dynasty
+  - The Ming Dynasty
+  - The Quing Dynasty
+
+  station:
+  - Yedidah Averroes Knot
+  - Zola Neha Knot
+  - Haregewoin Aenoheso Knot
+  - Kristijan Serket Knot
+  - Zoubida Djehutimesu Knot
+  - Clemens Tyrrell Knot
+  - Gayathri Jaxton Knot
+  - Yair Laodike Yard
+  - Marko Rosica Yard
+  - Adile Irena Yard
+  
 ship_classes:
 - id: shp_bulk_transport
   name: C3G-022 'Spermwhale'
+  naming_convention: cargo
   description: >
     A larger variant that carries triple the fuel and triple the engines pf the Hedgehog.
     Notably, it has the capacity to transport module usually reserved for large stations, 
@@ -24,6 +111,7 @@ ship_classes:
   
 - id: shp_light_transport
   name: C1G-998 'Hedgehog'
+  naming_convention: cargo
   description: >
     Despite being nowadays classified as a light freightship, the C1K was
     the largest cargo ship at the time of its construction. With
@@ -52,6 +140,7 @@ ship_classes:
   
 - id: shp_spacestation
   name: Station 10M
+  naming_convention: station
   description: >
     General Cosmonautics space station bus is a structural, thermal and power
     framework that can hold 10 metric kilotonns of cargo. It is often used for 
@@ -82,6 +171,7 @@ ship_classes:
 
 - id: shp_express
   name: N1Q-034 'Hawk'
+  naming_convention: cargo
   description: >
     One of the earliest truly commercially successful nuclear thermal cargo spacecraft, 
     the Hawk played a large role in making some interplanetary colonies financially successful.
@@ -109,6 +199,7 @@ ship_classes:
 
 - id: shp_cruiser
   name: Cruiser
+  naming_convention: military_large
   description: >
     TBD
   dv: 12

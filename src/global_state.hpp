@@ -16,18 +16,7 @@
 #include "techtree.hpp"
 
 struct GlobalState {
-    enum FocusablesPanels {
-        COMBAT_LOG,
-        QUEST_MANAGER,
-        TIMELINE,
-        BUILDING_CONSTRUCTION,
-        TRANSFER_PLAN_UI,
-        PLANET_SHIP_DETAILS,
-        TECHTREE,
-        MAP,
-    };
 
-    FocusablesPanels current_focus;
     RID focused_planet;
     RID focused_ship;
     RID hover;
@@ -65,18 +54,12 @@ struct GlobalState {
     const char* AddStringIdentifier(const char* string_id, RID rid);
     RID GetFromStringIdentifier(const char* string_id);
 
-    // Interaction
-    bool CompleteTransaction(int faction, int delta);
-    cost_t GetMoney(int faction);
 
     // Serialization
     void LoadGame(const char* file_path);
     void SaveGame(const char* file_path) const;
     void Serialize(DataNode* dn) const;
     void Deserialize(const DataNode* dn);
-
-    //entt::registry registry;
-    void _InspectState();
 };
 
 GlobalState* GetGlobalState();

@@ -310,66 +310,6 @@ void Planet::Update() {
     }
     economy.Update();
 }
-/*
-void Planet::AdvanceShipProductionQueue() {
-    // Update ship production
-    if (ship_production_queue.size == 0) return;
-    if (!CanProduce(ship_production_queue[0])) {
-        // TODO: notify the player
-        return;
-    }
-    ship_production_process++;
-    const ShipClass* sc = GetShipClassByRID(ship_production_queue[0]);
-    if (ship_production_process < sc->construction_time) return;
-
-    IDList list;
-    GetShips()->GetOnPlanet(&list, id, ship_selection_flags::ALL);
-    int allegiance = GetShip(list[0])->allegiance;// Assuming planets can't have split allegiance!
-
-    DataNode ship_data;
-    ship_data.Set("name", "TODO: random name");
-    ship_data.Set("class_id", sc->id);
-    ship_data.SetI("allegiance", allegiance); 
-    ship_data.Set("planet", name);
-    ship_data.CreateArray("tf_plans", 0);
-    ship_data.CreateArray("modules", 0);
-    GetShips()->AddShip(&ship_data);
-
-    for (int i=0; i < resources::MAX; i++) {
-        if (sc->construction_resources[i] != 0) {
-            economy.TakeResource((resources::T) i, sc->construction_resources[i]);
-        }
-    }
-
-    ship_production_queue.EraseAt(0);
-    ship_production_process = 0;
-}
-
-void Planet::AdvanceModuleProductionQueue() {
-    if (module_production_queue.size == 0) return;
-    if (!CanProduce(module_production_queue[0])) {
-        // TODO: notify the player
-        ERROR("CANNOT PRODUCE %s on %s", GetModule(module_production_queue[0])->name, name)
-        return;
-    }
-    module_production_process++;
-    const ShipModuleClass* smc = GetModule(module_production_queue[0]);
-    if (module_production_process < smc->GetConstructionTime()) return;
-    
-    ShipModuleSlot free_slot = GetFreeModuleSlot();
-    if (free_slot.IsValid()) {
-        free_slot.SetSlot(module_production_queue[0]);
-    }
-
-    for (int i=0; i < resources::MAX; i++) {
-        if (smc->construction_resources[i] != 0) {
-            economy.TakeResource((resources::T) i, smc->construction_resources[i]);
-        }
-    }
-
-    module_production_queue.EraseAt(0);
-    module_production_process = 0;
-}*/
 
 Planets::Planets() {
     planet_array = NULL;

@@ -5,8 +5,8 @@
 #include "debug_drawing.hpp"
 #include "string_builder.hpp"
 #include "utils.hpp"
+#include "diverse_ui.hpp"
 
-bool show_timeline = false;
 int pixels_per_day_vscale = 60;
 
 struct TimeLineCoordinateData {
@@ -301,21 +301,7 @@ void _DrawShips(TimeLineCoordinateData* tcd, const Ships* ships) {
     ui::EndDirectDraw();
 }
 
-bool TimelineIsOpen() {
-    return show_timeline;
-}
-
-void TimelineClose() {
-    show_timeline = false;
-}
-
 void DrawTimeline() {
-    // Manage viewing
-    if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_TWO)) {
-        show_timeline = !show_timeline;
-    }
-    if (!show_timeline) return;
-
     // Create UI Context
     GlobalState* gs = GetGlobalState();
     ui::CreateNew(
@@ -333,7 +319,7 @@ void DrawTimeline() {
     tcd.planet_coords = new int[gs->planets.planet_count];
 
     // Scrolling
-    if (GetGlobalState()->current_focus == GlobalState::TIMELINE) {
+    if (panel_management::GetCurrentFocus() == Focusables::TIMELINE) {
         float scroll_ratio = 1 + 0.1 * GetMouseWheelMove();
         if (scroll_ratio > 1) {
             pixels_per_day_vscale = ClampInt(pixels_per_day_vscale * scroll_ratio, pixels_per_day_vscale + 1, tcd.h);

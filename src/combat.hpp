@@ -33,7 +33,6 @@ union BattleLogEntry {
 
 struct BattleLog {
     StringBuilder log;
-    bool shown;
     std::vector<BattleLogEntry> battle_logs = std::vector<BattleLogEntry>();
 
     void AppendAttackLog(int turn, const Ship* attacker, const Ship* target, bool aggressor_is_attacking);
