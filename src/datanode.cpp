@@ -759,13 +759,11 @@ void DataNode::Remove(const char* key) {
     FieldArrays.erase(key);
     auto it_children = Children.find(key);
     if (it_children != Children.end()) {
-        //free(it_children->second);
         Children.erase(it_children);
     }
     Children.erase(key);
     auto it_children_arr = ChildArrays.find(key);
     if (it_children_arr != ChildArrays.end()) {
-        //free(it_children_arr->second);
         ChildArrays.erase(it_children_arr);
     }
     ChildArrays.erase(key);

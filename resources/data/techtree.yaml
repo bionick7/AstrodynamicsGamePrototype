@@ -109,7 +109,7 @@ techtree:
   prerequisites: [tech_ships]
   condition:
     type: produce_item
-    item: shp_light_transport
+    item: ship_light_transport
     comp: geq
     value: 1
   unlocks:

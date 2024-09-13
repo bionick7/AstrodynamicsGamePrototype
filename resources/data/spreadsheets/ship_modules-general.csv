@@ -25,7 +25,7 @@ shpmod_workshop,Workshop,Construction Workshops. Needed in order to build most s
 shpmod_wetdock,Wet Dock,"Dock, where ships can be build and repaired. 'Wet' docks keep ships exposed to the vacuum.",large,50, , , ,1,1, , , , , , , , ,30
 shpmod_drydock,Dry Dock,"Dock, where ships can be build and repaired. 'Dry' docks pressurize the entire area around the ship. Construction in dry-docks is much more efficient, but the large volume of atmosphere leaks air at a significant rate.",large,150, , , ,2,2, , , , , , , , ,45
 shpmod_cleanroom,Clean room,"Clean rooms are required to manufacture special high-tech components, like electronics, optics or medicine.",large,30, ,1,1, ,1, , , , , , , , ,20
-shpmod_gun,Naval gun,Conventional chemical weapons sometimes still find uses on the modern battlefield,small,3,,,,,1,,,,,,,,,25
+shpmod_gun,Naval gun,Conventional chemical weapons sometimes still find uses on the modern battlefield,small,3,,,,,1,,,,,,,,,10
 shpmod_railgun,Railgun,High-velocity kinetic weapon that needs extra energy to fire.,small,2, , , , ,1, , , , ,1,1, , ,15
 shpmod_missiles,Missiles,Tactical non-nuclear missiles. Basic ordnance used in combat,small,5, , , , ,1, , , , ,1, , , ,20
 shpmod_light_armor,Light armor,"A lighter, thinner armor, granting basic protection to ships.",armor,10, , ,1, ,1,1, , , , , , , ,5

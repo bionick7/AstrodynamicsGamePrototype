@@ -275,7 +275,7 @@ int TechTree::Load(const DataNode *data) {
         nodes[i].icon_index.y = node_data->GetArrayElemI("icon_index", 1);
 
         int unlocks_count = node_data->GetArrayLen("unlocks");
-        nodes[i].attached_components = IDList(unlocks_count);
+        nodes[i].attached_components.Resize(unlocks_count);
         for(int j=0; j < unlocks_count; j++) {
             RID unlock = GetGlobalState()->GetFromStringIdentifier(node_data->GetArrayElem("unlocks", j));
             nodes[i].attached_components.Append(unlock);
@@ -301,7 +301,7 @@ int TechTree::Load(const DataNode *data) {
     for(int i=0; i < nodes_count; i++) {
         const DataNode* node_data = data->GetChildArrayElem("techtree", i);
         int prerequisite_count = node_data->GetArrayLen("prerequisites", true);
-        nodes[i].prerequisites = IDList(prerequisite_count);
+        nodes[i].prerequisites.Resize(prerequisite_count);
         for(int j=0; j < prerequisite_count; j++) {
             RID prereq = GetGlobalState()->GetFromStringIdentifier(node_data->GetArrayElem("prerequisites", j));
             nodes[i].prerequisites.Append(prereq);
@@ -476,7 +476,7 @@ void TechTree::Serialize(DataNode *data) const {
         }
     }
     data->CreateArray("unlocked", 0);
-    for (int i=0; i < research_condition_count; i++) {
+    for (int i=0; i < nodes_count; i++) {
         if (node_unlocked[i]) {
             data->AppendToArray("unlocked", nodes[i].str_id);
         }

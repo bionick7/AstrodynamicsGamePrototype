@@ -82,7 +82,7 @@ IDList::IDList(int initial_capacity){
 }
 
 IDList::IDList(const IDList& other) {
-    capacity = other.size;
+    capacity = other.capacity;
     size = other.size;
     buffer = new RID[capacity];
     for(int i=0; i < size; i++) {
@@ -95,6 +95,7 @@ IDList::~IDList() {
 }
 
 void IDList::Resize(int new_capacity) {
+    if (new_capacity == capacity) return;
     if (new_capacity == 0) {
         delete[] buffer;
         buffer = NULL;
@@ -111,7 +112,6 @@ void IDList::Append(RID id) {
     if (size >= capacity) {
         int extension = capacity/2;
         if (extension < 5) extension = 5;
-        capacity += extension;
         Resize(capacity + extension);
     }
     buffer[size] = id;

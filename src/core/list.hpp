@@ -33,7 +33,7 @@ struct List {
     }
 
     List(const List& other) {
-        capacity = other.size;
+        capacity = other.capacity;
         size = other.size;
         buffer = new T[capacity];
         for(int i=0; i < size; i++) {
@@ -62,7 +62,6 @@ struct List {
         if (size >= capacity) {
             int extension = capacity/2;
             if (extension < 5) extension = 5;
-            capacity += extension;
             Resize(capacity + extension);
         }
         buffer[size] = id;

@@ -47,6 +47,7 @@
 - SHIPS: canceling top of queue resets production progress (Done)
 - SHIPS: carrying capacity can exceed max capacity (Done)
 - ASTRO: Crash when selecting transfer plan
+- SAVING: Crash when loading after queueing production (Done)
 
 ## Necessary Incomplete features
 - save wren quest state (Done)

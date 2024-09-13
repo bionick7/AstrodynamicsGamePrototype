@@ -10,8 +10,8 @@ fov_deg: 50
 sdf_text: n
 sdf_icons: n
 skip_postprocessing: y
-fps_cap: 60
-v_sync: y
+fps_cap: -1
+v_sync: n
 
 # Debug info
 show_fps: n

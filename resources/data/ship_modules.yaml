@@ -553,8 +553,6 @@ shipmodules:
   name: Naval gun
   description: Conventional chemical weapons sometimes still find uses on the modern
     battlefield
-  add:
-    initiative: -1
   require: []
   mass: 3
   construction_resources:
@@ -566,7 +564,7 @@ shipmodules:
   construction_requirements:
     industrial_manufacturing: 1
   produce: {}
-  construction_time: 25
+  construction_time: 10
 - id: shpmod_railgun
   name: Railgun
   description: High-velocity kinetic weapon that needs extra energy to fire.

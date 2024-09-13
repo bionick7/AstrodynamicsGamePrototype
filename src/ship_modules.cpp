@@ -579,14 +579,15 @@ int ShipModules::Load(const DataNode* data) {
 
 const ShipModuleClass* ShipModules::GetModuleByRID(RID index) const {
     if (ship_modules == NULL) {
-        ERROR("Ship modules uninitialized")
+        FAIL("Ship modules uninitialized")
         return NULL;
     }
     if (IdGetType(index) != EntityType::MODULE_CLASS) {
+        FAIL("Invalid ship module id (%d)", index)
         return NULL;
     }
     if (IdGetIndex(index) >= shipmodule_count) {
-        ERROR("Invalid ship module index (%d >= %d or negative)", index, shipmodule_count)
+        FAIL("Invalid ship module index (%d >= %d or negative)", index, shipmodule_count)
         return NULL;
     }
     return &ship_modules[IdGetIndex(index)];

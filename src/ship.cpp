@@ -776,7 +776,14 @@ void Ship::AdvanceProductionQueue() {
     
     if (candidate == GetInvalidId()) {
         // TODO: notify the player
-        ERROR("CANNOT PRODUCE '%s' ON '%s'", GetModule(production_queue.Get(0))->name, name)
+        RID current_id = production_queue.Get(0);
+        if (IsIdValidTyped(current_id, EntityType::SHIP_CLASS)) {
+            ERROR("CANNOT PRODUCE '%s' ON '%s'", GetShipClassByRID(production_queue.Get(0))->name, name)
+        } else if (IsIdValidTyped(current_id, EntityType::MODULE_CLASS)) {
+            ERROR("CANNOT PRODUCE '%s' ON '%s'", GetModule(production_queue.Get(0))->name, name)
+        } else {
+            ERROR("INVALID PRODUCTION ITEM ON '%s'", name)
+        }
         return;
     }
     production_process++;
@@ -863,7 +870,7 @@ void Ship::_OnDeparture(const TransferPlan* tp) {
             local_economy->TakeResource(tp->fuel_type, fuel_quantity);
         } else {
             // Abort
-            USER_INFO(
+             USER_INFO(
                 "Not enough fuel. Could not afford/access remaining fuel %d cts on %s", 
                 remaining_fuel, GetPlanet(tp->departure_planet)->name
             )
@@ -908,6 +915,7 @@ void _OnFleetArrival(Ship* leading_ship, const TransferPlan* tp) {
     GetShips()->GetFleet(&allied_ships, leading_ship->id);
     allied_ships.Append(leading_ship->id);
     if (allied_ships.Count() >= 3) {
+        //TODO: this only accounts for fleets
         GetTechTree()->ReportAchievement("archvmt_conveniat");
     }
     if (hostile_ships.size > 0) {
@@ -1164,7 +1172,7 @@ void Ships::KillShip(RID uuid, bool notify_callback) {
     }
     GetRenderServer()->icons.EraseAt(GetShip(uuid)->icon3d);  // Destroy it here, since GetRenderServer() may not exist in destructor
     GetRenderServer()->text_labels_3d.EraseAt(GetShip(uuid)->text3d);
-    alloc.EraseAt(uuid);
+    alloc.EraseAt(uuid);  // Calls destructor
 }
 
 void Ships::DrawShipClassUI(RID uuid) const {
