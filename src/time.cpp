@@ -78,6 +78,11 @@ bool Time::IsInvalid() const {
 
 char* Time::FormatAsTime(char* buffer, int buffer_len) const {
     time_t time_in_s = (time_t) __t;
+    if (IsInvalid()) {
+        static const char* error_msg = "INVALID";
+        strncpy(buffer, error_msg, buffer_len);
+        return buffer + strlen(error_msg);
+    }
 
     tm time_tm = *gmtime(&time_in_s);
     time_tm.tm_year -= 70;

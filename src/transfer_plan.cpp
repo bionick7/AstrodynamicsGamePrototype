@@ -225,17 +225,9 @@ double TransferPlanSolveWithTimes(TransferPlan tp, timemath::Time departure, tim
 void TransferPlanSetBestDeparture(TransferPlan* tp, timemath::Time t0, timemath::Time t1) {
     // simple optimization of dv vs departure time
 
-#if true
-    //const timemath::Time H = timemath::Time(1);
     const double H = 1.0;
 
     timemath::Time x = tp->departure_time;
-
-    /*HohmannTransfer(
-        &GetPlanet(tp->departure_planet)->orbit,
-        &GetPlanet(tp->arrival_planet)->orbit, t0,
-        &x, NULL, NULL, NULL
-    );*/
 
     double diff_seconds;
     int counter = 0;
@@ -261,99 +253,52 @@ void TransferPlanSetBestDeparture(TransferPlan* tp, timemath::Time t0, timemath:
     if (x > t1 - 1) x = t1 - 1;
     if (x < t0 + 1) x = t0 + 1;
     tp->departure_time = x;
-
-    //double dv_plus = TransferPlanSolveWithDepartureTime(tp, x + H);
-    //double dv_minus = TransferPlanSolveWithDepartureTime(tp, x - H);
-    //double deriv = (dv_plus - dv_minus) / (2 * H);
-    //SHOW_F(deriv)
-#else
-    timemath::Time xl = t0;
-    timemath::Time xr = t1;
-    
-    double yl = TransferPlanSolveWithDepartureTime(tp, xl);
-    double yr = TransferPlanSolveWithDepartureTime(tp, xr);
-
-    const double CONVERGANCE_DELTA = 1e-10;
-    const int MAX_ITER = 100;
-    const double PHI_INV = 0.6180339887; // (sqrt(5) - 1) / 2
-    for (int i = 0; /*yr - yl > CONVERGANCE_DELTA &&*/ i < MAX_ITER; i++) {
-        if (yl < yr) {
-            xr = xl + (PHI_INV) * (xr - xl).Seconds();
-            yr = TransferPlanSolveWithDepartureTime(tp, xr);
-        } else {
-            xl = xl + (1 - PHI_INV) * (xr - xl).Seconds();
-            yl = TransferPlanSolveWithDepartureTime(tp, xl);
-        }
-    }
-
-    double deriv = (yr - yl) / (xr - xl).Seconds();
-    DebugPrintText("l: (%f, %f), r: (%f, %f)", xl, yl, xr, yr);
-
-    if (xl.IsInvalid() && xr.IsInvalid()) return;
-    if (xl.IsInvalid()) tp->departure_time = yl;
-    else if (xr.IsInvalid()) tp->departure_time = yr;
-    else tp->departure_time = yl < yr ? xl : xr;
-
-#endif
 }
 
 void TransferPlanSoonest(TransferPlan* tp, double dv_limit) {
-    // TODO
     // least arrival time in departure_time x arrival_time where (dv = dvlimit)
-    // https://en.wikipedia.org/wiki/Lagrange_multiplier
-
-    // f(x) inputs: arrival and departure time
-    // f(x) outputs: arrival time
-    // h(x) inputs: arrival and departure time
-    // h(x) outputs: delta V
+    // Simplified imperfect (but quick) solution:
+    //    assume departure time is equal to hohmann departure time
+    //    adjust arrival time
 
     timemath::Time now = GlobalGetNow();
-
-    double t1 = timemath::Time::SecDiff(tp->departure_time, now) / timemath::SECONDS_IN_DAY;
-    double t2 = timemath::Time::SecDiff(tp->arrival_time, now) / timemath::SECONDS_IN_DAY;
-    const double EPSILON_T = 120.0;  // Seconds
-    double lagrange_multiplier = 1;
+    timemath::Time hohmann_departure_time, hohmann_arrival_time;
+    double hohmann_departure_dv, hohmann_arrival_dv;
     
-    /*for (int i=0; i < 10; i++) {
-        timemath::Time t1_seconds = now + t1 * timemath::SECONDS_IN_DAY;
-        timemath::Time t2_seconds = now + t2 * timemath::SECONDS_IN_DAY;
+    HohmannTransfer(
+        &GetPlanet(tp->departure_planet)->orbit,
+        &GetPlanet(tp->arrival_planet)->orbit, now,
+        &hohmann_departure_time, &hohmann_arrival_time,
+        &hohmann_departure_dv, &hohmann_arrival_dv
+    );
 
-        double dv = TransferPlanSolveWithTimes(*tp, t1_seconds, t2_seconds);
-        double dv_plus1 = TransferPlanSolveWithTimes(*tp, t1_seconds + EPSILON_T, t2_seconds);
-        double dv_minus1 = TransferPlanSolveWithTimes(*tp, t1_seconds - EPSILON_T, t2_seconds);
-        double dv_plus2 = TransferPlanSolveWithTimes(*tp, t1_seconds, t2_seconds + EPSILON_T);
-        double dv_minus2 = TransferPlanSolveWithTimes(*tp, t1_seconds, t2_seconds - EPSILON_T);
-        double dv_plus12 = TransferPlanSolveWithTimes(*tp, t1_seconds + EPSILON_T, t2_seconds + EPSILON_T);
+    timemath::Time xl = hohmann_arrival_time;
+    double yl = hohmann_departure_dv + hohmann_arrival_dv - dv_limit;
+    
+    // TODO: Finding a good starting guess that is generally applicable is tricky
+    timemath::Time xr = hohmann_departure_time + (hohmann_arrival_time - hohmann_departure_time) * 0.1;
+    double yr = TransferPlanSolveWithTimes(*tp, hohmann_departure_time, xr) - dv_limit;
 
-        double dh_dt1 = (dv_plus1 - dv_minus1) / (2*EPSILON_T) * timemath::SECONDS_IN_DAY / 1000;
-        double dh_dt2 = (dv_plus2 - dv_minus2) / (2*EPSILON_T) * timemath::SECONDS_IN_DAY / 1000;
-        double d2h_dt1_2 = (dv_plus1 - 2*dv + dv_minus1) / (EPSILON_T*EPSILON_T) * timemath::SECONDS_IN_DAY*timemath::SECONDS_IN_DAY / 1000;
-        double d2h_dt2_2 = (dv_plus2 - 2*dv + dv_minus2) / (EPSILON_T*EPSILON_T) * timemath::SECONDS_IN_DAY*timemath::SECONDS_IN_DAY / 1000;
-        double d2h_dt2_2 = (dv_plus12 - dv_plus1 - dv_plus2 + dv) / (EPSILON_T*EPSILON_T) * timemath::SECONDS_IN_DAY*timemath::SECONDS_IN_DAY / 1000;
+    ASSERT(yl < 0)
+    ASSERT(yr > 0)
 
-        double h = (dv - dv_limit) / 1000;
-        double f = t2;
-        double L = f + lagrange_multiplier * h;
-        
-        double dL_dt1 = lagrange_multiplier * dh_dt1;
-        double dL_dt2 = lagrange_multiplier * dh_dt2 + 1;
-        double dL_dlambda = h;  // Huh?
-
-        double d2L_dt1_2 = lagrange_multiplier * d2h_dt1_2;
-        double d2L_dt2_2 = lagrange_multiplier * d2h_dt2_2;
-        double d2L_dlambda_2 = 0;
-
-        t1 -= dL_dt1 / d2L_dt1_2;
-        t2 -= dL_dt2 / d2L_dt2_2;
-        lagrange_multiplier -= dL_dlambda * 0.1;
-
-        INFO("%f %f %f", dL_dt1, dL_dt2, dL_dlambda)
+    for (int i=0; i < 100; i++) {
+        timemath::Time xm = xl + (xr - xl) / 2;
+        double ym = TransferPlanSolveWithTimes(*tp, hohmann_departure_time, xm) - dv_limit;
+        if (ym > 0) {
+            yr = ym;
+            xr = xm;
+        } else {
+            yl = ym;
+            xl = xm;
+        }
+        if (yl > -1) {
+            break;
+        }
     }
-    
-    tp->departure_time = now + t1 * timemath::SECONDS_IN_DAY;
-    tp->arrival_time = now + t2 * timemath::SECONDS_IN_DAY;
 
-    //TransferPlanSolveWithTimes(*tp, dv_limit);*/
+    tp->departure_time = hohmann_departure_time;
+    tp->arrival_time = xl;
 }
 
 void TransferPlan::Serialize(DataNode* data) const {
