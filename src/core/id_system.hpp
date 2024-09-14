@@ -16,6 +16,7 @@ enum class EntityType: uint8_t {
 
     ICON3D,
     TEXT3D,
+    EMBEDDED_SCENE,
 
     TECHTREE_NODE,
     ACHIEVEMENT,

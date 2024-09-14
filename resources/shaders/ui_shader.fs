@@ -9,6 +9,7 @@ uniform sampler2D texture0;
 uniform vec4 colDiffuse;
 uniform vec4 background_color;
 uniform float depth;
+uniform int raw_color;  // acts as bool
 //uniform float dSDFsFrag;
 
 // Output fragment color
@@ -18,9 +19,12 @@ out vec4 finalColor;
 
 void main() {
     vec4 col = texture(texture0, fragTexCoord);
-    //if (col.a <= 0.5) discard; else col.a = 1.0;  // Currently doesn't support transparency
-    finalColor = col;
-    finalColor.rgb *= mix(background_color.rgb, fragColor.rgb * colDiffuse.rgb, col.a);  // Blend into background color
-    //finalColor.a = 1.0;
+    if (raw_color > 0) {
+        finalColor = col;
+    } else {
+        //if (col.a <= 0.5) discard; else col.a = 1.0;  // Currently doesn't support transparency
+        finalColor = mix(background_color, fragColor * colDiffuse, col.a);
+        //finalColor.a = 1.0;
+    }
     gl_FragDepth = depth;
 }

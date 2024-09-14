@@ -446,8 +446,8 @@ void assets::BakeAllResources() {
     fprintf(out_file, "#include \"basic.hpp\"\n");
     fprintf(out_file, "#include \"assets.hpp\"\n\n");
     fprintf(out_file, "namespace baked {\n");
-    fprintf(out_file, "#define BAKED_DATA_SIZE %lu\n", data_size);
-    fprintf(out_file, "#define BAKED_TEXT_SIZE %lu\n", text_size);
+    fprintf(out_file, "#define BAKED_DATA_SIZE %zu\n", data_size);
+    fprintf(out_file, "#define BAKED_TEXT_SIZE %zu\n", text_size);
     fprintf(out_file, "#define BAKED_RESOURCE_COUNT %d\n\n", resource_count);
     fprintf(out_file, "assets::BakedResource resources[] = {\n");
     for(int i=0; i < resource_count; i++) {

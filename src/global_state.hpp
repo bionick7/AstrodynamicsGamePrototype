@@ -41,6 +41,8 @@ struct GlobalState {
 
     std::map<std::string, RID> string_identifiers = std::map<std::string, RID>();
 
+    uint64_t frame_count = 0;  // Usefull for e.g. only spawning stuff on frame 1
+
     // Lifecycle
     void Make(timemath::Time time);
     void LoadData();

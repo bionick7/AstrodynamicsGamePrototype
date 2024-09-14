@@ -14,16 +14,16 @@ fov_deg: 50
 sdf_text: n
 sdf_icons: n
 skip_postprocessing: y
-fps_cap: 60
-v_sync: y
+fps_cap: -1
+v_sync: n
 camera_rotation_sensitivity: 0.01  # rad/px
 
 # Debug info
-show_fps: n
+show_fps: y
 draw_renderrects: n
 draw_textrects: n
 suppress_datanode_warnings: y
-show_preformance_stats: n
+show_performance_stats: n
 
 # Gameplay variables
 base_tech_progress: 10

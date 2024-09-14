@@ -51,7 +51,7 @@ void ReconfigureWindow() {
     int fps_cap = GetSettingNum("fps_cap");  // negative cap means unlimited
     bool v_sync = GetSettingBool("v_sync");
     // ConfigFlags are called before window creation
-    uint32_t window_flags = FLAG_MSAA_4X_HINT | FLAG_WINDOW_RESIZABLE;
+    uint32_t window_flags = FLAG_WINDOW_RESIZABLE;
     if (v_sync && fps_cap > 0) {
         window_flags |= FLAG_VSYNC_HINT;
     }

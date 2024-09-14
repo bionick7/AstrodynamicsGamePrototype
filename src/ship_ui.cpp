@@ -330,7 +330,6 @@ void _ProductionQueueMouseHint(RID id, const Ship* ship, bool is_in_production_q
             construction_requirements =  &module_class->construction_requirements[0];
             build_time = module_class->GetConstructionTime();
             batch_size = module_class->construction_batch_size;
-            module_class->planets_restriction;
             is_planet_invalid = module_class->IsPlanetRestricted(planet->id);
             break;
         }

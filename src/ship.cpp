@@ -289,8 +289,8 @@ const char* _GetTypeIcon(ship_type::T ship_type) {
         case ship_type::UTILITY: return " " ICON_UTIL_SHIP;
         case ship_type::TRANSPORT: return " " ICON_TRANSPORT_SHIP;
         case ship_type::MILITARY: return " " ICON_MIL_SHIP;
+        default: return ICON_EMPTY;
     }
-    return ICON_EMPTY;
 }
 
 const char *Ship::GetTypeIcon() const {
@@ -1013,11 +1013,6 @@ void Ship::_EnsureContinuity() {
         }
     }
 }
-
-constexpr ship_selection_flags::T ship_selection_flags::GetAllegianceFlags(unsigned int index) { 
-    if (index > 7) return 0;
-    return 1u << index | ALL_SELECTION;  // By default, includes everything. filter as needed using '&'
-};
 
 bool ship_selection_flags::MatchesShip(T selection_flags, const Ship *ship)
 {

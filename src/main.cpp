@@ -61,6 +61,8 @@ void MainLoopStep(GlobalState* app) {
     BeginDrawing();
     app->render_server.Draw();
     EndDrawing();
+
+    app->frame_count++;  // Only update at the very end
 }
 
 int main(int argc, const char** argv) {

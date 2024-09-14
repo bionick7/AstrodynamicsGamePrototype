@@ -9,6 +9,65 @@
 
 #include "rlgl.h"
 
+EmbeddedScene::~EmbeddedScene() {
+    delete[] meshes;
+    delete[] transforms;
+}
+
+void EmbeddedScene::Make(int p_mesh_count, int p_render_width, int p_render_height) {
+    mesh_count = p_mesh_count;
+    meshes = new WireframeMesh[mesh_count];
+    transforms = new Matrix[mesh_count];
+    render_width = p_render_width;
+    render_height = p_render_width;
+
+    camera.position = {0, 0, 5};
+    camera.target = Vector3Zero();
+    camera.up = {0, 1, 0};
+    camera.fovy = 45;
+    camera.projection = CAMERA_PERSPECTIVE;
+}
+
+void EmbeddedScene::UpdateTurntableCamera(float yaw_rate, float pitch) {
+    float yaw = GetTime() * yaw_rate;
+    const float distance = 5;
+    camera.position = {
+        cosf(yaw) * cosf(pitch) * distance,
+        -sinf(pitch) * distance,
+        sinf(yaw) * cosf(pitch) * distance,
+    };
+    camera.target = Vector3Zero();
+    camera.up = { 0, 1, 0 };
+    camera.fovy = 45;
+    camera.projection = CAMERA_PERSPECTIVE;
+}
+
+void EmbeddedScene::Render() {
+    BeginTextureMode(render_target);
+    BeginMode3D(camera);
+    ClearBackground(ColorAlpha(Palette::bg, 0));
+
+    // Set up render environment
+    if (render_target.texture.width != render_width || 
+        render_target.texture.height != render_height
+    ) {
+        render_target.texture.width = render_width;
+        render_target.texture.height = render_height;
+        if (IsRenderTextureReady(render_target))
+            UnloadRenderTextureWithDepth(render_target);
+        render_target = LoadRenderTextureWithDepth(render_width, render_height);
+    }
+
+    for (int i=0; i < mesh_count; i++) {
+        if (IsWireframeReady(meshes[i])) {
+            RenderWireframeMesh(meshes[i], transforms[i], Palette::bg, Palette::ui_main);
+        }
+    }
+
+    EndMode3D();
+    EndTextureMode();
+}
+
 namespace icon_shader {
     Shader shader;
 
@@ -287,6 +346,12 @@ void RenderServer::Draw() {
 
     //WireframeMesh test_mesh = assets::GetWireframe("resources/meshes/test/ship_contours.obj");
     //WireframeMesh test_mesh = assets::GetWireframe("resources/meshes/ships/shp_light_transport.obj");
+    PushTimer();
+    for (auto it = embedded_scenes.GetIter(); it; it++) {
+        EmbeddedScene* scene = embedded_scenes.Get(it.GetId());
+        scene->Render();
+    }
+    PopAndReadTimer("Embedded Scenes", true);
 
     PushTimer();
     BeginTextureMode(render_targets[0]);

@@ -47,10 +47,10 @@ void text::GetLayout(Layout* layout, Vector2 start, Font font, const char *text,
 }
 
 text::Layout::Layout() {
-    int size = 0;
-    Rectangle* rects = new Rectangle[size];
-    Rectangle bounding_box = Rectangle();
-    const char* text = NULL;  // Does not own
+    size = 0;
+    rects = new Rectangle[size];
+    bounding_box = Rectangle();
+    text = NULL;  // Does not own
 }
 
 text::Layout::~Layout() {

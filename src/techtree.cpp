@@ -4,6 +4,7 @@
 #include "debug_drawing.hpp"
 #include "debug_console.hpp"
 #include "global_state.hpp"
+#include "event_popup.hpp"
 
 float _GetProgressFromComparison(int variable, int reference, ResearchCondition::Comparison comp) {
     switch (comp) {
@@ -53,6 +54,7 @@ bool ResearchCondition::IsValid() const {
     case ACHIEVEMENT:{
         maximum_variable_value = GetTechTree()->achievement_count - 1; break;
     }
+    default: break;
     }
     if (cond.leaf.variable < 0 || cond.leaf.variable > maximum_variable_value) {
         return false;
@@ -194,6 +196,7 @@ void ResearchCondition::GetDescriptiveText(StringBuilder *sb) const {
         sb->Add(" Free Bingo (for testing) :)");
         break;
     }
+    default: break;
     }
 }
 
@@ -602,6 +605,12 @@ void TechTree::Update() {
     UpdateTechProgress();
 }
 
+void _ShowNodeUnlockPopup(const TechTreeNode* node) {
+    Popup* popup = event_popup::AddPopup(500, 500, 300);
+    strcpy(popup->title, node->name);
+    strcpy(popup->description, "[DESCRIPTIOPNS TBD]");
+}
+
 void TechTree::UpdateTechProgress() {
     for (int i=0; i < nodes_count; i++) {
         // Recalculate 
@@ -619,7 +628,9 @@ void TechTree::UpdateTechProgress() {
             continue;
         }
         if (node_unlocked[i] == 0 && research_conditions[nodes[i].condition_index].GetProgress() >= 1) {
+            // Node Unlocked
             node_unlocked[i] = 1;
+            _ShowNodeUnlockPopup(&nodes[i]);
         }
     }
 }

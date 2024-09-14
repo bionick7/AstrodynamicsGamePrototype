@@ -113,7 +113,8 @@ struct TextBox {
     void WriteLayout(const text::Layout* layout, bool advance_cursor);
     void AdvanceLayout(const text::Layout* layout);
     void Decorate(const text::Layout* layout, const TokenList* tokens);
-    void DrawTexture(Texture2D texture, Rectangle source, int height, Color tint, bool sdf);
+    enum TextureDrawMode { TEXTURE_DRAW_DEFAULT, TEXTURE_DRAW_SDF, TEXTURE_DRAW_RAW };
+    void DrawTexture(Texture2D texture, Rectangle source, int height, Color tint, TextureDrawMode draw_mode);
     button_state_flags::T WriteButton(const char* text, int inset);
     button_state_flags::T AsButton() const;
     Vector2 GetTextCursor() const;

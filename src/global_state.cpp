@@ -52,7 +52,7 @@ void GlobalState::LoadData() {
         "TechTree Nodes",
     };
 
-    int ammounts[NUM];
+    int amounts[NUM];
     
     for (int i=0; i < NUM; i++) {
         INFO("Loading %s", declarations[i])
@@ -61,11 +61,11 @@ void GlobalState::LoadData() {
             FAIL("Could not load resource %s", loading_paths[i]);
         }
 
-        ammounts[i] = load_funcs[i](data);
+        amounts[i] = load_funcs[i](data);
     }
 
     for (int i=0; i < NUM; i++) {
-        INFO("%d %s%s", ammounts[i], declarations[i], i == NUM-1 ? "\n" : "; ");
+        INFO("%d %s%s", amounts[i], declarations[i], i == NUM-1 ? "\n" : "; ");
     }
 
     // INFO(GetModuleByRID(GetGlobalState()->GetFromStringIdentifier("shpmod_water_extractor"))->id)
@@ -137,6 +137,19 @@ void GlobalState::UpdateState(double delta_t) {
 
     camera.HandleInput();
 
+    if (frame_count == 0 || IsKeyPressed(KEY_Q)) {
+        Popup* popup = event_popup::AddPopup(600, 400, 300);
+        strcpy(popup->title, "Test Popup");
+        strcpy(popup->description, "This is a popup, created for the purpose of testing. No further action required");
+        EmbeddedScene* scene;
+        popup->embedded_scene = GetRenderServer()->embedded_scenes.Allocate(&scene);
+        scene->Make(2, popup->width, popup->face_height);
+        scene->meshes[0] = assets::GetWireframe("resources/meshes/test/ship_contours.obj");
+        scene->meshes[1] = assets::GetWireframe("resources/meshes/test/ship_contours.obj");
+        scene->transforms[0] = MatrixTranslate(0, 0,  1);
+        scene->transforms[1] = MatrixTranslate(0, 0, -1);
+    }
+
     if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_F5)) {
         assets::Reload();
     }
@@ -167,28 +180,7 @@ void GlobalState::DrawUI() {
     DrawDebugConsole();
     DrawPauseMenu();
 
-    // Popup test
-    event_popup::MakeEventPopupCentered(400, 500);
-    event_popup::BeginTurntableFace(200, 1, 0.6);
-
-    WireframeMesh mesh = assets::GetWireframe("resources/meshes/test/ship_contours.obj");
-
-    //DrawBoundingBox(mesh.bounding_box, RED);
-    RenderWireframeMesh(mesh, MatrixIdentity(), Palette::bg, Palette::ui_main);
-
-    event_popup::BeginBody();
-
-    ui::Write("Body");
-
-    event_popup::EndBody();
-    if (event_popup::Choice("Yes", 0, 2)) {
-        INFO("Yes")
-    }
-    else if (event_popup::Choice("No", 1, 2)) {
-        INFO("No")
-    }
-    event_popup::EndEventPopup();
-    
+    event_popup::UpdateAllPopups();
 
     ui.UIEnd();
 

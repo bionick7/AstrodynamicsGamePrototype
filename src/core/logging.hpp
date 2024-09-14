@@ -5,23 +5,23 @@
 
 #ifdef LOGGING_DISABLE
 
-#define INFO(...)
-#define WARNING(...)
-#define ERROR(...)
-#define USER_INFO(...)
-#define USER_ERROR(...)
+#define INFO(...) {}
+#define WARNING(...) {}
+#define ERROR(...) {}
+#define USER_INFO(...) {}
+#define USER_ERROR(...) {}
 
-#define SHOW_F(var)
-#define SHOW_I(var)
-#define SHOW_V2(var)
+#define SHOW_F(var) {}
+#define SHOW_I(var) {}
+#define SHOW_V2(var) {}
 
 #define NOT_IMPLEMENTED {exit(1);}
 #define NOT_REACHABLE {exit(1);}
 #define FAIL(...) {exit(1);}
 
-#define ASSERT(condition) 
-#define ASSERT_EQUAL_INT(v1, v2)
-#define ASSERT_ALOMST_EQUAL_FLOAT(v1, v2) 
+#define ASSERT(condition) {}
+#define ASSERT_EQUAL_INT(v1, v2) {}
+#define ASSERT_ALOMST_EQUAL_FLOAT(v1, v2) {}
 
 #else
 

@@ -59,13 +59,19 @@ struct List {
     }
 
     void Append(T id) {
+        int index = AllocForAppend();
+        buffer[index] = id;
+    }
+
+    int AllocForAppend() {
         if (size >= capacity) {
             int extension = capacity/2;
             if (extension < 5) extension = 5;
             Resize(capacity + extension);
         }
-        buffer[size] = id;
+        int res = size;
         size++;
+        return res;
     }
 
     void EraseAt(int index) {

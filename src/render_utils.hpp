@@ -22,7 +22,7 @@ void DrawTextureSDF(Texture2D texture, Rectangle source, Rectangle dest,
                     Vector2 origin, float rotation, Color tint, uint8_t z_layer);
 
 void BeginRenderSDFInUILayer(uint8_t z_layer, Color background);
-void BeginRenderInUILayer(uint8_t z_layer, Color background);
+void BeginRenderInUILayer(uint8_t z_layer, Color background, bool raw_color=false);
 void BeginRenderInUILayer(uint8_t z_layer);
 void EndRenderInUILayer();
 

@@ -261,7 +261,8 @@ void TextBox::Decorate(const text::Layout* layout, const TokenList* tokens) {
     EndRenderInUILayer();
 }
 
-void TextBox::DrawTexture(Texture2D texture, Rectangle source, int texture_height, Color tint, bool sdf) {
+void TextBox::DrawTexture(Texture2D texture, Rectangle source, int texture_height, Color tint, 
+                          TextureDrawMode draw_mode) {
     Vector2 pos = {x + x_cursor, y + y_cursor};
     int texture_width = texture_height * source.width / source.height;
     Rectangle destination = { pos.x, pos.y, (float)texture_width, (float)texture_height };
@@ -274,10 +275,14 @@ void TextBox::DrawTexture(Texture2D texture, Rectangle source, int texture_heigh
         BeginScissorMode(render_rec.x, render_rec.y, render_rec.width, render_rec.height);
     }
 
-    if (sdf) {
+    if (draw_mode & TEXTURE_DRAW_SDF) {
         DrawTextureSDF(texture, source, destination, Vector2Zero(), 0, tint, z_layer);
-    } else {
-        BeginRenderInUILayer(z_layer);
+    } else if (draw_mode & TEXTURE_DRAW_DEFAULT) {
+        BeginRenderInUILayer(z_layer, background_color);
+        DrawTexturePro(texture, source, destination, Vector2Zero(), 0, tint);
+        EndRenderInUILayer();
+    } else if (draw_mode & TEXTURE_DRAW_RAW) {
+        BeginRenderInUILayer(z_layer, background_color, true);
         DrawTexturePro(texture, source, destination, Vector2Zero(), 0, tint);
         EndRenderInUILayer();
     }
@@ -305,10 +310,8 @@ button_state_flags::T TextBox::WriteButton(const char* text, int inset) {
         pos.x += inset;
         pos.y += inset;
     }
-    bool is_in_area = CheckCollisionPointRec(GetMousePosition(), {pos.x, pos.y, size.x, size.y});
-    bool was_in_area = CheckCollisionPointRec(Vector2Subtract(GetMousePosition(), GetMouseDelta()), {pos.x, pos.y, size.x, size.y});
-    button_state_flags::T res = GetButtonState(is_in_area, was_in_area);
-    Color c = is_in_area ? Palette::ui_main : Palette::interactable_main;
+    button_state_flags::T res = GetButtonStateRec({pos.x, pos.y, size.x, size.y});
+    Color c = (res & button_state_flags::HOVER) ? Palette::ui_main : Palette::interactable_main;
     DrawRectangleLines(pos.x - inset, pos.y - inset, size.x, size.y, c);
     text::DrawTextEx(GetCustomDefaultFont(text_size), text, pos, text_size, 1, 
                      text_color, text_background, render_rec, z_layer);
@@ -526,8 +529,8 @@ void ui::PushInline(int width, int height) {
     new_tb.render_rec = GetCollisionRec(new_tb.render_rec, tb->render_rec);
 
     tb->_Advance(
-        {(float)new_tb.x, (float)new_tb.y}, 
-        {(float)new_tb.width, (float)new_tb.height}
+        { (float)new_tb.x, (float)new_tb.y }, 
+        { (float)new_tb.width, (float)new_tb.height }
     );
     ui::PushTextBox(new_tb);
 }
@@ -627,9 +630,9 @@ void ui::EncloseDynamic(int shrink, Color background_color, Color line_color, in
 
 void ui::DrawIcon(AtlasPos atlas_index, Color tint, int height) {
     if (GetSettingBool("sdf_icons", false)) {
-        ui::Current()->DrawTexture(GetUI()->GetIconAtlasSDF(), atlas_index.GetRect(ATLAS_SIZE), height, tint, true);
+        ui::Current()->DrawTexture(GetUI()->GetIconAtlasSDF(), atlas_index.GetRect(ATLAS_SIZE), height, tint, TextBox::TEXTURE_DRAW_SDF);
     } else {
-        ui::Current()->DrawTexture(GetUI()->GetIconAtlas(), atlas_index.GetRect(ATLAS_SIZE), height, tint, false);
+        ui::Current()->DrawTexture(GetUI()->GetIconAtlas(), atlas_index.GetRect(ATLAS_SIZE), height, tint, TextBox::TEXTURE_DRAW_DEFAULT);
     }
 }
 

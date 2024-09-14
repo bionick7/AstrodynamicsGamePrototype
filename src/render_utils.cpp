@@ -111,11 +111,13 @@ namespace ui_shader {
     Shader shader;
     int depth = -1;
     int background_color = -1;
+    int raw_color = -1;
 
     void Load() {
         LOAD_SHADER(ui_shader)
         LOAD_SHADER_UNIFORM(ui_shader, depth)
         LOAD_SHADER_UNIFORM(ui_shader, background_color)
+        LOAD_SHADER_UNIFORM(ui_shader, raw_color)
     }
 }
 
@@ -142,12 +144,14 @@ void BeginRenderSDFInUILayer(uint8_t z_layer, Color background) {
     SetShaderValue(sdf_shader::shader, sdf_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT);
 }
 
-void BeginRenderInUILayer(uint8_t z_layer, Color background) {
+void BeginRenderInUILayer(uint8_t z_layer, Color background, bool raw_color) {
     RELOAD_IF_NECESSARY(ui_shader)
     BeginShaderMode(ui_shader::shader);
     float z_layer_f = 1.0f - z_layer / 256.0f;
     float bg_color_4[4];
     _ColorToFloat4Buffer(bg_color_4, background);  // Hardcoded for now
+    int raw_color_int = (int) raw_color;
+    SetShaderValue(ui_shader::shader, ui_shader::raw_color, &raw_color_int, SHADER_UNIFORM_INT);
     SetShaderValue(ui_shader::shader, ui_shader::background_color, bg_color_4, SHADER_UNIFORM_VEC4);
     SetShaderValue(ui_shader::shader, ui_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT);
 }

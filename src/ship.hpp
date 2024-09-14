@@ -199,8 +199,11 @@ namespace ship_selection_flags {
     const static T ALL_ALLEGIANCE = 0x000000FF;
     const static T ALL = ALL_SELECTION | ALL_ALLEGIANCE;
 
-    constexpr T GetAllegianceFlags(unsigned int index);
-    bool MatchesShip(T selectio_flags, const Ship* ship);
+    constexpr T GetAllegianceFlags(unsigned int index) { 
+        if (index > 7) return 0;
+        return 1u << index | ALL_SELECTION;  // By default, includes everything. filter as needed using '&'return 1U << index; 
+    }
+    bool MatchesShip(T selection_flags, const Ship* ship);
 }
 
 struct Ships {
