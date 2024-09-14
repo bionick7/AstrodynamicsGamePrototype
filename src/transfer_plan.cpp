@@ -8,6 +8,7 @@
 #include "constants.hpp"
 #include "string_builder.hpp"
 #include "render_utils.hpp"
+#include "debug_console.hpp"
 
 double _Lambert(double x, double K, int solution) {
     // x² = a_min/a
@@ -32,12 +33,12 @@ double _Lambert(double x, double K, int solution) {
         β = 2 * asinh(K * x);
     }
     switch (solution) {
-    case 0: return (α - sin(α) - β + sin(β)) / (x*x*x);             // no focus
+    case 0: return         (α - sin(α)  - β + sin(β)) / (x*x*x);    // no focus
     case 1: return (2*PI - (α - sin(α)) - β + sin(β)) / (x*x*x);    // F1 & F2
-    case 2: return (α - sin(α) + β - sin(β)) / (x*x*x);             // F1
+    case 2: return         (α - sin(α)  + β - sin(β)) / (x*x*x);    // F1
     case 3: return (2*PI - (α - sin(α)) + β - sin(β)) / (x*x*x);    // F2
-    case 4: return (sinh(α) - α - sinh(β) + β) / (x*x*x);
-    case 5: return (sinh(α) - α + sinh(β) - β) / (x*x*x);
+    case 4: return         (sinh(α) - α - sinh(β) + β) / (x*x*x);
+    case 5: return         (sinh(α) - α + sinh(β) - β) / (x*x*x);
     }
     FAIL("Solution provided to lambert solver must be 0, 1, 2, 3, 4 or 5")
     return 0;
@@ -90,7 +91,7 @@ double _SolveLambertWithNewton(double y, double K, int solution) {
     switch (solution) {
     case 4: xs = 2 * (K*K - 1) / y; break;
     case 5: xs = -2 * (K*K + 1) / y; break;
-    default: FAIL("newtown's method only implemented for cases 4 and 5")
+    default: FAIL("Newtown's method only implemented for cases 4 and 5")
     }
 
     int counter = 0;
@@ -522,7 +523,7 @@ void _DrawTransferOrbit(const TransferPlan* plan, int solution, bool is_secondar
     OrbitPos pos1 = plan->transfer_orbit[solution].GetPosition(plan->departure_time);
     OrbitPos pos2 = plan->transfer_orbit[solution].GetPosition(plan->arrival_time);
     _DrawSweep(&from->orbit, t0, plan->departure_time, orbit_color);
-    _DrawSweep(&to->orbit,   t0, plan->arrival_time,   orbit_color);
+    _DrawSweep(&to->orbit, t0, plan->arrival_time, orbit_color);
     OrbitSegment segment = OrbitSegment(&plan->transfer_orbit[solution], pos1, pos2);
     RenderOrbit(&segment, orbit_render_mode::Solid, orbit_color);
 }
@@ -594,7 +595,9 @@ void TransferPlanUI::Draw3D() {
         _DrawTransferOrbit(plan, plan->primary_solution, false, time_bounds[0]);
     } else if (plan->num_solutions == 2) {
         _DrawTransferOrbit(plan, plan->primary_solution, false, time_bounds[0]);
-        _DrawTransferOrbit(plan, 1 - plan->primary_solution, true, time_bounds[0]);
+        if (GetSettingBool("transferplan_draw_second_solution")) {
+            _DrawTransferOrbit(plan, 1 - plan->primary_solution, true, time_bounds[0]);
+        }
     }
 }
 

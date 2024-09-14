@@ -274,7 +274,7 @@ void ModuleConfiguration::Load(const DataNode *data, const char* ship_id) {
     StringBuilder sb;
     sb.Add("resources/meshes/ships/").Add(ship_id).Add(".obj");
     strcpy(mesh_resource_path, sb.c_str);
-    WireframeMesh mesh = assets::GetWirframe(mesh_resource_path);
+    WireframeMesh mesh = assets::GetWireframe(mesh_resource_path);
     if (IsWireframeReady(mesh)) {
         mesh_draw_space = {
             mesh.bounding_box.min.x * 100, mesh.bounding_box.min.z * 100,
@@ -301,7 +301,7 @@ void ModuleConfiguration::Draw(Ship* ship, Vector2 anchor_point, text_alignment:
     int lower_border = SHIP_MODULE_HEIGHT + 10;
     //Rectangle bounding = ui::Current()->GetRect();
 
-    WireframeMesh mesh = assets::GetWirframe(mesh_resource_path);
+    WireframeMesh mesh = assets::GetWireframe(mesh_resource_path);
     float size_x = mesh.bounding_box.max.x - mesh.bounding_box.min.x;
     float size_y = mesh.bounding_box.max.z - mesh.bounding_box.min.z;
     Rectangle adjusted_draw_space = {
@@ -338,7 +338,7 @@ void ModuleConfiguration::Draw(Ship* ship, Vector2 anchor_point, text_alignment:
     ui::CreateNew(
         adjusted_draw_space.x, adjusted_draw_space.y,
         adjusted_draw_space.width, adjusted_draw_space.height,
-        DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, false
+        DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, z_layers::BASE
     );
     module_config_popup_rect = adjusted_draw_space;
 

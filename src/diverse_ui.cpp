@@ -104,7 +104,7 @@ void panel_management::DrawUIPanels(GlobalState* gs) {
     float mouse_distance = y_full - GetMousePosition().y;
     float mouse_interpolation_factor = 1.0f - Clamp(mouse_distance / mouse_reaction_distance, 0, 1);
     int y = y_none + (int) ((y_full - y_none) * mouse_interpolation_factor);
-    ui::CreateNew(x, y, w, cell_height, 40, Palette::ui_main, Palette::bg, true);
+    ui::CreateNew(x, y, w, cell_height, 40, Palette::ui_main, Palette::bg, z_layers::MENU_PANELS + 1);
     ui::Enclose();
     for (int i=0; i < UIPANEL_COUNT; i++) {
         ui::PushHSplit(i * cell_width, (i+1) * cell_width);
@@ -178,7 +178,7 @@ void DrawPauseMenu() {
         DEFAULT_FONT_SIZE,
         Palette::ui_main,
         Palette::bg,
-        true
+        z_layers::POPUPS + 10
     );
     ui::Enclose();
     if (_PauseMenuButton("Save")) {

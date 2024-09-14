@@ -94,7 +94,7 @@ void Planet::DrawUI() {
         return;
     }
 
-    ui::CreateNew(10, y_start, 340, height, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, false);
+    ui::CreateNew(10, y_start, 340, height, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, z_layers::BASE);
     ui::Enclose();
 
     if (IsKeyPressed(KEY_Q)) current_tab = 0;

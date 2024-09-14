@@ -26,7 +26,7 @@ namespace assets {
     char* GetResourceText(const char* filepath);
 
     Texture2D GetTexture(const char* path);
-    WireframeMesh GetWirframe(const char* path);
+    WireframeMesh GetWireframe(const char* path);
     Image GetImage(const char* path);
     Font GetFont(const char* path);
     Shader GetShader(const char* path);

@@ -19,7 +19,8 @@ out vec4 finalColor;
 void main() {
     vec4 col = texture(texture0, fragTexCoord);
     //if (col.a <= 0.5) discard; else col.a = 1.0;  // Currently doesn't support transparency
-    finalColor = mix(background_color, fragColor * colDiffuse, col.a);
+    finalColor = col;
+    finalColor.rgb *= mix(background_color.rgb, fragColor.rgb * colDiffuse.rgb, col.a);  // Blend into background color
     //finalColor.a = 1.0;
     gl_FragDepth = depth;
 }

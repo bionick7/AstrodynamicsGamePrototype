@@ -103,6 +103,7 @@ bool ShipBattle(const IDList* ships_aggressor, const IDList* ships_defender, dou
     }
 
     GetTechTree()->ReportAchievement("archvmt_battle");
+    return agressor_won;
 
     //INFO("Party 1 (%d) received %d dammage. Party 2 (%d) received (%d) dammage", ships_1->size, dmg_received_1, ships_2->size, dmg_received_2)
 }
@@ -148,7 +149,7 @@ void BattleLog::DrawUI() {
     if (GetScreenHeight() - 2 * 50 < height) height = GetScreenHeight() - 2 * 50;
     ui::CreateNew(
         (GetScreenWidth() - width) / 2, (GetScreenHeight() - height) / 2, width, height, 
-        DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, true
+        DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, z_layers::MENU_PANELS
     );
     ui::Enclose();
     ui::Write(log.c_str);

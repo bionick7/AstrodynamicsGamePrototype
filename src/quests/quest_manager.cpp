@@ -105,7 +105,7 @@ void QuestManager::Draw() {
     int y_margin = MinInt(50, GetScreenWidth()*.1);
     int w = GetScreenWidth() - x_margin*2;
     int h = GetScreenHeight() - y_margin*2;
-    ui::CreateNew(x_margin, y_margin, w, h, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, true);
+    ui::CreateNew(x_margin, y_margin, w, h, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, z_layers::MENU_PANELS);
     ui::Enclose();
 
     // TABS

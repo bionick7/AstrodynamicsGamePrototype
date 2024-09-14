@@ -205,7 +205,7 @@ Texture2D assets::GetTexture(const char *path) {
     }
 }
 
-WireframeMesh assets::GetWirframe(const char *path) {
+WireframeMesh assets::GetWireframe(const char *path) {
     uint64_t path_hash = HashPath(path);
     int find = mesh_table.Find(path_hash);
     if (find >= 0) {

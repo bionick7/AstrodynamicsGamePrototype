@@ -306,7 +306,7 @@ void DrawTimeline() {
     GlobalState* gs = GetGlobalState();
     ui::CreateNew(
         20, 100, GetScreenWidth() - 40, GetScreenHeight() - 100, 
-        DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, true
+        DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, z_layers::MENU_PANELS
     );
     ui::Enclose();
 

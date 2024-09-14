@@ -212,7 +212,7 @@ void _UpdateShipIcons() {
 
 // Directly from raylib depth buffer example
 // Load custom render texture, create a writable depth texture buffer
-RenderTexture2D _LoadRenderTextureDepthTex(int width, int height) {
+RenderTexture2D LoadRenderTextureWithDepth(int width, int height) {
     RenderTexture2D target = { 0 };
 
     target.id = rlLoadFramebuffer(width, height);   // Load an empty framebuffer
@@ -235,11 +235,14 @@ RenderTexture2D _LoadRenderTextureDepthTex(int width, int height) {
         target.depth.mipmaps = 1;
 
         // Attach color texture and depth texture to FBO
-        rlFramebufferAttach(target.id, target.texture.id, RL_ATTACHMENT_COLOR_CHANNEL0, RL_ATTACHMENT_TEXTURE2D, 0);
-        rlFramebufferAttach(target.id, target.depth.id, RL_ATTACHMENT_DEPTH, RL_ATTACHMENT_TEXTURE2D, 0);
+        rlFramebufferAttach(target.id, target.texture.id, RL_ATTACHMENT_COLOR_CHANNEL0, 
+                            RL_ATTACHMENT_TEXTURE2D, 0);
+        rlFramebufferAttach(target.id, target.depth.id, RL_ATTACHMENT_DEPTH, 
+                            RL_ATTACHMENT_TEXTURE2D, 0);
 
         // Check if fbo is complete with attachments (valid)
-        if (rlFramebufferComplete(target.id)) TRACELOG(LOG_INFO, "FBO: [ID %i] Framebuffer object created successfully", target.id);
+        if (rlFramebufferComplete(target.id)) 
+            TRACELOG(LOG_INFO, "FBO: [ID %i] Framebuffer object created successfully", target.id);
 
         rlDisableFramebuffer();
         SetTextureFilter(target.texture, TEXTURE_FILTER_BILINEAR);
@@ -250,7 +253,7 @@ RenderTexture2D _LoadRenderTextureDepthTex(int width, int height) {
 }
 
 // Unload render texture from GPU memory (VRAM)
-void _UnloadRenderTextureDepthTex(RenderTexture2D target) {
+void UnloadRenderTextureWithDepth(RenderTexture2D target) {
     if (target.id > 0) {
         // Color texture attached to FBO is deleted
         rlUnloadTexture(target.texture.id);
@@ -264,11 +267,11 @@ void _UnloadRenderTextureDepthTex(RenderTexture2D target) {
 
 void RenderServer::OnScreenResize() {
     if (IsRenderTextureReady(render_targets[0])) {
-        _UnloadRenderTextureDepthTex(render_targets[0]);
-        _UnloadRenderTextureDepthTex(render_targets[1]);
+        UnloadRenderTextureWithDepth(render_targets[0]);
+        UnloadRenderTextureWithDepth(render_targets[1]);
     }
-    render_targets[0] = _LoadRenderTextureDepthTex(GetScreenWidth(), GetScreenHeight());
-    render_targets[1] = _LoadRenderTextureDepthTex(GetScreenWidth(), GetScreenHeight());
+    render_targets[0] = LoadRenderTextureWithDepth(GetScreenWidth(), GetScreenHeight());
+    render_targets[1] = LoadRenderTextureWithDepth(GetScreenWidth(), GetScreenHeight());
 }
 
 void RenderServer::Draw() {
@@ -278,16 +281,16 @@ void RenderServer::Draw() {
     }
 
     if (!IsRenderTextureReady(render_targets[0])) {
-        render_targets[0] = _LoadRenderTextureDepthTex(GetScreenWidth(), GetScreenHeight());
-        render_targets[1] = _LoadRenderTextureDepthTex(GetScreenWidth(), GetScreenHeight());
+        render_targets[0] = LoadRenderTextureWithDepth(GetScreenWidth(), GetScreenHeight());
+        render_targets[1] = LoadRenderTextureWithDepth(GetScreenWidth(), GetScreenHeight());
     }
 
-    //WireframeMesh test_mesh = assets::GetWirframe("resources/meshes/test/ship_contours.obj");
-    //WireframeMesh test_mesh = assets::GetWirframe("resources/meshes/ships/shp_light_transport.obj");
+    //WireframeMesh test_mesh = assets::GetWireframe("resources/meshes/test/ship_contours.obj");
+    //WireframeMesh test_mesh = assets::GetWireframe("resources/meshes/ships/shp_light_transport.obj");
 
     PushTimer();
     BeginTextureMode(render_targets[0]);
-        ClearBackground(WHITE);  // Very important apperently
+        ClearBackground(WHITE);  // Very important apparently
 
         //RenderWireframeMesh(test_mesh, MatrixIdentity(), Palette::bg, Palette::ui_main);
 
@@ -343,7 +346,7 @@ void RenderServer::Draw() {
     PopAndReadTimer("UI rendering", true);
 
     // Postprocessing etc.
-    ClearBackground(Palette::bg);  // There are transperent areas when skipping postprocessing
+    ClearBackground(Palette::bg);  // There are transparent areas when skipping postprocessing
     RenderDeferred(render_targets[0]);
     RenderDeferred(render_targets[1]);
 }

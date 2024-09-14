@@ -32,6 +32,10 @@ struct Text3D {
     void Draw() const;
 };
 
+
+RenderTexture2D LoadRenderTextureWithDepth(int width, int height);
+void UnloadRenderTextureWithDepth(RenderTexture2D target);
+
 struct RenderServer {
     IDAllocatorList<Icon3D, EntityType::ICON3D> icons;
     IDAllocatorList<Text3D, EntityType::TEXT3D> text_labels_3d;

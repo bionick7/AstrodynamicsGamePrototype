@@ -8,6 +8,7 @@
 #include "timeline.hpp"
 #include "debug_console.hpp"
 #include "diverse_ui.hpp"
+#include "event_popup.hpp"
 
 GlobalState global_state;
 
@@ -165,6 +166,29 @@ void GlobalState::DrawUI() {
     panel_management::DrawUIPanels(this);
     DrawDebugConsole();
     DrawPauseMenu();
+
+    // Popup test
+    event_popup::MakeEventPopupCentered(400, 500);
+    event_popup::BeginTurntableFace(200, 1, 0.6);
+
+    WireframeMesh mesh = assets::GetWireframe("resources/meshes/test/ship_contours.obj");
+
+    //DrawBoundingBox(mesh.bounding_box, RED);
+    RenderWireframeMesh(mesh, MatrixIdentity(), Palette::bg, Palette::ui_main);
+
+    event_popup::BeginBody();
+
+    ui::Write("Body");
+
+    event_popup::EndBody();
+    if (event_popup::Choice("Yes", 0, 2)) {
+        INFO("Yes")
+    }
+    else if (event_popup::Choice("No", 1, 2)) {
+        INFO("No")
+    }
+    event_popup::EndEventPopup();
+    
 
     ui.UIEnd();
 

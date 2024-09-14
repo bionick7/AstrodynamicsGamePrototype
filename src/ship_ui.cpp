@@ -414,7 +414,7 @@ void _ProductionQueueMouseHint(RID id, const Ship* ship, bool is_in_production_q
     }
     ui::Write(sb.c_str);
     //if (IsIdValidTyped(id, EntityType::SHIP_CLASS)) {
-    //    WireframeMesh wf = assets::GetWirframe(GetShipClassByRID(id)->module_config.mesh_resource_path);
+    //    WireframeMesh wf = assets::GetWireframe(GetShipClassByRID(id)->module_config.mesh_resource_path);
     //}
 }
 
@@ -643,7 +643,7 @@ void Ship::DrawUI() {
     int panel_start_y = OUTSET_MARGIN + 50;
     ui::CreateNew(
         panel_start_x, panel_start_y, width,  GetScreenHeight(),
-        TEXT_SIZE, Palette::ui_main, Palette::bg, false
+        TEXT_SIZE, Palette::ui_main, Palette::bg, z_layers::BASE
     );
 
     //ui::EncloseEx(4, Palette::bg, GetColor(), 4);
@@ -695,7 +695,7 @@ void Ship::DrawUI() {
     if (ui_submenu_toggles[1]) {  // Production Queue
         ui::CreateNew(
             panel_start_x, lower_bound + 10, width, GetScreenHeight() - lower_bound - 10,
-            TEXT_SIZE, Palette::ui_main, Palette::bg, false
+            TEXT_SIZE, Palette::ui_main, Palette::bg, z_layers::BASE
         );
         ui::Enclose();
         _UIDrawProduction(this);
@@ -703,7 +703,7 @@ void Ship::DrawUI() {
     if (ui_submenu_toggles[2]) {  // Transfers
         ui::CreateNew(
             panel_start_x, lower_bound + 10, width,  1,
-            TEXT_SIZE, Palette::ui_main, Palette::bg, false
+            TEXT_SIZE, Palette::ui_main, Palette::bg, z_layers::BASE
         );
         ui::Current()->flexible = true;
         ui::Current()->z_layer += 5;
@@ -716,7 +716,7 @@ void Ship::DrawUI() {
         ui::CreateNew(
             GetScreenWidth() - width - OUTSET_MARGIN, lower_bound + 5,
             width, 135, 
-            DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, false
+            DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, z_layers::BASE
         );
         GetGlobalState()->active_transfer_plan.DrawUI();
     }

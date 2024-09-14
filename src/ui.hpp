@@ -14,6 +14,16 @@
 static inline Vector2 GetScreenCenter() { return { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f }; }
 static inline Rectangle GetScreenRect() { return { 0, 0, (float)GetScreenWidth(), (float)GetScreenHeight() }; }
 
+namespace z_layers {
+    const uint8_t BOTTOM = 0;
+    const uint8_t BASE = 10;
+    const uint8_t MENU_PANELS = 30;
+    const uint8_t POPUPS = 50;
+    const uint8_t MOUSE_HINTS = 200;
+    const uint8_t DEBUG_CONSOLE = 254;
+    const uint8_t TOP = 255;
+}
+
 namespace text_alignment {
     typedef uint8_t T;
     const static T LEFT      = 0x00;
@@ -171,7 +181,7 @@ struct UIGlobals {
 namespace ui {
     void PushTextBox(TextBox tb);
     void PushGlobal(int x, int y, int w, int h, int text_size, Color color, Color background, uint8_t z_layer);
-    void CreateNew(int x, int y, int w, int h, int text_size, Color color, Color background, bool overlay);
+    void CreateNew(int x, int y, int w, int h, int text_size, Color color, Color background, uint8_t z_layer);
     void PushMouseHint(Vector2 mouse_pos, int width, int height, uint8_t z_layer);
 
     int PushInset(int h);

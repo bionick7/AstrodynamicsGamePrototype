@@ -7,6 +7,7 @@ enable_player_ai: y
 show_unconstructable_products: n
 show_help: y
 make_ui_panels_exclusive: y
+transferplan_draw_second_solution: n
 
 # Graphics
 fov_deg: 50
