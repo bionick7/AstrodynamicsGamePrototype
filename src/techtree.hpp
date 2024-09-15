@@ -74,8 +74,8 @@ struct Achievement{
 
 struct TechTreeNode {
     // Primary info
-    char name[100] = "UNNAMED";
-    char description[1024] = "UNNAMED";
+    PermaString name;
+    PermaString description;
     const char* str_id;  // Not owning. Is stored in the map GlobalState
     IDList attached_components;
     IDList prerequisites;

@@ -98,12 +98,12 @@ button_state_flags::T Task::DrawUI(bool show_as_button, bool highlight) const {
 
     StringBuilder sb;
     // Line 1
-    sb.AddFormat("%s >> %s  %d cts", GetPlanet(departure_planet)->name, GetPlanet(arrival_planet)->name, KGToResourceCounts(payload_mass));
+    sb.AddFormat("%s >> %s  %d cts", GetPlanet(departure_planet)->name.GetChar(), GetPlanet(arrival_planet)->name, KGToResourceCounts(payload_mass));
     if (button_state == button_state_flags::HOVER) {
         ui::SetMouseHint(sb_mouse.c_str);
     }
     if (IsIdValid(current_planet)) {
-        sb.Add("  Now: [").Add(GetPlanet(current_planet)->name).AddLine("]");
+        sb.Add("  Now: [").Add(GetPlanet(current_planet)->name.GetChar()).AddLine("]");
     } else sb.AddLine("");
     // Line 2
     bool is_in_transit = IsIdValid(ship) && !GetShip(ship)->IsParked();

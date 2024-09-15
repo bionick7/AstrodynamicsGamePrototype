@@ -18,6 +18,9 @@ techtree:
 
 - name: Metallurgy
   id: tech_metallurgy
+  description: >
+    All production is based on the primary materials available to us:
+    ALuminium and Steel
   start_condition: available
   prerequisites: [tech_start]
   condition:
@@ -32,8 +35,10 @@ techtree:
   - shpmod_steel_smelter
   icon_index: [9, 27]
 
-- name: Industry
+- name: Industrial Modules
   id: tech_industry
+  description: >
+    TBD
   start_condition: available
   prerequisites: [tech_metallurgy]
   condition:
@@ -47,8 +52,12 @@ techtree:
   - shpmod_large_storage
   icon_index: [15, 31]
 
-- name: Ships
+- name: Shipbuilding
   id: tech_ships
+  description: >
+    Without ships, no logistics. 
+    Without logistics, no industry. 
+    Without industry, no survival. Not here
   start_condition: available
   prerequisites: [tech_metallurgy]
   condition:
@@ -61,8 +70,11 @@ techtree:
   - shpmod_wetdock
   icon_index: [15, 31]
 
-- name: Heavy Industry
+- name: Construction at scale
   id: tech_heavy_industry
+  description: >
+    Heavier industry requires larger facilities. 
+    These large facilities allow for efficiency at scale.
   start_condition: available
   prerequisites: [tech_industry]
   condition:
@@ -75,8 +87,10 @@ techtree:
   - shpmod_sail_large
   icon_index: [15, 31]
 
-- name: Advanced construction
+- name: System Engineering
   id: tech_advanced_construction
+  description: >
+    TBD
   start_condition: available
   prerequisites: [tech_industry]
   condition:
@@ -89,8 +103,10 @@ techtree:
   - shpmod_workshop
   icon_index: [15, 31]
 
-- name: Cryogenics
+- name: Hydrogen Management
   id: tech_cryo
+  description: >
+    As fuel or ingredient in industrial and chemical processes, hydrogen ...
   start_condition: available
   prerequisites: [tech_industry]
   condition:
@@ -103,8 +119,11 @@ techtree:
   - shpmod_fuel_cell
   icon_index: [1, 17]
 
-- name: Ship equipment
+- name: Ship Specialization
   id: tech_equipment
+  description: >
+    Modules build for smaller ships allow modifying the function ...
+    TBD
   start_condition: available
   prerequisites: [tech_ships]
   condition:
@@ -122,6 +141,8 @@ techtree:
   
 - name: Surface shuttles
   id: tech_shuttles
+  description: >
+    TBD
   start_condition: available
   prerequisites: [tech_ships]
   unlocks:
@@ -129,8 +150,10 @@ techtree:
   - shpmod_large_shuttles
   icon_index: [1, 17]
   
-- name: Advanced shipbuilding
+- name: Large Shipbuilding Projects
   id: tech_advanced_ship
+  description: >
+    TBD
   start_condition: available
   prerequisites: [tech_ships, tech_advanced_construction]
   condition:
@@ -142,6 +165,8 @@ techtree:
   
 - name: Mega Engineering
   id: tech_mega_engineering
+  description: >
+    TBD
   start_condition: available
   prerequisites: [tech_heavy_industry]
   condition:
@@ -154,8 +179,10 @@ techtree:
   - shpmod_launch_structure
   icon_index: [1, 17]
 
-- name: Large extraction
+- name: Resource Extraction at Scale
   id: tech_large_extraction
+  description: >
+    TBD
   start_condition: available
   prerequisites: [tech_heavy_industry, tech_shuttles]
   condition:
@@ -176,6 +203,8 @@ techtree:
 
 - name: Chemical industry
   id: tech_chemical
+  description: >
+    TBD
   start_condition: available
   prerequisites: [tech_advanced_construction, tech_cryo]
   condition:
@@ -193,6 +222,8 @@ techtree:
 
 - name: Cryogenic tanks
   id: tech_droptank_hydrogen
+  description: >
+    TBD
   start_condition: available
   prerequisites: [tech_cryo, tech_equipment]
   condition:
@@ -208,8 +239,10 @@ techtree:
   - shpmod_droptank_hydrogen
   icon_index: [1, 17]
   
-- name: Semiconductor manufacturing
+- name: Semiconductor Industry
   id: tech_hitech
+  description: >
+    TBD
   start_condition: available
   prerequisites: [tech_chemical]
   condition:
@@ -229,6 +262,8 @@ techtree:
 
 - name: Ship Armor
   id: tech_armor
+  description: >
+    TBD
   start_condition: available
   prerequisites: [tech_equipment]
   condition:
@@ -239,8 +274,10 @@ techtree:
   - shpmod_armor
   icon_index: [1, 17]
   
-- name: Naval Weaponry
+- name: Dedicated Naval Weaponry
   id: tech_naval_weaponry
+  description: >
+    TBD
   start_condition: available
   prerequisites: [tech_hitech, tech_equipment]
   condition:
@@ -257,8 +294,10 @@ techtree:
   - shpmod_acs
   icon_index: [1, 17]
   
-- name: Research and Development
+- name: Academic Research
   id: tech_rnd
+  description: >
+    TBD
   start_condition: available
   prerequisites: [tech_hitech]
   condition:
@@ -290,6 +329,8 @@ techtree:
   
 - name: Expeditionary Military
   id: tech_expeditionary_military
+  description: >
+    TBD
   start_condition: available
   prerequisites: [tech_rnd]
   condition:
@@ -305,6 +346,8 @@ techtree:
   
 - name: Bio Industry
   id: tech_bio
+  description: >
+    TBD
   start_condition: available
   prerequisites: [tech_rnd]
   condition:
@@ -318,6 +361,8 @@ techtree:
   
 - name: Nuclear Power
   id: tech_nuclear
+  description: >
+    TBD
   start_condition: available
   prerequisites: [tech_rnd]
   condition:
@@ -330,8 +375,10 @@ techtree:
   - shpmod_reactor_industrial
   icon_index: [1, 17]
 
-- name: Nuclear-thermal Engines
+- name: Nuclear Rocketengines
   id: tech_ntr
+  description: >
+    TBD
   start_condition: available
   prerequisites: [tech_nuclear, tech_advanced_ship]
   condition:

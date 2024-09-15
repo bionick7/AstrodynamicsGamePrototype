@@ -6,7 +6,7 @@
 #include "constants.hpp"
 #include "string_builder.hpp"
 
-static ResourceData global_resource_data[resources::MAX] = {{""}};
+static ResourceData global_resource_data[resources::MAX];
 
 double ResourceCountsToKG(resource_count_t counts) {
     return counts * KG_PER_COUNT;
@@ -69,7 +69,7 @@ resource_count_t PlanetaryEconomy::GetForPrice(resources::T resource, cost_t pri
 }
 
 void PlanetaryEconomy::Update() {
-    if (*global_resource_data[0].name == '\n') {
+    if (global_resource_data[0].resource_index < 0) {
         FAIL("Resources uninitialized")
     }
     for (int i=0; i < resources::MAX; i++) {
@@ -105,7 +105,7 @@ void PlanetaryEconomy::AdvanceEconomy() {
 }
 
 void PlanetaryEconomy::RecalculateEconomy() {
-    if (global_resource_data[0].name[0] == 0) {
+    if (global_resource_data[0].resource_index < 0) {
         FAIL("Resources uninitialized")
     }
     for (int i = 0; i < resources::MAX; i++){
@@ -121,7 +121,7 @@ void PlanetaryEconomy::RecalculateEconomy() {
 
 int resources_scroll = 0;
 void PlanetaryEconomy::UIDrawResources(RID planet) {
-    if (global_resource_data[0].name[0] == 0) {
+    if (global_resource_data[0].resource_index < 0) {
         FAIL("Resources uninitialized")
     }
     int total_size = (DEFAULT_FONT_SIZE + 4 + 8) * (resources::MAX + 1);
@@ -267,7 +267,7 @@ void PlanetaryEconomy::UIDrawEconomy(RID planet) {
         }*/
 
         StringBuilder sb = StringBuilder();
-        sb.AddFormat("%-10s", GetResourceData(i)->name).AddCost(resource_price[i]);
+        sb.AddFormat("%-10s", resources::names[i]).AddCost(resource_price[i]);
         //sprintf(buffer, "%-10sM§M  %+3fK /cnt", GetResourceData(i)->name, resource_price[i]/1e3);
         ui::WriteEx(sb.c_str, text_alignment::CONFORM, false);
 
@@ -304,14 +304,12 @@ void PlanetaryEconomy::UIDrawEconomy(RID planet) {
 
 int LoadResources(const DataNode* data) {
     for (int i=0; i < resources::MAX; i++) {
-        strcpy(GetResourceData(i)->name, resources::names[i]);
-    }
-    for (int i=0; i < resources::MAX; i++) {
-        const DataNode* dn = data->GetChild(GetResourceData(i)->name);
+        GetResourceData(i)->resource_index = i;
+        const DataNode* dn = data->GetChild(resources::names[i]);
         if (dn == NULL) {
             continue;
         }
-        strncpy(GetResourceData(i)->description, dn->Get("description", "[DESCRIPTION MISSING]"), RESOURCE_DESCRIPTION_MAX_SIZE);
+        GetResourceData(i)->description = PermaString(dn->Get("description", "[DESCRIPTION MISSING]"));
         GetResourceData(i)->min_cost = dn->GetF("min_cost", 0, true);
         GetResourceData(i)->max_cost = dn->GetF("max_cost", GetResourceData(i)->min_cost, true);
         GetResourceData(i)->default_cost = dn->GetF("default_cost", (GetResourceData(i)->max_cost + GetResourceData(i)->min_cost) / 2, true);

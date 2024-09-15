@@ -511,7 +511,7 @@ int ShipModules::Load(const DataNode* data) {
                 int index = IdGetIndex(GetPlanets()->GetIdByName(module_data->GetArrayElem("planets_restriction", j)));
                 ship_modules[i].planets_restriction |= 1ull << index;
             }
-            //INFO("%lX, %s", (long int)ship_modules[i].planets_restriction, ship_modules[i].name)
+            //INFO("%lX, %s", (long int)ship_modules[i].planets_restriction, ship_modules[i].name.GetChar())
         } else {
             ship_modules[i].planets_restriction = UINT64_MAX;
         }

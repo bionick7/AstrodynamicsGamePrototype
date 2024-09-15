@@ -74,7 +74,7 @@ void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
         if (x - previous_x < min_planet_spacing) {
             x = previous_x + min_planet_spacing;
         }
-        //DebugPrintText("%s: sma = %f, x = %d", planet->name, planet->orbit.sma, x);
+        //DebugPrintText("%s: sma = %f, x = %d", planet->name.GetChar(), planet->orbit.sma, x);
         Rectangle rect = DrawTextAligned(
             planet->name.GetChar(), {(float)x, (float)tcd->y0 + 18}, 
             text_alignment::HCENTER | text_alignment::BOTTOM, 

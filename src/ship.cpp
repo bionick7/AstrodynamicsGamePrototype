@@ -1081,7 +1081,7 @@ int Ships::LoadShipClasses(const DataNode* data) {
 
     for (int index=0; index < ship_classes_count; index++) {
         const DataNode* sc_data = data->GetChildArrayElem("ship_classes", index);
-        ShipClass sc = {0};
+        ShipClass sc;
 
         sc.name = PermaString(sc_data->Get("name", "[NAME MISSING]"));
         sc.description = PermaString(sc_data->Get("description", "[DESCRITION MISSING]"));

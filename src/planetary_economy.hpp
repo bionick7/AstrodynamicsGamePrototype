@@ -4,6 +4,7 @@
 #include "datanode.hpp"
 #include "constants.hpp"
 #include "id_system.hpp"
+#include "string_builder.hpp"
 
 const double KG_PER_COUNT = 10e3;
 
@@ -46,15 +47,13 @@ namespace resources {
 #undef X
 }
 
-#define RESOURCE_NAME_MAX_SIZE 30
-#define RESOURCE_DESCRIPTION_MAX_SIZE 1000
 #define PRICE_TREND_SIZE 31
 
 typedef int64_t cost_t;
 
 struct ResourceData {
-    char name[RESOURCE_NAME_MAX_SIZE];
-    char description[RESOURCE_DESCRIPTION_MAX_SIZE];
+    int resource_index = -1;
+    PermaString description;
 
     cost_t min_cost;
     cost_t max_cost;

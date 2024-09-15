@@ -179,7 +179,7 @@ void ResearchCondition::GetDescriptiveText(StringBuilder *sb) const {
         }
         const Planet* planet = GetPlanetByIndex(cond.leaf.variable);
         sb->AddClock(GetProgress());
-        sb->AddFormat("Visit %s", planet->name);
+        sb->AddFormat("Visit %s", planet->name.GetChar());
         break;
     }
     case ACHIEVEMENT:{
@@ -269,8 +269,8 @@ int TechTree::Load(const DataNode *data) {
     for(int i=0; i < nodes_count; i++) {
         const DataNode* node_data = data->GetChildArrayElem("techtree", i);
         //nodes[i].name = AddPermaString(node_data->Get("name"));
-        strcpy(nodes[i].name, node_data->Get("name"));
-        strcpy(nodes[i].description, node_data->Get("description"));
+        nodes[i].name = PermaString(node_data->Get("name"));
+        nodes[i].description = PermaString(node_data->Get("description"));
         const char* start_condition_str = node_data->Get("start_condition", "locked");
         node_unlocked[i] = 0;
         if (strcmp(start_condition_str, "unlocked") == 0) node_unlocked[i] = 1;
@@ -337,7 +337,7 @@ int TechTree::Load(const DataNode *data) {
         if (nodes[i].index_in_layer + 1 > max_indices_in_layer){
             max_indices_in_layer = nodes[i].index_in_layer + 1;
         }
-        //INFO("%s: %d, %d", nodes[i].name, nodes[i].layer, nodes[i].index_in_layer)
+        //INFO("%s: %d, %d", nodes[i].name.GetChar(), nodes[i].layer, nodes[i].index_in_layer)
     }
     // 5th pass: Set total in layer
     for(int i=0; i < nodes_count; i++) {
@@ -610,10 +610,10 @@ void TechTree::Update() {
 void _ShowNodeUnlockPopup(const TechTreeNode* node) {
     Popup* popup = event_popup::AddPopup(500, 500, 300);
     StringBuilder sb;
-    sb.Add("Unlocked ").Add(node->name);
+    sb.Add("Unlocked ").Add(node->name.GetChar());
     strcpy(popup->title, sb.c_str);
     sb.Clear();
-    strcpy(popup->description, "[DESCRIPTIOPNS TBD]");
+    strcpy(popup->description, node->description.GetChar());
 }
 
 void TechTree::UpdateTechProgress() {
@@ -755,7 +755,7 @@ void TechTree::DrawUI() {
         button_state_flags::T button_state = ui::AsButton();
         HandleButtonSound(button_state);
         if (button_state & button_state_flags::HOVER) {
-            ui::SetMouseHint(nodes[i].name);
+            ui::SetMouseHint(nodes[i].name.GetChar());
             ui_hovered_tech = i;
         }
 
@@ -788,7 +788,7 @@ void TechTree::DrawUI() {
         ui::Enclose();
 
         // Prerequisites
-        ui::Write(nodes[preview_tech].name);
+        ui::Write(nodes[preview_tech].name.GetChar());
         if (nodes[preview_tech].prerequisites.size > 0) {
             ui::Write("Prerequisites: ");
             for (int i=0; i < nodes[preview_tech].prerequisites.size; i++) {
@@ -796,7 +796,7 @@ void TechTree::DrawUI() {
                 if (node_unlocked[prereq_index] < 1) {
                     ui::Current()->text_color = Palette::red;
                 }
-                ui::Write(TextFormat("- %s", nodes[prereq_index].name));
+                ui::Write(TextFormat("- %s", nodes[prereq_index].name.GetChar()));
                 ui::Current()->text_color = Palette::ui_main;
             }
         }

@@ -447,11 +447,11 @@ void HohmannTransfer(const Orbit* from, const Orbit* to,
 void GetDVTable(StringBuilder* sb, bool include_arobreaks) {
     sb->Add("|          ");
     for(int j=0; j < GetPlanets()->GetPlanetCount(); j++) {
-        sb->AddFormat("|%10.10s", GetPlanetByIndex(j)->name);
+        sb->AddFormat("|%10.10s", GetPlanetByIndex(j)->name.GetChar());
     }
     sb->Add("|\n");
     for(int i=0; i < GetPlanets()->GetPlanetCount(); i++) {
-        sb->AddFormat("|%10.10s", GetPlanetByIndex(i)->name);
+        sb->AddFormat("|%10.10s", GetPlanetByIndex(i)->name.GetChar());
         for(int j=0; j < GetPlanets()->GetPlanetCount(); j++) {
             if (i == j) {
                 sb->Add("|          ");

@@ -453,7 +453,7 @@ void TransferPlanUI::Update() {
             // Is overriding tot_dv a good idea?
             plan->tot_dv = plan->dv1[plan->primary_solution];
         }
-        //DebugPrintText("%s has atmosphere ? %s", GetPlanet(plan->arrival_planet)->name, GetPlanet(plan->arrival_planet)->has_atmosphere ? "y" : "n");
+        //DebugPrintText("%s has atmosphere ? %s", GetPlanet(plan->arrival_planet)->name.GetChar(), GetPlanet(plan->arrival_planet)->has_atmosphere ? "y" : "n");
         is_valid = plan->num_solutions > 0 && plan->tot_dv <= ship_instance->GetCapableDV();
         is_valid = is_valid && GlobalGetNow() < plan->departure_time;
 
@@ -638,7 +638,7 @@ void TransferPlanUI::DrawUI() {
         if (IsIdValidTyped(GetGlobalState()->hover, EntityType::PLANET)) {
             const Planet* hover_planet = GetPlanet(GetGlobalState()->hover);
             double dv = PlanetsMinDV(plan->departure_planet, GetGlobalState()->hover, false);
-            sb.AddFormat("\n[LMB to select %s] (\u2265 %4.2f km/s \u0394V)", hover_planet->name, dv / 1e3);
+            sb.AddFormat("\n[LMB to select %s] (\u2265 %4.2f km/s \u0394V)", hover_planet->name.GetChar(), dv / 1e3);
         }
         //ui::SetMouseHint(sb.c_str);
 

@@ -367,7 +367,6 @@ const PlanetNature* Planets::GetParentNature() const {
 
 int Planets::LoadEphemeris(const DataNode* data) {
     // Init planets
-    parent = {0};
     parent.radius = data->GetF("radius");
     parent.mu = data->GetF("mass") * G;
     planet_count = data->GetChildArrayLen("satellites");
