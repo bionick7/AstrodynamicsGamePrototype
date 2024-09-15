@@ -45,6 +45,21 @@ void TransferPlanSetBestDeparture(TransferPlan* tp, timemath::Time t0, timemath:
 void TransferPlanSoonest(TransferPlan* tp, double dv_limit);
 int TransferPlanTests();
 
+struct TransferPlanCycle {
+    int stops = 0;
+    RID* planets = NULL;
+    double* dvs = NULL;
+    resource_count_t (*resource_transfers)[resources::MAX] = NULL;
+
+    ~TransferPlanCycle();
+
+    void Serialize(DataNode* data) const;
+    void Deserialize(const DataNode* data);
+
+    void GenFromTransferplans(TransferPlan* transferplans, int transferplan_count);
+    void Reset();
+};
+
 struct TransferPlanUI {
     TransferPlan* plan;
     RID ship;

@@ -302,29 +302,19 @@ void TextBox::DrawTexture(Texture2D texture, Rectangle source, int texture_heigh
     RecalculateExtends();
 }
 
-button_state_flags::T TextBox::WriteButton(const char* text, int inset) {
-    Vector2 pos = {x + text_margin_x + x_cursor, y + text_margin_y + y_cursor};
-    Vector2 size = MeasureTextEx(GetCustomDefaultFont(text_size), text, text_size, 1);
-    // text fully in render rectangle
-    if (
-        (!CheckCollisionPointRec(pos, render_rec)
-        || !CheckCollisionPointRec(Vector2Add(pos, size), render_rec))
-        && !flexible
-    ) return button_state_flags::DISABLED;
-
-    if (inset >= 0) {
-        size.x += 2*inset;
-        size.y += 2*inset;
-        pos.x += inset;
-        pos.y += inset;
+button_state_flags::T TextBox::WriteButton(const char* text) {
+    // text fully in render rectangle    
+    button_state_flags::T button_state = AsButton();
+    HandleButtonSound(button_state);
+    if (button_state & button_state_flags::HOVER) {
+        text_color = Palette::interactable_main;
+        Enclose(0, 4, background_color, text_color);
     }
-    button_state_flags::T res = GetButtonStateRec({pos.x, pos.y, size.x, size.y});
-    Color c = (res & button_state_flags::HOVER) ? Palette::ui_main : Palette::interactable_main;
-    DrawRectangleLines(pos.x - inset, pos.y - inset, size.x, size.y, c);
-    text::DrawTextEx(GetCustomDefaultFont(text_size), text, pos, text_size, 1, 
-                     text_color, text_background, render_rec, z_layer);
-    _Advance(pos, size);
-    return res;
+
+    Write(text, text_alignment::CENTER);
+    text_color = Palette::ui_main;
+
+    return button_state;
 }
 
 button_state_flags::T TextBox::AsButton() const {
@@ -621,7 +611,7 @@ void ui::Shrink(int dx, int dy) {
 
 void ui::Enclose() {
     ui::Current()->Enclose(0, 4, ui::Current()->background_color, ui::Current()->text_color);
-    Shrink(4, 4);
+    //Shrink(4, 4);
 }
 
 void ui::EncloseEx(int shrink, Color background_color, Color line_color, int corner_radius) {
@@ -655,6 +645,10 @@ void ui::WriteEx(const char *text, text_alignment::T alignment, bool linebreak) 
     } else {
         tb->Write(text, alignment);
     }
+}
+
+button_state_flags::T ui::WriteButton(const char *text) {
+    return ui::Current()->WriteButton(text);
 }
 
 void ui::DecorateEx(const text::Layout* layout, const TokenList* tokens) {

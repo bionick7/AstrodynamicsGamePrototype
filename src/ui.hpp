@@ -115,7 +115,7 @@ struct TextBox {
     void Decorate(const text::Layout* layout, const TokenList* tokens);
     enum TextureDrawMode { TEXTURE_DRAW_DEFAULT, TEXTURE_DRAW_SDF, TEXTURE_DRAW_RAW };
     void DrawTexture(Texture2D texture, Rectangle source, int height, Color tint, TextureDrawMode draw_mode);
-    button_state_flags::T WriteButton(const char* text, int inset);
+    button_state_flags::T WriteButton(const char* text);
     button_state_flags::T AsButton() const;
     Vector2 GetTextCursor() const;
     Rectangle GetRect() const;
@@ -204,6 +204,7 @@ namespace ui {
     void DrawIcon(AtlasPos atlas_index, Color tint, int height);
     void Write(const char* text);
     void WriteEx(const char* text, text_alignment::T alignment, bool linebreak);
+    button_state_flags::T WriteButton(const char* text);
     void DecorateEx(const text::Layout* layout, const TokenList* tokens);
     Rectangle MeasureTextEx(const char* text, text_alignment::T alignment);
     void FillLine(double value, Color fill_color, Color background_color);

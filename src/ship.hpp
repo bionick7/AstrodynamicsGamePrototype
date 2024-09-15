@@ -87,24 +87,26 @@ struct Ship {
     bool is_detected;  // by the other faction
     OrbitPos position;
 
-    int prepared_plans_count;
-    TransferPlan prepared_plans[SHIP_MAX_PREPARED_PLANS];
     RID modules[SHIP_MAX_MODULES];
     // Replace with struct in case more stuff has be be tracked
     bool modules_enabled[SHIP_MAX_MODULES];  
     // stats are more or less constant for the same amount of modules
     int stats[ship_stats::MAX];
     // variables vary
-    int dammage_taken[ship_variables::MAX];
+    int damage_taken[ship_variables::MAX];
 
     // Allows to refer to all the stats as variables.
     // Still needs to be declared
     #define X(upper, lower) int lower() const { return stats[ship_stats::upper]; };
     X_SHIP_STATS
     #undef X
-    
+
+    // Transfer plans
+    int prepared_plans_count;
+    TransferPlan prepared_plans[SHIP_MAX_PREPARED_PLANS];    
     int plan_edit_index;
     int highlighted_plan_index;
+    TransferPlanCycle transferplan_cycle;
 
     // UI/visual state
     Vector2 draw_pos;

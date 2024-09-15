@@ -331,12 +331,92 @@ void TransferPlan::Deserialize(const DataNode* data) {
     TransferPlanSolve(this);
 }
 
-resource_count_t TransferPlan::GetPayloadMass() const{
+resource_count_t TransferPlan::GetPayloadMass() const {
     resource_count_t total_payload = 0;
     for(int i=0; i < resources::MAX; i++) {
         total_payload += resource_transfer[i];
     }
     return total_payload;
+}
+
+TransferPlanCycle::~TransferPlanCycle() {
+    delete[] planets;
+    delete[] dvs;
+    delete[] resource_transfers;
+}
+
+void TransferPlanCycle::Serialize(DataNode *data) const {
+    data->CreatChildArray("cycle", stops);
+    for(int i=0; i < stops; i++) {
+        DataNode* cycle_stop_data = data->InsertIntoChildArray("cycles", i);
+        cycle_stop_data->Set("planet", GetPlanet(planets[i])->name.GetChar());
+        cycle_stop_data->SetF("dv", dvs[i]);
+        cycle_stop_data->SerializeBuffer("resources", resource_transfers[i], resources::names, resources::MAX);
+    }
+}
+
+void TransferPlanCycle::Deserialize(const DataNode *data) {
+    delete[] planets;
+    delete[] dvs;
+    delete[] resource_transfers;
+
+    stops = data->GetChildArrayLen("cycle");
+    if (stops == 0) return;
+
+    planets = new RID[stops];
+    dvs = new double[stops];
+    resource_transfers = new resource_count_t[stops + 1][resources::MAX];
+
+    for(int i=0; i < stops; i++) {
+        const DataNode* cycle_stop_data = data->GetChildArrayElem("cycle", i);
+        RID planet_id = GetGlobalState()->GetFromStringIdentifier(cycle_stop_data->GetArrayElem("planet", i));
+        if (!IsIdValidTyped(planet_id, EntityType::PLANET)) {
+            planets[i] = GetInvalidId();    
+            // Means planet IDs can be invalid
+            FAIL("No such planet: '%s'", cycle_stop_data->GetArrayElem("planet", i))
+            continue;
+        }
+        planets[i] = planet_id;
+        dvs[i] = cycle_stop_data->GetF("dv");
+        cycle_stop_data->DeserializeBuffer("resources", resource_transfers[i], resources::names, resources::MAX);
+    }
+}
+
+void TransferPlanCycle::GenFromTransferplans(TransferPlan *transferplans, int transferplan_count) {
+    if (transferplans[0].departure_planet != transferplans[transferplan_count-1].arrival_planet) {
+        FAIL("Tried to create invalid Transferplan Cycle: final arrival planet did not match departure planet")
+        return;
+    }
+    
+    delete[] planets;
+    delete[] dvs;
+    delete[] resource_transfers;
+
+    stops = transferplan_count;
+
+    planets = new RID[stops];
+    dvs = new double[stops];
+    resource_transfers = new resource_count_t[stops + 1][resources::MAX];
+    
+    for(int i=0; i < transferplan_count; i++) {
+        planets[i] = transferplans[i].arrival_planet;
+        dvs[i] = transferplans[i].tot_dv;
+        for(int j=0; j < resources::MAX; j++) {
+            resource_transfers[i][j] = transferplans[i].resource_transfer[j];
+        }
+    }
+}
+
+void TransferPlanCycle::Reset() {
+    delete[] planets;
+    delete[] dvs;
+    delete[] resource_transfers;
+    
+    planets = NULL;
+    dvs = NULL;
+    resource_transfers  = NULL;
+
+    stops = 0;
 }
 
 int TransferPlanTests() {
@@ -770,12 +850,12 @@ void TransferPlanUI::SetPlan(TransferPlan* pplan, RID pship, timemath::Time pmin
     }
 }
 
- void TransferPlanUI::SetLogistics(resource_count_t fuel_mass) {
+void TransferPlanUI::SetLogistics(resource_count_t fuel_mass) {
     if (plan == NULL) return;
     plan->fuel = fuel_mass;
 }
 
- void TransferPlanUI::SetDestination(RID planet) {
+void TransferPlanUI::SetDestination(RID planet) {
     if (is_dragging_departure || is_dragging_arrival || !IsIdValid(ship) || !IsIdValid(plan->departure_planet)) {
         return;
     }

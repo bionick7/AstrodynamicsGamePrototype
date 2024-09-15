@@ -117,7 +117,7 @@ void Ship::Serialize(DataNode *data) const {
     
     data->Set("class_id", GetShipClassByRID(ship_class)->id);
     data->SerializeBuffer("transporting", transporting, resources::names, resources::MAX);
-    data->SerializeBuffer("dammage_taken", dammage_taken, ship_variables::names, ship_variables::MAX);
+    data->SerializeBuffer("damage_taken", damage_taken, ship_variables::names, ship_variables::MAX);
     
     data->SetI("production_process", production_process);
     production_queue.SerializeTo(data, "production_queue");
@@ -135,6 +135,7 @@ void Ship::Serialize(DataNode *data) const {
     for (int i=0; i < prepared_plans_count; i++) {
         prepared_plans[i].Serialize(data->InsertIntoChildArray("prepared_plans", i));
     }
+    transferplan_cycle.Serialize(data);
 }
 
 void Ship::Deserialize(const DataNode* data) {
@@ -146,7 +147,7 @@ void Ship::Deserialize(const DataNode* data) {
         FAIL("Invalid ship class")  // TODO fail more gracefully
     }
 
-    data->DeserializeBuffer("dammage_taken", dammage_taken, ship_variables::names, ship_variables::MAX);
+    data->DeserializeBuffer("damage_taken", damage_taken, ship_variables::names, ship_variables::MAX);
     
     production_process = data->GetI("ship_production_process", 0, true);
     production_queue.DeserializeFrom(data, "production_queue", true);
@@ -174,6 +175,8 @@ void Ship::Deserialize(const DataNode* data) {
         prepared_plans[i] = TransferPlan();
         prepared_plans[i].Deserialize(data->GetChildArrayElem("prepared_plans", i, true));
     }
+    
+    transferplan_cycle.Deserialize(data);
 }
 
 double Ship::GetOperationalMass() const {  // Without resources
@@ -277,9 +280,9 @@ int Ship::GetMissingHealth() const {
     //SHOW_I(variables[ship_variables::CREW])
     
     return
-          dammage_taken[ship_variables::KINETIC_ARMOR]
-        + dammage_taken[ship_variables::ENERGY_ARMOR]
-        + dammage_taken[ship_variables::CREW]
+          damage_taken[ship_variables::KINETIC_ARMOR]
+        + damage_taken[ship_variables::ENERGY_ARMOR]
+        + damage_taken[ship_variables::CREW]
     ;
 }
 
@@ -300,13 +303,13 @@ const char *Ship::GetTypeIcon() const {
 bool Ship::CanDragModule(int index) const {
     if (!IsIdValid(modules[index]))
         return true;
-    if (GetModule(modules[index])->delta_stats[ship_stats::KINETIC_HP] > kinetic_hp() - dammage_taken[ship_variables::KINETIC_ARMOR]) {
+    if (GetModule(modules[index])->delta_stats[ship_stats::KINETIC_HP] > kinetic_hp() - damage_taken[ship_variables::KINETIC_ARMOR]) {
         return false;
     }
-    if (GetModule(modules[index])->delta_stats[ship_stats::ENERGY_HP] > energy_hp() - dammage_taken[ship_variables::ENERGY_ARMOR]) {
+    if (GetModule(modules[index])->delta_stats[ship_stats::ENERGY_HP] > energy_hp() - damage_taken[ship_variables::ENERGY_ARMOR]) {
         return false;
     }
-    if (GetModule(modules[index])->delta_stats[ship_stats::CREW] > crew() - dammage_taken[ship_variables::CREW]) {
+    if (GetModule(modules[index])->delta_stats[ship_stats::CREW] > crew() - damage_taken[ship_variables::CREW]) {
         return false;
     }
     return true;
@@ -673,19 +676,19 @@ void Ship::RemoveShipModuleAt(int index) {
 void Ship::Repair(int hp) {
     if (hp > stats[ship_stats::KINETIC_HP] + stats[ship_stats::ENERGY_HP] + stats[ship_stats::CREW]){
         // for initializetion
-        dammage_taken[ship_variables::KINETIC_ARMOR] = 0;
-        dammage_taken[ship_variables::ENERGY_ARMOR] = 0;
-        dammage_taken[ship_variables::CREW] = 0;
+        damage_taken[ship_variables::KINETIC_ARMOR] = 0;
+        damage_taken[ship_variables::ENERGY_ARMOR] = 0;
+        damage_taken[ship_variables::CREW] = 0;
         return;
     }
-    int kinetic_repair = MinInt(hp, dammage_taken[ship_variables::KINETIC_ARMOR]);
+    int kinetic_repair = MinInt(hp, damage_taken[ship_variables::KINETIC_ARMOR]);
     hp -= kinetic_repair;
-    int energy_repair = MinInt(hp, dammage_taken[ship_variables::ENERGY_ARMOR]);
+    int energy_repair = MinInt(hp, damage_taken[ship_variables::ENERGY_ARMOR]);
     hp -= energy_repair;
-    int crew_repair = MinInt(hp, dammage_taken[ship_variables::CREW]);
-    dammage_taken[ship_variables::KINETIC_ARMOR] -= kinetic_repair;
-    dammage_taken[ship_variables::ENERGY_ARMOR] -= energy_repair;
-    dammage_taken[ship_variables::CREW] -= crew_repair;
+    int crew_repair = MinInt(hp, damage_taken[ship_variables::CREW]);
+    damage_taken[ship_variables::KINETIC_ARMOR] -= kinetic_repair;
+    damage_taken[ship_variables::ENERGY_ARMOR] -= energy_repair;
+    damage_taken[ship_variables::CREW] -= crew_repair;
 }
 
 ShipModuleSlot Ship::GetFreeModuleSlot(module_types::T least) const {
@@ -993,6 +996,9 @@ void Ship::_OnArrival(const TransferPlan* tp) {
     }
 
     RemoveTransferPlan(0);
+
+    // TODO: update Transfer plans according to cycle
+
     Update();
 }
 

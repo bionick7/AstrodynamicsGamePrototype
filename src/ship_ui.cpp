@@ -116,9 +116,9 @@ void _UIDrawStats(const Ship* ship) {
         ui::PushInset(combat_stat_block_height);
         //sb.AddFormat(ICON_POWER "%2d" ICON_ACS "%2d\n", ship->power(), ship->initiative());
         sb.AddFormat(" %2d/%2d" ICON_HEART_KINETIC "  %2d/%2d" ICON_HEART_ENERGY "  %3d/%3d" ICON_HEART_BOARDING "\n", 
-                    ship->kinetic_hp() - ship->dammage_taken[ship_variables::KINETIC_ARMOR], ship->kinetic_hp(),
-                    ship->energy_hp()  - ship->dammage_taken[ship_variables::ENERGY_ARMOR],  ship->energy_hp(),
-                    ship->crew()       - ship->dammage_taken[ship_variables::CREW],          ship->crew());
+                    ship->kinetic_hp() - ship->damage_taken[ship_variables::KINETIC_ARMOR], ship->kinetic_hp(),
+                    ship->energy_hp()  - ship->damage_taken[ship_variables::ENERGY_ARMOR],  ship->energy_hp(),
+                    ship->crew()       - ship->damage_taken[ship_variables::CREW],          ship->crew());
         sb.AddFormat("   %2d " ICON_ATTACK_KINETIC "    %2d " ICON_ATTACK_ORDNANCE "     %3d " ICON_ATTACK_BOARDING "\n", 
                     ship->kinetic_offense(), ship->ordnance_offense(), ship->boarding_offense());
         sb.AddFormat("   %2d " ICON_SHIELD_KINETIC "    %2d " ICON_SHIELD_ORDNANCE "     %3d " ICON_SHIELD_BOARDING "\n", 
@@ -131,14 +131,17 @@ void _UIDrawStats(const Ship* ship) {
 }
 
 int _UIDrawTransferplans(Ship* ship) {
-    int inset_height = ship->prepared_plans_count * (ui::Current()->GetLineHeight() * 2 + 8 + 4);
+    int panel_height = ui::Current()->GetLineHeight() * 2 + 8;
+    int inset_height = ship->prepared_plans_count * panel_height;
+    if (ship->transferplan_cycle.stops > 0) {
+        inset_height += panel_height;
+    }
     inset_height += 40;
 
     ui::PushInset(inset_height);
     ui::Enclose();
     timemath::Time now = GlobalGetNow();
     for (int i=0; i < ship->prepared_plans_count; i++) {
-        char tp_str[2][40];
         const char* resource_name;
         const char* departure_planet_name;
         const char* arrival_planet_name;
@@ -171,7 +174,7 @@ int _UIDrawTransferplans(Ship* ship) {
         sb.AddFormat("  %s >> %s", departure_planet_name, arrival_planet_name);
 
         // Double Button
-        ui::PushInset(ui::Current()->GetLineHeight() * 2 + 8);
+        ui::PushInset(panel_height);
         button_state_flags::T button_state = ui::AsButton();
         if (button_state & button_state_flags::HOVER) {
             ui::EnclosePartial(4, Palette::bg, Palette::interactable_main, direction::DOWN | direction::LEFT);
@@ -207,26 +210,68 @@ int _UIDrawTransferplans(Ship* ship) {
 
         ui::Pop();  // Insert
     }
-    ui::HelperText(GetUI()->GetConceptDescription("transfer"));
     
-    // 'New transfer' button
+    ui::HelperText(GetUI()->GetConceptDescription("transfer"));
+
+    if (ship->transferplan_cycle.stops > 0) {
+        ui::PushInset(panel_height);
+        StringBuilder sb;
+        sb.Add("Currently on cycle: \n");
+        for (int i=0; i < ship->transferplan_cycle.stops; i++) {
+            sb.AddPerma(GetPlanet(ship->transferplan_cycle.planets[i])->name);
+            sb.Add(" >> ");
+        }
+        sb.AddPerma(GetPlanet(ship->transferplan_cycle.planets[0])->name);
+        ui::WriteEx(sb.c_str, text_alignment::CENTER, false);
+
+        ui::Pop();  // Inset
+    }
+    
+    // Buttons
 
     ui::VSpace(10);
-    Rectangle text_rect = ui::Current()->TbMeasureText("New transfer", text_alignment::CONFORM);
-    //ui::PushInline(text_rect.width + 2, text_rect.height + 2);
-    ui::PushAligned(text_rect.width + 6, text_rect.height + 4, text_alignment::HCENTER | text_alignment::VCONFORM);
-        button_state_flags::T new_button_state = ui::AsButton();
-        if (new_button_state & button_state_flags::HOVER) {
-            ui::EnclosePartial(0, Palette::bg, Palette::interactable_main, direction::DOWN);
-        } else {
-            ui::EnclosePartial(0, Palette::bg, Palette::ui_main, direction::DOWN);
+
+    ui::PushInset(30);
+    RID last_arrival_planet = ship->prepared_plans[ship->prepared_plans_count - 1].arrival_planet;
+    bool show_cycle_button = 
+        ship->transferplan_cycle.stops > 0 || 
+        (ship->GetParentPlanet() == last_arrival_planet && ship->plan_edit_index < 0);
+    int button_tabs = show_cycle_button ? 2 : 1;
+    bool button_pressed[2];
+    for(int i=0; i < button_tabs; i++) {
+        ui::PushHSplit(i * ui::Current()->width/button_tabs,
+                       (i+1) * ui::Current()->width/button_tabs);
+
+        const char* text = "New Transfer";
+        if (i == 1) {
+            text = ship->transferplan_cycle.stops > 0 ? "Remove Cycle" : "Add Cycle";
         }
-        ui::WriteEx("New transfer", text_alignment::CENTER, false);
-        HandleButtonSound(new_button_state);
-    ui::Pop();  // Aligned
-    ui::VSpace(text_rect.height + 4);
-    if (new_button_state & button_state_flags::JUST_PRESSED) {
+
+        button_state_flags::T button_state = ui::WriteButton(text);
+        button_pressed[i] = button_state & button_state_flags::JUST_PRESSED;
+        if (i == 1 && ship->transferplan_cycle.stops == 0 && button_state & button_state_flags::HOVER) {
+            StringBuilder sb;
+            for (int i=0; i < ship->prepared_plans_count; i++) {
+                sb.AddPerma(GetPlanet(ship->prepared_plans[i].departure_planet)->name);
+                sb.Add(" >> ");
+            }
+            ui::SetMouseHint(sb.c_str);
+        }
+
+        ui::Pop();  // HSplit
+    }
+    
+    ui::Pop();  // Inset (Button)
+
+    if (button_pressed[0]) {
         ship->_OnNewPlanClicked();
+    }
+    if (button_pressed[1]) {
+        if (ship->transferplan_cycle.stops > 0) {
+            ship->transferplan_cycle.Reset();
+        } else {
+            ship->transferplan_cycle.GenFromTransferplans(ship->prepared_plans, ship->prepared_plans_count);
+        }
     }
     ui::Pop();  // Inset
 
@@ -417,16 +462,16 @@ void _ProductionQueueMouseHint(RID id, const Ship* ship, bool is_in_production_q
     //}
 }
 
-int module_class_ui_tab = 0;
 void _UIDrawProduction(Ship* ship) {
+    static int module_class_ui_tab = 0;
+    const int tabs = module_types::ANY + 1;
+
     if (ship == NULL) {
         return;
     }
     if (!ship->IsParked()) {
         return;
     }
-
-    const int tabs = module_types::ANY + 1;
 
     // Set variables for planet/ship
     int option_size = GetShips()->ship_classes_count + GetShipModules()->shipmodule_count;
