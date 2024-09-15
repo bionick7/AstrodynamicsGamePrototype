@@ -140,7 +140,7 @@ void Planet::DrawUI() {
     ui::Pop();  // Tab container
     ui::PushInset(10000);  // Constrained by outside container
 
-    ui::WriteEx(name, text_alignment::CONFORM, true);
+    ui::WriteEx(name.GetChar(), text_alignment::CONFORM, true);
 
     // Independence slider
     /*ui::PushInset(30);

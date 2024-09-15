@@ -152,12 +152,12 @@ int _UIDrawTransferplans(Ship* ship) {
             }
         }
         if (IsIdValid(ship->prepared_plans[i].departure_planet)) {
-            departure_planet_name = GetPlanet(ship->prepared_plans[i].departure_planet)->name;
+            departure_planet_name = GetPlanet(ship->prepared_plans[i].departure_planet)->name.GetChar();
         } else {
             departure_planet_name = "NOT SET";
         }
         if (IsIdValid(ship->prepared_plans[i].arrival_planet)) {
-            arrival_planet_name = GetPlanet(ship->prepared_plans[i].arrival_planet)->name;
+            arrival_planet_name = GetPlanet(ship->prepared_plans[i].arrival_planet)->name.GetChar();
         } else {
             arrival_planet_name = "NOT SET";
         }

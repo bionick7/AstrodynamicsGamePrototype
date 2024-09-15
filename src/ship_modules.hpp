@@ -147,8 +147,8 @@ struct ShipModuleClass {
     uint64_t planets_restriction;
 
     double mass;  // kg
-    char name[100];
-    char description[512];
+    PermaString name;
+    PermaString description;
     bool has_stat_dependencies;
     int construction_time;
     bool is_hidden;

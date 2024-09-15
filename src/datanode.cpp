@@ -184,7 +184,7 @@ int DataNode::FromYaml(DataNode* node, const char* filename, yaml_parser_t* pars
     //const char* indent = _GetSpaces(recursion_depth*4);
 
     DataNodeParseState parse_state = DN_PARESE_EXPECT_KEY;
-    char key_name[1024];
+    char key_name[1024];  // Cannot be static, since it's recursive
     int array_index = 0;
 
     while (true) {
@@ -596,13 +596,13 @@ void DataNode::Set(const char* key, const char* value) {
 }
 
 void DataNode::SetI(const char* key, int value) {
-    char buffer[20];
+    static char buffer[20];
     sprintf(buffer, "%d", value);
     Set(key, buffer);
 }
 
 void DataNode::SetF(const char* key, double value) {
-    char buffer[30];
+    static char buffer[30];
     sprintf(buffer, "%f", value);
     Set(key, buffer);
 }
@@ -672,13 +672,13 @@ void DataNode::CreatChildArray(const char* key, size_t size) {
 }
 
 void DataNode::InsertIntoArrayI(const char* key, int index, int value) {
-    char buffer[100];
+    static char buffer[100];
     sprintf(buffer, "%d", value);
     InsertIntoArray(key, index, buffer);
 }
 
 void DataNode::InsertIntoArrayF(const char* key, int index, double value) {
-    char buffer[100];
+    static char buffer[100];
     sprintf(buffer, "%f", value);
     InsertIntoArray(key, index, buffer);
 }

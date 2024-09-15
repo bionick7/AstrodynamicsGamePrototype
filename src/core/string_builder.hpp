@@ -14,9 +14,18 @@ struct TokenList {
     void AddToken(int start, int end);
 };
 
+
+struct PermaString {
+    int offset;
+
+    PermaString();
+    PermaString(const char* string);
+    const char* GetChar() const;
+};
+
 struct StringBuilder {
     char* c_str;
-    int length;  // size of buffer, not of  string
+    int length;  // size of buffer, not of string
 
     StringBuilder();
     StringBuilder(int p_length);
@@ -33,7 +42,8 @@ struct StringBuilder {
     StringBuilder GetSubstring(int from, int to);
 
     StringBuilder& Add(const char* add_str);
-    StringBuilder& _AddBuffer(char buffer[]);
+    StringBuilder& _AddWithTerminator(const char* add_str);
+    StringBuilder& AddPerma(PermaString perma_str);
     StringBuilder& AddFormat(const char* fmt, ...);
     StringBuilder& AddLine(const char* add_str);
     StringBuilder& AddF(double num);
@@ -43,7 +53,6 @@ struct StringBuilder {
     StringBuilder& AddCost(int64_t cost);
     StringBuilder& AddClock(float progress);
 };
-
 
 int StringBuilderTests();
 

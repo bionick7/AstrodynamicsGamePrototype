@@ -217,7 +217,7 @@ void _UpdateShipIcons() {
         float radius_px = GetCamera()->MeasurePixelSize(GameCamera::WorldToRender(text3d->world_pos));
         text3d->scale = DEFAULT_FONT_SIZE;
         text3d->offset = { 0, radius_px + 3 };
-        text3d->text = planet->name;
+        text3d->text = planet->name.GetChar();
         text3d->color = Palette::ui_main;
         text3d->world_pos = planet->position.cartesian;
         text3d->alignment = text_alignment::HCENTER | text_alignment::BOTTOM;

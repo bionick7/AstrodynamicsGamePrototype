@@ -66,7 +66,7 @@ struct ResearchCondition {
 };
 
 struct Achievement{
-    char description[1024] = "NO DESCRIPTION";
+    PermaString description;
     const char* str_id;  // Not owning. Is stored in the map GlobalState
 
     Achievement();
@@ -75,6 +75,7 @@ struct Achievement{
 struct TechTreeNode {
     // Primary info
     char name[100] = "UNNAMED";
+    char description[1024] = "UNNAMED";
     const char* str_id;  // Not owning. Is stored in the map GlobalState
     IDList attached_components;
     IDList prerequisites;

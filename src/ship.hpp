@@ -11,7 +11,6 @@
 #define SHIP_MAX_PREPARED_PLANS 10
 
 #define SHIPCLASS_NAME_MAX_SIZE 64
-#define SHIPCLASS_DESCRIPTION_MAX_SIZE 1024
 #define SHIP_NAME_MAX_SIZE 64
 
 struct WrenHandle;
@@ -45,8 +44,8 @@ namespace ship_type {
 };
 
 struct ShipClass {
-    char name[SHIPCLASS_NAME_MAX_SIZE];
-    char description[SHIPCLASS_DESCRIPTION_MAX_SIZE];
+    PermaString name;
+    PermaString description;
     char naming_convention[SHIPCLASS_NAME_MAX_SIZE];
     const char* id = "INVALID ID - SHIP CLASS LOADING ERROR";
 

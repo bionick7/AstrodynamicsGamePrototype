@@ -160,10 +160,10 @@ void ResearchCondition::GetDescriptiveText(StringBuilder *sb) const {
         const char* name = "UNKNOWN";
         if (IsIdValidTyped(object_id, EntityType::MODULE_CLASS)) {
             const ShipModuleClass* smc = GetModule(object_id);
-            name = smc->name;
+            name = smc->name.GetChar();
         } else if (IsIdValidTyped(object_id, EntityType::SHIP_CLASS)) {
             const ShipClass* sc = GetShipClassByRID(object_id);
-            name = sc->name;
+            name = sc->name.GetChar();
         } else {
             sb->Add("Invalid stat condition");
             break;
@@ -188,7 +188,7 @@ void ResearchCondition::GetDescriptiveText(StringBuilder *sb) const {
             break;
         }
         sb->AddClock(GetProgress());
-        sb->Add(GetTechTree()->achievements[cond.leaf.variable].description);
+        sb->AddPerma(GetTechTree()->achievements[cond.leaf.variable].description);
         break;
     }
     case FREE:{
@@ -260,7 +260,7 @@ int TechTree::Load(const DataNode *data) {
     for (int i=0; i < achievement_count; i++) { 
         const DataNode* achievement_data = data->GetChildArrayElem("achievements", i);
         achievement_states[i] = false;
-        strcpy(achievements[i].description, achievement_data->Get("description"));
+        achievements[i].description = PermaString(achievement_data->Get("description"));
         RID rid = RID(i, EntityType::ACHIEVEMENT);
         achievements[i].str_id = GetGlobalState()->AddStringIdentifier(achievement_data->Get("id"), rid);
     }
@@ -268,7 +268,9 @@ int TechTree::Load(const DataNode *data) {
     // 1st pass: most data
     for(int i=0; i < nodes_count; i++) {
         const DataNode* node_data = data->GetChildArrayElem("techtree", i);
+        //nodes[i].name = AddPermaString(node_data->Get("name"));
         strcpy(nodes[i].name, node_data->Get("name"));
+        strcpy(nodes[i].description, node_data->Get("description"));
         const char* start_condition_str = node_data->Get("start_condition", "locked");
         node_unlocked[i] = 0;
         if (strcmp(start_condition_str, "unlocked") == 0) node_unlocked[i] = 1;
@@ -406,7 +408,7 @@ int TechTree::LoadResearchCondition(const DataNode* condition_data, int idx, int
         case ResearchCondition::PRODUCE_ITEM:{
             const char* var_id = condition_data->Get("item");
             RID rid = GetGlobalState()->GetFromStringIdentifier(var_id);
-            if (!IsIdValidTyped(rid, EntityType::ACHIEVEMENT)) {
+            if (!IsIdValidTyped(rid, EntityType::SHIP_CLASS) && !IsIdValidTyped(rid, EntityType::MODULE_CLASS)) {
                 research_conditions[idx].cond.leaf.variable = GetInvalidId().AsInt();
                 ERROR("No such product '%s'", var_id);
             } else {
@@ -459,7 +461,7 @@ void TechTree::Serialize(DataNode *data) const {
     data->CreateArray("visited_planets", 0);
     for (int i=0; i < GetPlanets()->GetPlanetCount(); i++) {
         if (visited_planets[i]) {
-            data->AppendToArray("visited_planets", GetPlanetByIndex(i)->name);
+            data->AppendToArray("visited_planets", GetPlanetByIndex(i)->name.GetChar());
         }
     }
     data->CreateArray("achievements", 0);
@@ -607,7 +609,10 @@ void TechTree::Update() {
 
 void _ShowNodeUnlockPopup(const TechTreeNode* node) {
     Popup* popup = event_popup::AddPopup(500, 500, 300);
-    strcpy(popup->title, node->name);
+    StringBuilder sb;
+    sb.Add("Unlocked ").Add(node->name);
+    strcpy(popup->title, sb.c_str);
+    sb.Clear();
     strcpy(popup->description, "[DESCRIPTIOPNS TBD]");
 }
 

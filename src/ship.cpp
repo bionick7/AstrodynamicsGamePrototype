@@ -33,8 +33,8 @@ resource_count_t ShipClass::GetFuelRequiredEmpty(double dv) const {
 }
 
 void ShipClass::MouseHintWrite(StringBuilder* sb) const {
-    sb->Add(name).Add("\n");
-    sb->Add(description).Add("\n");
+    sb->AddPerma(name).Add("\n");
+    sb->AddPerma(description).Add("\n");
 
     StringBuilder sb2;
     int stat_num = 0;
@@ -819,7 +819,7 @@ void Ship::AdvanceProductionQueue() {
         ship_data.Set("name", ship_name);
         ship_data.Set("class_id", sc->id);
         ship_data.SetI("allegiance", allegiance); 
-        ship_data.Set("planet", planet->name);
+        ship_data.Set("planet", planet->name.GetChar());
         ship_data.CreateArray("tf_plans", 0);
         ship_data.CreateArray("modules", 0);
         GetShips()->AddShip(&ship_data);
@@ -1083,9 +1083,8 @@ int Ships::LoadShipClasses(const DataNode* data) {
         const DataNode* sc_data = data->GetChildArrayElem("ship_classes", index);
         ShipClass sc = {0};
 
-        strncpy(sc.name, sc_data->Get("name", "[NAME MISSING]"), SHIPCLASS_NAME_MAX_SIZE);
-        strncpy(sc.description, sc_data->Get("description", "[DESCRITION MISSING]"), SHIPCLASS_DESCRIPTION_MAX_SIZE);
-        strncpy(sc.naming_convention, sc_data->Get("naming_convention", "cargo"), SHIPCLASS_NAME_MAX_SIZE);
+        sc.name = PermaString(sc_data->Get("name", "[NAME MISSING]"));
+        sc.description = PermaString(sc_data->Get("description", "[DESCRITION MISSING]"));
         const char* ship_id = sc_data->Get("id", "_");
 
         sc.max_capacity = sc_data->GetI("capacity", 0);

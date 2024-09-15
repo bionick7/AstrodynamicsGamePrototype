@@ -9,8 +9,8 @@
 #include "render_utils.hpp"
 #include "debug_drawing.hpp"
 
-Planet::Planet(const char* p_name, double p_mu, double p_radius) {
-    strcpy(name, p_name);
+Planet::Planet(PermaString p_name, double p_mu, double p_radius) {
+    name = p_name;
     mu = p_mu;
     radius = p_radius;
     //ship_production_queue.Clear();
@@ -22,7 +22,7 @@ Planet::Planet(const char* p_name, double p_mu, double p_radius) {
 }
 
 void Planet::Serialize(DataNode* data) const {
-    data->Set("name", name);
+    data->Set("name", name.GetChar());
     data->Set("trading_accessible", economy.trading_accessible ? "y" : "n");
     data->SetI("allegiance", allegiance);
     data->SetI("independence", independence);
@@ -62,7 +62,7 @@ void Planet::Serialize(DataNode* data) const {
 void Planet::Deserialize(Planets* planets, const DataNode *data) {
     //SettingOverridePush("datanode_quite", true);
     //SettingOverridePop("datanode_quite");
-    strcpy(name, data->Get("name", name, true));
+    name = PermaString(data->Get("name", name.GetChar(), true));
     allegiance = data->GetI("allegiance", 0);
 
     independence = data->GetI("independence", 0, true);
@@ -81,7 +81,7 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
         module_production_queue[i].worker = RID(dn->GetI("worker"));
         module_production_queue[i].product = RID(dn->GetI("product"));
     }*/
-    RID index = planets->GetIdByName(name);
+    RID index = planets->GetIdByName(name.GetChar());
     if (!IsIdValid(index)) {
         return;
     }
@@ -353,7 +353,7 @@ int Planets::GetPlanetCount() const {
 RID Planets::GetIdByName(const char* planet_name) const {
     // Returns NULL if planet_name not found
     for(int i=0; i < planet_count; i++) {
-        if (strcmp(ephemeris[i].name, planet_name) == 0) {
+        if (strcmp(ephemeris[i].name.GetChar(), planet_name) == 0) {
             return RID(i, EntityType::PLANET);
         }
     }
@@ -378,7 +378,7 @@ int Planets::LoadEphemeris(const DataNode* data) {
     for(int i=0; i < planet_count; i++) {
         const DataNode* planet_data = data->GetChildArrayElem("satellites", i);
         PlanetNature* nature = &ephemeris[i];
-        strcpy(nature->name, planet_data->Get("name"));
+        nature->name = PermaString(planet_data->Get("name"));
         
         double sma = planet_data->GetF("SMA");
         double ann = planet_data->GetF("Ann") * DEG2RAD;

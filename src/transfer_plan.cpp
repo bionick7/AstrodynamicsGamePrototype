@@ -543,7 +543,7 @@ timemath::Time _DrawHandle(
     timemath::Time period = orbit->GetPeriod();
     int full_orbits = floor(timemath::Time::SecDiff(current, t0) / period.Seconds());
     if (full_orbits > 0) {
-        char text_content[4];
+        static char text_content[5];
         sprintf(text_content, "%+3d", full_orbits);
         DrawTextAligned(text_content, text_pos, text_alignment::HCENTER | text_alignment::RIGHT, 
                         c, Palette::bg, 0);

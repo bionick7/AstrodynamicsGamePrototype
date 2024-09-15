@@ -13,7 +13,7 @@
 struct Planets;
 
 struct PlanetNature {
-    char name[100];
+    PermaString name;
     double mu;
     double radius;
     bool has_atmosphere;
@@ -21,7 +21,7 @@ struct PlanetNature {
 };
 
 struct Planet {
-    char name[100];
+    PermaString name;
     double mu;
     double radius;
     bool has_atmosphere;
@@ -53,8 +53,8 @@ struct Planet {
 
     ShipModuleSlot current_slot;
 
-    Planet() : Planet("UNNAMED", 0, 0) {};
-    Planet(const char* name, double mu, double radius);
+    Planet() : Planet(PermaString(), 0, 0) {};
+    Planet(PermaString p_name, double mu, double radius);
     void Serialize(DataNode* data) const;
     void Deserialize(Planets* planets,const DataNode* data);
 

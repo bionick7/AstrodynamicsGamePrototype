@@ -114,7 +114,7 @@ void _UpdateShipsPlanets(GlobalState* gs) {
     }
 
     if (prev_hover != gs->hover) {
-        HandleButtonSound(button_state_flags::JUST_HOVER_IN);
+        //HandleButtonSound(button_state_flags::JUST_HOVER_IN);
     }
     if (IsIdValid(prev_hover) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         HandleButtonSound(button_state_flags::JUST_PRESSED);
@@ -263,7 +263,7 @@ void GlobalState::Serialize(DataNode* data) const {
         DataNode* dn2 = data->InsertIntoChildArray("ships", i++);
         dn2->SetI("id", it.GetId().AsInt());
         if (ship->IsParked()) {
-            dn2->Set("planet", planets.GetPlanet(ship->GetParentPlanet())->name);
+            dn2->Set("planet", planets.GetPlanet(ship->GetParentPlanet())->name.GetChar());
         }
         ship->Serialize(dn2);
     }

@@ -37,7 +37,7 @@ void InternalToggleFullScreen() {
 void DatedScreenShot() {
     time_t timer = time(NULL);
     tm* tm_info = localtime(&timer);
-    char filepath[42] = "screenshots/";
+    static char filepath[42] = "screenshots/";
     strftime(&filepath[12], 30, "%Y_%m_%d %H_%M_%S.png", tm_info);
 
     unsigned char *imgData = rlReadScreenPixels(GetScreenWidth(), GetScreenHeight());

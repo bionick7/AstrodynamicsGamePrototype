@@ -52,7 +52,6 @@ void _DrawHohmanTFs(const TimeLineCoordinateData* tcd, RID from, RID to) {
 }
 
 void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
-
     double min_sma = INFINITY, max_sma = 0;
     for (int planet_index = 0; planet_index < planets->planet_count; planet_index++) {
         const Planet* planet = &planets->planet_array[planet_index];
@@ -77,7 +76,7 @@ void _DrawPlanets(TimeLineCoordinateData* tcd, const Planets* planets) {
         }
         //DebugPrintText("%s: sma = %f, x = %d", planet->name, planet->orbit.sma, x);
         Rectangle rect = DrawTextAligned(
-            planet->name, {(float)x, (float)tcd->y0 + 18}, 
+            planet->name.GetChar(), {(float)x, (float)tcd->y0 + 18}, 
             text_alignment::HCENTER | text_alignment::BOTTOM, 
             Palette::ui_main, Palette::bg, ui::Current()->z_layer
         );

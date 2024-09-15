@@ -275,17 +275,25 @@ void TextBox::DrawTexture(Texture2D texture, Rectangle source, int texture_heigh
         BeginScissorMode(render_rec.x, render_rec.y, render_rec.width, render_rec.height);
     }
 
-    if (draw_mode & TEXTURE_DRAW_SDF) {
+    switch (draw_mode) {
+    case TEXTURE_DRAW_SDF:{
         DrawTextureSDF(texture, source, destination, Vector2Zero(), 0, tint, z_layer);
-    } else if (draw_mode & TEXTURE_DRAW_DEFAULT) {
-        BeginRenderInUILayer(z_layer, background_color);
-        DrawTexturePro(texture, source, destination, Vector2Zero(), 0, tint);
-        EndRenderInUILayer();
-    } else if (draw_mode & TEXTURE_DRAW_RAW) {
-        BeginRenderInUILayer(z_layer, background_color, true);
-        DrawTexturePro(texture, source, destination, Vector2Zero(), 0, tint);
-        EndRenderInUILayer();
+        break;
     }
+    case TEXTURE_DRAW_DEFAULT:{
+        BeginRenderInUILayer(z_layer, BLANK);
+        DrawTexturePro(texture, source, destination, Vector2Zero(), 0, tint);
+        EndRenderInUILayer();
+        break;
+    }
+    case TEXTURE_DRAW_RAW:{
+        BeginRenderInUILayer(z_layer, BLANK, true);
+        DrawTexturePro(texture, source, destination, Vector2Zero(), 0, tint);
+        EndRenderInUILayer();
+        break;
+    }
+    }
+
     if (!inside_render_rect && !flexible) {
         EndScissorMode();
     }

@@ -36,6 +36,50 @@ void TokenList::AddToken(int start, int end) {
     length++;
 }
 
+
+// Cannot re-use StringBuilder because of terminators within buffer
+static char* perma_string = NULL;
+static int perma_string_length = 0;
+
+void _PermaStringStaticInit() {
+    const char* DEFAULT = "[UNNAMED]";
+    perma_string_length = strlen(DEFAULT) + 1;
+    perma_string = new char[perma_string_length];
+    strcpy(perma_string, DEFAULT);
+    perma_string[perma_string_length - 1] = '\0';
+}
+
+PermaString::PermaString() {
+    if (perma_string_length == 0) {
+        _PermaStringStaticInit();
+    }
+    offset = 0;
+}
+
+PermaString::PermaString(const char *string) {
+    if (perma_string_length == 0) {
+        _PermaStringStaticInit();
+    }
+
+    offset = perma_string_length;
+
+    // Reallocate
+    int new_length = perma_string_length + strlen(string) + 1;
+    char* c_str2 = new char[new_length];
+    memcpy(c_str2, perma_string, perma_string_length);
+    perma_string_length = new_length;
+    delete[] perma_string;
+    perma_string = c_str2;
+
+    // Add new string
+    strcpy(perma_string + offset, string);
+    perma_string[perma_string_length - 1] = '\0';
+}
+
+const char *PermaString::GetChar() const {
+    return perma_string + offset;
+}
+
 StringBuilder::StringBuilder() {
     c_str = new char[1];
     c_str[0] = '\0';
@@ -163,11 +207,16 @@ StringBuilder& StringBuilder::Add(const char* add_str) {
     return *this;
 }
 
-StringBuilder& StringBuilder::_AddBuffer(char buffer[]) {
-    int write_offset = length - 1;
-    _ReSize(length + strlen(buffer));
-    strcpy(c_str + write_offset, buffer);
+StringBuilder& StringBuilder::_AddWithTerminator(const char* add_str) {
+    int write_offset = length;
+    _ReSize(length + strlen(add_str) + 1);
+    strcpy(c_str + write_offset, add_str);
     c_str[length - 1] = '\0';
+    return *this;
+}
+
+StringBuilder &StringBuilder::AddPerma(PermaString perma_str) {
+    Add(perma_str.GetChar());
     return *this;
 }
 
@@ -181,44 +230,41 @@ StringBuilder& StringBuilder::AddLine(const char *add_str) {
 }
 
 StringBuilder& StringBuilder::AddFormat(const char* fmt, ...) {
-    
     static char buffer[1024];  // How much is enough?
     va_list args;
     va_start(args, fmt);
     vsnprintf(buffer, 1024, fmt, args);
     va_end(args);
-    return _AddBuffer(buffer);
+    return Add(buffer);
 }
 
 StringBuilder& StringBuilder::AddF(double num) {
-    char buffer[12];  // How much is enough?
+    static char buffer[12];  // How much is enough?
     if (fabs(num) > 1e4 || (fabs(num) < 1e-4 && num != 0)) {
         sprintf(buffer, "%.4e", num);
     } else {
         sprintf(buffer, "%.7f", num);
     }
-    return _AddBuffer(buffer);
+    return Add(buffer);
 }
 
 StringBuilder& StringBuilder::AddI(int num) {
-    char buffer[12];
+    static char buffer[12];
     sprintf(buffer, "%d", num);
-    return _AddBuffer(buffer);
+    return Add(buffer);
 }
 
 StringBuilder& StringBuilder::AddTime(timemath::Time t) {
-    char buffer[20];
+    static char buffer[20];
     t.FormatAsTime(buffer, 20);
-    return _AddBuffer(buffer);
+    return Add(buffer);
 }
-
 
 StringBuilder& StringBuilder::AddDate(timemath::Time t, bool shorthand) {
-    char buffer[20];
+    static char buffer[20];
     t.FormatAsDate(buffer, 20, shorthand);
-    return _AddBuffer(buffer);
+    return Add(buffer);
 }
-
 
 StringBuilder& StringBuilder::AddCost(int64_t cost) {
     // 9223372036854775807: 19 digits
@@ -226,9 +272,9 @@ StringBuilder& StringBuilder::AddCost(int64_t cost) {
     // +5 text
     // +1 - sign
     // +1 terminator
-    char buffer[24];
+    static char buffer[24];
     sprintf(buffer, "M$M %lldK", (long long int) (cost / 1000));
-    return _AddBuffer(buffer);
+    return Add(buffer);
 }
 
 StringBuilder &StringBuilder::AddClock(float progress) {

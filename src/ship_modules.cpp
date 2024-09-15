@@ -12,8 +12,8 @@ bool ModuleConfiguration::IsAdjacent(ShipModuleSlot lhs, ShipModuleSlot rhs) con
 
 ShipModuleClass::ShipModuleClass() {
     mass = 0.0;
-    name[0] = '\0';
-    description[0] = '\0';
+    name = PermaString();
+    description = PermaString();
     has_stat_dependencies = false;
 
     for (int i=0; i < (int) ship_stats::MAX; i++) {
@@ -62,8 +62,8 @@ int ShipModuleClass::GetConstructionTime() const {
 }
 
 void ShipModuleClass::MouseHintWrite(StringBuilder* sb) const {
-    sb->Add(name).Add(" ").Add(module_types::str_icons[type]).Add("\n");
-    sb->Add(description).Add("\n");
+    sb->AddPerma(name).Add(" ").Add(module_types::str_icons[type]).Add("\n");
+    sb->AddPerma(description).Add("\n");
 
     int consumptions_count = 0;
     int production_rsc_count = 0;
@@ -351,7 +351,7 @@ void ModuleConfiguration::Draw(Ship* ship, Vector2 anchor_point, text_alignment:
         adjusted_draw_space.x + adjusted_draw_space.width/2,
         adjusted_draw_space.y + adjusted_draw_space.height/2,
     };
-    ui::WriteEx(GetShipClassByRID(ship->ship_class)->name, text_alignment::HCENTER | text_alignment::TOP, false);
+    ui::WriteEx(GetShipClassByRID(ship->ship_class)->name.GetChar(), text_alignment::HCENTER | text_alignment::TOP, false);
 
     //bool use_scissor = !CheckEnclosingRecs(ui::Current()->render_rec, bounding);
     //if (use_scissor) {
@@ -499,8 +499,8 @@ int ShipModules::Load(const DataNode* data) {
     for(int i=0; i < shipmodule_count; i++) {
         DataNode* module_data = data->GetChildArrayElem("shipmodules", i);
         ship_modules[i].mass = module_data->GetF("mass") * KG_PER_COUNT;
-        strcpy(ship_modules[i].name, module_data->Get("name"));
-        strcpy(ship_modules[i].description, module_data->Get("description"));
+        ship_modules[i].name = PermaString(module_data->Get("name"));
+        ship_modules[i].description = PermaString(module_data->Get("description"));
         ship_modules[i].is_hidden = strcmp(module_data->Get("hidden", "n", true), "y") == 0;
         ship_modules[i].construction_time = module_data->GetI("construction_time", 20, !ship_modules[i].is_hidden);
         ship_modules[i].construction_batch_size = module_data->GetI("construction_batch_size", 1, true);
