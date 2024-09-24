@@ -44,7 +44,7 @@ private:
     uint32_t _internal;
 };
 
-//constexpr uint32_t GetInvalidId() { return UINT32_MAX; }
+
 inline RID GetInvalidId() { return RID(UINT32_MAX); }
 inline EntityType IdGetType(RID id) { return (EntityType) ((id.AsInt() >> 24) & 0xff); }
 inline uint32_t IdGetIndex(RID id) {  return id.AsInt() & 0x00fffffful; }

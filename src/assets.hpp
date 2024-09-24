@@ -7,17 +7,14 @@
 
 #define ASSET_PATH_MAX_LENGTH 256
 
-typedef uint64_t PathHash;
-
 namespace assets {
     struct BakedResource {
-        PathHash path_hash;
+        StrHash path_hash;
         bool is_text;
         size_t offset;
         size_t size;
     };
-    PathHash HashKey(const char* key);
-    PathHash HashPath(const char* path);
+    StrHash HashPath(const char* path);
 
     bool HasTextResource(const char* path);
     bool HasDataResource(const char* path);
@@ -45,7 +42,7 @@ namespace assets {
 
     template<typename T>
     struct Table { 
-        PathHash* hashes = NULL;
+        StrHash* hashes = NULL;
         T* data = NULL;
 
         int size = 0;
@@ -54,7 +51,7 @@ namespace assets {
         Table() { Init(); }
         ~Table() { Clear(); }
 
-        int Find(PathHash hash) const {
+        int Find(StrHash hash) const {
             for (int i=0; i < size; i++) {
                 if (hash == hashes[i]) {
                     return i;
@@ -63,7 +60,7 @@ namespace assets {
             return -1;
         }
 
-        int Insert(PathHash hash, T value) {
+        int Insert(StrHash hash, T value) {
             size++;
             if (size > capacity) {
                 capacity += 10;
@@ -95,7 +92,7 @@ namespace assets {
         void Init() {
             size = 0;
             capacity = 10;
-            hashes = new PathHash[capacity];
+            hashes = new StrHash[capacity];
             data = new T[capacity];
         }
 

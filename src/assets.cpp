@@ -9,9 +9,6 @@
 #endif
 
 namespace assets {
-    const uint64_t FNV_OFFSET = 14695981039346656037ULL;
-    const uint64_t FNV_PRIME = 1099511628211ULL;
-
     Table<Texture2D> texture_table;
     Table<Image> image_table;
     Table<Font> font_table;
@@ -21,20 +18,9 @@ namespace assets {
     Table<DataNode> data_table;
 }
 
-// Return 64-bit FNV-1a hashes for key (NUL-terminated). See description:
-// https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function
-uint64_t assets::HashKey(const char* key) {
-    uint64_t hash = assets::FNV_OFFSET;
-    ASSERT(strlen(key) < ASSET_PATH_MAX_LENGTH)  // Excluded in final build
-    for (const char* p = key; *p; p++) {
-        hash ^= (uint64_t)(unsigned char)(*p);
-        hash *= assets::FNV_PRIME;
-    }
-    return hash;
-}
-
 // Makes sure the same path is spelled the same
 uint64_t assets::HashPath(const char* path) {
+    ASSERT(strlen(path) < ASSET_PATH_MAX_LENGTH)  // Excluded in final build
     if (path[0] == '.' && path[1] == '/')
         return HashKey(&path[2]);
     return HashKey(path);

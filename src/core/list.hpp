@@ -87,6 +87,13 @@ struct List {
         if (index < 0) return buffer[size + index];
         return buffer[index];
     }
+    
+    int Find(T item) const {
+        for (int i=0; i < size; i++) {
+            if(buffer[i] == item) return i;
+        }
+        return -1;
+    }
 
     int Count() const {
         return size;

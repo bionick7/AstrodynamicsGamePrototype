@@ -17,4 +17,7 @@
     #define LONG_STRID "ll"
 #endif
 
+typedef uint64_t StrHash;
+StrHash HashKey(const char* key);
+
 #endif // BASIC_H

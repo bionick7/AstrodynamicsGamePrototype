@@ -135,7 +135,7 @@ techtree:
   - shpmod_droptank_water
   - shpmod_sail_small
   - shpmod_gun
-  special_unlocks:
+  milestone_unlocks:
   - combat
   icon_index: [1, 17]
   

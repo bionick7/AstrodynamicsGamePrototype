@@ -241,6 +241,7 @@ int TechTree::Load(const DataNode *data) {
     delete[] nodes;
     delete[] node_unlocked;
     delete[] research_conditions;
+    delete[] milestones;
 
     nodes = new TechTreeNode[nodes_count];
     node_unlocked = new int[nodes_count];
@@ -293,16 +294,19 @@ int TechTree::Load(const DataNode *data) {
             nodes[i].condition_index = -1;
         }
         research_condition_count += condition_count;
+        milestone_count += node_data->GetArrayLen("milestone_unlocks");
 
         RID rid = RID(i, EntityType::TECHTREE_NODE);
         nodes[i].str_id = GetGlobalState()->AddStringIdentifier(node_data->Get("id"), rid);
     }
 
+    milestones = new Milestone[milestone_count];
     research_conditions = new ResearchCondition[research_condition_count];
 
+    int milestone_index = 0;
     int research_condition_index = 0;
 
-    // 2nd pass: collect prerequisites and load research conditions
+    // 2nd pass: collect prerequisites, load research conditions and milestones
     for(int i=0; i < nodes_count; i++) {
         const DataNode* node_data = data->GetChildArrayElem("techtree", i);
         int prerequisite_count = node_data->GetArrayLen("prerequisites", true);
@@ -310,6 +314,13 @@ int TechTree::Load(const DataNode *data) {
         for(int j=0; j < prerequisite_count; j++) {
             RID prereq = GetGlobalState()->GetFromStringIdentifier(node_data->GetArrayElem("prerequisites", j));
             nodes[i].prerequisites.Append(prereq);
+        }
+
+        for (int j=0; j < node_data->GetArrayLen("milestone_unlocks"); j++) {
+            milestones[milestone_index].node = RID(i, EntityType::TECHTREE_NODE);
+            milestones[milestone_index].value = HashKey(node_data->GetArrayElem("milestone_unlocks", j));
+            milestones[milestone_index].unlocked = node_unlocked[i] > 0;
+            milestone_index++;
         }
 
         // Research conditions
@@ -436,11 +447,23 @@ int TechTree::LoadResearchCondition(const DataNode* condition_data, int idx, int
     }
 }
 
-void TechTree::ForceUnlockTechnology(RID technode_id) {
-    //INFO("'%s' => %d", tech_id, technode_id.AsInt())
-    if (IsIdValidTyped(technode_id, EntityType::TECHTREE_NODE)) {
-        int index = IdGetIndex(technode_id);
-        node_unlocked[index] = 1;
+void TechTree::UnlockTechnology(RID technode_id, bool notify) {
+    int node_index = IdGetIndex(technode_id);
+    node_unlocked[node_index] = 1;
+    for (int i=0; i < milestone_count; i++) {
+        if (IdGetIndex(milestones[i].node) == node_index) {
+            milestones[i].unlocked = true;
+        }
+    }
+    if (notify) {  // Popup
+        const TechTreeNode* node = &nodes[node_index];
+
+        Popup* popup = event_popup::AddPopup(500, 500, 300);
+        StringBuilder sb;
+        sb.Add("Unlocked ").Add(node->name.GetChar());
+        strcpy(popup->title, sb.c_str);
+        sb.Clear();
+        strcpy(popup->description, node->description.GetChar());
     }
 }
 
@@ -507,7 +530,7 @@ void TechTree::Deserialize(const DataNode *data) {
         const char* node_id = data->GetArrayElem("unlocked", i);
         RID node_index = GetGlobalState()->GetFromStringIdentifier(node_id);
         if (IsIdValidTyped(node_index, EntityType::TECHTREE_NODE)) {
-            node_unlocked[IdGetIndex(node_index)] = 1;
+            UnlockTechnology(node_index, false);
         }
     }
 }
@@ -577,6 +600,13 @@ void TechTree::ReportResourceProduction(const resource_count_t production[]) {
 }
 
 bool TechTree::IsMilestoneReached(const char *identifier) {
+    uint64_t search_key = HashKey(identifier);
+    for(int i=0; i < milestone_count; i++) {
+        if (milestones[i].value == search_key) {
+            return milestones[i].unlocked;
+        }
+    }
+    WARNING("No such milestone '%s'", identifier)
     return false;
 }
 
@@ -607,15 +637,6 @@ void TechTree::Update() {
     UpdateTechProgress();
 }
 
-void _ShowNodeUnlockPopup(const TechTreeNode* node) {
-    Popup* popup = event_popup::AddPopup(500, 500, 300);
-    StringBuilder sb;
-    sb.Add("Unlocked ").Add(node->name.GetChar());
-    strcpy(popup->title, sb.c_str);
-    sb.Clear();
-    strcpy(popup->description, node->description.GetChar());
-}
-
 void TechTree::UpdateTechProgress() {
     for (int i=0; i < nodes_count; i++) {
         // Recalculate 
@@ -633,9 +654,7 @@ void TechTree::UpdateTechProgress() {
             continue;
         }
         if (node_unlocked[i] == 0 && research_conditions[nodes[i].condition_index].GetProgress() >= 1) {
-            // Node Unlocked
-            node_unlocked[i] = 1;
-            _ShowNodeUnlockPopup(&nodes[i]);
+            UnlockTechnology(RID(i, EntityType::TECHTREE_NODE), true);
         }
     }
 }

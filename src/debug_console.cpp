@@ -154,6 +154,7 @@ void SaveSettings(const char*);
 void RelaodSettings(const char*);
 void GiveResource(const char*);
 void UnlockTech(const char*);
+void CheckMilestone(const char*);
 
 struct { const char* name; void(*func)(const char*); } commands[] = {
     { "help", Help },
@@ -163,6 +164,7 @@ struct { const char* name; void(*func)(const char*); } commands[] = {
     { "reload", RelaodSettings },
     { "give_rsc", GiveResource },
     { "unlock_tech", UnlockTech },
+    { "check_milestone", CheckMilestone },
 };
 
 void Help(const char* prompt) {
@@ -259,10 +261,21 @@ void UnlockTech(const char* prompt) {
     prompt = FetchArg(tech_id, prompt);
     RID technode_id = GetGlobalState()->GetFromStringIdentifier(tech_id);
     if (IsIdValidTyped(technode_id, EntityType::TECHTREE_NODE)) {
-        GetTechTree()->ForceUnlockTechnology(technode_id);
+        GetTechTree()->UnlockTechnology(technode_id, true);
     } else {
         PushLine(TextFormat("Invalid tech id '%s'", tech_id));
     }
+}
+
+void CheckMilestone(const char* prompt) {
+    static char milestone_name[DEBUG_CONSOLE_MAX_LINE_SIZE];
+    if (*prompt == '\0') {
+        PushLine("Expected argument: milestone_name");
+        return;
+    }
+    prompt = FetchArg(milestone_name, prompt);
+    bool is_reached = GetTechTree()->IsMilestoneReached(milestone_name);
+    PushLine(TextFormat("%s: %s", milestone_name, is_reached ? "reached" : "unreached"));
 }
 
 void InterpreteResult(const char* prompt) {

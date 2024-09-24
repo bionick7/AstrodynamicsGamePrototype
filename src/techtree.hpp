@@ -108,12 +108,16 @@ struct TechTree {
     Achievement* achievements = NULL;
     bool* achievement_states = NULL;
 
+    struct Milestone { RID node; StrHash value; bool unlocked = false; };
+    int milestone_count = 0;
+    Milestone* milestones = NULL;
+
     int Load(const DataNode* data);
     int LoadResearchCondition(const DataNode* data, int idx, int child_indices);
     void Update();
     void UpdateTechProgress();
     bool IsUnlocked(RID entity_class) const;
-    void ForceUnlockTechnology(RID technode_id);
+    void UnlockTechnology(RID technode_id, bool notify);
 
     void Serialize(DataNode* data) const;
     void Deserialize(const DataNode* data);
@@ -124,7 +128,7 @@ struct TechTree {
     void ReportResourceProduction(const resource_count_t production[]);
 
     bool IsMilestoneReached(const char* identifier);
-    
+
     void GetAttachedConditions(int condition_index, List<int>* condition_indices) const;
 
     void DrawResearchProgressRecursive(int condition_index) const;
