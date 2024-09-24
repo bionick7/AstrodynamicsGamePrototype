@@ -3,13 +3,15 @@
 #include "ui.hpp"
 #include "debug_console.hpp"
 
-void text::GetLayout(Layout* layout, Vector2 start, Font font, const char *text, float fontSize, float spacing) {
+void text::GetLayout(Layout* layout, Vector2 start, Font font, 
+                     const char *text, float fontSize, float spacing, int max_width) {
+
     if (font.texture.id == 0) font = GetFontDefault();
     layout->size = TextLength(text);
     layout->text = text;
 
-    float textOffsetX = start.x;
-    float textOffsetY = start.y;
+    float text_offset_x = start.x;
+    float text_offset_y = start.y;
 
     float scaleFactor = fontSize/font.baseSize;
 
@@ -18,32 +20,54 @@ void text::GetLayout(Layout* layout, Vector2 start, Font font, const char *text,
     layout->bounding_box.width = 0;
     layout->rects = new Rectangle[layout->size];
 
+    int last_wordbreak = 0;
+    bool reiterating = false;
+
     for (int i = 0; i < layout->size;) {
         int codepointByteCount = 0;
         int codepoint = GetCodepointNext(&text[i], &codepointByteCount);
         int index = GetGlyphIndex(font, codepoint);
 
-        float x_increment = (float)font.recs[index].width*scaleFactor + spacing;
-        layout->rects[i] = { textOffsetX, textOffsetY, x_increment, fontSize };
+        // Handle auto-breaks
+        if (codepoint == ' ' || codepoint == '\t') {
+            if (text_offset_x - start.x > max_width && !reiterating) {
+                i = last_wordbreak;
 
-        if (codepoint == '\n') {
-            if (textOffsetX > layout->bounding_box.x + layout->bounding_box.width) {
-                layout->bounding_box.width = textOffsetX - layout->bounding_box.x;
+                int max_offset = layout->rects[i].x + layout->rects[i].width;
+                if (max_offset > layout->bounding_box.x + layout->bounding_box.width) {
+                    layout->bounding_box.width = max_offset - layout->bounding_box.x;
+                }
+                
+                text_offset_x = start.x;
+                text_offset_y += 20;
+                reiterating = true;
+            } else {
+                reiterating = false;
             }
-            textOffsetX = start.x;
-            textOffsetY += 20;
-        } else {
-            if (font.glyphs[index].advanceX == 0) textOffsetX += x_increment;
-            else textOffsetX += ((float)font.glyphs[index].advanceX*scaleFactor + spacing);
+            last_wordbreak = i + codepointByteCount;
         }
 
-        i += codepointByteCount;   // (Raylib cmt) Move text bytes counter to next codepoint
+        float x_increment = (float)font.recs[index].width*scaleFactor + spacing;
+        layout->rects[i] = { text_offset_x, text_offset_y, x_increment, fontSize };
+
+        if (codepoint == '\n') {
+            if (text_offset_x > layout->bounding_box.x + layout->bounding_box.width) {
+                layout->bounding_box.width = text_offset_x - layout->bounding_box.x;
+            }
+            text_offset_x = start.x;
+            text_offset_y += 20;
+        } else {
+            if (font.glyphs[index].advanceX == 0) text_offset_x += x_increment;
+            else text_offset_x += ((float)font.glyphs[index].advanceX*scaleFactor + spacing);
+        }
+
+        i += codepointByteCount;
     }
     
-    if (textOffsetX > layout->bounding_box.x + layout->bounding_box.width) {
-        layout->bounding_box.width = textOffsetX - layout->bounding_box.x;
+    if (text_offset_x > layout->bounding_box.x + layout->bounding_box.width) {
+        layout->bounding_box.width = text_offset_x - layout->bounding_box.x;
     }
-    layout->bounding_box.height = textOffsetY + 20 - layout->bounding_box.y;
+    layout->bounding_box.height = text_offset_y + 20 - layout->bounding_box.y;
 }
 
 text::Layout::Layout() {
@@ -78,7 +102,7 @@ int text::Layout::GetCharacterIndex(Vector2 position) const {
             return i;
         }
 
-        i += codepointByteCount;   // (Raylib cmt) Move text bytes counter to next codepoint
+        i += codepointByteCount;
     }
     return -1;
 }
@@ -207,6 +231,7 @@ void text::Layout::DrawTextLayout(Font font, float fontSize, Color tint, Color b
     EndRenderInUILayer();
 }
 
+
 void text::DrawText(const char *text, Vector2 position, Color color) {
     text::DrawTextEx(GetCustomDefaultFont(DEFAULT_FONT_SIZE), text, position, DEFAULT_FONT_SIZE, 1, color, BLANK, GetScreenRect(), 0);
 }
@@ -218,6 +243,6 @@ void text::DrawTextEx(Font font, const char *text, Vector2 position, float fontS
 void text::DrawTextEx(Font font, const char *text, Vector2 position, float fontSize, float spacing, 
                         Color tint, Color bg, Rectangle render_rect, uint8_t z_layer) {
     Layout layout;
-    text::GetLayout(&layout, position, font, text, fontSize, spacing);
+    text::GetLayout(&layout, position, font, text, fontSize, spacing, render_rect.width);
     layout.DrawTextLayout(font, fontSize, tint, bg, render_rect, z_layer);
 }

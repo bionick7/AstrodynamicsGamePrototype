@@ -236,7 +236,10 @@ void TextBox::WriteLayout(const text::Layout* layout, bool advance_cursor) {
     if (GetSettingBool("draw_textrects", false)) {
         BeginRenderInUILayer(z_layer);
         DrawRectangleLinesEx(rect, 1, RED);
-        DrawCircle(x + text_margin_x + x_cursor, y + text_margin_y + y_cursor + line_size_y, 3, RED);
+        DrawCircle(x + text_margin_x + x_cursor, y + text_margin_y + y_cursor + line_size_y, 2, RED);
+        for(int i=0; i < layout->size; i++) {
+            DrawRectangleLinesEx(layout->rects[i], 1, ColorBrightness(RED, -0.5));
+        }
         EndRenderInUILayer();
     }
 }
@@ -341,7 +344,7 @@ text::Layout TextBox::GetTextLayout(const char *text, text_alignment::T alignmen
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(text_size), text, text_size, 1);
     Vector2 pos = ApplyAlignment(GetAnchorPointText(alignment), size, alignment);
     text::Layout text_layout;
-    text::GetLayout(&text_layout, pos, GetCustomDefaultFont(text_size), text, text_size, 1);
+    text::GetLayout(&text_layout, pos, GetCustomDefaultFont(text_size), text, text_size, 1, width);
     return text_layout;
 }
 
@@ -804,11 +807,14 @@ void ui::VSpace(int pixels) {
 }
 
 void ui::SetMouseHint(const char* text) {
+    Vector2 mousepos = GetMousePosition();
+    int max_width = GetScreenWidth() - mousepos.x;
+    
     text::Layout layout;
     text::GetLayout(&layout, 
-        Vector2Add(GetMousePosition(), {-4,-4}),
+        Vector2Add(mousepos, {-4,-4}),
         GetCustomDefaultFont(DEFAULT_FONT_SIZE), text, 
-        DEFAULT_FONT_SIZE, 1
+        DEFAULT_FONT_SIZE, 1, max_width
     );
 
     Rectangle rect = layout.bounding_box;

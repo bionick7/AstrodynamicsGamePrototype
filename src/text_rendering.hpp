@@ -23,7 +23,8 @@ namespace text {
         void DrawTextLayout(Font font, float fontSize, Color tint, Color background, Rectangle render_rect, uint8_t z_layer) const;
     };
 
-    void GetLayout(Layout* layout, Vector2 start, Font font, const char *text, float fontSize, float spacing);
+    void GetLayout(Layout* layout, Vector2 start, Font font, const char *text, 
+                   float fontSize, float spacing, int max_width);
     void DrawText(const char *text, Vector2 position, Color color);
     void DrawTextEx(Font font, const char *text, Vector2 position, 
                             float fontSize, float spacing, Color tint);
