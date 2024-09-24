@@ -631,9 +631,11 @@ void ui::EncloseDynamic(int shrink, Color background_color, Color line_color, in
 
 void ui::DrawIcon(AtlasPos atlas_index, Color tint, int height) {
     if (GetSettingBool("sdf_icons", false)) {
-        ui::Current()->DrawTexture(GetUI()->GetIconAtlasSDF(), atlas_index.GetRect(ATLAS_SIZE), height, tint, TextBox::TEXTURE_DRAW_SDF);
+        ui::Current()->DrawTexture(GetUI()->GetIconAtlasSDF(), atlas_index.GetRect(ATLAS_SIZE), 
+                                   height, tint, TextBox::TEXTURE_DRAW_SDF);
     } else {
-        ui::Current()->DrawTexture(GetUI()->GetIconAtlas(), atlas_index.GetRect(ATLAS_SIZE), height, tint, TextBox::TEXTURE_DRAW_DEFAULT);
+        ui::Current()->DrawTexture(GetUI()->GetIconAtlas(), atlas_index.GetRect(ATLAS_SIZE), 
+                                   height, tint, TextBox::TEXTURE_DRAW_DEFAULT);
     }
 }
 

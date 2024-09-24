@@ -781,9 +781,9 @@ void Ship::AdvanceProductionQueue() {
         // TODO: notify the player
         RID current_id = production_queue.Get(0);
         if (IsIdValidTyped(current_id, EntityType::SHIP_CLASS)) {
-            ERROR("CANNOT PRODUCE '%s' ON '%s'", GetShipClassByRID(production_queue.Get(0))->name, name)
+            ERROR("CANNOT PRODUCE '%s' ON '%s'", GetShipClassByRID(production_queue.Get(0))->name.GetChar(), name)
         } else if (IsIdValidTyped(current_id, EntityType::MODULE_CLASS)) {
-            ERROR("CANNOT PRODUCE '%s' ON '%s'", GetModule(production_queue.Get(0))->name, name)
+            ERROR("CANNOT PRODUCE '%s' ON '%s'", GetModule(production_queue.Get(0))->name.GetChar(), name)
         } else {
             ERROR("INVALID PRODUCTION ITEM ON '%s'", name)
         }

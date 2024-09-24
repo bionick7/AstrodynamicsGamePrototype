@@ -4,6 +4,7 @@
 #include "tests.hpp"
 #include "constants.hpp"
 
+#include <time.h>
 
 TokenList::TokenList() {
     start_positions = NULL;
@@ -255,15 +256,38 @@ StringBuilder& StringBuilder::AddI(int num) {
 }
 
 StringBuilder& StringBuilder::AddTime(timemath::Time t) {
-    static char buffer[20];
-    t.FormatAsTime(buffer, 20);
-    return Add(buffer);
+    if (t.IsInvalid()) {
+        return Add("[INVALID TIME]");
+    }
+    time_t time_in_s = (time_t) t.Seconds();
+    tm* time_tm = gmtime(&time_in_s);
+    if (time_tm == NULL) {
+        return Add("[INVALID TIME]");
+    }
+
+    time_tm->tm_year -= 70;
+    if (time_tm->tm_year == 0) {
+        return AddFormat("%2dM %2dD %2dH", time_tm->tm_mon, time_tm->tm_mday - 1, time_tm->tm_hour);
+    } else {
+        return AddFormat("%4dY %2dM %2dD %2dH", time_tm->tm_year, time_tm->tm_mon, time_tm->tm_mday - 1, time_tm->tm_hour);
+    }
 }
 
 StringBuilder& StringBuilder::AddDate(timemath::Time t, bool shorthand) {
-    static char buffer[20];
-    t.FormatAsDate(buffer, 20, shorthand);
-    return Add(buffer);
+    int start_year = 2080 - 1970;
+    time_t time_in_s = t.__t;
+    tm* time_tm = gmtime(&time_in_s);
+    if (time_tm == NULL) {
+        return Add("[INVALID TIME]");
+    }
+    time_tm->tm_year += start_year;
+    if (shorthand) {
+        return AddFormat("%d-%d'%02d", time_tm->tm_mday, time_tm->tm_mon + 1, 
+                                       (time_tm->tm_year + 1900) % 100);
+    } else {
+        return AddFormat("%02d. %02d. %4dY, %2dh", time_tm->tm_mday, time_tm->tm_mon + 1, 
+                                                   time_tm->tm_year + 1900, time_tm->tm_hour);
+    }
 }
 
 StringBuilder& StringBuilder::AddCost(int64_t cost) {

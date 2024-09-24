@@ -32,9 +32,6 @@ namespace timemath {
 
         bool IsInvalid() const;
 
-        char* FormatAsTime(char* buffer, int buffer_len) const;
-        char* FormatAsDate(char* buffer, int buffer_len, bool shorthand=false) const;
-
         static double SecDiff(Time lhs, Time rhs);
         static Time Earliest(Time lhs, Time rhs);
         static Time Latest(Time lhs, Time rhs);

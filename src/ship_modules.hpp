@@ -181,6 +181,7 @@ struct ShipModuleSlot {
     bool IsValid() const;
     bool IsReachable(ShipModuleSlot other) const;
     bool IsSlotFitting(RID module) const;
+    bool IsPlayerAccessible() const;
 
     void Draw() const;
 };

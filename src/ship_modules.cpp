@@ -189,6 +189,16 @@ bool ShipModuleSlot::IsSlotFitting(RID module) const {
     return module_types::IsCompatible(smc->type, module_type);
 }
 
+bool ShipModuleSlot::IsPlayerAccessible() const {
+    if (IsIdValidTyped(entity, EntityType::PLANET)) {
+        return GetPlanet(entity)->allegiance == GetFactions()->player_faction;
+    }
+    if (IsIdValidTyped(entity, EntityType::SHIP)) {
+        return GetShip(entity)->IsPlayerControlled();
+    }
+    return false;
+}
+
 void ShipModuleSlot::Draw() const {
     //if (IsSlotFitting(GetShipModules()->_dragging)) {
     //    int enclose_dist = sin(GetRenderServer()->animation_time*5.) > 0 ? 4 : 7;
@@ -622,6 +632,9 @@ void ShipModules::DrawShipModule(RID index, bool inactive) const {
 }
 
 void ShipModules::InitDragging(ShipModuleSlot slot, Rectangle current_draw_rect) {
+    if (!slot.IsPlayerAccessible()) {
+        return;
+    }
     _dragging_origin = slot;
     _dragging = slot.GetSlot();
     slot.SetSlot(GetInvalidId());
@@ -632,6 +645,9 @@ void ShipModules::InitDragging(ShipModuleSlot slot, Rectangle current_draw_rect)
 
 void ShipModules::DirectSwap(ShipModuleSlot slot) {
     if (!IsIdValid(slot.GetSlot())) {
+        return;
+    }
+    if (!slot.IsPlayerAccessible()) {
         return;
     }
     ShipModuleSlot available = ShipModuleSlot();

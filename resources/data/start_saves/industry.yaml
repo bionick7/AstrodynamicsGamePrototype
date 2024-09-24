@@ -10,8 +10,8 @@ planets:
     resource_stock:
       water: 1000
     resource_delta:
-      hydrogen: 10
-      water: 50
+      hydrogen: 50
+      water: 10
     base_independance_delta: 0
 
   - name: Rings 
@@ -28,14 +28,14 @@ planets:
 
   - name: Mimas
     trading_accessible: n
-    allegiance: 0
+    allegiance: 1
     resource_stock:
       water: 1000
       steel: 20
       electronics: 6
       hydrogen: 5
     resource_delta:
-      water: 50
+      water: 10
     base_independance_delta: 0
 
   - name: Encelladus
@@ -151,6 +151,25 @@ ships:
   - shpmod_workshop
   - shpmod_shuttles
   
+- name: Mimas Polytechnic School
+  class_id: shp_spacestation
+  allegiance: 1
+  planet: Mimas
+  tf_plans: []
+  modules:
+  - shpmod_workshop
+  - shpmod_biolab
+  - shpmod_electrolyser
+
+- name: Improvised defences
+  class_id: shp_light_transport
+  allegiance: 1
+  planet: Mimas
+  tf_plans: []
+  modules:
+  - shpmod_gun
+  - shpmod_light_armor
+
 - name: Enclave
   class_id: shp_spacestation
   allegiance: 2

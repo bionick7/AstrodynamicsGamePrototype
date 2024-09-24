@@ -58,18 +58,17 @@ void Calendar::Update(double delta_t) {
 }
 
 void Calendar::DrawUI() const {
-    // timemath::Time scale (top-right coc++ staticrner)
     const int font_size = DEFAULT_FONT_SIZE;
 
     Font font = GetCustomDefaultFont(font_size);
 
-    const char* text = TextFormat("%s Time x %.1f", paused ? ICON_PAUSE : ICON_PLAY, time_scale);
-    Vector2 pos = { GetScreenWidth() - MeasureTextEx(font, text, font_size, 1).x - 10, 10 };
-    text::DrawTextEx(font, text, pos, font_size, 1, Palette::ui_main, Palette::bg, GetScreenRect(), 0);
-    static char text_date[100];
-    GlobalGetNow().FormatAsDate(text_date, 100);
-    pos = { GetScreenWidth() - MeasureTextEx(font, text_date, font_size, 1).x - 10, 30 };
-    text::DrawTextEx(font, text_date, pos, font_size, 1, Palette::ui_main, Palette::bg, GetScreenRect(), 0);
+    //const char* text = TextFormat("%s Time x %.1f", paused ? ICON_PAUSE : ICON_PLAY, time_scale);
+    //Vector2 pos = { GetScreenWidth() - MeasureTextEx(font, text, font_size, 1).x - 10, 10 };
+    //text::DrawTextEx(font, text, pos, font_size, 1, Palette::ui_main, Palette::bg, GetScreenRect(), 0);
+    StringBuilder sb;
+    sb.AddDate(GlobalGetNow());
+    Vector2 pos = { GetScreenWidth() - MeasureTextEx(font, sb.c_str, font_size, 1).x - 10, 30 };
+    text::DrawTextEx(font, sb.c_str, pos, font_size, 1, Palette::ui_main, Palette::bg, GetScreenRect(), 0);
 }
 
 bool Calendar::IsNewDay() const {

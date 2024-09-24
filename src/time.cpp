@@ -2,8 +2,6 @@
 #include "logging.hpp"
 #include "datanode.hpp"
 
-#include <time.h>
-
 using namespace timemath;
 
 Time::Time(double seconds) {
@@ -74,40 +72,6 @@ void Time::Deserialize(const DataNode* data, const char* key) {
 
 bool Time::IsInvalid() const {
     return isnan(__t);
-}
-
-char* Time::FormatAsTime(char* buffer, int buffer_len) const {
-    time_t time_in_s = (time_t) __t;
-    if (IsInvalid()) {
-        static const char* error_msg = "INVALID";
-        strncpy(buffer, error_msg, buffer_len);
-        return buffer + strlen(error_msg);
-    }
-
-    tm time_tm = *gmtime(&time_in_s);
-    time_tm.tm_year -= 70;
-    const int char_count = 17;
-    if (time_tm.tm_year > 0) {
-        snprintf(buffer, buffer_len, "%4dY %2dM %2dD %2dH", time_tm.tm_year, time_tm.tm_mon, time_tm.tm_mday - 1, time_tm.tm_hour);
-    } else {
-        snprintf(buffer, buffer_len, "%2dM %2dD %2dH", time_tm.tm_mon, time_tm.tm_mday - 1, time_tm.tm_hour);
-    }
-    return buffer + char_count;
-}
-
-char* Time::FormatAsDate(char* buffer, int buffer_len, bool shorthand) const {
-    int start_year = 2080 - 1970;
-    //time_t epoch_in_s = 65744l*86400l;  // 1900 - 2080
-    time_t time_in_s = __t;  // + epoch_in_s;
-    tm time_tm = *gmtime(&time_in_s);
-    time_tm.tm_year += start_year;
-    int char_count = 0;
-    if (shorthand) {
-        char_count = snprintf(buffer, buffer_len, "%d-%d'%02d", time_tm.tm_mday, time_tm.tm_mon + 1, (time_tm.tm_year + 1900)%100);
-    } else {
-        char_count = snprintf(buffer, buffer_len, "%02d. %02d. %4dY, %2dh", time_tm.tm_mday, time_tm.tm_mon + 1, time_tm.tm_year + 1900, time_tm.tm_hour);
-    }
-    return buffer + char_count;
 }
 
 double Time::SecDiff(Time lhs, Time rhs) {
