@@ -415,7 +415,6 @@ void Ship::CloseEditedTransferPlan() {
 }
 
 void Ship::RemoveTransferPlan(int index) {
-    // Does not call _EnsureContinuity to prevent invinite recursion
     if (index < 0 || index >= prepared_plans_count) {
         ERROR("Tried to remove transfer plan at invalid index %d (ship %s)", index, name);
         return;
@@ -487,6 +486,7 @@ void Ship::Update() {
 
     _UpdateModules();
     _UpdateShipyard();
+    _UpdateTransferCycle();
 }
 
 void Ship::_UpdateShipyard() {
@@ -569,6 +569,50 @@ void Ship::_UpdateModules() {
         if (IsIdValid(modules[i])) {
             GetModule(modules[i])->UpdateCustom(this);
         }
+    }
+}
+
+// A -> B -> C -> B -> C -> A ... 
+// B -> A; A -> B
+
+bool _CompareTPWithCycle(const TransferPlan* prepared_plans, int prepared_plans_count, const TransferPlanCycle* cycle, int cycle_index) {
+    for (int i=0; i < prepared_plans_count; i++) {
+        const TransferPlan* last_tp = &prepared_plans[prepared_plans_count - 1 - i];
+        if (last_tp->arrival_planet != cycle->planets[(cycle_index - i + cycle->stops) % cycle->stops]) 
+            return false;
+        //if (last_tp->departure_planet != cycle->planets[(cycle_index - i + cycle->stops - 1) % cycle->stops])
+        //    return false;
+    }
+    return true;
+}
+
+void Ship::_UpdateTransferCycle() {
+    while (prepared_plans_count < transferplan_cycle.stops) {
+        // Figure out where we are in the cycle
+        int cycle_index = -1;
+        for (int i=0; i < transferplan_cycle.stops; i++) {
+            if(_CompareTPWithCycle(prepared_plans, prepared_plans_count, &transferplan_cycle, i)) {
+                cycle_index = (i + 1) % transferplan_cycle.stops;  // Next one
+            }
+        }
+        if (cycle_index < 0) {
+            ERROR("Ship broke cycle: cannot complete")
+            return;
+        }
+        
+        prepared_plans[prepared_plans_count] = TransferPlan();
+        // Create new transfer plan
+        TransferPlan* tp = &prepared_plans[prepared_plans_count];
+        tp->departure_planet = prepared_plans[prepared_plans_count - 1].arrival_planet;
+        tp->arrival_planet = transferplan_cycle.planets[cycle_index];
+
+        TransferPlanSoonest(tp, transferplan_cycle.dvs[cycle_index], prepared_plans[prepared_plans_count - 1].arrival_time);
+        TransferPlanSolve(tp);
+        
+        for (int resource_idx = 0; resource_idx < resources::MAX; resource_idx++) {
+            tp->resource_transfer[resource_idx] = transferplan_cycle.resource_transfers[cycle_index][resource_idx];
+        }
+        prepared_plans_count++;
     }
 }
 
@@ -1000,24 +1044,6 @@ void Ship::_OnArrival(const TransferPlan* tp) {
     // TODO: update Transfer plans according to cycle
 
     Update();
-}
-
-void Ship::_EnsureContinuity() {
-    INFO("Ensure Continuity Call");
-    if (prepared_plans_count == 0) return;
-    RID planet_tracker = parent_obj;
-    int start_index = 0;
-    if (!IsParked()) {
-        planet_tracker = prepared_plans[0].arrival_planet;
-        start_index = 1;
-    }
-    for(int i=start_index; i < prepared_plans_count; i++) {
-        if (prepared_plans[i].departure_planet == planet_tracker) {
-            planet_tracker = prepared_plans[i].arrival_planet;
-        } else {
-            RemoveTransferPlan(i);
-        }
-    }
 }
 
 bool ship_selection_flags::MatchesShip(T selection_flags, const Ship *ship)

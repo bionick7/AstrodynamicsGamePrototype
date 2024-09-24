@@ -256,19 +256,18 @@ void TransferPlanSetBestDeparture(TransferPlan* tp, timemath::Time t0, timemath:
     tp->departure_time = x;
 }
 
-void TransferPlanSoonest(TransferPlan* tp, double dv_limit) {
+void TransferPlanSoonest(TransferPlan* tp, double dv_limit, timemath::Time earliest) {
     // least arrival time in departure_time x arrival_time where (dv = dvlimit)
     // Simplified imperfect (but quick) solution:
     //    assume departure time is equal to hohmann departure time
     //    adjust arrival time
 
-    timemath::Time now = GlobalGetNow();
     timemath::Time hohmann_departure_time, hohmann_arrival_time;
     double hohmann_departure_dv, hohmann_arrival_dv;
     
     HohmannTransfer(
         &GetPlanet(tp->departure_planet)->orbit,
-        &GetPlanet(tp->arrival_planet)->orbit, now,
+        &GetPlanet(tp->arrival_planet)->orbit, earliest,
         &hohmann_departure_time, &hohmann_arrival_time,
         &hohmann_departure_dv, &hohmann_arrival_dv
     );
@@ -785,7 +784,7 @@ void TransferPlanUI::DrawUI() {
             ui::EncloseEx(0, Palette::bg, Palette::ui_main, 4);
         }
         if(button_state & button_state_flags::JUST_PRESSED) {
-            TransferPlanSoonest(plan, ship_instance->GetCapableDV() - 1);
+            TransferPlanSoonest(plan, ship_instance->GetCapableDV() - 1, GlobalGetNow());
         }
         ui::WriteEx("ASAP", text_alignment::CENTER, false);
         ui::Pop();  // HSplit

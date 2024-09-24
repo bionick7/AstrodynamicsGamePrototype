@@ -505,7 +505,7 @@ void TechTree::Serialize(DataNode *data) const {
     }
     data->CreateArray("unlocked", 0);
     for (int i=0; i < nodes_count; i++) {
-        if (node_unlocked[i]) {
+        if (node_unlocked[i] > 0) {
             data->AppendToArray("unlocked", nodes[i].str_id);
         }
     }

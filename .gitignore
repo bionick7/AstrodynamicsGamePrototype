@@ -23,3 +23,7 @@ build.sh
 .fuse_hidden*
 
 *.o
+
+test.c
+test
+test.exe

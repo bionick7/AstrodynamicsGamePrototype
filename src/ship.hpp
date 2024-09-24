@@ -8,7 +8,7 @@
 #include "task.hpp"
 #include "ship_modules.hpp"
 
-#define SHIP_MAX_PREPARED_PLANS 10
+#define SHIP_MAX_PREPARED_PLANS 32
 
 #define SHIPCLASS_NAME_MAX_SIZE 64
 #define SHIP_NAME_MAX_SIZE 64
@@ -138,6 +138,7 @@ struct Ship {
     void Update();
     void _UpdateShipyard();
     void _UpdateModules();
+    void _UpdateTransferCycle();
     void DrawIcon(int x_offsets[], int y_offsets[], float grow_factor);
     void DrawTrajectories() const;
     void DrawUI();
@@ -186,7 +187,6 @@ struct Ship {
 
     void _OnDeparture(const TransferPlan *tp);
     void _OnArrival(const TransferPlan *tp);
-    void _EnsureContinuity();
     void _OnNewPlanClicked();
     void _OnClicked();
 };

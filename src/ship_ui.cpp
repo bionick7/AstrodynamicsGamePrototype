@@ -183,12 +183,16 @@ int _UIDrawTransferplans(Ship* ship) {
         }
         ui::PushHSplit(0, -32);
         ui::Write(sb.c_str);
-        HandleButtonSound(button_state & button_state_flags::JUST_PRESSED);
         if (button_state & button_state_flags::HOVER) {
             ship->highlighted_plan_index = i;
         }
         if (button_state & button_state_flags::JUST_PRESSED) {
-            ship->StartEditingPlan(i);
+            if (ship->transferplan_cycle.stops == 0) {
+                HandleButtonSound(button_state & button_state_flags::JUST_PRESSED);
+                ship->StartEditingPlan(i);
+            } else {
+                PlaySFX(SFX_ERROR);
+            }
         }
         ui::Pop();  // HSplit
 
@@ -203,7 +207,12 @@ int _UIDrawTransferplans(Ship* ship) {
             ui::WriteEx(ICON_X, text_alignment::CENTER, false);
             HandleButtonSound(button_state & button_state_flags::JUST_PRESSED);
             if (button_state & button_state_flags::JUST_PRESSED) {
-                ship->RemoveTransferPlan(i);
+                if (ship->transferplan_cycle.stops == 0) {
+                    HandleButtonSound(button_state & button_state_flags::JUST_PRESSED);
+                    ship->RemoveTransferPlan(i);
+                } else {
+                    PlaySFX(SFX_ERROR);
+                }
             }
             ui::Pop();  // HSplit
         }
@@ -236,11 +245,17 @@ int _UIDrawTransferplans(Ship* ship) {
     bool show_cycle_button = 
         ship->transferplan_cycle.stops > 0 || 
         (ship->GetParentPlanet() == last_arrival_planet && ship->plan_edit_index < 0);
-    int button_tabs = show_cycle_button ? 2 : 1;
+    bool show_add_button = ship->transferplan_cycle.stops == 0;
+    int button_tabs = 2;
     bool button_pressed[2];
     for(int i=0; i < button_tabs; i++) {
         ui::PushHSplit(i * ui::Current()->width/button_tabs,
                        (i+1) * ui::Current()->width/button_tabs);
+
+        if ((i == 0 && !show_add_button) || (i == 1 && !show_cycle_button)) {
+            ui::Pop();  // HSplit
+            continue;
+        }
 
         const char* text = "New Transfer";
         if (i == 1) {
