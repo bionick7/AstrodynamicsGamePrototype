@@ -133,7 +133,7 @@ namespace module_types {
     bool IsCompatible(T from, T to);
 };
 
-#define MODULE_CONFIG_MAX_NEIGHBOURS 4
+#define MODULE_CONFIG_MAX_NEIGHBORS 4
 
 struct ShipModuleClass {
     int delta_stats[ship_stats::MAX];
@@ -190,7 +190,7 @@ struct ModuleConfiguration {
     // Essential data
     int module_count = 0;
     module_types::T types[SHIP_MAX_MODULES];
-    int neighbours[SHIP_MAX_MODULES*MODULE_CONFIG_MAX_NEIGHBOURS];
+    int neighbors[SHIP_MAX_MODULES * MODULE_CONFIG_MAX_NEIGHBORS];
     Vector2 draw_offset[SHIP_MAX_MODULES];
 
     // Rendering cached
@@ -228,6 +228,7 @@ struct ShipModules {
     } expected_modules;
 };
 
+RID DeserializeModuleInfo(const char* module_info, int* index);
 int LoadShipModules(const DataNode* data);
 const ShipModuleClass* GetModule(RID id);
 

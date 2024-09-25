@@ -68,6 +68,12 @@ techtree:
   unlocks:
   - shp_light_transport
   - shpmod_wetdock
+  events:
+  - spawn:
+      name: Light transport
+      class_id: shp_light_transport
+      allegiance: 0
+      planet: Tethys
   icon_index: [15, 31]
 
 - name: Construction at scale

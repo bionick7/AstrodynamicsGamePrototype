@@ -122,12 +122,9 @@ void Ship::Serialize(DataNode *data) const {
     data->SetI("production_process", production_process);
     production_queue.SerializeTo(data, "production_queue");
 
-    data->CreateArray("modules", SHIP_MAX_MODULES);
     for(int i=0; i < SHIP_MAX_MODULES; i++) {
         if (IsIdValid(modules[i])) {
-            data->InsertIntoArray("modules", i, GetModule(modules[i])->id);
-        } else {
-            data->InsertIntoArray("modules", i, "---");
+            data->AppendToArray("modules", TextFormat("%d %s%", i, GetModule(modules[i])->id));
         }
     }
 
@@ -137,6 +134,7 @@ void Ship::Serialize(DataNode *data) const {
     }
     transferplan_cycle.Serialize(data);
 }
+
 
 void Ship::Deserialize(const DataNode* data) {
     strcpy(name, data->Get("name", "UNNAMED"));
@@ -154,6 +152,7 @@ void Ship::Deserialize(const DataNode* data) {
 
     data->DeserializeBuffer("transporting", transporting, resources::names, resources::MAX);
 
+    // Fill ship modules
     int modules_count = data->GetArrayLen("modules", true);
     if (modules_count > SHIP_MAX_MODULES) modules_count = SHIP_MAX_MODULES;
     const ShipModules* sms = GetShipModules();
@@ -161,14 +160,27 @@ void Ship::Deserialize(const DataNode* data) {
         modules[i] = GetInvalidId();
     }
     for(int i=0; i < modules_count; i++) {
-        RID module_rid = GetGlobalState()->GetFromStringIdentifier(data->GetArrayElem("modules", i));
-        if (!IsIdValidTyped(module_rid, EntityType::MODULE_CLASS)) continue;
+        const char* identifier_package = data->GetArrayElem("modules", i);
+
+        int index;
+        RID module_rid = DeserializeModuleInfo(identifier_package, &index);
+        if (!IsIdValid(module_rid)) continue;
+        
         module_types::T module_type = sms->GetModuleByRID(module_rid)->type;
         int proper_index = GetFreeModuleSlot(module_type).index;
-        if (proper_index < 0) continue;
-        modules[proper_index] = module_rid;
+        if (index < 0) {
+            // Unspecified index
+            index = proper_index;
+        } else if (IsIdValidTyped(modules[index], EntityType::MODULE_CLASS)) {
+            // Index not available
+            WARNING("Ship already has module at %d", index)
+            index = proper_index;
+        }
+
+        modules[index] = module_rid;
     }
 
+    // Deserialize transfer plans
     prepared_plans_count = data->GetChildArrayLen("prepared_plans", true);
     if (prepared_plans_count > SHIP_MAX_PREPARED_PLANS) prepared_plans_count = SHIP_MAX_PREPARED_PLANS;
     for (int i=0; i < prepared_plans_count; i++) {
@@ -719,7 +731,7 @@ void Ship::RemoveShipModuleAt(int index) {
 
 void Ship::Repair(int hp) {
     if (hp > stats[ship_stats::KINETIC_HP] + stats[ship_stats::ENERGY_HP] + stats[ship_stats::CREW]){
-        // for initializetion
+        // for initialisation
         damage_taken[ship_variables::KINETIC_ARMOR] = 0;
         damage_taken[ship_variables::ENERGY_ARMOR] = 0;
         damage_taken[ship_variables::CREW] = 0;

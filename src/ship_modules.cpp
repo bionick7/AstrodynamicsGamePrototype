@@ -133,7 +133,7 @@ ShipModuleSlot::ShipModuleSlot(RID p_entity, int p_index, ShipModuleSlotType p_o
 
 void ShipModuleSlot::SetSlot(RID module_) const {
     if (origin_type == ShipModuleSlot::DRAGGING_FROM_PLANET) {
-        GetPlanet(entity)->ship_module_inventory[index] = module_;
+        GetPlanet(entity)->inventory[index] = module_;
     } else if (origin_type == ShipModuleSlot::DRAGGING_FROM_SHIP) {
         GetShip(entity)->modules[index] = module_;
     }
@@ -141,7 +141,7 @@ void ShipModuleSlot::SetSlot(RID module_) const {
 
 RID ShipModuleSlot::GetSlot() const {
     if (origin_type == ShipModuleSlot::DRAGGING_FROM_PLANET) {
-        return GetPlanet(entity)->ship_module_inventory[index];
+        return GetPlanet(entity)->inventory[index];
     } else if (origin_type == ShipModuleSlot::DRAGGING_FROM_SHIP) {
         return GetShip(entity)->modules[index];
     }
@@ -262,12 +262,12 @@ void ModuleConfiguration::Load(const DataNode *data, const char* ship_id) {
     for(int i=0; i < module_count; i++) {
         const DataNode* child = data->GetChildArrayElem(ship_id, i);
         types[i] = module_types::FromString(child->Get("type"));
-        for(int j=0; j < MODULE_CONFIG_MAX_NEIGHBOURS; j++) {
+        for(int j=0; j < MODULE_CONFIG_MAX_NEIGHBORS; j++) {
             int neighbour = child->GetArrayElemI("neighbours", j, -1, true);
             if (neighbour >= module_count) {
                 WARNING("Neighbour count exceeds module configuration size")
             } else {
-                neighbours[i*MODULE_CONFIG_MAX_NEIGHBOURS + j] = neighbour;
+                neighbors[i*MODULE_CONFIG_MAX_NEIGHBORS + j] = neighbour;
             }
         }
         draw_offset[i].x = child->GetArrayElemF("offset", 0, 0.0);
@@ -394,9 +394,9 @@ void ModuleConfiguration::Draw(Ship* ship, Vector2 anchor_point, text_alignment:
         int center_y = center.y - draw_offset[i].y;
         //DEBUG_SHOW_I(center_x)
         //DEBUG_SHOW_I(center_y)
-        for(int j=0; j < MODULE_CONFIG_MAX_NEIGHBOURS; j++) {
-            if (neighbours[i*MODULE_CONFIG_MAX_NEIGHBOURS + j] >= 0) {
-                int neighbour = neighbours[i*MODULE_CONFIG_MAX_NEIGHBOURS + j];
+        for(int j=0; j < MODULE_CONFIG_MAX_NEIGHBORS; j++) {
+            if (neighbors[i*MODULE_CONFIG_MAX_NEIGHBORS + j] >= 0) {
+                int neighbour = neighbors[i*MODULE_CONFIG_MAX_NEIGHBORS + j];
                 int other_center_x = center.x + draw_offset[neighbour].x;
                 int other_center_y = center.y + draw_offset[neighbour].y;
                 //INFO("%d(%d, %d) => %d(%d, %d)", i, center_x, center_y, neighbour, other_center_x, other_center_y)
@@ -712,6 +712,30 @@ bool ShipModules::IsDropTank(RID module, resources::T rsc) const {
     if ((rsc == resources::WATER    || rsc == resources::NONE) && module == expected_modules.droptank_water) return true;
     if ((rsc == resources::HYDROGEN || rsc == resources::NONE) && module == expected_modules.droptank_hydrogen) return true;
     return false;
+}
+
+
+RID DeserializeModuleInfo(const char* module_info, int* index) {
+    static char identifier[100];
+    
+    if ('0' <= module_info[0] && module_info[0] <= '9') {
+        int scan_res = sscanf(module_info, "%d %s", index, identifier);
+        if (scan_res != 2) {
+            ERROR("Could not parse ship module id '%s'", module_info)
+            return GetInvalidId();
+        }
+    } else {
+        strcpy(identifier, module_info);
+        *index = -1;
+    }
+
+    RID module_rid = GetGlobalState()->GetFromStringIdentifier(identifier);
+    if (!IsIdValidTyped(module_rid, EntityType::MODULE_CLASS)) {
+        ERROR("No valid module class '%s'", identifier)
+        return GetInvalidId();
+    }
+    
+    return module_rid;
 }
 
 int LoadShipModules(const DataNode* data) {

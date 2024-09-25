@@ -7,7 +7,6 @@
 #include "planetary_economy.hpp"
 #include "ship_modules.hpp"
 
-#define MAX_PLANET_BUILDINGS 20
 #define MAX_PLANET_INVENTORY 40
 
 struct Planets;
@@ -42,7 +41,7 @@ struct Planet {
     OrbitPos position;
     PlanetaryEconomy economy;
 
-    RID ship_module_inventory[MAX_PLANET_INVENTORY];
+    RID inventory[MAX_PLANET_INVENTORY];
 
     IDList cached_ship_list;  // Cached for quicka access (renewed every frame)
 

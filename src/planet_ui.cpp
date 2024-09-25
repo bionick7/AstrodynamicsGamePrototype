@@ -24,7 +24,7 @@ void Planet::_UIDrawInventory() {
     ShipModules* sms = GetShipModules();
     for (int i = 0; i < i_max; i++) {
         ShipModuleSlot this_slot = ShipModuleSlot(id, i, ShipModuleSlot::DRAGGING_FROM_PLANET, module_types::ANY);
-        //if (!IsIdValid(ship_module_inventory[i])) continue;
+        //if (!IsIdValid(inventory[i])) continue;
         ui::PushGridCell(columns, rows, i % columns, i / columns);
         ui::Shrink(MARGIN, MARGIN);
         button_state_flags::T button_state = ui::AsButton();
@@ -43,7 +43,7 @@ void Planet::_UIDrawInventory() {
         //ui::BeginDirectDraw();
         //DrawRectangleLinesEx(ui::Current()->GetRect(), 1, Palette::ui_alt);
         //ui::EndDirectDraw();
-        sms->DrawShipModule(ship_module_inventory[i], false);
+        sms->DrawShipModule(inventory[i], false);
         ui::Pop();  // GridCell
     }
     ui::Pop();  // Inset

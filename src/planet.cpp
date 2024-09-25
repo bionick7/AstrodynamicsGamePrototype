@@ -17,7 +17,7 @@ Planet::Planet(PermaString p_name, double p_mu, double p_radius) {
     //module_production_queue.Clear();
 
     for (int i = 0; i < MAX_PLANET_INVENTORY; i++) {
-        ship_module_inventory[i] = GetInvalidId();
+        inventory[i] = GetInvalidId();
     }
 }
 
@@ -28,31 +28,14 @@ void Planet::Serialize(DataNode* data) const {
     data->SetI("independence", independence);
     data->SetI("base_independence_delta", base_independence_delta);
     data->SetI("opinion", opinion);
-    /*data->CreatChildArray("ship_production_queue", ship_production_queue.size);
-    for(int i=0; i < ship_production_queue.size; i++) {
-        DataNode* dn = data->InsertIntoChildArray("ship_production_queue", i);
-        dn->SetI("worker", ship_production_queue[i].worker.AsInt());
-        dn->SetI("product", ship_production_queue[i].product.AsInt());
-    }
-    data->CreatChildArray("module_production_queue", module_production_queue.size);
-    for(int i=0; i < module_production_queue.size; i++) {
-        DataNode* dn = data->InsertIntoChildArray("module_production_queue", i);
-        dn->SetI("worker", module_production_queue[i].worker.AsInt());
-        dn->SetI("product", module_production_queue[i].product.AsInt());
-    }*/
-    //data->SetF("mass", mu / G);
-    //data->SetF("radius", radius);
 
     data->SerializeBuffer("resource_stock", economy.resource_stock, resources::names, resources::MAX);
     data->SerializeBuffer("resource_delta", economy.native_resource_delta, resources::names, resources::MAX);
     
     // modules
-    data->CreateArray("inventory", MAX_PLANET_INVENTORY);
     for(int i=0; i < MAX_PLANET_INVENTORY; i++) {
-        if (IsIdValid(ship_module_inventory[i])) {
-            data->InsertIntoArray("inventory", i, GetModule(ship_module_inventory[i])->id);
-        } else {
-            data->InsertIntoArray("inventory", i, "---");
+        if (IsIdValid(inventory[i])) {
+            data->AppendToArray("inventory", TextFormat("%d %s%", i, GetModule(inventory[i])->id));
         }
     }
 
@@ -69,18 +52,6 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
     base_independence_delta = data->GetI("base_independence_delta", 0);
     opinion = data->GetI("opinion", 0, true);
 
-    /*ship_production_queue.Resize(data->GetChildArrayLen("ship_production_queue", true));
-    for(int i=0; i < ship_production_queue.size; i++) {
-        const DataNode* dn = data->GetChildArrayElem("ship_production_queue", i);
-        ship_production_queue[i].worker = RID(dn->GetI("worker"));
-        ship_production_queue[i].product = RID(dn->GetI("product"));
-    }
-    module_production_queue.Resize(data->GetChildArrayLen("module_production_queue", true));
-    for(int i=0; i < module_production_queue.size; i++) {
-        const DataNode* dn = data->GetChildArrayElem("module_production_queue", i);
-        module_production_queue[i].worker = RID(dn->GetI("worker"));
-        module_production_queue[i].product = RID(dn->GetI("product"));
-    }*/
     RID index = planets->GetIdByName(name.GetChar());
     if (!IsIdValid(index)) {
         return;
@@ -97,15 +68,40 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
     data->DeserializeBuffer("resource_delta", economy.native_resource_delta, resources::names, resources::MAX);
     
     if (data->HasArray("inventory")) {
-        int ship_module_inventory_count = data->GetArrayLen("inventory", true);
-        if (ship_module_inventory_count > MAX_PLANET_INVENTORY) {
-            ship_module_inventory_count = MAX_PLANET_INVENTORY;
+        int inventory_count = data->GetArrayLen("inventory", true);
+        if (inventory_count > MAX_PLANET_INVENTORY) {
+            inventory_count = MAX_PLANET_INVENTORY;
         }
         
-        for (int i = 0; i < ship_module_inventory_count; i++) {
+        for (int i = 0; i < inventory_count; i++) {
             const char* module_id = data->GetArrayElem("inventory", i);
-            ship_module_inventory[i] = GetGlobalState()->GetFromStringIdentifier(module_id);
+            inventory[i] = GetGlobalState()->GetFromStringIdentifier(module_id);
         }
+    }
+    
+    int inventory_count = data->GetArrayLen("inventory", true);
+    if (inventory_count > MAX_PLANET_INVENTORY) {
+        inventory_count = MAX_PLANET_INVENTORY;
+    }
+    for(int i=0; i < inventory_count; i++) {
+        const char* identifier_package = data->GetArrayElem("inventory", i);
+
+        int index;
+        RID module_rid = DeserializeModuleInfo(identifier_package, &index);
+        if (!IsIdValid(module_rid)) continue;
+        
+        module_types::T module_type = GetShipModules()->GetModuleByRID(module_rid)->type;
+        int proper_index = GetFreeModuleSlot(module_type).index;
+        if (index < 0) {
+            // Unspecified index
+            index = proper_index;
+        } else if (IsIdValidTyped(inventory[index], EntityType::MODULE_CLASS)) {
+            // Index not available
+            WARNING("Ship already has module at %d", index)
+            index = proper_index;
+        }
+
+        inventory[index] = module_rid;
     }
     
     RecalculateStats();
@@ -225,7 +221,7 @@ void Planet::RecalculateStats() {
 ShipModuleSlot Planet::GetFreeModuleSlot(module_types::T type) const {
     for (int index = 0; index < MAX_PLANET_INVENTORY; index++) {
         module_types::T slot_type = module_types::ANY;  // For now
-        if(!IsIdValid(ship_module_inventory[index]) && module_types::IsCompatible(type, slot_type)) {
+        if(!IsIdValid(inventory[index]) && module_types::IsCompatible(type, slot_type)) {
             return ShipModuleSlot(id, index, ShipModuleSlot::DRAGGING_FROM_PLANET, module_types::ANY);
         }
     }
@@ -233,7 +229,7 @@ ShipModuleSlot Planet::GetFreeModuleSlot(module_types::T type) const {
 }
 
 void Planet::RemoveShipModuleInInventory(int index) {
-    ship_module_inventory[index] = GetInvalidId();
+    inventory[index] = GetInvalidId();
 }
 
 /*Planet::ProductionOrder Planet::MakeProductionOrder(RID id) const {
