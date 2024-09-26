@@ -265,7 +265,9 @@
 
 // Primitive assembly draw modes
 #define RL_LINES                                0x0001      // GL_LINES
+#define RL_LINESTRIP                            0x0003      // GL_LINE_STRIP
 #define RL_TRIANGLES                            0x0004      // GL_TRIANGLES
+#define RL_TRIANGLESTRIP                        0x0005      // GL_TRIANGLESTRIP
 #define RL_QUADS                                0x0007      // GL_QUADS
 
 // GL equivalent data types
@@ -703,9 +705,8 @@ RLAPI void rlSetVertexAttributeDefault(int locIndex, const void *value, int attr
 RLAPI void rlDrawVertexArray(int offset, int count);    // Draw vertex array (currently active vao)
 
 // Custom additions
-RLAPI void rlDrawVertexLineArray(int offset, int count);
-RLAPI void rlDrawVertexLineStripArray(int offset, int count);
-RLAPI void rlDrawVertexLineArrayElements(int offset, int count, const void *buffer);
+RLAPI void rlDrawVertexPrimitiveArray(int primitive_type, int offset, int count);
+RLAPI void rlDrawVertexPrimitiveArrayElements(int primitive_type, int offset, int count, const void *buffer);
 
 RLAPI void rlDrawVertexArrayElements(int offset, int count, const void *buffer); // Draw vertex array elements
 RLAPI void rlDrawVertexArrayInstanced(int offset, int count, int instances); // Draw vertex array (currently active vao) with instancing
@@ -3759,23 +3760,19 @@ void rlDrawVertexArray(int offset, int count)
 
 // =============  CUSTOM ADDITION (HACK)  ==============
 // Draw vertex array
-void rlDrawVertexLineArray(int offset, int count)
+void rlDrawVertexPrimitiveArray(int primitive_type, int offset, int count) 
 {
-    glDrawArrays(GL_LINES, offset, count);
+    glDrawArrays(primitive_type, offset, count);
 }
 
-void rlDrawVertexLineStripArray(int offset, int count) 
-{
-    glDrawArrays(GL_LINE_STRIP, offset, count);
-}
 
-void rlDrawVertexLineArrayElements(int offset, int count, const void *buffer)
+void rlDrawVertexPrimitiveArrayElements(int primitive_type, int offset, int count, const void *buffer)
 {
     // NOTE: Added pointer math separately from function to avoid UBSAN complaining
     unsigned short *bufferPtr = (unsigned short *)buffer;
     if (offset > 0) bufferPtr += offset;
 
-    glDrawElements(GL_LINES, count, GL_UNSIGNED_SHORT, (const unsigned short *)bufferPtr);
+    glDrawElements(primitive_type, count, GL_UNSIGNED_SHORT, (const unsigned short *)bufferPtr);
 }
 
 

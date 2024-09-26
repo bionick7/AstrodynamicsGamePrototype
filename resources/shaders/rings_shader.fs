@@ -30,10 +30,10 @@ void main() {
 
 	float w = (mvp * vec4(fragModelPos, 1)).w;
 	vec2 screen_pos    = get_screen_pos(fragModelPos);
-	vec2 screen_pos_dr = get_screen_pos(fragModelPos + vec3(uv/r * 0.01,0));
-	vec2 dscreen_drad = (screen_pos_dx - screen_pos) / 0.01;
+	vec2 screen_pos_dr = get_screen_pos(fragModelPos + vec3(uv/r * 0.01,0).xzy);
+	float dscreen_drad = length(screen_pos_dr - screen_pos) / 0.01;
 
-	float delta = 0.002 / d_screen_drad;
+	float delta = 0.002 / dscreen_drad;
 	float r_min = innerRad + delta;
 	float r_max = 1.0 - delta;
 	if (r < r_min - delta || r > r_max + delta) {
@@ -42,7 +42,7 @@ void main() {
     float mask_outer = smoothstep(r_max + delta, r_max, r) * smoothstep(r_max - delta, r_max, r);
     float mask_inner = smoothstep(r_min + delta, r_min, r) * smoothstep(r_min - delta, r_min, r);
     float gradient = pow((r - r_min) / (r_max - r_min), 3.) * 0.3;
-    gradient = 1.0 - (1.0 - mask_outer) * (1.0 - mask_inner) * (1.0 - gradient);
+    //gradient = 1.0 - (1.0 - mask_outer) * (1.0 - mask_inner) * (1.0 - gradient);
 	float mask = smoothstep(r_max + delta, r_max, r) * smoothstep(r_min - delta, r_min, r);
 
 	finalColor = mix(bgColor, fragColor, gradient);

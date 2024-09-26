@@ -2,6 +2,7 @@
 
 // Input vertex attributes (from vertex shader)
 smooth in float anomaly;
+smooth in float lateral_offset;
 
 // Input uniform values
 uniform int render_mode;
@@ -28,4 +29,7 @@ void main() {
     else if (render_mode == RENDER_MODE_GRADIENT) {
         finalColor.a = path_offset * (1. - step(0.997, path_offset));
     }
+    //finalColor.a = smoothstep(1.0f, 0.0f, lateral_offset*lateral_offset);
+    finalColor.a *= smoothstep(1.0f, 0.0f, abs(lateral_offset));
+    //finalColor.a = 1.0;
 }

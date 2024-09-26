@@ -130,8 +130,7 @@ void Planet::DrawUI() {
         //}
         if (button_state & button_state_flags::JUST_PRESSED) {
             current_tab = i;
-        }
-        if (button_state & button_state_flags::HOVER || i == current_tab) {
+        }if (button_state & button_state_flags::HOVER || i == current_tab) {
             ui::EnclosePartial(0, Palette::bg, Palette::ui_main, direction::DOWN);
         }
         ui::Write(tab_descriptions[i]);

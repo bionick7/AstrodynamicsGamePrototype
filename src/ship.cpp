@@ -589,13 +589,19 @@ void Ship::_UpdateTransferCycle() {
         // Figure out where we are in the cycle
         int cycle_index = -1;
         for (int i=0; i < transferplan_cycle.stops; i++) {
+            bool cycle_match = true;
             for (int j=0; j < prepared_plans_count; j++) {
                 const TransferPlan* last_tp = &prepared_plans[prepared_plans_count - 1 - j];
-                if (last_tp->arrival_planet != transferplan_cycle.planets[
-                        (cycle_index - j + transferplan_cycle.stops) % transferplan_cycle.stops
-                ])  continue;
+                int cycle_check_index = (i - j + transferplan_cycle.stops) % transferplan_cycle.stops;
+                if (last_tp->arrival_planet != transferplan_cycle.planets[cycle_check_index]) {
+                    cycle_match = false;
+                    break;
+                }
             }
-            cycle_index = (i + 1) % transferplan_cycle.stops;  // Next one
+            if (cycle_match) {
+                cycle_index = (i + 1) % transferplan_cycle.stops;  // Next one
+                break;
+            }
         }
         if (cycle_index < 0) {
             ERROR("Ship broke cycle: cannot complete")
@@ -611,6 +617,8 @@ void Ship::_UpdateTransferCycle() {
             tp->departure_planet = GetParentPlanet();
         }
         tp->arrival_planet = transferplan_cycle.planets[cycle_index];
+
+        ASSERT(tp->arrival_planet != tp->departure_planet)
 
         TransferPlanSoonest(tp, transferplan_cycle.dvs[cycle_index], prepared_plans[prepared_plans_count - 1].arrival_time);
         TransferPlanSolve(tp);

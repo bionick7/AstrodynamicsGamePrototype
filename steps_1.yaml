@@ -254,22 +254,18 @@ ships:
     resources:
       iron_ore: 51
 
-
   - dv: 2002.081645
     planet: Rhea
-    resources:
-
+    resources: []
 
   - dv: 5997.702671
     planet: Titan
-    resources:
-
+    resources: []
 
   - dv: 3711.759302
     planet: Rhea
     resources:
       carbon: 23
-
 
   prepared_plans:
   - arrival_planet: 16777221

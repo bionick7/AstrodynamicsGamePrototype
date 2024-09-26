@@ -53,7 +53,7 @@ void main() {
     col = mix(col, fade_color, fade_factor_color);
     //col = vec3(1) * edge_dist;
 
-    col = visualize_depth_map(texture(depthMap, fragTexCoord).r);
+    //col = visualize_depth_map(texture(depthMap, fragTexCoord).r);
     
     finalColor.rgb = col;
 }
