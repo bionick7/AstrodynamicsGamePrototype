@@ -226,7 +226,7 @@ struct Ships {
     void GetFleet(IDList* list, RID ship) const;
     void KillShip(RID uuid, bool notify_callback);
     void DrawShipClassUI(RID uuid) const;
-    void GetRandomShipName(const ShipClass* ship_class, char buffer[]) const;
+    void GetRandomShipName(RID ship_class, StringBuilder* sb) const;
     void Clear();
 };
 

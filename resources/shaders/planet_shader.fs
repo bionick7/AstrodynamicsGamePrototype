@@ -60,7 +60,7 @@ void main() {
 
 	float r = dot(uv, uv);
 	
-    const float feathering = 3.0;
+    const float feathering = 2.0;
 
 	if(r > draw_max*draw_max + delta*feathering){
 		discard;
@@ -72,7 +72,7 @@ void main() {
     float mask = 1.0 - (1.0 - mask_outer*mask_inner) * (1.0 - gradient);
 
 	finalColor.rgb = mix(fillColor.rgb, rimColor.rgb, mask);
-	finalColor.a = 1.0;
+	finalColor.a = smoothstep(draw_max*draw_max + delta*feathering, draw_max*draw_max, r);
 	
 	//finalColor.rgba = vec4(0,0,0,1);
 	//finalColor.rgb = true_world_pos;

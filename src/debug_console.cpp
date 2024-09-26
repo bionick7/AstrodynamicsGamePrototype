@@ -91,7 +91,6 @@ const char* GetSettingStr(const char* key, const char* default_) {
     return setting->Get();
 }
 
-
 bool GetSettingBool(const char* key, bool default_) {
     Setting* setting = GetSetting(key);
     if (setting == NULL) {
@@ -151,20 +150,24 @@ void Help(const char*);
 void SetSetting(const char*);
 void ListSettings(const char*);
 void SaveSettings(const char*);
-void RelaodSettings(const char*);
+void ReloadSettings(const char*);
 void GiveResource(const char*);
 void UnlockTech(const char*);
 void CheckMilestone(const char*);
+void Save(const char*);
+void Load(const char*);
 
 struct { const char* name; void(*func)(const char*); } commands[] = {
     { "help", Help },
     { "set", SetSetting },
     { "list", ListSettings },
     { "save", SaveSettings },
-    { "reload", RelaodSettings },
+    { "reload", ReloadSettings },
     { "give_rsc", GiveResource },
     { "unlock_tech", UnlockTech },
     { "check_milestone", CheckMilestone },
+    { "load", Load },
+    { "save", Save },
 };
 
 void Help(const char* prompt) {
@@ -217,7 +220,7 @@ void SaveSettings(const char* prompt) {
     dn.WriteToFile(SETTINGS_FILE_PATH, FileFormat::YAML);
 }
 
-void RelaodSettings(const char* prompt) {
+void ReloadSettings(const char* prompt) {
     settings::Init();
 }
 
@@ -276,6 +279,32 @@ void CheckMilestone(const char* prompt) {
     prompt = FetchArg(milestone_name, prompt);
     bool is_reached = GetTechTree()->IsMilestoneReached(milestone_name);
     PushLine(TextFormat("%s: %s", milestone_name, is_reached ? "reached" : "unreached"));
+}
+
+void Save(const char* prompt) {
+    static char filename[DEBUG_CONSOLE_MAX_LINE_SIZE];
+    if (*prompt == '\0') {
+        PushLine("Expected argument: milestone_name");
+        return;
+    }
+    prompt = FetchArg(filename, prompt);
+    
+    GetGlobalState()->SaveGame(filename);
+
+    PushLine(TextFormat("File saved as: %s", filename));
+}
+
+void Load(const char* prompt) {
+    static char filename[DEBUG_CONSOLE_MAX_LINE_SIZE];
+    if (*prompt == '\0') {
+        PushLine("Expected argument: milestone_name");
+        return;
+    }
+    prompt = FetchArg(filename, prompt);
+    
+    GetGlobalState()->LoadGame(filename);
+
+    PushLine(TextFormat("File loaded from: %s", filename));
 }
 
 void InterpreteResult(const char* prompt) {

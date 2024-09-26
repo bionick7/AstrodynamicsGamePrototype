@@ -70,7 +70,7 @@ techtree:
   - shpmod_wetdock
   events:
   - spawn:
-      name: Light transport
+      name: Restored transport
       class_id: shp_light_transport
       allegiance: 0
       planet: Tethys

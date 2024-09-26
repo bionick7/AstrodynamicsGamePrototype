@@ -1,0 +1,452 @@
+focused_planet: 16777219
+focused_ship: -1
+player_faction: 0
+calendar:
+  paused: y
+  time: 4752000.000000
+  time_scale: 16384.000000
+
+camera:
+  focus: -1
+  fovy: 50.000000
+  position_x: 0.010734
+  position_y: 32.201176
+  position_z: 0.000000
+
+quests:
+  active_quests: []
+  available_quests: []
+  dialogues: []
+
+tech:
+  achievements: []
+  condition_internals:
+  - ---
+  - 14
+  - 36
+  - ---
+  - ---
+  - ---
+  - 0
+  - ---
+  - 0
+  - ---
+  - 0
+  - 0
+  - ---
+  - ---
+  - ---
+  - ---
+  - 0
+  - ---
+  - ---
+  - 0
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - ---
+  - 0
+  - ---
+  - ---
+  - ---
+  - 0
+  unlocked:
+  - tech_start
+  - tech_metallurgy
+  visited_planets:
+  - Tethys
+  - Rhea
+  - Titan
+
+factions:
+- money: 0
+
+- money: 0
+
+planets:
+- allegiance: 0
+  base_independence_delta: 0
+  id: 16777216
+  independence: 0
+  name: Low Saturn Orbit
+  opinion: 0
+  trading_accessible: n
+  resource_delta:
+    hydrogen: 50
+    water: 10
+
+  resource_stock:
+    hydrogen: 1000
+    water: 1000
+
+
+- allegiance: 0
+  base_independence_delta: 0
+  id: 16777217
+  independence: 0
+  name: Rings
+  opinion: 0
+  trading_accessible: n
+  resource_delta:
+    water: 50
+
+  resource_stock:
+    electronics: 6
+    steel: 20
+    water: 1000
+
+
+- allegiance: 1
+  base_independence_delta: 0
+  id: 16777218
+  independence: 0
+  name: Mimas
+  opinion: 0
+  trading_accessible: n
+  resource_delta:
+    water: 10
+
+  resource_stock:
+    electronics: 6
+    hydrogen: 115
+    oxygen: 990
+    steel: 20
+    water: 450
+
+
+- allegiance: 0
+  base_independence_delta: 0
+  id: 16777219
+  independence: 0
+  name: Encelladus
+  opinion: 0
+  trading_accessible: n
+  resource_delta:
+
+  resource_stock:
+    electronics: 6
+    steel: 20
+    water: 1000
+
+
+- allegiance: 0
+  base_independence_delta: 0
+  id: 16777220
+  independence: 0
+  name: Tethys
+  opinion: 0
+  trading_accessible: n
+  resource_delta:
+
+  resource_stock:
+    aluminium: 3
+    electronics: 5
+    hydrogen: 14
+    iron_ore: 39
+    rock: 41
+    steel: 24
+    water: 1000
+
+  inventory:
+  - 0 shpmod_electrolyser
+  - 1 shpmod_reactor
+  - 2 shpmod_boost_init
+
+- allegiance: 0
+  base_independence_delta: 0
+  id: 16777221
+  independence: 0
+  name: Rhea
+  opinion: 0
+  trading_accessible: n
+  resource_delta:
+    rock: 300
+    water: 50
+
+  resource_stock:
+    aluminium: 39
+    aluminium_ore: 28
+    carbon: 57
+    co2: 44
+    electronics: 5
+    iron_ore: 37
+    rock: 1000
+    steel: 20
+    water: 1000
+
+  inventory:
+  - 0 shpmod_heatshield
+  - 1 shpmod_reactor
+
+- allegiance: 0
+  base_independence_delta: 0
+  id: 16777222
+  independence: 0
+  name: Titan
+  opinion: 0
+  trading_accessible: n
+  resource_delta:
+    carbon: 10
+    water: 20
+
+  resource_stock:
+    carbon: 481
+    electronics: 6
+    steel: 20
+    water: 1000
+
+
+- allegiance: 0
+  base_independence_delta: 0
+  id: 16777223
+  independence: 0
+  name: Iaeptus
+  opinion: 0
+  trading_accessible: n
+  resource_delta:
+    water: 20
+
+  resource_stock:
+    electronics: 6
+    steel: 20
+    water: 1000
+
+  inventory:
+  - 0 shpmod_railgun
+  - 1 shpmod_acs
+
+- allegiance: 0
+  base_independence_delta: 0
+  id: 16777224
+  independence: 0
+  name: Phoebe
+  opinion: 0
+  trading_accessible: n
+  resource_delta:
+
+  resource_stock:
+    electronics: 6
+    steel: 20
+    water: 1000
+
+  inventory:
+  - 0 shpmod_manufacture_offices
+  - 1 shpmod_heatpump
+
+ships:
+- allegiance: 0
+  class_id: shp_light_transport
+  id: 33554432
+  name: Light transport
+  planet: Tethys
+  production_process: 0
+  damage_taken:
+
+  transporting:
+    iron_ore: 51
+
+  production_queue: []
+  cycle:
+  - dv: 2002.414214
+    planet: Tethys
+    resources:
+      iron_ore: 51
+
+
+  - dv: 2002.081645
+    planet: Rhea
+    resources:
+
+
+  - dv: 5997.702671
+    planet: Titan
+    resources:
+
+
+  - dv: 3711.759302
+    planet: Rhea
+    resources:
+      carbon: 23
+
+
+  prepared_plans:
+  - arrival_planet: 16777221
+    arrival_time: 5056927.271305
+    departure_planet: 16777220
+    departure_time: 4922591.790791
+    resource_transfer:
+
+
+  - arrival_planet: 16777222
+    arrival_time: 5486269.658471
+    departure_planet: 16777221
+    departure_time: 5308621.995702
+    resource_transfer:
+
+
+  - arrival_planet: 16777221
+    arrival_time: 6064430.747735
+    departure_planet: 16777222
+    departure_time: 5653141.221090
+    resource_transfer:
+      carbon: 23
+
+
+  - arrival_planet: 16777220
+    arrival_time: 6411163.439515
+    departure_planet: 16777221
+    departure_time: 6276827.959001
+    resource_transfer:
+      iron_ore: 51
+
+
+
+- allegiance: 0
+  class_id: shp_spacestation
+  id: 33554433
+  name: Anna Kowalsky knot
+  planet: Tethys
+  production_process: 0
+  damage_taken:
+
+  transporting:
+
+  modules:
+  - 0 shpmod_manufacture_offices
+  - 1 shpmod_workshop
+  - 2 shpmod_large_storage
+  - 3 shpmod_drydock
+  - 4 shpmod_water_extractor
+  - 5 shpmod_sail_medium
+  - 6 shpmod_steel_smelter
+  production_queue: []
+  cycle: []
+  prepared_plans: []
+
+- allegiance: 0
+  class_id: shp_spacestation
+  id: 33554434
+  name: Oldblaze
+  planet: Titan
+  production_process: 0
+  damage_taken:
+
+  transporting:
+
+  production_queue: []
+  cycle: []
+  prepared_plans: []
+
+- allegiance: 0
+  class_id: shp_spacestation
+  id: 33554435
+  name: Baghdad knot
+  planet: Rhea
+  production_process: 0
+  damage_taken:
+
+  transporting:
+
+  modules:
+  - 0 shpmod_workshop
+  - 1 shpmod_shuttles
+  - 2 shpmod_sail_medium
+  - 3 shpmod_ore_extractor
+  - 4 shpmod_reactor
+  - 5 shpmod_aluminium_smelter
+  production_queue: []
+  cycle: []
+  prepared_plans: []
+
+- allegiance: 1
+  class_id: shp_spacestation
+  id: 33554436
+  name: Mimas Polytechnic School
+  planet: Mimas
+  production_process: 0
+  damage_taken:
+
+  transporting:
+
+  modules:
+  - 0 shpmod_workshop
+  - 1 shpmod_biolab
+  - 2 shpmod_electrolyser
+  production_queue: []
+  cycle: []
+  prepared_plans: []
+
+- allegiance: 1
+  class_id: shp_light_transport
+  id: 33554437
+  name: Improvised defences
+  planet: Mimas
+  production_process: 0
+  damage_taken:
+
+  transporting:
+
+  modules:
+  - 2 shpmod_gun
+  - 6 shpmod_light_armor
+  production_queue: []
+  cycle: []
+  prepared_plans: []
+
+- allegiance: 2
+  class_id: shp_spacestation
+  id: 33554438
+  name: Enclave
+  planet: Iaeptus
+  production_process: 0
+  damage_taken:
+
+  transporting:
+
+  modules:
+  - 0 shpmod_workshop
+  production_queue: []
+  cycle: []
+  prepared_plans: []
+
+- allegiance: 2
+  class_id: shp_express
+  id: 33554439
+  name: Military ship 1
+  planet: Iaeptus
+  production_process: 0
+  damage_taken:
+
+  transporting:
+
+  modules:
+  - 0 shpmod_missiles
+  - 1 shpmod_missiles
+  - 2 shpmod_acs
+  - 3 shpmod_light_armor
+  production_queue: []
+  cycle: []
+  prepared_plans: []
+
+- allegiance: 2
+  class_id: shp_express
+  id: 33554440
+  name: Military ship 2
+  planet: Iaeptus
+  production_process: 0
+  damage_taken:
+
+  transporting:
+
+  modules:
+  - 0 shpmod_missiles
+  - 1 shpmod_missiles
+  - 2 shpmod_acs
+  - 3 shpmod_light_armor
+  production_queue: []
+  cycle: []
+  prepared_plans: []
+
+

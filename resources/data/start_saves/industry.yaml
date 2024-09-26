@@ -91,8 +91,8 @@ planets:
       water: 20
       carbon: 10
     inventory:
-    - shpmod_droptank
-    - shpmod_droptank
+    - shpmod_droptank_water
+    - shpmod_droptank_water
     base_independance_delta: 8
 
   - name: Iaeptus

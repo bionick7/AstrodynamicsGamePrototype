@@ -365,8 +365,8 @@ void RenderServer::Draw() {
 
             // Saturn and rings are hardcoded for now
             RenderPerfectSphere(DVector3::Zero(), GetPlanets()->GetParentNature()->radius, Palette::ui_main);
-            RenderRings(DVector3::Up(), 74.0e+6, 92.0e+6, Palette::ui_main);
-            RenderRings(DVector3::Up(), 94.0e+6, 117.58e+6, Palette::ui_main);
+            //RenderRings(DVector3::Up(), 74.0e+6, 92.0e+6, Palette::ui_main);
+            //RenderRings(DVector3::Up(), 94.0e+6, 117.58e+6, Palette::ui_main);
             RenderRings(DVector3::Up(), 122.17e+6, 136.775e+6, Palette::ui_main);
 
             for(int i=0; i < GetPlanets()->GetPlanetCount(); i++) {

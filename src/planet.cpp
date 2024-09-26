@@ -66,19 +66,7 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
 
     data->DeserializeBuffer("resource_stock", economy.resource_stock, resources::names, resources::MAX);
     data->DeserializeBuffer("resource_delta", economy.native_resource_delta, resources::names, resources::MAX);
-    
-    if (data->HasArray("inventory")) {
-        int inventory_count = data->GetArrayLen("inventory", true);
-        if (inventory_count > MAX_PLANET_INVENTORY) {
-            inventory_count = MAX_PLANET_INVENTORY;
-        }
         
-        for (int i = 0; i < inventory_count; i++) {
-            const char* module_id = data->GetArrayElem("inventory", i);
-            inventory[i] = GetGlobalState()->GetFromStringIdentifier(module_id);
-        }
-    }
-    
     int inventory_count = data->GetArrayLen("inventory", true);
     if (inventory_count > MAX_PLANET_INVENTORY) {
         inventory_count = MAX_PLANET_INVENTORY;

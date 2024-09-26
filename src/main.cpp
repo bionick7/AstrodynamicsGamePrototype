@@ -26,8 +26,16 @@ bool GetCmdSettingBool(int argc, const char** argv, const char* find) {
 
 void TestingSetup(GlobalState* app) {
     StringBuilder sb;
+    sb.Add("==== DV TABLE ====\n");
     GetDVTable(&sb, true);
-    sb.WriteToFile("DVTable.txt");
+
+    sb.Add("\n\n==== RANDOM (TRANSPORT) SHIP NAMES ====\n");
+    for (int i=0; i < 100; i++) {
+        GetShips()->GetRandomShipName(app->GetFromStringIdentifier("shp_light_transport"), &sb);
+        sb.Add("\n");
+    }
+
+    sb.WriteToFile("test_outputs.txt");
 }
 
 void Load(int argc, const char** argv) {

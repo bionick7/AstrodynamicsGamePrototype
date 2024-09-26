@@ -347,7 +347,7 @@ TransferPlanCycle::~TransferPlanCycle() {
 void TransferPlanCycle::Serialize(DataNode *data) const {
     data->CreatChildArray("cycle", stops);
     for(int i=0; i < stops; i++) {
-        DataNode* cycle_stop_data = data->InsertIntoChildArray("cycles", i);
+        DataNode* cycle_stop_data = data->InsertIntoChildArray("cycle", i);
         cycle_stop_data->Set("planet", GetPlanet(planets[i])->name.GetChar());
         cycle_stop_data->SetF("dv", dvs[i]);
         cycle_stop_data->SerializeBuffer("resources", resource_transfers[i], resources::names, resources::MAX);
@@ -368,11 +368,11 @@ void TransferPlanCycle::Deserialize(const DataNode *data) {
 
     for(int i=0; i < stops; i++) {
         const DataNode* cycle_stop_data = data->GetChildArrayElem("cycle", i);
-        RID planet_id = GetGlobalState()->GetFromStringIdentifier(cycle_stop_data->GetArrayElem("planet", i));
+        RID planet_id = GetPlanets()->GetIdByName(cycle_stop_data->Get("planet"));
         if (!IsIdValidTyped(planet_id, EntityType::PLANET)) {
             planets[i] = GetInvalidId();    
             // Means planet IDs can be invalid
-            FAIL("No such planet: '%s'", cycle_stop_data->GetArrayElem("planet", i))
+            ERROR("No such planet: '%s'", cycle_stop_data->Get("planet"))
             continue;
         }
         planets[i] = planet_id;

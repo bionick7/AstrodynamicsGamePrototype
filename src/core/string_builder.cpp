@@ -278,7 +278,7 @@ StringBuilder& StringBuilder::AddDate(timemath::Time t, bool shorthand) {
     time_t time_in_s = t.__t;
     tm* time_tm = gmtime(&time_in_s);
     if (time_tm == NULL) {
-        return Add("[INVALID TIME]");
+        return Add("[INVALID DATE]");
     }
     time_tm->tm_year += start_year;
     if (shorthand) {

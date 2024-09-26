@@ -584,28 +584,18 @@ void Ship::_UpdateModules() {
     }
 }
 
-// A -> B -> C -> B -> C -> A ... 
-// B -> A; A -> B
-
-bool _CompareTPWithCycle(const TransferPlan* prepared_plans, int prepared_plans_count, const TransferPlanCycle* cycle, int cycle_index) {
-    for (int i=0; i < prepared_plans_count; i++) {
-        const TransferPlan* last_tp = &prepared_plans[prepared_plans_count - 1 - i];
-        if (last_tp->arrival_planet != cycle->planets[(cycle_index - i + cycle->stops) % cycle->stops]) 
-            return false;
-        //if (last_tp->departure_planet != cycle->planets[(cycle_index - i + cycle->stops - 1) % cycle->stops])
-        //    return false;
-    }
-    return true;
-}
-
 void Ship::_UpdateTransferCycle() {
     while (prepared_plans_count < transferplan_cycle.stops) {
         // Figure out where we are in the cycle
         int cycle_index = -1;
         for (int i=0; i < transferplan_cycle.stops; i++) {
-            if(_CompareTPWithCycle(prepared_plans, prepared_plans_count, &transferplan_cycle, i)) {
-                cycle_index = (i + 1) % transferplan_cycle.stops;  // Next one
+            for (int j=0; j < prepared_plans_count; j++) {
+                const TransferPlan* last_tp = &prepared_plans[prepared_plans_count - 1 - j];
+                if (last_tp->arrival_planet != transferplan_cycle.planets[
+                        (cycle_index - j + transferplan_cycle.stops) % transferplan_cycle.stops
+                ])  continue;
             }
+            cycle_index = (i + 1) % transferplan_cycle.stops;  // Next one
         }
         if (cycle_index < 0) {
             ERROR("Ship broke cycle: cannot complete")
@@ -615,7 +605,11 @@ void Ship::_UpdateTransferCycle() {
         prepared_plans[prepared_plans_count] = TransferPlan();
         // Create new transfer plan
         TransferPlan* tp = &prepared_plans[prepared_plans_count];
-        tp->departure_planet = prepared_plans[prepared_plans_count - 1].arrival_planet;
+        if (prepared_plans_count > 0) {
+            tp->departure_planet = prepared_plans[prepared_plans_count - 1].arrival_planet;
+        } else {
+            tp->departure_planet = GetParentPlanet();
+        }
         tp->arrival_planet = transferplan_cycle.planets[cycle_index];
 
         TransferPlanSoonest(tp, transferplan_cycle.dvs[cycle_index], prepared_plans[prepared_plans_count - 1].arrival_time);
@@ -682,19 +676,6 @@ void Ship::DrawIcon(int x_offsets[], int y_offsets[], float grow_factor) {
 void Ship::DrawTrajectories() const {
     Color color = GetColor();
     
-    /*if (plan_edit_index >= 0 
-        && IsIdValid(prepared_plans[plan_edit_index].arrival_planet)
-        && IsTrajectoryKnown(plan_edit_index)
-    ) {
-        const TransferPlan* last_tp = &prepared_plans[plan_edit_index];
-        OrbitPos last_pos = GetPlanet(last_tp->arrival_planet)->orbit.GetPosition(
-            last_tp->arrival_time
-        );
-        //Vector2 last_draw_pos = GetCamera()->GetScreenPos(last_pos.cartesian);
-        DrawIcon(last_pos.cartesian, GetShipType(), ColorAlpha(color, 0.5), Vector2Zero());
-    }*/
-    
-
     if ((GetIntelLevel() & intel_level::TRAJECTORY) == 0) {
         return;
     }
@@ -717,7 +698,11 @@ void Ship::DrawTrajectories() const {
         OrbitSegment tf_orbit = OrbitSegment(&plan->transfer_orbit[plan->primary_solution], to_departure, to_arrival);
         //RenderOrbit(&tf_orbit, i == plan_edit_index ? Palette::ui_main : GetColor());
         //OrbitSegment tf_orbit = OrbitSegment(&plan->transfer_orbit[plan->primary_solution]);
-        RenderOrbit(&tf_orbit, orbit_render_mode::Solid, color);
+        if (i == 0) {
+            RenderOrbit(&tf_orbit, orbit_render_mode::Solid, color);
+        } else if (mouse_hover || GetGlobalState()->focused_ship == id) {
+            RenderOrbit(&tf_orbit, orbit_render_mode::Solid, ColorBrightness(color, -0.5));
+        }
     }
 }
 
@@ -873,9 +858,9 @@ void Ship::AdvanceProductionQueue() {
         GetShips()->GetOnPlanet(&list, id, ship_selection_flags::ALL);
 
         DataNode ship_data;
-        char ship_name[SHIP_NAME_MAX_SIZE];
-        GetShips()->GetRandomShipName(sc, ship_name);
-        ship_data.Set("name", ship_name);
+        StringBuilder sb;
+        GetShips()->GetRandomShipName(product_id, &sb);
+        ship_data.Set("name", sb.c_str);
         ship_data.Set("class_id", sc->id);
         ship_data.SetI("allegiance", allegiance); 
         ship_data.Set("planet", planet->name.GetChar());
@@ -1098,7 +1083,7 @@ RID Ships::AddShip(const DataNode* data) {
         }
         ship->parent_obj = planet_id;
     }
-
+    
     ship->id = ship_entity;
     ship->Update();
         
@@ -1143,6 +1128,7 @@ int Ships::LoadShipClasses(const DataNode* data) {
             sc_data->GetArrayElemI("icon_index", 0, 31),
             sc_data->GetArrayElemI("icon_index", 1, 31));
         sc.module_config.Load(module_configurations, ship_id);
+        strcpy(sc.naming_convention, sc_data->Get("naming_convention", "cargo"));
 
         if (sc_data->HasChild("construction_requirements")) {
             sc_data->DeserializeBuffer("construction_requirements", sc.construction_requirements, ship_stats::names, ship_stats::MAX);
@@ -1236,16 +1222,17 @@ void Ships::DrawShipClassUI(RID uuid) const {
     }
 }
 
-void Ships::GetRandomShipName(const ShipClass* ship_class, char buffer[]) const {
+void Ships::GetRandomShipName(RID ship_class_id, StringBuilder* sb) const {
+    const ShipClass* ship_class = GetShipClassByRID(ship_class_id);
     const char* key = ship_class->naming_convention;
     int choice_domain_size = name_library.GetArrayLen(key);
     if (choice_domain_size == 0) {
         ERROR("No such naming convention '%s'", key)
-        strncpy(buffer, "[INVALID NAMING CONVENTION]", SHIP_NAME_MAX_SIZE);
+        sb->Add("[INVALID NAMING CONVENTION]");
         return;
     }
     int choice = rand() % choice_domain_size;
-    strcpy(buffer, name_library.GetArrayElem(key, choice));
+    sb->Add(name_library.GetArrayElem(key, choice));
 }
 
 void Ships::Clear() {

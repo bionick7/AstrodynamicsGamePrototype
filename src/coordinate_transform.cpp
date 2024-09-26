@@ -191,7 +191,7 @@ Vector2 GameCamera::GetScreenPos(DVector3 world_pos) const {
 }
 
 float GameCamera::MeasurePixelSize(Vector3 render_pos) const {
-    return Vector3Distance(rl_camera.position, render_pos) * tan(rl_camera.fovy/2.0) / GetScreenHeight();
+    return Vector3Distance(rl_camera.position, render_pos) * tan(rl_camera.fovy/2.0*DEG2RAD) / GetScreenHeight() * 2.0;
 }
 
 Matrix GameCamera::ViewMatrix() const {
