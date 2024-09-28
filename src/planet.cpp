@@ -6,7 +6,6 @@
 #include "ship_modules.hpp"
 #include "logging.hpp"
 #include "string_builder.hpp"
-#include "render_utils.hpp"
 #include "debug_drawing.hpp"
 
 Planet::Planet(PermaString p_name, double p_mu, double p_radius) {
@@ -292,6 +291,7 @@ void Planet::Update() {
             Conquer(1, true);
         }
     }
+    
     economy.Update();
 }
 

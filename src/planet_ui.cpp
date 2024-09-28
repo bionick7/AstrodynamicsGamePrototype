@@ -6,7 +6,6 @@
 #include "ship_modules.hpp"
 #include "logging.hpp"
 #include "string_builder.hpp"
-#include "render_utils.hpp"
 #include "debug_drawing.hpp"
 #include "debug_console.hpp"
 

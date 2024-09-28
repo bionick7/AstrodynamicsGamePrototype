@@ -184,8 +184,11 @@ void Text3D::Draw() const {
 void _DrawTrajectories() {
     // Draw planet trajectories
     for(int i=0; i < GetPlanets()->GetPlanetCount(); i++) {
-        OrbitSegment segment = OrbitSegment(&GetPlanetByIndex(i)->orbit);
-        RenderOrbit(&segment, orbit_render_mode::Gradient, GetPlanetByIndex(i)->GetColor());
+        const Planet* planet = GetPlanetByIndex(i);
+        GetRenderServer()->QueueConicDraw(ConicRenderInfo::FromOrbit(
+            &planet->orbit, GlobalGetNow(), orbit_render_mode::Gradient, planet->GetColor()));
+        GetRenderServer()->QueueSphereDraw(SphereRenderInfo::FromWorldPos(
+            planet->position.cartesian, planet->radius, planet->GetColor()));
     }
     
     // Draw ship trajectories
@@ -194,7 +197,7 @@ void _DrawTrajectories() {
         ship->DrawTrajectories();
     }
 
-    // Draw planet trajectories
+    // Draw transfer plan trajectories
     GetTransferPlanUI()->Draw3D();
 }
 
@@ -207,12 +210,7 @@ void _UpdateShipIcons() {
 
         // Update planet text3d
 
-        Text3D* text3d;
-        if (!IsIdValidTyped(planet->text3d, EntityType::TEXT3D)) {
-            planet->text3d = GetRenderServer()->text_labels_3d.Allocate(&text3d);
-        } else {
-            text3d = GetRenderServer()->text_labels_3d.Get(planet->text3d);
-        }
+        Text3D* text3d = GetRenderServer()->text_labels_3d.GetOrAllocate(&planet->text3d);
 
         float radius_px = GetCamera()->MeasurePixelSize(GameCamera::WorldToRender(text3d->world_pos));
         text3d->scale = DEFAULT_FONT_SIZE;
@@ -324,6 +322,18 @@ void UnloadRenderTextureWithDepth(RenderTexture2D target) {
     }
 }
 
+void RenderServer::QueueConicDraw(ConicRenderInfo conic_render_info) {
+    conic_queue.Append(conic_render_info);
+}
+
+void RenderServer::QueueSphereDraw(SphereRenderInfo sphere_render_info) {
+    if (sphere_render_info.radius == 0) {
+        // Don't draw degenerate spheres (situational optimization)
+        return;
+    }
+    sphere_queue.Append(sphere_render_info);
+}
+
 void RenderServer::OnScreenResize() {
     if (IsRenderTextureReady(render_targets[0])) {
         UnloadRenderTextureWithDepth(render_targets[0]);
@@ -359,20 +369,15 @@ void RenderServer::Draw() {
 
         //RenderWireframeMesh(test_mesh, MatrixIdentity(), Palette::bg, Palette::ui_main);
 
-        // True 3D
+        // True 3D - Planets
         BeginMode3D(GetCamera()->rl_camera);
             RenderSkyBox();
 
             // Saturn and rings are hardcoded for now
-            RenderPerfectSphere(DVector3::Zero(), GetPlanets()->GetParentNature()->radius, Palette::ui_main);
+            QueueSphereDraw(SphereRenderInfo::FromWorldPos(DVector3::Zero(), GetPlanets()->GetParentNature()->radius, Palette::ui_main));
             RenderRings(DVector3::Up(), 74.0e+6, 92.0e+6, Palette::ui_main);
             RenderRings(DVector3::Up(), 94.0e+6, 117.58e+6, Palette::ui_main);
             RenderRings(DVector3::Up(), 122.17e+6, 136.775e+6, Palette::ui_main);
-
-            for(int i=0; i < GetPlanets()->GetPlanetCount(); i++) {
-                const Planet* planet = GetPlanetByIndex(i);
-                RenderPerfectSphere(planet->position.cartesian, planet->radius, planet->GetColor());
-            }
 
             _DrawTrajectories();
             _UpdateShipIcons();
@@ -382,6 +387,19 @@ void RenderServer::Draw() {
             for (auto it = icons.GetIter(); it; it++) {
                 icons[it.GetId()]->Draw();
             }
+
+            // Draw queued objects (split it into sets of PRIMITIVE_BATCH_SIZE)
+            for (int i=0; i < conic_queue.Count(); i += PRIMITIVE_BATCH_SIZE) {
+                int count = MinInt(conic_queue.Count() - i, PRIMITIVE_BATCH_SIZE);
+                RenderOrbits(&conic_queue.buffer[i], count);
+            }
+            for (int i=0; i < sphere_queue.Count(); i += PRIMITIVE_BATCH_SIZE) {
+                int count = MinInt(sphere_queue.Count() - i, PRIMITIVE_BATCH_SIZE);
+                RenderPerfectSpheres(&sphere_queue.buffer[i], count);
+            }
+            conic_queue.Clear();
+            sphere_queue.Clear();
+
             EndShaderMode();
             DebugFlush3D();
         EndMode3D();
@@ -415,3 +433,4 @@ void RenderServer::Draw() {
     RenderDeferred(render_targets[0]);
     RenderDeferred(render_targets[1]);
 }
+ 

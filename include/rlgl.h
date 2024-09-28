@@ -707,6 +707,7 @@ RLAPI void rlDrawVertexArray(int offset, int count);    // Draw vertex array (cu
 // Custom additions
 RLAPI void rlDrawVertexPrimitiveArray(int primitive_type, int offset, int count);
 RLAPI void rlDrawVertexPrimitiveArrayElements(int primitive_type, int offset, int count, const void *buffer);
+RLAPI void rlSetUniformMatrixArray(int locIndex, Matrix* mat, int count);
 
 RLAPI void rlDrawVertexArrayElements(int offset, int count, const void *buffer); // Draw vertex array elements
 RLAPI void rlDrawVertexArrayInstanced(int offset, int count, int instances); // Draw vertex array (currently active vao) with instancing
@@ -3773,6 +3774,13 @@ void rlDrawVertexPrimitiveArrayElements(int primitive_type, int offset, int coun
     if (offset > 0) bufferPtr += offset;
 
     glDrawElements(primitive_type, count, GL_UNSIGNED_SHORT, (const unsigned short *)bufferPtr);
+}
+
+void rlSetUniformMatrixArray(int locIndex, Matrix* mat, int count) 
+{
+#if defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
+    glUniformMatrix4fv(locIndex, count, false, (float*)(void*)mat);
+#endif
 }
 
 

@@ -49,6 +49,8 @@ struct Planet {
     RID id;
 
     RID text3d;  // updated externally
+    RID orbit_render_conic;
+    RID sphere;
 
     ShipModuleSlot current_slot;
 

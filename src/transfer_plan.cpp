@@ -7,7 +7,6 @@
 #include "logging.hpp"
 #include "constants.hpp"
 #include "string_builder.hpp"
-#include "render_utils.hpp"
 #include "debug_console.hpp"
 
 double _Lambert(double x, double K, int solution) {
@@ -603,8 +602,9 @@ void _DrawTransferOrbit(const TransferPlan* plan, int solution, bool is_secondar
     OrbitPos pos2 = plan->transfer_orbit[solution].GetPosition(plan->arrival_time);
     _DrawSweep(&from->orbit, t0, plan->departure_time, orbit_color);
     _DrawSweep(&to->orbit, t0, plan->arrival_time, orbit_color);
+
     OrbitSegment segment = OrbitSegment(&plan->transfer_orbit[solution], pos1, pos2);
-    RenderOrbit(&segment, orbit_render_mode::Solid, orbit_color);
+    GetRenderServer()->QueueConicDraw(ConicRenderInfo::FromOrbitSegment(&segment, orbit_render_mode::Solid, orbit_color));
 }
 
 timemath::Time _DrawHandle(

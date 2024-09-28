@@ -76,6 +76,9 @@ struct TransferPlanUI {
 
     timemath::Time time_bounds[2];
 
+    // 3d
+    RID orbit_renders[2];
+
     TransferPlanUI();
     void Reset();
     void Abort();

@@ -150,6 +150,15 @@ struct IDAllocatorList {
     inline T* Get(Iterator iter) const { return Get(iter.GetId()); }
     inline T* operator[] (Iterator iter) const { return Get(iter.GetId()); }
 
+    T* GetOrAllocate(RID* id) {
+        if (ContainsID(*id)) {
+            return &array[IdGetIndex(*id)]; 
+        }
+        T* res;
+        *id = Allocate(&res);
+        return res;
+    }
+
     uint32_t Count() const { return alloc_count; }
 
     void Clear() {

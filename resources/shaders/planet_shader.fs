@@ -1,24 +1,22 @@
 #version 330
 
-in vec2 uv;
-in vec4 world_pos_4;
+smooth in vec2 uv;
+smooth in vec4 world_pos_4;
+flat in int planet_index;
 
 out vec4 finalColor;
 
 uniform float edge;
 uniform float space;
-uniform float radius;
 uniform float screenWidth;
-
 uniform vec3 cameraPos;  // in world_pos
-uniform vec3 centerPos;
-uniform vec3 normal;
-uniform vec4 rimColor;
 uniform vec4 fillColor;
-
-uniform mat4 transform;
 uniform mat4 mvp;
 
+uniform float radius[100];
+uniform vec3 centerPos[100];
+uniform vec3 normal[100];
+uniform vec4 rimColor[100];
 
 float trace(vec3 ray_origin, vec3 ray_dir, float r) {
 	float b = 2.0 * dot(ray_dir, ray_origin);
@@ -34,16 +32,15 @@ float trace(vec3 ray_origin, vec3 ray_dir, float r) {
 
 void main() {
 	vec3 world_pos = world_pos_4.xyz;
-	//vec3 world_pos = (transform * vec4(uv, 0, 1)).xyz;
 	vec3 cam_pos = world_pos - cameraPos;
 	float cam_dist = length(cam_pos);
 	vec3 camera_ray_dir = cam_pos / cam_dist;
-	float horizon_angle = acos(dot(camera_ray_dir, normal)*.999) - 3.141592 / 2.0;  // both normalized
-	float duv_dclip = cam_dist / (radius  * sin(horizon_angle) * sin(horizon_angle));
-	float delta = duv_dclip * 1 / screenWidth;
+	float horizon_angle = acos(dot(camera_ray_dir, normal[planet_index])*.999) - 3.141592 / 2.0;  // both normalized
+	float duv_dclip = cam_dist / (radius[planet_index]  * sin(horizon_angle) * sin(horizon_angle));
+	float delta = duv_dclip * 1.0 / screenWidth;
 
 	// raytracing
-	float l = trace(cameraPos - centerPos, camera_ray_dir, radius);
+	float l = trace(cameraPos - centerPos[planet_index], camera_ray_dir, radius[planet_index]);
 	vec3 true_world_pos = cameraPos + camera_ray_dir * l;
 
 	// geometry to figure out radius
@@ -71,7 +68,7 @@ void main() {
     float gradient = pow(r / (draw_max*draw_max), 10.0) * 0.3;
     float mask = 1.0 - (1.0 - mask_outer*mask_inner) * (1.0 - gradient);
 
-	finalColor.rgb = mix(fillColor.rgb, rimColor.rgb, mask);
+	finalColor.rgb = mix(fillColor.rgb, rimColor[planet_index].rgb, mask);
 	finalColor.a = smoothstep(draw_max*draw_max + delta*feathering, draw_max*draw_max, r);
 	
 	//finalColor.rgba = vec4(0,0,0,1);
@@ -79,6 +76,8 @@ void main() {
 	//finalColor.rg = uv;
 
 	vec4 p_clip = mvp * vec4(world_pos, 1.0);
+
+	//finalColor = vec4(radius[planet_index] * 0.1,0,0,1);
 
 	float ndc_depth = p_clip.z / p_clip.w;
 	gl_FragDepth = (gl_DepthRange.diff * ndc_depth + gl_DepthRange.far + gl_DepthRange.near) / 2.0;

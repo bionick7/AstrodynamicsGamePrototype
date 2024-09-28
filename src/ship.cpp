@@ -8,8 +8,6 @@
 #include "debug_drawing.hpp"
 #include "combat.hpp"
 
-#include "render_utils.hpp"
-
 double ShipClass::GetPayloadCapacityMass(double dv, int drop_tanks) const {
     //          dv_n = v_e * ln((max_cap + oem + extra_fuel * n) / (max_cap + oem + extra_fuel * (n - 1)))
     //          dv_0 = v_e * ln((max_cap + oem) / (x + eom))
@@ -134,7 +132,6 @@ void Ship::Serialize(DataNode *data) const {
     }
     transferplan_cycle.Serialize(data);
 }
-
 
 void Ship::Deserialize(const DataNode* data) {
     strcpy(name, data->Get("name", "UNNAMED"));
@@ -642,14 +639,7 @@ void Ship::DrawIcon(int x_offsets[], int y_offsets[], float grow_factor) {
 
     draw_pos = Vector2Add(GetCamera()->GetScreenPos(position.cartesian), draw_offset);
     
-    if (!IsIdValidTyped(icon3d, EntityType::ICON3D)) {
-        icon3d = GetRenderServer()->icons.Allocate();
-    }
-    if (!IsIdValidTyped(text3d, EntityType::TEXT3D)) {
-        text3d = GetRenderServer()->text_labels_3d.Allocate();
-    }
-
-    Icon3D* icon_inst = GetRenderServer()->icons.Get(icon3d);
+    Icon3D* icon_inst = GetRenderServer()->icons.GetOrAllocate(&icon3d);
     icon_inst->scale = icon_size;
     icon_inst->offset = draw_offset;
     icon_inst->atlas_pos = AtlasPos(type, 28);
@@ -662,7 +652,7 @@ void Ship::DrawIcon(int x_offsets[], int y_offsets[], float grow_factor) {
         DrawLine3D(from, to, GetColor());
     }
     
-    Text3D* text_inst = GetRenderServer()->text_labels_3d.Get(text3d);
+    Text3D* text_inst = GetRenderServer()->text_labels_3d.GetOrAllocate(&text3d);
     text_inst->scale = DEFAULT_FONT_SIZE;
     text_inst->offset = draw_offset;
     if (type < 2) {
@@ -706,11 +696,14 @@ void Ship::DrawTrajectories() const {
         OrbitSegment tf_orbit = OrbitSegment(&plan->transfer_orbit[plan->primary_solution], to_departure, to_arrival);
         //RenderOrbit(&tf_orbit, i == plan_edit_index ? Palette::ui_main : GetColor());
         //OrbitSegment tf_orbit = OrbitSegment(&plan->transfer_orbit[plan->primary_solution]);
+
+        ConicRenderInfo cri;
         if (i == 0) {
-            RenderOrbit(&tf_orbit, orbit_render_mode::Solid, color);
+            cri = ConicRenderInfo::FromOrbitSegment(&tf_orbit, orbit_render_mode::Solid, color);
         } else if (mouse_hover || GetGlobalState()->focused_ship == id) {
-            RenderOrbit(&tf_orbit, orbit_render_mode::Solid, ColorBrightness(color, -0.5));
+            cri = ConicRenderInfo::FromOrbitSegment(&tf_orbit, orbit_render_mode::Solid, ColorBrightness(color, -0.5));
         }
+        GetRenderServer()->QueueConicDraw(cri);
     }
 }
 

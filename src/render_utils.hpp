@@ -6,16 +6,9 @@
 #include "basic.hpp"
 #include "assets.hpp"
 
-struct OrbitSegment;
-struct Text3D;
+void ColorToFloatBuffer(float buffer[], Color color);
 
-namespace orbit_render_mode {
-    enum T {
-        Solid = 0,
-        Gradient = 1,
-        Dashed = 2
-    };
-}
+void Vector3ToFloatBuffer(float buffer[], Vector3 vec);
 
 bool ShaderNeedReload(Shader shader);
 void DrawTextureSDF(Texture2D texture, Rectangle source, Rectangle dest, 
@@ -29,8 +22,6 @@ void EndRenderInUILayer();
 void RenderWireframeMesh(WireframeMesh mesh, Matrix transform, Color background, Color foreground);
 void RenderWireframeMesh2D(WireframeMesh mesh, Rectangle box, Color foreground, uint8_t z_layer);
 void RenderWireframeMesh2DEx(WireframeMesh mesh, Vector2 mid_pos, float scale, Color background, Color foreground, uint8_t z_layer);
-void RenderOrbit(const OrbitSegment* orbit, orbit_render_mode::T render_mode, Color color);
-void RenderPerfectSphere(DVector3 pos, double radius, Color color);
 void RenderRings(DVector3 normal, double min_rad, double max_rad, Color color);
 void RenderSkyBox();
 void RenderDeferred(RenderTexture render_target);
