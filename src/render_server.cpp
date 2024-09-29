@@ -339,6 +339,35 @@ void RenderServer::OnScreenResize() {
     }
 }
 
+void _BeginCameraDraw(Camera3D camera, float nearclip, float farclip) {
+    // Copied Raylib func to include nearclip and farclip values customizable at runtime
+
+    rlDrawRenderBatchActive();
+    rlMatrixMode(RL_PROJECTION);
+    rlPushMatrix();
+    rlLoadIdentity();
+
+    float aspect = GetScreenWidth() / (float) GetScreenHeight();
+
+    // NOTE: zNear and zFar values are important when computing depth buffer values
+    if (camera.projection == CAMERA_PERSPECTIVE) {
+        // Setup perspective projection
+        double top = nearclip*tan(camera.fovy*0.5*DEG2RAD);
+        double right = top*aspect;
+
+        rlFrustum(-right, right, -top, top, nearclip, farclip);
+    }
+
+    rlMatrixMode(RL_MODELVIEW);
+    rlLoadIdentity();
+
+    // Setup Camera view
+    Matrix matView = MatrixLookAt(camera.position, camera.target, camera.up);
+    rlMultMatrixf(MatrixToFloat(matView));      // Multiply modelview matrix by view matrix (camera)
+
+    rlEnableDepthTest();
+}
+
 void RenderServer::Draw() {
     animation_time += GetFrameTime();
     if (render_targets[0].texture.width != GetScreenWidth() || render_targets[0].texture.height != GetScreenHeight()) {
@@ -367,7 +396,7 @@ void RenderServer::Draw() {
         //RenderWireframeMesh(test_mesh, MatrixIdentity(), Palette::bg, Palette::ui_main);
 
         // True 3D - Planets
-        BeginMode3D(GetCamera()->macro_camera);
+        _BeginCameraDraw(GetCamera()->macro_camera, GetCamera()->MacroNearClipPlane(), GetCamera()->MacroFarClipPlane());
             RenderSkyBox();
 
             // Saturn and rings are hardcoded for now
@@ -386,16 +415,16 @@ void RenderServer::Draw() {
             }
 
             // Draw queued objects (split it into sets of PRIMITIVE_BATCH_SIZE)
-            for (int i=0; i < conic_queue.Count(); i += PRIMITIVE_BATCH_SIZE) {
-                int count = MinInt(conic_queue.Count() - i, PRIMITIVE_BATCH_SIZE);
-                RenderOrbits(&conic_queue.buffer[i], count);
-            }
             for (int i=0; i < sphere_queue.Count(); i += PRIMITIVE_BATCH_SIZE) {
                 int count = MinInt(sphere_queue.Count() - i, PRIMITIVE_BATCH_SIZE);
                 RenderPerfectSpheres(&sphere_queue.buffer[i], count);
             }
-            conic_queue.Clear();
+            for (int i=0; i < conic_queue.Count(); i += PRIMITIVE_BATCH_SIZE) {
+                int count = MinInt(conic_queue.Count() - i, PRIMITIVE_BATCH_SIZE);
+                RenderOrbits(&conic_queue.buffer[i], count);
+            }
             sphere_queue.Clear();
+            conic_queue.Clear();
 
             EndShaderMode();
             DebugFlush3D();
@@ -416,7 +445,7 @@ void RenderServer::Draw() {
     BeginTextureMode(render_targets[render_layers::SHIPS]);
         ClearBackground(ColorAlpha(Palette::bg, 0));
 
-        BeginMode3D(GetCamera()->micro_camera);
+        _BeginCameraDraw(GetCamera()->micro_camera, GetCamera()->MicroNearClipPlane(), GetCamera()->MicroFarClipPlane());
         RenderWireframeMesh(assets::GetWireframe("resources/meshes/test/ship_contours.obj"), MatrixIdentity(), Palette::bg, Palette::ui_main);
         EndMode3D();
 

@@ -31,6 +31,7 @@ vec3 get_direction(float ecc, vec2 sc) {
 	return vec3(d.x, 0, d.y);
 }
 
+const float STRIP_THICKNESS = 3.0;  // pixels
 const float EPSILON = 0.01;
 
 void main() {
@@ -47,7 +48,7 @@ void main() {
 	vec2 direction_clip = (direction_clip_delta.xy / direction_clip_delta.w - clip_pos.xy / clip_pos.w) / EPSILON;
 
 	vec2 orth_direction_clip = normalize(direction_clip).yx * vec2(1,-1);
-	vec2 ndc_offset = 2.0f / window_size;
+	vec2 ndc_offset = STRIP_THICKNESS / window_size;
 	clip_pos.xy += linear_input_buffer.y * clip_pos.w * ndc_offset * orth_direction_clip;
 	lateral_offset = linear_input_buffer.y;
 	gl_Position = clip_pos;

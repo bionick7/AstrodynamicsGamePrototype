@@ -43,10 +43,18 @@ struct GameCamera {
     static float WorldToMicro(double world) { return (float) (world / micro_scale); }
 
     RID focus_object;
+
     DVector3 world_focus;
+    Vector3 view_direction;
+    double macro_view_distance;
 
     Camera3D macro_camera;
     Camera3D micro_camera;
+
+    double MacroNearClipPlane() const;
+    double MacroFarClipPlane() const;
+    double MicroNearClipPlane() const;
+    double MicroFarClipPlane() const;
 
     void Make();
     
