@@ -604,7 +604,8 @@ void _DrawTransferOrbit(const TransferPlan* plan, int solution, bool is_secondar
     _DrawSweep(&to->orbit, t0, plan->arrival_time, orbit_color);
 
     OrbitSegment segment = OrbitSegment(&plan->transfer_orbit[solution], pos1, pos2);
-    GetRenderServer()->QueueConicDraw(ConicRenderInfo::FromOrbitSegment(&segment, orbit_render_mode::Solid, orbit_color));
+    GetRenderServer()->QueueConicDraw(ConicRenderInfo::FromOrbitSegment(
+        &segment, GlobalGetNow(), DVector3::Zero(), orbit_render_mode::Solid, orbit_color));
 }
 
 timemath::Time _DrawHandle(

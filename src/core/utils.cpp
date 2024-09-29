@@ -1,7 +1,6 @@
 #include "utils.hpp"
 #include <random>
 
-
 int MinInt(int a, int b) {
     return a < b ? a : b;
 }
@@ -112,21 +111,6 @@ bool CheckEnclosingRecs(Rectangle outside, Rectangle inside) {
     ;
 }
 
-Matrix MatrixFromColumns(Vector3 col_x, Vector3 col_y, Vector3 col_z) {
-    Matrix m = {0};
-    m.m0  = col_x.x;
-    m.m1  = col_x.y;
-    m.m2  = col_x.z;
-    m.m4  = col_y.x;
-    m.m5  = col_y.y;
-    m.m6  = col_y.z;
-    m.m8  = col_z.x;
-    m.m9  = col_z.y;
-    m.m10 = col_z.z;
-    m.m15 = 1.0f;
-    return m;
-}
-
 Matrix MatrixFromColumns(Vector3 col_x, Vector3 col_y, Vector3 col_z, Vector3 origin) {
     Matrix m = {0};
     m.m0  = col_x.x;
@@ -145,18 +129,36 @@ Matrix MatrixFromColumns(Vector3 col_x, Vector3 col_y, Vector3 col_z, Vector3 or
     return m;
 }
 
+Matrix MatrixFromColumns(Vector3 col_x, Vector3 col_y, Vector3 col_z) {
+    return MatrixFromColumns(col_x, col_y, col_z, Vector3Zero());
+}
+
 static std::mt19937_64 r_generator = std::mt19937_64(std::random_device{}());
 
-void SetRandomSeed(uint_fast64_t seed) {
+void randomgen::SetRandomSeed(uint_fast64_t seed) {
     r_generator.seed(seed);
 }
 
-double GetRandomUniform(double from, double to) {
+double randomgen::GetRandomUniform(double from, double to) {
     auto uniform = std::uniform_real_distribution(from, to);
     return uniform(r_generator);
 }
 
-double GetRandomGaussian(double mean, double std) {
+double randomgen::GetRandomGaussian(double mean, double std) {
     auto normal = std::normal_distribution(mean, std);
     return normal(r_generator);
+}
+
+DVector3 randomgen::RandomOnSphere() {
+    // A = 2pi cos(x) dx
+    // A_tot = 4pi
+    // PDF = cos(x)/2
+    // CDF = (sin(x) + 1)/2
+    double azimuth = GetRandomUniform(0, 2*PI);
+    double elevation = asin(2 * GetRandomUniform(0, 1) - 1);
+    return DVector3(
+        cos(azimuth) * cos(elevation),
+        sin(azimuth) * cos(elevation),
+        sin(elevation)
+    );
 }

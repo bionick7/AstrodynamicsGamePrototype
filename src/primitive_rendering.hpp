@@ -28,9 +28,9 @@ struct ConicRenderInfo {
     orbit_render_mode::T render_mode;
     Color color;
 
-    static ConicRenderInfo FromOrbitSegment(const OrbitSegment* segment, 
+    static ConicRenderInfo FromOrbitSegment(const OrbitSegment* segment, timemath::Time time, DVector3 focus,
                                            orbit_render_mode::T render_mode, Color color);
-    static ConicRenderInfo FromOrbit(const Orbit *orbit, timemath::Time time,
+    static ConicRenderInfo FromOrbit(const Orbit *orbit, timemath::Time time, DVector3 focus,
                                      orbit_render_mode::T render_mode, Color color);
     static ConicRenderInfo FromCircle(DVector3 world_position, Matrix orientation, double radius, 
                                       orbit_render_mode::T render_mode, Color color);

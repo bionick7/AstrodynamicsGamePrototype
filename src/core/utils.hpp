@@ -2,6 +2,7 @@
 #define UTILS_H
 
 #include "basic.hpp"
+#include "dvector3.hpp"
 
 int MinInt(int a, int b);
 int MaxInt(int a, int b);
@@ -24,8 +25,11 @@ bool CheckEnclosingRecs(Rectangle outside, Rectangle inside);
 Matrix MatrixFromColumns(Vector3 col_x, Vector3 col_y, Vector3 col_z);
 Matrix MatrixFromColumns(Vector3 col_x, Vector3 col_y, Vector3 col_z, Vector3 origin);
 
-void SetRandomSeed(uint_fast64_t seed);
-double GetRandomUniform(double from, double to);
-double GetRandomGaussian(double mean, double std);
+namespace randomgen {
+    void SetRandomSeed(uint_fast64_t seed);
+    double GetRandomUniform(double from, double to);
+    double GetRandomGaussian(double mean, double std);
+    DVector3 RandomOnSphere();
+}
 
 #endif  // UTILS_H

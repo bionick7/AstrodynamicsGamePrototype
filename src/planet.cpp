@@ -55,11 +55,14 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
     if (!IsIdValid(index)) {
         return;
     }
-    //*this = *((Planet*) (void*) &find->second);
+    // Cursed way to do it
+    //*this = *((Planet*) (void*) planets->GetPlanetNature(index));
+    
     const PlanetNature* nature = planets->GetPlanetNature(index);
     mu = nature->mu;
     radius = nature->radius;
     has_atmosphere = nature->has_atmosphere;
+    rotation_period = nature->rotation_period;
     orbit = nature->orbit;
     economy.trading_accessible = strcmp(data->Get("trading_accessible", economy.trading_accessible ? "y" : "n", true), "y") == 0;
 
@@ -117,6 +120,10 @@ void Planet::_OnClicked() {
 double Planet::ScreenRadius() const {
     return radius / GetCamera()->macro_scale;
     //return fmax(radius / GetCamera()->macro_scale, 4);
+}
+
+double Planet::GetSOI() const {
+    return orbit.sma * pow(mu / GetPlanets()->parent.mu, 0.4);
 }
 
 double Planet::GetDVFromExcessVelocity(DVector3 vel) const {
@@ -274,6 +281,123 @@ double Planet::GetMousePixelDistance() const {
     return screen_distance;
 }
 
+void Planet::GetRandomOrbit(int index, Orbit *orbit) const {
+    randomgen::SetRandomSeed(index + (IdGetIndex(id) << 16));
+    double soi = GetSOI();
+    double min_radius = radius * 1.05;
+    double max_radius = soi * 0.8;
+
+    enum {
+        LOW,
+        MEDIUM,
+        HIGH,
+        STATIONARY,
+        HALF_STATIONARY,
+    } orbit_altitude_cat;
+    
+    enum {
+        EQUATORIAL,
+        POLAR,
+        ANY,
+    } orbit_orientation_cat;
+
+    enum {
+        CIRCULAR,
+        ELLIPTIC,
+    } orbit_ecc_cat = CIRCULAR;
+
+    // rotation_period = 2 PI sqrt(sma³ / mu);
+    // sma = cbrt((rotation_period / 2PI)² * mu)
+    const double GEOSTAT_ALTITUDE_FACTOR = 0.6299605249;  // (1/2) ^ (2/3)
+    double geostat_radius = cbrt(rotation_period*rotation_period / (2*PI*PI) * mu);
+    double semi_geostat_radius = GEOSTAT_ALTITUDE_FACTOR * geostat_radius;
+
+    if (index < 2) {
+        // Put the 'main' stations on index 0,1 which are low equatorial orbits
+        orbit_altitude_cat = LOW;
+        orbit_orientation_cat = EQUATORIAL;
+        orbit_ecc_cat = CIRCULAR;
+    } else {
+        double selector_alt = randomgen::GetRandomUniform(0, 1);
+        if (selector_alt < 0.4) {
+            orbit_altitude_cat = LOW;
+        } else if (selector_alt < 0.6) {
+            orbit_altitude_cat = LOW;
+        } else {
+            orbit_altitude_cat = HIGH;
+        }
+        if (min_radius < geostat_radius && geostat_radius < max_radius && 0.8 < selector_alt) {
+            orbit_altitude_cat = STATIONARY;
+        }
+        if (min_radius < semi_geostat_radius && semi_geostat_radius < max_radius && 0.9 < selector_alt) {
+            orbit_altitude_cat = HALF_STATIONARY;
+        }
+
+        double selector_orientation = randomgen::GetRandomUniform(0, 1);
+        if (selector_alt < 0.2 || orbit_altitude_cat == STATIONARY || orbit_altitude_cat == HALF_STATIONARY) {
+            orbit_orientation_cat = EQUATORIAL;
+        } else if (selector_alt < 0.4) {
+            orbit_orientation_cat = POLAR;
+        } else {
+            orbit_orientation_cat = ANY;
+        }
+        if (0.9 < selector_alt) {
+            orbit_ecc_cat = ELLIPTIC;
+        }
+    }
+
+    switch (orbit_altitude_cat) {
+    case LOW:
+        do orbit->sma = min_radius + fabs(randomgen::GetRandomGaussian(0, min_radius * 0.66));
+        while (orbit->sma >= max_radius);
+        break;
+    case MEDIUM:
+        do orbit->sma = randomgen::GetRandomGaussian(min_radius * 3, min_radius * 2);
+        while (orbit->sma >= max_radius || orbit->sma < min_radius);
+        break;
+    case HIGH:
+        do orbit->sma = randomgen::GetRandomUniform(min_radius * 3, max_radius);
+        while (orbit->sma >= max_radius || orbit->sma < min_radius);
+        break;
+    case STATIONARY:
+        do orbit->sma = randomgen::GetRandomGaussian(geostat_radius, 1000);
+        while (orbit->sma >= max_radius || orbit->sma < min_radius);
+        break;
+    case HALF_STATIONARY:
+        do orbit->sma = randomgen::GetRandomGaussian(semi_geostat_radius, 1000);
+        while (orbit->sma >= max_radius || orbit->sma < min_radius);
+        break;
+    }
+    
+    switch (orbit_orientation_cat) {
+    case EQUATORIAL:
+        orbit->normal = { 0.0f, 1.0f, 0.0f }; break;
+    case POLAR: {
+        double longuitude = randomgen::GetRandomUniform(0, 2*PI);
+        orbit->normal = DVector3(cos(longuitude), 0, sin(longuitude)); 
+        break;}
+    case ANY:
+        orbit->normal = randomgen::RandomOnSphere(); break;
+    }
+    
+    switch (orbit_ecc_cat) {
+    case CIRCULAR:
+        orbit->ecc = fabs(randomgen::GetRandomUniform(0, 0.1)); break;
+    case ELLIPTIC:{
+        // periapsis: p / (1 + e), apoapsis: p / (1 - e)
+        // e < p / min_r - 1; e < 1 - p / max_r
+        double p = orbit->sma * (1 - orbit->ecc*orbit->ecc);
+        double max_ecc = fmin(p / min_radius - 1, 1 - p / max_radius);
+        orbit->ecc = fabs(randomgen::GetRandomUniform(0, max_ecc)); 
+        break;}
+    }
+    
+    orbit->mu = mu;
+    orbit->periapsis_dir = orbit->normal.AnyOrthogonalDirection();
+    orbit->periapsis_dir.Rotated(orbit->normal, randomgen::GetRandomUniform(0, 2*PI));
+    orbit->epoch = timemath::Time(randomgen::GetRandomUniform(0, orbit->GetPeriod().Seconds()));
+}
+
 void Planet::Update() {
     timemath::Time now = GlobalGetNow();
     position = orbit.GetPosition(now);
@@ -297,11 +421,46 @@ void Planet::Update() {
 
 void Planet::Draw3D() const {
     GetRenderServer()->QueueConicDraw(ConicRenderInfo::FromOrbit(
-        &orbit, GlobalGetNow(), orbit_render_mode::Gradient, GetColor()));
+        &orbit, GlobalGetNow(), DVector3::Zero(), orbit_render_mode::Gradient, GetColor()));
     GetRenderServer()->QueueSphereDraw(SphereRenderInfo::FromWorldPos(
         position.cartesian, radius, GetColor()));
 
-    // Draw surrounding orbits (visual)
+    if (radius > 0 && mu > 0 && GetGlobalState()->focused_planet == id) {
+        IDList ship_list;
+        GetShips()->GetOnPlanet(&ship_list, id, ship_selection_flags::ALL);
+
+        // Draw surrounding orbits (visual)
+        Orbit ship_orbit;
+        for(int i=0; i < 20; i++) {
+            GetRandomOrbit(i, &ship_orbit);
+            Color color = Palette::ui_alt;
+            if (i == 0){
+                color = GetShip(ship_list.Get(i))->GetColor();
+            }
+            GetRenderServer()->QueueConicDraw(ConicRenderInfo::FromOrbit(
+                &ship_orbit, GlobalGetNow(), position.cartesian, orbit_render_mode::Solid, color));
+        }
+        
+        // Show SOI
+        GetRenderServer()->QueueConicDraw(ConicRenderInfo::FromCircle(
+            position.cartesian, MatrixIdentity(), GetSOI(), orbit_render_mode::Solid, Palette::ui_main));
+    }
+
+    RID preview_ship = GetInvalidId();
+    if (IsIdValidTyped(GetGlobalState()->focused_ship, EntityType::SHIP) && GetShip(GetGlobalState()->focused_ship)->GetParentPlanet() == id) {
+        preview_ship = GetGlobalState()->focused_ship;
+    }
+    if (IsIdValidTyped(GetGlobalState()->hover, EntityType::SHIP) && GetShip(GetGlobalState()->hover)->GetParentPlanet() == id) {
+        preview_ship = GetGlobalState()->hover;
+    }
+    if (IsIdValid(preview_ship)) {
+        Orbit ship_orbit;
+        int index = 0;
+        GetRandomOrbit(index, &ship_orbit);
+        Color color = GetShip(preview_ship)->GetColor();
+        GetRenderServer()->QueueConicDraw(ConicRenderInfo::FromOrbit(
+            &ship_orbit, GlobalGetNow(), position.cartesian, orbit_render_mode::Solid, color));
+    }
 }
 
 Planets::Planets() {
@@ -390,7 +549,8 @@ int Planets::LoadEphemeris(const DataNode* data) {
             parent.mu,
             epoch
         );
-        nature->has_atmosphere = strcmp(planet_data->Get("has_atmosphere", "n", true), "y") == 0;
+        nature->has_atmosphere = strcmp(planet_data->Get("has_atmosphere", "n", true), "y") == 0;;
+        nature->rotation_period = planet_data->GetF("rotation_period", 0) * 3600;
     }
     return planet_count;
 }
@@ -439,3 +599,4 @@ double PlanetsMinDV(RID planet_a, RID planet_b, bool aerobrake) {
 }
 
 int LoadEphemeris(const DataNode* data) { return GetPlanets()->LoadEphemeris(data); }
+

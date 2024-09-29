@@ -15,6 +15,7 @@ struct PlanetNature {
     PermaString name;
     double mu;
     double radius;
+    double rotation_period;
     bool has_atmosphere;
     Orbit orbit;
 };
@@ -23,6 +24,7 @@ struct Planet {
     PermaString name;
     double mu;
     double radius;
+    double rotation_period;
     bool has_atmosphere;
     Orbit orbit;
 
@@ -61,6 +63,7 @@ struct Planet {
 
     void _OnClicked();
     double ScreenRadius() const;
+    double GetSOI() const;
     double GetDVFromExcessVelocity(DVector3 vel) const;
     double GetDVFromExcessVelocity(double vel) const;
     double GetDVFromExcessVelocityPro(double vel, double parking_orbit, bool aerobreaking) const;
@@ -76,6 +79,7 @@ struct Planet {
     //ProductionOrder MakeProductionOrder(RID id) const;
 
     double GetMousePixelDistance() const;
+    void GetRandomOrbit(int index, Orbit* orbit) const;
     void Update();
     //void AdvanceShipProductionQueue();
     //void AdvanceModuleProductionQueue();

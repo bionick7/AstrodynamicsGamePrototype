@@ -699,9 +699,9 @@ void Ship::DrawTrajectories() const {
 
         ConicRenderInfo cri;
         if (i == 0) {
-            cri = ConicRenderInfo::FromOrbitSegment(&tf_orbit, orbit_render_mode::Solid, color);
+            cri = ConicRenderInfo::FromOrbitSegment(&tf_orbit, GlobalGetNow(), DVector3::Zero(), orbit_render_mode::Solid, color);
         } else if (mouse_hover || GetGlobalState()->focused_ship == id) {
-            cri = ConicRenderInfo::FromOrbitSegment(&tf_orbit, orbit_render_mode::Solid, ColorBrightness(color, -0.5));
+            cri = ConicRenderInfo::FromOrbitSegment(&tf_orbit, GlobalGetNow(), DVector3::Zero(), orbit_render_mode::Solid, ColorBrightness(color, -0.5));
         }
         GetRenderServer()->QueueConicDraw(cri);
     }

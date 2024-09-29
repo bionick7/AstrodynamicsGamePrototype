@@ -7,26 +7,25 @@
 
 #include "rlgl.h"
 
-#define ORBIT_RESOLUTION 64
-#define ORBIT_BUFFER_SIZE ORBIT_RESOLUTION * 6 * 2
+#define ORBIT_RESOLUTION 128
+#define ORBIT_POINT_COUNT ORBIT_RESOLUTION * 6
+#define ORBIT_BUFFER_SIZE ORBIT_POINT_COUNT * 2
 
 
-ConicRenderInfo ConicRenderInfo::FromOrbitSegment(const OrbitSegment *segment, 
+ConicRenderInfo ConicRenderInfo::FromOrbitSegment(const OrbitSegment *segment, timemath::Time time, DVector3 focus,
                                                   orbit_render_mode::T render_mode, Color color) {
     ConicRenderInfo res;
 
     const Orbit* orbit = segment->orbit;
 
-    res.center = Vector3Zero();
+    res.center = GameCamera::WorldToMacro(focus);
     res.semi_latus_rectum = (float) (orbit->sma * (1 - orbit->ecc*orbit->ecc) / GameCamera::macro_scale);
     res.eccentricity = (float) orbit->ecc;
     Vector3 mat_x = (Vector3) orbit->periapsis_dir;
     Vector3 mat_y = (Vector3) orbit->normal;
     Vector3 mat_z = Vector3CrossProduct(mat_y, mat_x);
     res.orientation = MatrixFromColumns(mat_x, mat_y, mat_z);
-    res.anomaly = orbit->GetPosition(GlobalGetNow()).θ;
-
-    float current_focal_anomaly = orbit->GetPosition(GlobalGetNow()).θ;
+    res.anomaly = orbit->GetPosition(time).θ;
 
     if (segment->is_full_circle) {
         res.focal_bound = 0;
@@ -45,12 +44,12 @@ ConicRenderInfo ConicRenderInfo::FromOrbitSegment(const OrbitSegment *segment,
     return res;
 }
 
-ConicRenderInfo ConicRenderInfo::FromOrbit(const Orbit *orbit, timemath::Time time,
+ConicRenderInfo ConicRenderInfo::FromOrbit(const Orbit *orbit, timemath::Time time, DVector3 focus,
                                            orbit_render_mode::T render_mode, Color color) {
     ConicRenderInfo res;
 
-    res.center = Vector3Zero();
-    res.semi_latus_rectum = (float) (orbit->sma * (1 - orbit->ecc*orbit->ecc) / GameCamera::macro_scale);
+    res.center = GameCamera::WorldToMacro(focus);
+    res.semi_latus_rectum = GameCamera::WorldToMacro(orbit->sma * (1 - orbit->ecc*orbit->ecc));
     res.eccentricity = (float) orbit->ecc;
     Vector3 mat_x = (Vector3) orbit->periapsis_dir;
     Vector3 mat_y = (Vector3) orbit->normal;
@@ -101,16 +100,6 @@ namespace orbit_render_buffers {
 
     int buffer_size = 0;
 
-    float* semi_latus_recta = NULL;
-    float* eccentricities = NULL;
-    float* current_anomalies = NULL;
-    float* focal_bounds_start = NULL;
-    float* focal_ranges = NULL;
-    float* colors = NULL;
-    Vector3* offsets = NULL;
-    int* render_modes = NULL;
-    Matrix* mvps = NULL;
-
     void ReloadBuffer(int orbits_count) {
         if (orbits_count <= buffer_size) {
             // Not expected to unload / reload
@@ -120,16 +109,6 @@ namespace orbit_render_buffers {
             // Not the first time, this is called
             rlUnloadVertexArray(vao);
             rlUnloadVertexBuffer(vbo);
-
-            delete[] semi_latus_recta;
-            delete[] eccentricities;
-            delete[] current_anomalies;
-            delete[] focal_bounds_start;
-            delete[] focal_ranges;
-            delete[] colors;
-            delete[] offsets;
-            delete[] render_modes;
-            delete[] mvps;
         }
 
         // Regenerate vertex buffer
@@ -164,17 +143,6 @@ namespace orbit_render_buffers {
         delete[] float_array;
 
         buffer_size = orbits_count;
-
-        // Reinitialize arrays
-        semi_latus_recta = new float[orbits_count];
-        eccentricities = new float[orbits_count];
-        current_anomalies = new float[orbits_count];
-        focal_bounds_start = new float[orbits_count];
-        focal_ranges = new float[orbits_count];
-        colors = new float[orbits_count*4];
-        offsets = new Vector3[orbits_count];
-        render_modes = new int[orbits_count];
-        mvps = new Matrix[orbits_count];
     }
 };
 
@@ -185,7 +153,6 @@ namespace orbit_shader {
     int current_anomaly = -1;
     int focal_bound_start = -1;
     int focal_range = -1;
-    int offset = -1;
 
     int color = -1;
     int render_mode = -1;
@@ -201,7 +168,6 @@ namespace orbit_shader {
         LOAD_SHADER_UNIFORM(orbit_shader, current_anomaly)
         LOAD_SHADER_UNIFORM(orbit_shader, focal_bound_start)
         LOAD_SHADER_UNIFORM(orbit_shader, focal_range)
-        LOAD_SHADER_UNIFORM(orbit_shader, offset)
 
         LOAD_SHADER_UNIFORM(orbit_shader, color)
         LOAD_SHADER_UNIFORM(orbit_shader, render_mode)
@@ -214,39 +180,49 @@ namespace orbit_shader {
 void RenderOrbits(const ConicRenderInfo conics[], int number) {
     RELOAD_IF_NECESSARY(orbit_shader)
     orbit_render_buffers::ReloadBuffer(number);
+    
+    static float semi_latus_recta[PRIMITIVE_BATCH_SIZE];
+    static float eccentricities[PRIMITIVE_BATCH_SIZE];
+    static float current_anomalies[PRIMITIVE_BATCH_SIZE];
+    static float focal_bounds_start[PRIMITIVE_BATCH_SIZE];
+    static float focal_ranges[PRIMITIVE_BATCH_SIZE];
+    static float colors[PRIMITIVE_BATCH_SIZE*4];
+    static int render_modes[PRIMITIVE_BATCH_SIZE];
+    static Matrix mvps[PRIMITIVE_BATCH_SIZE];
 
     for (int i=0; i < number; i++) {
-        orbit_render_buffers::semi_latus_recta[i] = conics[i].semi_latus_rectum;
-        orbit_render_buffers::eccentricities[i] = conics[i].eccentricity;
-        orbit_render_buffers::focal_bounds_start[i] = conics[i].focal_bound;
-        orbit_render_buffers::focal_ranges[i] = conics[i].focal_range;
-        orbit_render_buffers::current_anomalies[i] = conics[i].anomaly;
+        semi_latus_recta[i] = conics[i].semi_latus_rectum;
+        eccentricities[i] = conics[i].eccentricity;
+        focal_bounds_start[i] = conics[i].focal_bound;
+        focal_ranges[i] = conics[i].focal_range;
+        current_anomalies[i] = conics[i].anomaly;
 
-        Matrix matModelView = MatrixMultiply(conics[i].orientation, rlGetMatrixModelview());
-        orbit_render_buffers::mvps[i] = MatrixMultiply(matModelView, rlGetMatrixProjection());
+        Matrix model_matrix = MatrixMultiply(conics[i].orientation, MatrixTranslate(
+            conics[i].center.x, conics[i].center.y, conics[i].center.z
+        ));
+        Matrix matModelView = MatrixMultiply(model_matrix, rlGetMatrixModelview());
+        mvps[i] = MatrixMultiply(matModelView, rlGetMatrixProjection());
 
-        orbit_render_buffers::render_modes[i] = conics[i].render_mode;
-        ColorToFloatBuffer(&orbit_render_buffers::colors[i*4], conics[i].color);
-        orbit_render_buffers::offsets[i] = conics[i].center;
+        render_modes[i] = conics[i].render_mode;
+        ColorToFloatBuffer(&colors[i*4], conics[i].color);
     }
 
     float window_size[2] = { GetScreenWidth(), GetScreenHeight() };
 
     rlEnableShader(orbit_shader::shader.id);
-    rlSetUniform(orbit_shader::semi_latus_rectum, orbit_render_buffers::semi_latus_recta, RL_SHADER_UNIFORM_FLOAT, number);
-    rlSetUniform(orbit_shader::eccentricity, orbit_render_buffers::eccentricities, RL_SHADER_UNIFORM_FLOAT, number);
-    rlSetUniform(orbit_shader::current_anomaly, orbit_render_buffers::current_anomalies, RL_SHADER_UNIFORM_FLOAT, number);
-    rlSetUniform(orbit_shader::focal_bound_start, orbit_render_buffers::focal_bounds_start, RL_SHADER_UNIFORM_FLOAT, number);
-    rlSetUniform(orbit_shader::focal_range, orbit_render_buffers::focal_ranges, RL_SHADER_UNIFORM_FLOAT, number);
-    rlSetUniform(orbit_shader::color, orbit_render_buffers::colors, RL_SHADER_UNIFORM_VEC4, number);
-    rlSetUniform(orbit_shader::offset, orbit_render_buffers::offsets, RL_SHADER_UNIFORM_VEC3, number);
     rlSetUniform(orbit_shader::window_size, window_size, RL_SHADER_UNIFORM_VEC2, 1);
 
-    rlSetUniform(orbit_shader::render_mode, orbit_render_buffers::render_modes, RL_SHADER_UNIFORM_INT, number);
-    rlSetUniformMatrixArray(orbit_shader::mvp, orbit_render_buffers::mvps, number);
+    rlSetUniform(orbit_shader::semi_latus_rectum, semi_latus_recta, RL_SHADER_UNIFORM_FLOAT, number);
+    rlSetUniform(orbit_shader::eccentricity, eccentricities, RL_SHADER_UNIFORM_FLOAT, number);
+    rlSetUniform(orbit_shader::current_anomaly, current_anomalies, RL_SHADER_UNIFORM_FLOAT, number);
+    rlSetUniform(orbit_shader::focal_bound_start, focal_bounds_start, RL_SHADER_UNIFORM_FLOAT, number);
+    rlSetUniform(orbit_shader::focal_range, focal_ranges, RL_SHADER_UNIFORM_FLOAT, number);
+    rlSetUniform(orbit_shader::color, colors, RL_SHADER_UNIFORM_VEC4, number);
+    rlSetUniform(orbit_shader::render_mode, render_modes, RL_SHADER_UNIFORM_INT, number);
+    rlSetUniformMatrixArray(orbit_shader::mvp, mvps, number);
 
     rlEnableVertexArray(orbit_render_buffers::vao);
-    rlDrawVertexArray(0, ORBIT_BUFFER_SIZE * number);
+    rlDrawVertexArray(0, ORBIT_POINT_COUNT * number);
     //rlDrawVertexPrimitiveArray(RL_LINES, 0, ORBIT_BUFFER_SIZE);
     rlDisableVertexArray();
     
@@ -259,12 +235,6 @@ namespace planet_render_buffers {
 
     int buffer_size = 0;
 
-    float* radius = NULL;
-    Vector3* centerPos = NULL;
-    Vector3* normal = NULL;
-    float* color = NULL;
-    Matrix* transform = NULL;
-
     const int VALS_PER_QUAD = 18;
 
     void Reload(int sphere_count) {
@@ -274,15 +244,9 @@ namespace planet_render_buffers {
             return;
         }
         if (buffer_size != 0) {
-            // Not the first time
+            // Not the first time, this is called
             rlUnloadVertexArray(vao);
             rlUnloadVertexBuffer(vbo);
-
-            delete[] radius;
-            delete[] centerPos;
-            delete[] normal;
-            delete[] color;
-            delete[] transform;
         }
         
         float* float_array = new float[VALS_PER_QUAD * sphere_count];
@@ -311,13 +275,6 @@ namespace planet_render_buffers {
         delete[] float_array;
         
         buffer_size = sphere_count;
-
-        // Reinitialize arrays
-        radius    = new float[sphere_count];
-        centerPos = new Vector3[sphere_count];
-        normal    = new Vector3[sphere_count];
-        color     = new float[sphere_count*4];
-        transform = new Matrix[sphere_count];
     }
 }
 
@@ -362,6 +319,12 @@ void RenderPerfectSpheres(const SphereRenderInfo spheres[], int number) {
     planet_render_buffers::Reload(number);
 
     Vector3 render_camera_pos = GetCamera()->macro_camera.position;
+    
+    static float radius[PRIMITIVE_BATCH_SIZE];
+    static Vector3 centerPos[PRIMITIVE_BATCH_SIZE];
+    static Vector3 normal[PRIMITIVE_BATCH_SIZE];
+    static float color[PRIMITIVE_BATCH_SIZE*4];
+    static Matrix transform[PRIMITIVE_BATCH_SIZE];
 
     for (int i=0; i < number; i++) {
         //Vector3 world_camera_dir = Vector3Subtract(GetCamera()->rl_camera.target, GetCamera()->rl_camera.position);
@@ -378,20 +341,20 @@ void RenderPerfectSpheres(const SphereRenderInfo spheres[], int number) {
         float h = sqrt(render_radius * render_radius - offset * offset);  // plane scale in render-world coordinate system
         //float h = render_radius * sqrt(1 - 1/camera_distance);  // plane scale in render-world coordinate system
 
-        planet_render_buffers::transform[i] = MatrixFromColumns(
+        transform[i] = MatrixFromColumns(
             Vector3Scale(mat_x, h),
             Vector3Scale(mat_y, h),
             Vector3Scale(mat_z, h)
         );	// Model to view such that model faces you
 
-        planet_render_buffers::transform[i].m12 = spheres[i].center.x + mat_z.x * offset;
-        planet_render_buffers::transform[i].m13 = spheres[i].center.y + mat_z.y * offset;
-        planet_render_buffers::transform[i].m14 = spheres[i].center.z + mat_z.z * offset;
+        transform[i].m12 = spheres[i].center.x + mat_z.x * offset;
+        transform[i].m13 = spheres[i].center.y + mat_z.y * offset;
+        transform[i].m14 = spheres[i].center.z + mat_z.z * offset;
         
-        planet_render_buffers::radius[i] = render_radius;
-        planet_render_buffers::centerPos[i] = spheres[i].center;
-        planet_render_buffers::normal[i] = mat_z;
-        ColorToFloatBuffer(&planet_render_buffers::color[i*4], spheres[i].color);
+        radius[i] = render_radius;
+        centerPos[i] = spheres[i].center;
+        normal[i] = mat_z;
+        ColorToFloatBuffer(&color[i*4], spheres[i].color);
 
         //DebugDrawTransform(new_model_matrix);
 
@@ -416,16 +379,16 @@ void RenderPerfectSpheres(const SphereRenderInfo spheres[], int number) {
     rlSetUniform(planet_shader::screenWidth, &screen_width, SHADER_UNIFORM_FLOAT, 1);
     rlSetUniform(planet_shader::cameraPos, &render_camera_pos, SHADER_UNIFORM_VEC3, 1);
 
-    rlSetUniform(planet_shader::rimColor, planet_render_buffers::color, SHADER_UNIFORM_VEC4, number);
-    rlSetUniform(planet_shader::radius, planet_render_buffers::radius, SHADER_UNIFORM_FLOAT, number);
-    rlSetUniform(planet_shader::centerPos, planet_render_buffers::centerPos, SHADER_UNIFORM_VEC3, number);
-    rlSetUniform(planet_shader::normal, planet_render_buffers::normal, SHADER_UNIFORM_VEC3, number);
+    rlSetUniform(planet_shader::rimColor, color, SHADER_UNIFORM_VEC4, number);
+    rlSetUniform(planet_shader::radius, radius, SHADER_UNIFORM_FLOAT, number);
+    rlSetUniform(planet_shader::centerPos, centerPos, SHADER_UNIFORM_VEC3, number);
+    rlSetUniform(planet_shader::normal, normal, SHADER_UNIFORM_VEC3, number);
 
     rlSetUniformMatrix(planet_shader::mvp, mvp);
-    rlSetUniformMatrixArray(planet_shader::transform, planet_render_buffers::transform, number);
+    rlSetUniformMatrixArray(planet_shader::transform, transform, number);
 
     rlEnableVertexArray(planet_render_buffers::vao);
-    rlDrawVertexArray(0, planet_render_buffers::VALS_PER_QUAD * number);
+    rlDrawVertexArray(0, 6 * number);
     rlDisableVertexArray();
 
     rlDisableShader();

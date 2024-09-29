@@ -93,7 +93,7 @@ void PlanetaryEconomy::AdvanceEconomy() {
         // 2. update noise (independent of natural state)
         // 3. update final
         resource_noise[i] = Clamp(
-            GetRandomGaussian(-resource_noise[i] * 0.5, GetResourceData(i)->cost_volatility),
+            randomgen::GetRandomGaussian(-resource_noise[i] * 0.5, GetResourceData(i)->cost_volatility),
             -GetResourceData(i)->max_noise * 0.5,
             GetResourceData(i)->max_noise * 0.5
         );

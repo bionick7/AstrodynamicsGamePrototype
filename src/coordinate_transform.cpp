@@ -126,7 +126,15 @@ void GameCamera::HandleInput() {
         world_focus = GetPlanet(focus_object)->position.cartesian;
     }
     if (IsIdValidTyped(focus_object, EntityType::SHIP)) {
-        world_focus = GetShip(focus_object)->position.cartesian;
+        const Ship* ship = GetShip(focus_object);
+        if (ship->IsParked()) {
+            const Planet* planet = GetPlanet(ship->GetParentPlanet());
+            Orbit ship_orbit;
+            planet->GetRandomOrbit(0, &ship_orbit);
+            world_focus = ship_orbit.GetPosition(GlobalGetNow()).cartesian + planet->position.ca;
+        } else {
+            world_focus = ship->position.cartesian;
+        }
     }
     
     float scroll_ratio = 1 - 0.1 * GetMouseWheelMove();
@@ -148,7 +156,6 @@ void GameCamera::HandleInput() {
         view_dir.x = cos(elevation) * cos(azimuth);
         view_dir.y = sin(elevation);
         view_dir.z = cos(elevation) * sin(azimuth);
-        focus_object = GetInvalidId();
     }
     if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE) && translating) {
         // Camera Translation
@@ -163,12 +170,13 @@ void GameCamera::HandleInput() {
                 world_focus = world_focus + DVector3(in_plane_delta) * macro_scale;
             }
         }
+        focus_object = GetInvalidId();
     }
 
     if (IsKeyPressed(KEY_F)) {
         // Enable camera track ( F ocus) on currently selected object
         if (IsIdValid(GetGlobalState()->focused_ship)) {
-            focus_object = GetGlobalState()->focused_planet;
+            focus_object = GetGlobalState()->focused_ship;
         } else if (IsIdValid(GetGlobalState()->focused_planet)) {
             focus_object = GetGlobalState()->focused_planet;
         }
