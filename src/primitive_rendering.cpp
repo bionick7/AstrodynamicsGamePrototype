@@ -18,7 +18,7 @@ ConicRenderInfo ConicRenderInfo::FromOrbitSegment(const OrbitSegment *segment,
     const Orbit* orbit = segment->orbit;
 
     res.center = Vector3Zero();
-    res.semi_latus_rectum = (float) (orbit->sma * (1 - orbit->ecc*orbit->ecc) / GameCamera::space_scale);
+    res.semi_latus_rectum = (float) (orbit->sma * (1 - orbit->ecc*orbit->ecc) / GameCamera::macro_scale);
     res.eccentricity = (float) orbit->ecc;
     Vector3 mat_x = (Vector3) orbit->periapsis_dir;
     Vector3 mat_y = (Vector3) orbit->normal;
@@ -50,7 +50,7 @@ ConicRenderInfo ConicRenderInfo::FromOrbit(const Orbit *orbit, timemath::Time ti
     ConicRenderInfo res;
 
     res.center = Vector3Zero();
-    res.semi_latus_rectum = (float) (orbit->sma * (1 - orbit->ecc*orbit->ecc) / GameCamera::space_scale);
+    res.semi_latus_rectum = (float) (orbit->sma * (1 - orbit->ecc*orbit->ecc) / GameCamera::macro_scale);
     res.eccentricity = (float) orbit->ecc;
     Vector3 mat_x = (Vector3) orbit->periapsis_dir;
     Vector3 mat_y = (Vector3) orbit->normal;
@@ -72,8 +72,8 @@ ConicRenderInfo ConicRenderInfo::FromCircle(DVector3 world_position, Matrix orie
                                             orbit_render_mode::T render_mode, Color color) {
     ConicRenderInfo res;
 
-    res.center = GameCamera::WorldToRender(world_position);
-    res.semi_latus_rectum = GameCamera::WorldToRender(radius);
+    res.center = GameCamera::WorldToMacro(world_position);
+    res.semi_latus_rectum = GameCamera::WorldToMacro(radius);
     res.eccentricity = 0.0f;
     res.orientation = orientation;
 
@@ -89,8 +89,8 @@ ConicRenderInfo ConicRenderInfo::FromCircle(DVector3 world_position, Matrix orie
 
 SphereRenderInfo SphereRenderInfo::FromWorldPos(DVector3 center, double radius, Color color) {
     SphereRenderInfo res;
-    res.center = GameCamera::WorldToRender(center);
-    res.radius = GameCamera::WorldToRender(radius);
+    res.center = GameCamera::WorldToMacro(center);
+    res.radius = GameCamera::WorldToMacro(radius);
     res.color = color;
     return res;
 }
@@ -361,7 +361,7 @@ void RenderPerfectSpheres(const SphereRenderInfo spheres[], int number) {
     RELOAD_IF_NECESSARY(planet_shader)
     planet_render_buffers::Reload(number);
 
-    Vector3 render_camera_pos = GetCamera()->rl_camera.position;
+    Vector3 render_camera_pos = GetCamera()->macro_camera.position;
 
     for (int i=0; i < number; i++) {
         //Vector3 world_camera_dir = Vector3Subtract(GetCamera()->rl_camera.target, GetCamera()->rl_camera.position);

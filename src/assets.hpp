@@ -52,6 +52,7 @@ namespace assets {
         ~Table() { Clear(); }
 
         int Find(StrHash hash) const {
+            // TODO: Faster as binary search tree ig
             for (int i=0; i < size; i++) {
                 if (hash == hashes[i]) {
                     return i;

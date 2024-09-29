@@ -16,7 +16,7 @@ void _OnSettingsChanged() {
     ReconfigureWindow();
     
     GlobalState* gs = GetGlobalState();
-    gs->camera.rl_camera.fovy = GetSettingNum("fov_deg", 90);
+    gs->camera.macro_camera.fovy = GetSettingNum("fov_deg", 90);
     // ...
 }
 

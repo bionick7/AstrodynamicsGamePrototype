@@ -286,7 +286,7 @@ void RenderRings(DVector3 normal, double min_rad, double max_rad, Color color) {
 
     rlPushMatrix();
     // scale -> rotate -> translate
-    float render_scale = GameCamera::WorldToRender(max_rad);
+    float render_scale = GameCamera::WorldToMacro(max_rad);
     rlScalef(render_scale, render_scale, render_scale);
     rlRotatef(90, 1, 0, 0);
     rlTranslatef(0, 0, 0.001);
@@ -337,10 +337,10 @@ void RenderSkyBox() {
 
     Vector2 resolution = { GetScreenWidth(), GetScreenHeight() };
     
-    float fov = GetCamera()->rl_camera.fovy * DEG2RAD;
+    float fov = GetCamera()->macro_camera.fovy * DEG2RAD;
     //Matrix camera_matrix = MatrixInvert(rlGetMatrixModelview());
 
-    Vector3 mat_z = Vector3Subtract(GetCamera()->rl_camera.position, GetCamera()->rl_camera.target);  // In world space
+    Vector3 mat_z = Vector3Subtract(GetCamera()->macro_camera.position, GetCamera()->macro_camera.target);  // In world space
 	Vector3 mat_y = { 0.0f, 1.0f, 0.0f };  // Chosen arbitrarily
     Vector3OrthoNormalize(&mat_z, &mat_y);
     Vector3 mat_x = Vector3CrossProduct(mat_y, mat_z);

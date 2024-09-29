@@ -48,7 +48,9 @@ void Planet::_UIDrawInventory() {
     ui::Pop();  // Inset
 }
 
-int current_tab = 0;  // Global variable, I suppose
+// Global variable, I suppose
+static int current_tab = 0;
+
 void Planet::DrawUI() {
     Vector2 screen_pos = GetCamera()->GetScreenPos(position.cartesian);
     int screen_x = (int)screen_pos.x, screen_y = (int)screen_pos.y;

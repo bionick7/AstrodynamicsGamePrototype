@@ -10,6 +10,16 @@
 
 #define PRIMITIVE_BATCH_SIZE 100
 
+namespace render_layers {
+    enum {
+        PLANETS = 0,
+        SHIPS,
+        UI,
+        
+        MAX,
+    };
+}
+
 struct EmbeddedScene {
     int mesh_count;
     Matrix* transforms = NULL;
@@ -60,7 +70,7 @@ struct RenderServer {
     IDAllocatorList<Text3D, EntityType::TEXT3D> text_labels_3d;
     IDAllocatorList<EmbeddedScene, EntityType::EMBEDDED_SCENE> embedded_scenes;
     // Two render textures for 3d and ui to use different z-buffers (and maybe postprocessing)
-    RenderTexture2D render_targets[2];
+    RenderTexture2D render_targets[render_layers::MAX];
 
     // Not queues in the fifo way, but things wait in here
     List<ConicRenderInfo> conic_queue;

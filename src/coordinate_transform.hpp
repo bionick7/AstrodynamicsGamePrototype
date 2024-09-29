@@ -31,12 +31,22 @@ struct Calendar {
 };
 
 struct GameCamera {
-    static constexpr double space_scale = 1e8;  // m per game unit
-    static Vector3 WorldToRender(DVector3 world) { return (Vector3) (world / space_scale); }
-    static float WorldToRender(double world) { return (float) (world / space_scale); }
+    // Macro and micro scale represent scales on which ships and planets are rendered
+
+    static constexpr double macro_scale = 1e8;  // m per game unit
+    static constexpr double micro_scale = 1e2;  // m per game unit
+    static constexpr double scale_ratio = macro_scale / micro_scale;
+
+    static Vector3 WorldToMacro(DVector3 world) { return (Vector3) (world / macro_scale); }
+    static float WorldToMacro(double world) { return (float) (world / macro_scale); }
+    static Vector3 WorldToMicro(DVector3 world) { return (Vector3) (world / micro_scale); }
+    static float WorldToMicro(double world) { return (float) (world / micro_scale); }
 
     RID focus_object;
-    Camera3D rl_camera;
+    DVector3 world_focus;
+
+    Camera3D macro_camera;
+    Camera3D micro_camera;
 
     void Make();
     

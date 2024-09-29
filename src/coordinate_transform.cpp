@@ -80,40 +80,53 @@ timemath::Time Calendar::GetFrameElapsedGameTime() const {
 }
 
 void GameCamera::Make() {
-    rl_camera.fovy = GetSettingNum("fov_deg", 90);
-    rl_camera.projection = CAMERA_PERSPECTIVE;
-    rl_camera.position = { 0.001f, 3.0f, 0.0f };
-    rl_camera.target = Vector3Zero();
-    rl_camera.up = { 0.0f, 1.0f, 0.0f };
+    macro_camera.fovy = GetSettingNum("fov_deg", 90);
+    macro_camera.projection = CAMERA_PERSPECTIVE;
+    macro_camera.position = { 0.001f, 3.0f, 0.0f };
+    macro_camera.target = Vector3Zero();
+    macro_camera.up = { 0.0f, 1.0f, 0.0f };
+
+    micro_camera.fovy = GetSettingNum("fov_deg", 90);
+    micro_camera.projection = CAMERA_PERSPECTIVE;
+    micro_camera.position = Vector3Scale(macro_camera.position, scale_ratio);
+    micro_camera.target = Vector3Zero();
+    micro_camera.up = { 0.0f, 1.0f, 0.0f };
+
     focus_object = GetInvalidId();
 }
 
 void GameCamera::Serialize(DataNode* data) const {
-    data->SetF("fovy", rl_camera.fovy);
+    data->SetF("fovy", macro_camera.fovy);
     data->SetI("focus", focus_object.AsInt());
-    data->SetF("position_x", rl_camera.position.x);
-    data->SetF("position_y", rl_camera.position.y);
-    data->SetF("position_z", rl_camera.position.z);
+    data->SetF("position_x", macro_camera.position.x);
+    data->SetF("position_y", macro_camera.position.y);
+    data->SetF("position_z", macro_camera.position.z);
 }
 
 void GameCamera::Deserialize(const DataNode* data) {
-    rl_camera.fovy = data->GetF("fovy");
     focus_object = RID(data->GetI("focus"));
-    rl_camera.position.x = data->GetF("position_x");
-    rl_camera.position.y = data->GetF("position_y");
-    rl_camera.position.z = data->GetF("position_z");
+    macro_camera.fovy = data->GetF("fovy");
+    macro_camera.position.x = data->GetF("position_x");
+    macro_camera.position.y = data->GetF("position_y");
+    macro_camera.position.z = data->GetF("position_z");
+
+    micro_camera.fovy = macro_camera.fovy;
+    micro_camera.position = Vector3Scale(macro_camera.position, scale_ratio);
 }
 
 void GameCamera::HandleInput() {
 
-    float dist = Vector3Distance(rl_camera.position, rl_camera.target);
-    Vector3 view_dir = Vector3Scale(Vector3Subtract(rl_camera.target, rl_camera.position), 1/dist);
+    // Micro camera has more 'resolution' here
+    float micro_dist = Vector3Distance(micro_camera.position, micro_camera.target);
+    float dist = Vector3Distance(micro_camera.position, micro_camera.target) / scale_ratio;
+
+    Vector3 view_dir = Vector3Scale(Vector3Subtract(micro_camera.target, micro_camera.position), 1/micro_dist);
 
     if (IsIdValidTyped(focus_object, EntityType::PLANET)) {
-        rl_camera.target = (Vector3) (GetPlanet(focus_object)->position.cartesian / space_scale);
+        world_focus = GetPlanet(focus_object)->position.cartesian;
     }
     if (IsIdValidTyped(focus_object, EntityType::SHIP)) {
-        rl_camera.target = (Vector3) (GetShip(focus_object)->position.cartesian / space_scale);
+        world_focus = GetShip(focus_object)->position.cartesian;
     }
     
     float scroll_ratio = 1 - 0.1 * GetMouseWheelMove();
@@ -139,15 +152,15 @@ void GameCamera::HandleInput() {
     }
     if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE) && translating) {
         // Camera Translation
-        Ray prev_pos = GetMouseRay(Vector2Subtract(GetMousePosition(), GetMouseDelta()), rl_camera);
-        Ray current_pos = GetMouseRay(GetMousePosition(), rl_camera);
+        Ray prev_pos = GetMouseRay(Vector2Subtract(GetMousePosition(), GetMouseDelta()), macro_camera);
+        Ray current_pos = GetMouseRay(GetMousePosition(), macro_camera);
         if (current_pos.position.y * current_pos.direction.y < 0) {                          // Mouse 'grabs' the origin plane ...
-            if (fabs(prev_pos.direction.y) > 1e-3 && fabs(current_pos.direction.y) > 1e-3) { // ... not at the horizon
+            if (fabs(prev_pos.direction.y) > 1e-3 && fabs(current_pos.direction.y) > 1e-3) { // ... but not at the horizon
                 Vector3 prev_impact = Vector3Add(prev_pos.position, Vector3Scale(prev_pos.direction, prev_pos.position.y / prev_pos.direction.y));
                 Vector3 current_impact = Vector3Add(current_pos.position, Vector3Scale(current_pos.direction, current_pos.position.y / current_pos.direction.y));
                 Vector3 in_plane_delta = Vector3Subtract(current_impact, prev_impact);
                 in_plane_delta = Vector3ClampValue(in_plane_delta, 0, 10 * GetFrameTime() * dist);
-                rl_camera.target = Vector3Add(rl_camera.target, in_plane_delta);
+                world_focus = world_focus + DVector3(in_plane_delta) * macro_scale;
             }
         }
     }
@@ -163,42 +176,50 @@ void GameCamera::HandleInput() {
     
     if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_HOME)) {
         // Reset Camera
-        rl_camera.target = Vector3Zero();
-        rl_camera.position = Vector3Subtract(rl_camera.target, Vector3Scale(view_dir, dist));
-        //rl_camera.position = { 0.001f, 3.0f, 0.0f };
+        world_focus = DVector3::Zero();
         focus_object = GetInvalidId();
     }
+    macro_camera.target = Vector3Zero();
 
-    rl_camera.position = Vector3Subtract(rl_camera.target, Vector3Scale(view_dir, dist));
+    dist = Clamp(dist, 1e-6, 100);  // Zoom limits
+
+    macro_camera.target = WorldToMacro(world_focus);
+    macro_camera.position = Vector3Subtract(macro_camera.target, Vector3Scale(view_dir, dist));
+    if (dist < 1e-3) {  // Avoid jitter due to very small distances
+        macro_camera.target = Vector3Add(macro_camera.position, Vector3Scale(view_dir, 1e-3));
+    }
+
+    micro_camera.target = Vector3Zero();  // Assumes object in view is always at (0,0,0)
+    micro_camera.position = Vector3Scale(view_dir, -dist*scale_ratio);
 }
 
 bool GameCamera::IsInView(Vector3 render_pos) const {
     return Vector3DotProduct(
-        Vector3Subtract(render_pos, rl_camera.position),
-        Vector3Subtract(rl_camera.target, rl_camera.position)
+        Vector3Subtract(render_pos, macro_camera.position),
+        Vector3Subtract(macro_camera.target, macro_camera.position)
     ) > 0;
 }
 
 bool GameCamera::IsInView(DVector3 render_pos) const {
-    return IsInView(WorldToRender(render_pos));
+    return IsInView(WorldToMacro(render_pos));
 }
 
 Vector2 GameCamera::GetScreenPos(DVector3 world_pos) const {
     if (!IsInView(world_pos)) {
         return { -1000.0f, -1000.0f };
     }
-    return GetWorldToScreen(WorldToRender(world_pos), rl_camera);
+    return GetWorldToScreen(WorldToMacro(world_pos), macro_camera);
 }
 
 float GameCamera::MeasurePixelSize(Vector3 render_pos) const {
-    return Vector3Distance(rl_camera.position, render_pos) * tan(rl_camera.fovy/2.0*DEG2RAD) / GetScreenHeight() * 2.0;
+    return Vector3Distance(macro_camera.position, render_pos) * tan(macro_camera.fovy/2.0*DEG2RAD) / GetScreenHeight() * 2.0;
 }
 
 Matrix GameCamera::ViewMatrix() const {
-    return GetCameraMatrix(rl_camera);
+    return GetCameraMatrix(macro_camera);
 }
 
 Matrix GameCamera::ProjectionMatrix() const {
     double ar = GetScreenWidth() / (double) GetScreenHeight();
-    return MatrixPerspective(rl_camera.fovy*DEG2RAD, ar, 0.01, 1000.0);
+    return MatrixPerspective(macro_camera.fovy*DEG2RAD, ar, 0.01, 1000.0);
 }

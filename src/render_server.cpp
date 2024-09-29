@@ -82,7 +82,7 @@ void Icon3D::Draw() const {
         return;
     }
 
-    Vector3 cam_z = Vector3Subtract(GetCamera()->rl_camera.target, GetCamera()->rl_camera.position);
+    Vector3 cam_z = Vector3Subtract(GetCamera()->macro_camera.target, GetCamera()->macro_camera.position);
     Vector3 cam_y = { 0.0f, 1.0f, 0.0f };
     Vector3OrthoNormalize(&cam_z, &cam_y);
 
@@ -92,7 +92,7 @@ void Icon3D::Draw() const {
     Rectangle source = atlas_pos.GetRect(ATLAS_SIZE);
 
     DrawBillboardPro(
-        GetCamera()->rl_camera, GetUI()->GetIconAtlasSDF(), source, 
+        GetCamera()->macro_camera, GetUI()->GetIconAtlasSDF(), source, 
         offset_render_pos, cam_y, 
         { render_scale, render_scale }, Vector2Zero(), 0.0f, 
         color
@@ -100,30 +100,30 @@ void Icon3D::Draw() const {
 }
 
 Vector3 Icon3D::GetFinalRenderPos() const {
-    Vector3 render_pos = GameCamera::WorldToRender(world_pos);
+    Vector3 render_pos = GameCamera::WorldToMacro(world_pos);
     if (Vector2LengthSqr(offset) == 0) {
         return render_pos;
     } else {
         Vector2 draw_pos = GetCamera()->GetScreenPos(world_pos);
         draw_pos = Vector2Add(draw_pos, offset);
 
-        Ray ray = GetMouseRay(draw_pos, GetCamera()->rl_camera);
+        Ray ray = GetMouseRay(draw_pos, GetCamera()->macro_camera);
         float dist = Vector3Distance(ray.position, render_pos);
         return Vector3Add(ray.position, Vector3Scale(ray.direction, dist));
     }
 }
 
 float Icon3D::GetFinalRenderScale() const {
-    Vector3 render_pos = GameCamera::WorldToRender(world_pos);
+    Vector3 render_pos = GameCamera::WorldToMacro(world_pos);
     Vector2 draw_pos = GetCamera()->GetScreenPos(world_pos);
     draw_pos = Vector2Add(draw_pos, offset);
     if (Vector2LengthSqr(offset) == 0) {
-        Ray ray = GetMouseRay(Vector2Add(draw_pos, {0.707, 0.707}), GetCamera()->rl_camera);
+        Ray ray = GetMouseRay(Vector2Add(draw_pos, {0.707, 0.707}), GetCamera()->macro_camera);
         float dist = Vector3Distance(ray.position, render_pos);
         Vector3 offset_pos = Vector3Add(ray.position, Vector3Scale(ray.direction, dist));
         return Vector3Distance(offset_pos, render_pos) * scale;  // finite difference
     } else {
-        Ray ray = GetMouseRay(draw_pos, GetCamera()->rl_camera);
+        Ray ray = GetMouseRay(draw_pos, GetCamera()->macro_camera);
         float dist = Vector3Distance(ray.position, render_pos);
         Vector3 offset_render_pos = Vector3Add(ray.position, Vector3Scale(ray.direction, dist));
 
@@ -150,7 +150,7 @@ void Text3D::Draw() const {
         return;
     }
 
-    Vector3 render_pos = GameCamera::WorldToRender(world_pos);
+    Vector3 render_pos = GameCamera::WorldToMacro(world_pos);
 
     Vector4 render_pos4 = { render_pos.x, render_pos.y, render_pos.z, 1.0f };
     Vector4 view_pos = QuaternionTransform(render_pos4, GetCamera()->ViewMatrix());
@@ -184,11 +184,7 @@ void Text3D::Draw() const {
 void _DrawTrajectories() {
     // Draw planet trajectories
     for(int i=0; i < GetPlanets()->GetPlanetCount(); i++) {
-        const Planet* planet = GetPlanetByIndex(i);
-        GetRenderServer()->QueueConicDraw(ConicRenderInfo::FromOrbit(
-            &planet->orbit, GlobalGetNow(), orbit_render_mode::Gradient, planet->GetColor()));
-        GetRenderServer()->QueueSphereDraw(SphereRenderInfo::FromWorldPos(
-            planet->position.cartesian, planet->radius, planet->GetColor()));
+        GetPlanetByIndex(i)->Draw3D();
     }
     
     // Draw ship trajectories
@@ -212,7 +208,7 @@ void _UpdateShipIcons() {
 
         Text3D* text3d = GetRenderServer()->text_labels_3d.GetOrAllocate(&planet->text3d);
 
-        float radius_px = GetCamera()->MeasurePixelSize(GameCamera::WorldToRender(text3d->world_pos));
+        float radius_px = GetCamera()->MeasurePixelSize(GameCamera::WorldToMacro(text3d->world_pos));
         text3d->scale = DEFAULT_FONT_SIZE;
         text3d->offset = { 0, radius_px + 3 };
         text3d->text = planet->name.GetChar();
@@ -222,8 +218,8 @@ void _UpdateShipIcons() {
 
         // Collect ships
 
-        float pixel_size = GetCamera()->MeasurePixelSize(GameCamera::WorldToRender(GetPlanetByIndex(i)->position.cartesian));
-        float planet_pixel_size = GameCamera::WorldToRender(GetPlanetByIndex(i)->radius) / pixel_size;
+        float pixel_size = GetCamera()->MeasurePixelSize(GameCamera::WorldToMacro(GetPlanetByIndex(i)->position.cartesian));
+        float planet_pixel_size = GameCamera::WorldToMacro(GetPlanetByIndex(i)->radius) / pixel_size;
 
         float mouse_distance = Vector2Distance(
             GetCamera()->GetScreenPos(GetPlanetByIndex(i)->position.cartesian),
@@ -335,12 +331,12 @@ void RenderServer::QueueSphereDraw(SphereRenderInfo sphere_render_info) {
 }
 
 void RenderServer::OnScreenResize() {
-    if (IsRenderTextureReady(render_targets[0])) {
-        UnloadRenderTextureWithDepth(render_targets[0]);
-        UnloadRenderTextureWithDepth(render_targets[1]);
+    for (int i=0; i < render_layers::MAX; i++) {
+        if (IsRenderTextureReady(render_targets[i])) {
+            UnloadRenderTextureWithDepth(render_targets[i]);
+        }
+        render_targets[i] = LoadRenderTextureWithDepth(GetScreenWidth(), GetScreenHeight());
     }
-    render_targets[0] = LoadRenderTextureWithDepth(GetScreenWidth(), GetScreenHeight());
-    render_targets[1] = LoadRenderTextureWithDepth(GetScreenWidth(), GetScreenHeight());
 }
 
 void RenderServer::Draw() {
@@ -349,9 +345,10 @@ void RenderServer::Draw() {
         OnScreenResize();
     }
 
-    if (!IsRenderTextureReady(render_targets[0])) {
-        render_targets[0] = LoadRenderTextureWithDepth(GetScreenWidth(), GetScreenHeight());
-        render_targets[1] = LoadRenderTextureWithDepth(GetScreenWidth(), GetScreenHeight());
+    for (int i=0; i < render_layers::MAX; i++) {
+        if (!IsRenderTextureReady(render_targets[i])) {
+            render_targets[i] = LoadRenderTextureWithDepth(GetScreenWidth(), GetScreenHeight());
+        }
     }
 
     //WireframeMesh test_mesh = assets::GetWireframe("resources/meshes/test/ship_contours.obj");
@@ -364,13 +361,13 @@ void RenderServer::Draw() {
     PopAndReadTimer("Embedded Scenes", true);
 
     PushTimer();
-    BeginTextureMode(render_targets[0]);
+    BeginTextureMode(render_targets[render_layers::PLANETS]);
         ClearBackground(WHITE);  // Very important apparently
 
         //RenderWireframeMesh(test_mesh, MatrixIdentity(), Palette::bg, Palette::ui_main);
 
         // True 3D - Planets
-        BeginMode3D(GetCamera()->rl_camera);
+        BeginMode3D(GetCamera()->macro_camera);
             RenderSkyBox();
 
             // Saturn and rings are hardcoded for now
@@ -414,23 +411,33 @@ void RenderServer::Draw() {
         GetTransferPlanUI()->Draw3DGizmos();
     
     EndTextureMode();
+
+    // Ship scale
+    BeginTextureMode(render_targets[render_layers::SHIPS]);
+        ClearBackground(ColorAlpha(Palette::bg, 0));
+
+        BeginMode3D(GetCamera()->micro_camera);
+        RenderWireframeMesh(assets::GetWireframe("resources/meshes/test/ship_contours.obj"), MatrixIdentity(), Palette::bg, Palette::ui_main);
+        EndMode3D();
+
+    EndTextureMode();
     PopAndReadTimer("3D rendering", true);
 
     // All UI shenanigans
     PushTimer();
-    BeginTextureMode(render_targets[1]);
+    BeginTextureMode(render_targets[render_layers::UI]);
         ClearBackground(ColorAlpha(Palette::bg, 0));
 
         rlEnableDepthTest(); 
-            GetGlobalState()->DrawUI();
-            //RenderWireframeMesh2DEx(test_mesh, {500, 500}, 100, Palette::bg, Palette::ui_main, 255);
+        GetGlobalState()->DrawUI();
         rlDisableDepthTest();
     EndTextureMode();
     PopAndReadTimer("UI rendering", true);
 
     // Postprocessing etc.
     ClearBackground(Palette::bg);  // There are transparent areas when skipping postprocessing
-    RenderDeferred(render_targets[0]);
-    RenderDeferred(render_targets[1]);
+    for (int i=0; i < render_layers::MAX; i++) {
+        RenderDeferred(render_targets[i]);
+    }
 }
  

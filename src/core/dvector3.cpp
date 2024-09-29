@@ -16,11 +16,12 @@ DVector3::DVector3() {
     x = 0; y = 0; z = 0;
 }
 
-DVector3::DVector3(double px, double py, double pz)
-{
-    x = px;
-    y = py;
-    z = pz;
+DVector3::DVector3(Vector3 v) {
+    x = v.x; y = v.y; z = v.z;
+}
+
+DVector3::DVector3(double px, double py, double pz) {
+    x = px; y = py; z = pz;
 }
 
 double DVector3::Length() const {

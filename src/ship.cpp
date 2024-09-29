@@ -645,7 +645,7 @@ void Ship::DrawIcon(int x_offsets[], int y_offsets[], float grow_factor) {
     icon_inst->atlas_pos = AtlasPos(type, 28);
     icon_inst->color = GetColor();
     icon_inst->world_pos = position.cartesian;
-    Vector3 from = GameCamera::WorldToRender(position.cartesian);
+    Vector3 from = GameCamera::WorldToMacro(position.cartesian);
     Vector3 to = icon_inst->GetFinalRenderPos();
 
     if (GetCamera()->IsInView(from) && GetCamera()->IsInView(to)) {

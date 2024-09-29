@@ -189,7 +189,7 @@ struct IDAllocatorList {
 
     Iterator GetIter() const { return Begin(); }
 
-    void Inpsect() {
+    void Inspect() {
         SHOW_I(free_index_array[0])
         SHOW_I(verifier_array[0])
         SHOW_I(alloc_count)

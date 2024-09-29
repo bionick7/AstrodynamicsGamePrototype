@@ -79,6 +79,7 @@ struct Planet {
     void Update();
     //void AdvanceShipProductionQueue();
     //void AdvanceModuleProductionQueue();
+    void Draw3D() const;
     void DrawUI();
     void _UIDrawModuleProduction();
     void _UIDrawShipProduction();

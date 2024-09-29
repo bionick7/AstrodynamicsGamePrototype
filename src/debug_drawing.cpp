@@ -24,8 +24,8 @@ void DebugDrawLineRenderSpace(Vector3 from, Vector3 to) {
 
 void DebugDrawLine(DVector3 from, DVector3 to) {
     DebugDrawLineRenderSpace(
-        GameCamera::WorldToRender(from),
-        GameCamera::WorldToRender(to)
+        GameCamera::WorldToMacro(from),
+        GameCamera::WorldToMacro(to)
     );
 }
 

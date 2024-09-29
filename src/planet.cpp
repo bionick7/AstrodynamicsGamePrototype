@@ -115,8 +115,8 @@ void Planet::_OnClicked() {
 }
 
 double Planet::ScreenRadius() const {
-    return radius / GetCamera()->space_scale;
-    //return fmax(radius / GetCamera()->space_scale, 4);
+    return radius / GetCamera()->macro_scale;
+    //return fmax(radius / GetCamera()->macro_scale, 4);
 }
 
 double Planet::GetDVFromExcessVelocity(DVector3 vel) const {
@@ -252,7 +252,7 @@ double Planet::GetMousePixelDistance() const {
     // TODO: proximity approximation is pretty shit at flat angles
 
     OrbitSegment segment = OrbitSegment(&orbit);
-    Ray mouse_ray = GetMouseRay(GetMousePosition(), GetCamera()->rl_camera);
+    Ray mouse_ray = GetMouseRay(GetMousePosition(), GetCamera()->macro_camera);
     Matrix orbit_transform = MatrixFromColumns((Vector3) orbit.periapsis_dir, (Vector3) orbit.normal, (Vector3) orbit.periapsis_dir.Cross(orbit.normal));
     Matrix inv_orbit_transform = MatrixInvert(orbit_transform);
     //Vector3 mouse_representation = Vector3Add(mouse_ray.position, mouse_ray.direction);
@@ -268,7 +268,7 @@ double Planet::GetMousePixelDistance() const {
     //DebugDrawLineRenderSpace(Vector3Transform(local_pos, orbit_transform), Vector3Transform(crossing, orbit_transform));
     //float scale = GameCamera::WorldToRender(orbit.sma);
     //DebugDrawTransform(MatrixMultiply(MatrixScale(scale, scale, scale), orbit_transform));
-    Vector2 closest_on_screen = GetWorldToScreen(Vector3Transform(local_pos, orbit_transform), GetCamera()->rl_camera);
+    Vector2 closest_on_screen = GetWorldToScreen(Vector3Transform(local_pos, orbit_transform), GetCamera()->macro_camera);
     float screen_distance = Vector2Distance(closest_on_screen, GetMousePosition());
     //DebugDrawLineRenderSpace(Vector3Transform(local_pos, orbit_transform), mouse_mouse_representation);
     return screen_distance;
@@ -293,6 +293,15 @@ void Planet::Update() {
     }
     
     economy.Update();
+}
+
+void Planet::Draw3D() const {
+    GetRenderServer()->QueueConicDraw(ConicRenderInfo::FromOrbit(
+        &orbit, GlobalGetNow(), orbit_render_mode::Gradient, GetColor()));
+    GetRenderServer()->QueueSphereDraw(SphereRenderInfo::FromWorldPos(
+        position.cartesian, radius, GetColor()));
+
+    // Draw surrounding orbits (visual)
 }
 
 Planets::Planets() {

@@ -249,7 +249,7 @@ timemath::Time Orbit::GetTimeUntilFocalAnomaly(double θ, timemath::Time start_t
 }
 
 Vector2 Orbit::GetMousPosOnPlane() const {
-    Ray mouse_ray = GetMouseRay(GetMousePosition(), GetCamera()->rl_camera);
+    Ray mouse_ray = GetMouseRay(GetMousePosition(), GetCamera()->macro_camera);
     Matrix orbit_transform = MatrixFromColumns((Vector3) periapsis_dir, (Vector3) normal, (Vector3) periapsis_dir.Cross(normal));
     Matrix inv_orbit_transform = MatrixInvert(orbit_transform);
     mouse_ray.position = Vector3Transform(mouse_ray.position, inv_orbit_transform);
@@ -342,7 +342,7 @@ OrbitSegment::OrbitSegment(const Orbit* orbit, OrbitPos bound1, OrbitPos bound2)
 }
 
 Vector2 _ConicEval2D(const Orbit* orbit, float focal) {
-    float r = GameCamera::WorldToRender(orbit->sma) * (1 - orbit->ecc * orbit->ecc) / (1 + orbit->ecc * cos(focal));
+    float r = GameCamera::WorldToMacro(orbit->sma) * (1 - orbit->ecc * orbit->ecc) / (1 + orbit->ecc * cos(focal));
     return {(float) r * cos(focal), (float) r * sin(focal)};
 }
 

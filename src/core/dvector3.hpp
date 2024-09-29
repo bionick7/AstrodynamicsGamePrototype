@@ -6,7 +6,6 @@
 struct DVector3 {
 	// 24 bytes
 	// Vector3, but with double precision
-	// Very Compact, don't judge me
 	static DVector3 Zero();
 	static DVector3 One();
 	static DVector3 Right();
@@ -21,6 +20,7 @@ struct DVector3 {
 	double z;
 
 	DVector3();
+	DVector3(Vector3 v);
 	DVector3(double px, double py, double pz);
 
 	double Length() const;
