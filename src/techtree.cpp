@@ -67,19 +67,19 @@ float ResearchCondition::GetProgress() const {
     switch (type) {
     case ANY:{
         for (int i=0; i < cond.branch.count; i++) {
-            if (GetTechTree()->research_conditions[cond.branch.index + i].GetProgress() < 1) {
-                return 0;
-            }
-        }
-        return 1;
-    }
-    case ALL:{
-        for (int i=0; i < cond.branch.count; i++) {
             if (GetTechTree()->research_conditions[cond.branch.index + i].GetProgress() >= 1) {
                 return 1;
             }
         }
         return 0;
+    }
+    case ALL:{
+        for (int i=0; i < cond.branch.count; i++) {
+            if (GetTechTree()->research_conditions[cond.branch.index + i].GetProgress() < 1) {
+                return 0;
+            }
+        }
+        return 1;
     }
     case STAT_CONDITION:{
         int max_stat = 0;

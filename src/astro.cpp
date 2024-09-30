@@ -120,25 +120,6 @@ Orbit::Orbit(double semi_major_axis, double eccenetricity, double inclination,
     this->epoch = epoch;
 }
 
-    /*bool is_prograde = lcase < 2;
-    bool cut_focus = lcase >= 2;
-    bool indirect_soution = lcase % 2 == 1;
-    if (lcase < 4) {
-        if (indirect_soution) cut_focus = !cut_focus;
-    } else {
-        cut_focus = !cut_focus;
-        is_prograde = !is_prograde;
-    }
-    DEBUG_SHOW_I(lcase)
-    DEBUG_SHOW_I(is_prograde)
-    DEBUG_SHOW_I(indirect_soution)
-
-    DVector3 r1_r2_cross = pos1.cartesian.Cross(pos2.cartesian);
-
-    bool swap_y0 = cut_focus ^ (r1_r2_cross.y < 0) ^ (!is_prograde) ^ (r1_r2_cross.y < 0 ^ indirect_soution);
-    bool swap_yf = (r1_r2_cross.y < 0) ^ (!is_prograde) ^ (r1_r2_cross.y < 0 ^ indirect_soution);
-    bool swap_normal = !is_prograde || lcase >= 4;*/
-
 Orbit::Orbit(OrbitPos pos1, OrbitPos pos2, timemath::Time time_at_pos1, 
              double sma, double mu, int lcase) {
     // https://en.wikipedia.org/wiki/Lambert%27s_problem

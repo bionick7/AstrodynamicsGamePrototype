@@ -38,7 +38,7 @@ satellites:
   body_size: Minor
   Ecc: 0
   Inc: 0.5
-  SMA: 120.0e+6
+  SMA: 110.0e+6
   Ann: 275
   LoA: 40.6
   AoP: 160

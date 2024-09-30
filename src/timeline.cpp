@@ -275,6 +275,11 @@ void _DrawShips(TimeLineCoordinateData* tcd, const Ships* ships) {
             
             end_point_x = Lerp(GetPlanetCoord(tcd, tp->departure_planet), GetPlanetCoord(tcd, tp->arrival_planet), travel_progress) + x_offset;
             _ShipDrawPathLine(tcd, &end_point_x, &end_point_y, tp->arrival_planet, tp->arrival_time, x_offset, ship->GetColor());
+            // vertical line to the next tp
+            if (ship->prepared_plans_count > 1) {
+                const TransferPlan* tp_next = &ship->prepared_plans[1];
+                _ShipDrawPathLine(tcd, &end_point_x, &end_point_y, tp_next->departure_planet, tp_next->departure_time, x_offset, ship->GetColor());
+            }
 
             start_tp_index++;
         }

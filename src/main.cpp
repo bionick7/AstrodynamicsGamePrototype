@@ -30,10 +30,10 @@ void TestingSetup(GlobalState* app) {
     GetDVTable(&sb, true);
 
     sb.Add("\n\n==== RANDOM (TRANSPORT) SHIP NAMES ====\n");
-    for (int i=0; i < 100; i++) {
-        GetShips()->GetRandomShipName(app->GetFromStringIdentifier("shp_light_transport"), &sb);
-        sb.Add("\n");
-    }
+    //for (int i=0; i < 100; i++) {
+    //    GetShips()->GetRandomShipName(app->GetFromStringIdentifier("shp_light_transport"), &sb);
+    //    sb.Add("\n");
+    //}
 
     sb.WriteToFile("test_outputs.txt");
 }

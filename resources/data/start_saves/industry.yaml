@@ -37,6 +37,9 @@ planets:
     resource_delta:
       water: 10
     base_independance_delta: 0
+    inventory:
+    - shpmod_reactor
+    - shpmod_reactor
 
   - name: Encelladus
     trading_accessible: n
@@ -60,7 +63,6 @@ planets:
     inventory:
     - shpmod_electrolyser
     - shpmod_reactor
-    - shpmod_boost_init
     base_independance_delta: -10
 
   - name: Rhea

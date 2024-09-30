@@ -43,7 +43,7 @@ struct ResearchCondition {
     };
 
     Type type;
-    int internal_counter = 0;  // Relevant now only for PRODUCTION_COUNTER
+    int internal_counter = 0;
 
     union {
         struct {

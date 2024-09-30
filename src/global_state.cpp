@@ -138,9 +138,19 @@ void GlobalState::UpdateState(double delta_t) {
     camera.HandleInput();
 
     if (frame_count == 0 || IsKeyPressed(KEY_Q)) {
-        Popup* popup = event_popup::AddPopup(600, 400, 300);
+        static const char* lorem = 
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean nec blandit ante."
+            "Nam in mi nibh. Donec nec urna ac ligula faucibus malesuada eget rhoncus eros."
+            "Duis id elit vitae neque blandit blandit mollis vel nisl. Vivamus in elit vitae"
+            "arcu dapibus lacinia. Mauris efficitur sollicitudin felis, non ultrices arcu fermentum non."
+            "Phasellus cursus nunc sem, vitae feugiat mi blandit sit amet. Integer vel sapien diam."
+            "Vivamus venenatis et metus sit amet malesuada. Etiam vitae vulputate turpis."
+            "Nulla volutpat.";
+
+        Popup* popup = event_popup::AddPopup(600, 600, 300);
         strcpy(popup->title, "Test Popup");
-        strcpy(popup->description, "This is a popup, created for the purpose of testing. No further action required");
+        strcpy(popup->description, "This is a popup, created for the purpose of testing. No further action required\n\n");
+        strcpy(popup->description + 81, lorem);
         EmbeddedScene* scene;
         popup->embedded_scene = GetRenderServer()->embedded_scenes.Allocate(&scene);
         scene->Make(2, popup->width, popup->face_height);
@@ -228,7 +238,7 @@ void GlobalState::SaveGame(const char* file_path) const {
     DataNode game_data = DataNode();
 
     Serialize(&game_data);
-    game_data.WriteToFile("save.yaml", FileFormat::YAML);
+    game_data.WriteToFile(file_path, FileFormat::YAML);
 }
 
 void GlobalState::Serialize(DataNode* data) const {
@@ -270,7 +280,7 @@ void GlobalState::Serialize(DataNode* data) const {
 }
 
 void GlobalState::Deserialize(const DataNode* data) {
-    if (data->HasChild("coordinate_transform")) {
+    if (data->HasChild("camera")) {
         camera.Deserialize(data->GetChild("camera"));
     } else {
         camera.Make();

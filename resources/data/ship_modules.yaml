@@ -553,6 +553,8 @@ shipmodules:
   name: Naval gun
   description: Conventional chemical weapons sometimes still find uses on the modern
     battlefield
+  add:
+    kinetic_offense: 1
   require: []
   mass: 3
   construction_resources:
@@ -570,7 +572,7 @@ shipmodules:
   description: High-velocity kinetic weapon that needs extra energy to fire.
   add:
     power: -2
-    kinetic_offense: 1
+    kinetic_offense: 2
   require:
     power: 2
   mass: 2

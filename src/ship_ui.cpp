@@ -75,17 +75,20 @@ void _UIDrawStats(const Ship* ship) {
     int width = ui::Current()->width;
     ui::PushInset(25);
     for (int i=0; i < 2; i++) {
+        if (i > 0 && !GetTechTree()->IsMilestoneReached("combat"))
+            continue;
         if (i == 0) ui::PushHSplit(5, width/2);
         else ui::PushHSplit(width/2, width - 5);
-            button_state_flags::T button_state = ui::AsButton();
-            HandleButtonSound(button_state);
-            if (button_state & button_state_flags::JUST_PRESSED) ship_stats_current_tab = i;
-            if (button_state & button_state_flags::HOVER || ship_stats_current_tab == i) 
-                ui::EnclosePartial(0, Palette::bg, Palette::ui_main, direction::DOWN);
-            else
-                ui::EnclosePartial(0, Palette::bg, Palette::ui_alt, direction::DOWN);
-            if (i == 0) ui::WriteEx("Production", text_alignment::VCENTER | text_alignment::LEFT, false);
-            else if (GetTechTree()->IsMilestoneReached("combat")) ui::WriteEx("Combat", text_alignment::VCENTER | text_alignment::RIGHT, false);
+
+        button_state_flags::T button_state = ui::AsButton();
+        HandleButtonSound(button_state);
+        if (button_state & button_state_flags::JUST_PRESSED) ship_stats_current_tab = i;
+        if (button_state & button_state_flags::HOVER || ship_stats_current_tab == i) 
+            ui::EnclosePartial(0, Palette::bg, Palette::ui_main, direction::DOWN);
+        else
+            ui::EnclosePartial(0, Palette::bg, Palette::ui_alt, direction::DOWN);
+        if (i == 0) ui::WriteEx("Production", text_alignment::VCENTER | text_alignment::LEFT, false);
+        else ui::WriteEx("Combat", text_alignment::VCENTER | text_alignment::RIGHT, false);
         ui::Pop();
     }
     ui::Pop();
@@ -140,6 +143,14 @@ int _UIDrawTransferplans(Ship* ship) {
 
     ui::PushInset(inset_height);
     ui::Enclose();
+
+    if (!ship->IsLeading()) {
+        ui::Write("Ship is not the leading ship in fleet. "
+                  "Disconnect from fleet before assigning transfers");
+        ui::Pop();  // Inset
+        return 0;    
+    }
+
     timemath::Time now = GlobalGetNow();
     for (int i=0; i < ship->prepared_plans_count; i++) {
         const char* resource_name;
@@ -154,12 +165,12 @@ int _UIDrawTransferplans(Ship* ship) {
                 resource_name = resources::names[j];
             }
         }
-        if (IsIdValid(ship->prepared_plans[i].departure_planet)) {
+        if (IsIdValidTyped(ship->prepared_plans[i].departure_planet, EntityType::PLANET)) {
             departure_planet_name = GetPlanet(ship->prepared_plans[i].departure_planet)->name.GetChar();
         } else {
             departure_planet_name = "NOT SET";
         }
-        if (IsIdValid(ship->prepared_plans[i].arrival_planet)) {
+        if (IsIdValidTyped(ship->prepared_plans[i].arrival_planet, EntityType::PLANET)) {
             arrival_planet_name = GetPlanet(ship->prepared_plans[i].arrival_planet)->name.GetChar();
         } else {
             arrival_planet_name = "NOT SET";
@@ -490,7 +501,6 @@ void _UIDrawProduction(Ship* ship) {
 
     // Set variables for planet/ship
     int option_size = GetShips()->ship_classes_count + GetShipModules()->shipmodule_count;
-    int option_sizes[tabs] = {0};
     IDList options[tabs];
     for (int i=0; i < tabs; i++) options[i].Clear();
 
@@ -524,8 +534,8 @@ void _UIDrawProduction(Ship* ship) {
 
     int max_display_options = 0;
     for (int i=0; i < tabs; i++) {
-        if (options[i].size > max_display_options) {
-            max_display_options = options[i].size;
+        if (options[i].Count() > max_display_options) {
+            max_display_options = options[i].Count();
         }
     }
     
@@ -546,6 +556,9 @@ void _UIDrawProduction(Ship* ship) {
     int tabs_y = ui::Current()->y;
 
     for(int i=0; i < tabs; i++) {
+        if (options[i].Count() == 0) {
+            continue;
+        }
         Color tab_draw_color = (module_class_ui_tab == i) ? Palette::ui_main : Palette::ui_alt;
         ui::PushInset(48);
         ui::Shrink(4, 4);
@@ -687,7 +700,7 @@ void Ship::DrawUI() {
     if (
         !mouse_hover 
         && GetTransferPlanUI()->ship != id
-        && (GetGlobalState()->focused_ship != id || IsIdValid(GetGlobalState()->hover))
+        && (GetGlobalState()->focused_ship != id || IsIdValidTyped(GetGlobalState()->hover, EntityType::SHIP))
     ) return;
 
 

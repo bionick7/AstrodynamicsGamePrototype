@@ -80,11 +80,11 @@ timemath::Time Calendar::GetFrameElapsedGameTime() const {
 }
 
 double GameCamera::MacroNearClipPlane() const {
-    return macro_view_distance * 0.01;
+    return fmaxf(macro_view_distance, 0.01) * 0.01;
 }
 
 double GameCamera::MacroFarClipPlane() const {
-    return macro_view_distance * 1000;
+    return fmaxf(macro_view_distance, 0.01) * 1000;
 }
 
 double GameCamera::MicroNearClipPlane() const {
@@ -95,11 +95,10 @@ double GameCamera::MicroFarClipPlane() const {
     return 1000;
 }
 
-void GameCamera::Make()
-{
+void GameCamera::Make() {
     macro_camera.fovy = GetSettingNum("fov_deg", 90);
     macro_camera.projection = CAMERA_PERSPECTIVE;
-    macro_camera.position = { 0.001f, 3.0f, 0.0f };
+    macro_camera.position = { 0.1f, 3.0f, 0.0f };
     macro_camera.target = Vector3Zero();
     macro_camera.up = { 0.0f, 1.0f, 0.0f };
 
@@ -109,37 +108,35 @@ void GameCamera::Make()
     micro_camera.target = Vector3Zero();
     micro_camera.up = { 0.0f, 1.0f, 0.0f };
 
+    world_focus = DVector3::Zero();
+    view_direction = Vector3Scale(Vector3Normalize(macro_camera.position), -1);
+    macro_view_distance = 3;
     focus_object = GetInvalidId();
 }
 
 void GameCamera::Serialize(DataNode* data) const {
-    data->SetF("fovy", macro_camera.fovy);
+    data->SetF("focus_point_x", world_focus.x);
+    data->SetF("focus_point_y", world_focus.y);
+    data->SetF("focus_point_z", world_focus.z);
+    data->SetF("view_direction_x", view_direction.x);
+    data->SetF("view_direction_y", view_direction.y);
+    data->SetF("view_direction_z", view_direction.z);
+    data->SetF("view_distance", macro_view_distance);
     data->SetI("focus", focus_object.AsInt());
-    data->SetF("position_x", macro_camera.position.x);
-    data->SetF("position_y", macro_camera.position.y);
-    data->SetF("position_z", macro_camera.position.z);
 }
 
 void GameCamera::Deserialize(const DataNode* data) {
+    world_focus.x = data->GetF("focus_point_x");
+    world_focus.y = data->GetF("focus_point_y");
+    world_focus.z = data->GetF("focus_point_z");
+    view_direction.x = data->GetF("view_direction_x");
+    view_direction.y = data->GetF("view_direction_y");
+    view_direction.z = data->GetF("view_direction_z");
+    macro_view_distance = data->GetF("view_distance");
     focus_object = RID(data->GetI("focus"));
-    macro_camera.fovy = data->GetF("fovy");
-    macro_camera.position.x = data->GetF("position_x");
-    macro_camera.position.y = data->GetF("position_y");
-    macro_camera.position.z = data->GetF("position_z");
-
-    micro_camera.fovy = macro_camera.fovy;
-    micro_camera.position = Vector3Scale(macro_camera.position, scale_ratio);
-
-    float micro_dist = Vector3Distance(micro_camera.position, micro_camera.target);
-    macro_view_distance = Vector3Distance(micro_camera.position, micro_camera.target) / scale_ratio;
-    view_direction = Vector3Scale(Vector3Subtract(micro_camera.target, micro_camera.position), 1/micro_dist);
 }
 
 void GameCamera::HandleInput() {
-
-    // Micro camera has more 'resolution' here
-    float micro_dist = Vector3Distance(micro_camera.position, micro_camera.target);
-
     if (IsIdValidTyped(focus_object, EntityType::PLANET)) {
         world_focus = GetPlanet(focus_object)->position.cartesian;
     }
@@ -219,15 +216,15 @@ void GameCamera::HandleInput() {
     micro_camera.position = Vector3Scale(view_direction, -macro_view_distance*scale_ratio);
 }
 
-bool GameCamera::IsInView(Vector3 render_pos) const {
+bool GameCamera::IsInView(Vector3 macro_pos) const {
     return Vector3DotProduct(
-        Vector3Subtract(render_pos, macro_camera.position),
+        Vector3Subtract(macro_pos, macro_camera.position),
         Vector3Subtract(macro_camera.target, macro_camera.position)
     ) > 0;
 }
 
-bool GameCamera::IsInView(DVector3 render_pos) const {
-    return IsInView(WorldToMacro(render_pos));
+bool GameCamera::IsInView(DVector3 world_pos) const {
+    return IsInView(WorldToMacro(world_pos));
 }
 
 Vector2 GameCamera::GetScreenPos(DVector3 world_pos) const {
@@ -247,5 +244,5 @@ Matrix GameCamera::ViewMatrix() const {
 
 Matrix GameCamera::ProjectionMatrix() const {
     double ar = GetScreenWidth() / (double) GetScreenHeight();
-    return MatrixPerspective(macro_camera.fovy*DEG2RAD, ar, 0.01, 1000.0);
+    return MatrixPerspective(macro_camera.fovy*DEG2RAD, ar, MacroNearClipPlane(), MacroFarClipPlane());
 }

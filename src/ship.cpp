@@ -81,6 +81,7 @@ void Ship::_OnNewPlanClicked() {
     if (tp_ui.IsActive() || IsIdValid(tp_ui.ship)) {
         return;
     }
+    if (!IsLeading()) return;
 
     GetCalendar()->paused = true;
 

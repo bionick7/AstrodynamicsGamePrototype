@@ -236,7 +236,7 @@ techtree:
     type: all
     elements:
     - type: production_counter
-      rsc: hydrogen
+      rsc: hydrogen  # Problem, as 'Low Saturn Orbit' always produces hydrogen
       comp: geq
       value: 20
     - type: achievement

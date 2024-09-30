@@ -161,7 +161,7 @@ struct { const char* name; void(*func)(const char*); } commands[] = {
     { "help", Help },
     { "set", SetSetting },
     { "list", ListSettings },
-    { "save", SaveSettings },
+    { "save_settings", SaveSettings },
     { "reload", ReloadSettings },
     { "give_rsc", GiveResource },
     { "unlock_tech", UnlockTech },

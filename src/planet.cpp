@@ -309,7 +309,7 @@ void Planet::GetRandomOrbit(int index, Orbit *orbit) const {
     // rotation_period = 2 PI sqrt(sma³ / mu);
     // sma = cbrt((rotation_period / 2PI)² * mu)
     const double GEOSTAT_ALTITUDE_FACTOR = 0.6299605249;  // (1/2) ^ (2/3)
-    double geostat_radius = cbrt(rotation_period*rotation_period / (2*PI*PI) * mu);
+    double geostat_radius = cbrt(rotation_period*rotation_period / (4*PI*PI) * mu);
     double semi_geostat_radius = GEOSTAT_ALTITUDE_FACTOR * geostat_radius;
 
     if (index < 2) {
@@ -434,7 +434,7 @@ void Planet::Draw3D() const {
         for(int i=0; i < 20; i++) {
             GetRandomOrbit(i, &ship_orbit);
             Color color = Palette::ui_alt;
-            if (i == 0){
+            if (i == 0 && ship_list.Count() > 0){
                 color = GetShip(ship_list.Get(i))->GetColor();
             }
             GetRenderServer()->QueueConicDraw(ConicRenderInfo::FromOrbit(
