@@ -102,6 +102,7 @@ ship_classes:
     crew: 10
   construction_time: 45
   construction_requirements:
+    industrial_storage: 2
     industrial_dock: 1
     industrial_admin: 1
     industrial_manufacturing: 1

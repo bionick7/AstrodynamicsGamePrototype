@@ -416,7 +416,7 @@ void Planet::Update() {
         }
     }
     
-    economy.Update();
+    economy.Update(id);
 }
 
 void Planet::Draw3D() const {

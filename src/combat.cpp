@@ -44,6 +44,8 @@ bool ShipBattle(const IDList* ships_aggressor, const IDList* ships_defender, dou
     });
 
     IDList killed = IDList();
+    
+    GetTechTree()->ReportAchievement("archvmt_battle");
 
     bool agressor_won;
     int leading_turns = 0;
@@ -102,7 +104,6 @@ bool ShipBattle(const IDList* ships_aggressor, const IDList* ships_defender, dou
         }
     }
 
-    GetTechTree()->ReportAchievement("archvmt_battle");
     return agressor_won;
 
     //INFO("Party 1 (%d) received %d dammage. Party 2 (%d) received (%d) dammage", ships_1->size, dmg_received_1, ships_2->size, dmg_received_2)

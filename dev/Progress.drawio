@@ -1,6 +1,6 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.7.8 Chrome/128.0.6613.36 Electron/32.0.1 Safari/537.36" version="24.7.8">
   <diagram name="Page-1" id="sICohbgbsp6g4xrvPl1Z">
-    <mxGraphModel dx="1609" dy="884" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="2336" math="0" shadow="0">
+    <mxGraphModel dx="2282" dy="1473" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="2336" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -19,7 +19,12 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="keFB2HzAeQSh-l3yCjFL-80" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.429;entryY=-0.007;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="keFB2HzAeQSh-l3yCjFL-37" target="keFB2HzAeQSh-l3yCjFL-67" edge="1">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1020" y="780" />
+              <mxPoint x="1100" y="780" />
+            </Array>
+          </mxGeometry>
         </mxCell>
         <mxCell id="keFB2HzAeQSh-l3yCjFL-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="keFB2HzAeQSh-l3yCjFL-2" target="keFB2HzAeQSh-l3yCjFL-11" edge="1">
           <mxGeometry relative="1" as="geometry" />
@@ -164,7 +169,7 @@
         <mxCell id="keFB2HzAeQSh-l3yCjFL-43" value="shpmod_shuttles" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="keFB2HzAeQSh-l3yCjFL-42" vertex="1">
           <mxGeometry y="30" width="140" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="aCe4N9a8sD5g56wQnAs4-1" value="shpmod_large_shuttles" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="keFB2HzAeQSh-l3yCjFL-42">
+        <mxCell id="aCe4N9a8sD5g56wQnAs4-1" value="shpmod_large_shuttles" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="keFB2HzAeQSh-l3yCjFL-42" vertex="1">
           <mxGeometry y="60" width="140" height="30" as="geometry" />
         </mxCell>
         <mxCell id="keFB2HzAeQSh-l3yCjFL-46" value="Cryogenic tanks" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
@@ -212,7 +217,7 @@
           <mxGeometry y="90" width="140" height="30" as="geometry" />
         </mxCell>
         <mxCell id="keFB2HzAeQSh-l3yCjFL-67" value="Naval Weaponary" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="960" y="1020" width="140" height="150" as="geometry" />
+          <mxGeometry x="1040" y="825" width="140" height="150" as="geometry" />
         </mxCell>
         <mxCell id="keFB2HzAeQSh-l3yCjFL-68" value="shpmod_railgun" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="keFB2HzAeQSh-l3yCjFL-67" vertex="1">
           <mxGeometry y="30" width="140" height="30" as="geometry" />
@@ -430,7 +435,7 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="9tYFpHOKv4lRxyuleGup-18" value="engage naval combat +&amp;nbsp;&lt;div&gt;Have twin workshop&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="1" vertex="1" connectable="0">
-          <mxGeometry x="1080" y="999.9985714285715" as="geometry">
+          <mxGeometry x="1160" y="809.9985714285715" as="geometry">
             <mxPoint x="3" as="offset" />
           </mxGeometry>
         </mxCell>

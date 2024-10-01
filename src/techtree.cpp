@@ -779,6 +779,8 @@ void TechTree::DrawUI() {
         }
 
         ui::Enclose();
+        ui::Current()->x_cursor = 5;
+        ui::Current()->y_cursor = 5;
         ui::DrawIcon(nodes[i].icon_index, color, 40);
         ui::Pop();  // Global
         /*

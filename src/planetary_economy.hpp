@@ -78,7 +78,7 @@ struct PlanetaryEconomy {
 
     PlanetaryEconomy();
 
-    void Update();
+    void Update(RID planet);
     void AdvanceEconomy();
     void RecalculateEconomy();
     void UIDrawResources(RID planet);

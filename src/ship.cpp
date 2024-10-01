@@ -920,7 +920,7 @@ void Ship::_OnDeparture(const TransferPlan* tp) {
             // Abort
              USER_INFO(
                 "Not enough fuel. Could not afford/access remaining fuel %d cts on %s", 
-                remaining_fuel, GetPlanet(tp->departure_planet)->name
+                remaining_fuel, GetPlanet(tp->departure_planet)->name.GetChar()
             )
             local_economy->GiveResource(tp->fuel_type, fuel_quantity);
             prepared_plans_count = 0;

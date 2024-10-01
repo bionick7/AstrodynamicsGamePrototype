@@ -22,7 +22,7 @@ PlanetaryEconomy::PlanetaryEconomy(){
         resource_delta[i] = 0;
         native_resource_delta[i] = 0;
         writable_resource_delta[i] = 0;
-        resource_capacity[i] = 1000;
+        resource_capacity[i] = 100;
         resource_price[i] = GetResourceData(i)->default_cost;
     }
     for (int i=0; i < resources::MAX*PRICE_TREND_SIZE; i++) {
@@ -68,7 +68,7 @@ resource_count_t PlanetaryEconomy::GetForPrice(resources::T resource, cost_t pri
     return price / resource_price[resource];
 }
 
-void PlanetaryEconomy::Update() {
+void PlanetaryEconomy::Update(RID planet) {
     if (global_resource_data[0].resource_index < 0) {
         FAIL("Resources uninitialized")
     }
@@ -78,7 +78,15 @@ void PlanetaryEconomy::Update() {
     }
     if (GetCalendar()->IsNewDay()) {
         GetTechTree()->ReportResourceProduction(resource_delta);
+        IDList ship_list;
+        GetShips()->GetOnPlanet(&ship_list, planet, 
+                                ship_selection_flags::GetAllegianceFlags(GetPlanet(planet)->allegiance));
+        int total_storage = 0;
+        for(int i=0; i < ship_list.Count(); i++) {
+            total_storage += GetShip(ship_list[i])->stats[ship_stats::INDUSTRIAL_STORAGE];
+        }
         for (int i=0; i < resources::MAX; i++) {
+            resource_capacity[i] = (1 + total_storage) * (i == resources::WATER ? 500 : 100);
             resource_stock[i] = Clamp(resource_stock[i] + resource_delta[i], 0, resource_capacity[i]);
             delivered_resources_today[i] = 0;
         }
