@@ -82,14 +82,12 @@ struct TechTreeNode {
     double default_status = -1;
     AtlasPos icon_index;
     int condition_index;
-
-    // Generated info (for drawing)
-    int layer = -1;
-    int index_in_layer = 0;
-    int total_in_layer = 0;
+    Vector2 draw_pos;
 };
 
 struct TechTree {
+    const int sidebar_width = 400;
+
     int nodes_count = 0;
     TechTreeNode* nodes = NULL;  // Static
     int* node_unlocked = NULL;
@@ -112,6 +110,8 @@ struct TechTree {
     int milestone_count = 0;
     Milestone* milestones = NULL;
 
+    Vector2 ui_camera_offset = {0};
+
     int Load(const DataNode* data);
     int LoadResearchCondition(const DataNode* data, int idx, int child_indices);
     void Update();
@@ -128,9 +128,9 @@ struct TechTree {
     void ReportResourceProduction(const resource_count_t production[]);
 
     bool IsMilestoneReached(const char* identifier);
-
     void GetAttachedConditions(int condition_index, List<int>* condition_indices) const;
 
+    Vector2 GetNodePos(const TechTreeNode* node) const;
     void DrawResearchProgressRecursive(int condition_index) const;
     void DrawUI();
 };

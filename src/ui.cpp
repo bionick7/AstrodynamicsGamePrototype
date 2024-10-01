@@ -673,6 +673,7 @@ void ui::FillLine(double value, Color fill_color, Color background_color) {
         x_start = ClampInt(x_start, tb->render_rec.x, tb->render_rec.x + tb->render_rec.width);
         x_end = ClampInt(x_end, tb->render_rec.x, tb->render_rec.x + tb->render_rec.width);
     }
+    tb->y_cursor += 2;
     ui::FillLineEx(x_start, x_end, y, value, fill_color, background_color);
 }
 

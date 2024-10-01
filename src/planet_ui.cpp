@@ -105,7 +105,7 @@ void Planet::DrawUI() {
     if (IsKeyPressed(KEY_S)) current_tab = 4;
     if (IsKeyPressed(KEY_D)) current_tab = 5;
 
-    ui::PushInset((DEFAULT_FONT_SIZE+4)*2);  // Tab container
+    ui::PushInset(DEFAULT_FONT_SIZE+4);  // Tab container
     int w = ui::Current()->width;
     const int n_tabs = 2;
     const int tab_columns = 2;
@@ -134,7 +134,7 @@ void Planet::DrawUI() {
         }if (button_state & button_state_flags::HOVER || i == current_tab) {
             ui::EnclosePartial(0, Palette::bg, Palette::ui_main, direction::DOWN);
         }
-        ui::Write(tab_descriptions[i]);
+        ui::WriteEx(tab_descriptions[i], text_alignment::CENTER, false);
         ui::Pop();  // GridCell
     }
     ui::Pop();  // Tab container

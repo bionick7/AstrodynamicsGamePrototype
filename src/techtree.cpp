@@ -204,7 +204,7 @@ Achievement::Achievement() {
     
 }
 
-int _SetNodeLayer(TechTreeNode* nodes, int index) {
+/*int _SetNodeLayer(TechTreeNode* nodes, int index) {
     if (nodes[index].layer >= 0) {
         return nodes[index].layer;
     }
@@ -216,7 +216,7 @@ int _SetNodeLayer(TechTreeNode* nodes, int index) {
         }
     }
     return nodes[index].layer;
-}
+}*/
 
 int _CountResearchConditionsRecursive(const DataNode *condition_data) {
     if (condition_data == NULL || !condition_data->Has("type")) {
@@ -298,6 +298,9 @@ int TechTree::Load(const DataNode *data) {
 
         RID rid = RID(i, EntityType::TECHTREE_NODE);
         nodes[i].str_id = GetGlobalState()->AddStringIdentifier(node_data->Get("id"), rid);
+        
+        nodes[i].draw_pos.x = node_data->GetArrayElemF("draw_pos", 0);
+        nodes[i].draw_pos.y = node_data->GetArrayElemF("draw_pos", 1);
     }
 
     milestones = new Milestone[milestone_count];
@@ -328,33 +331,6 @@ int TechTree::Load(const DataNode *data) {
         research_condition_index += LoadResearchCondition(research_condition_data, 
             research_condition_index, research_condition_index + 1) + 1;
     }
-
-    layers = 1;
-
-    // 3rd pass: Calculate layers
-    for(int i=0; i < nodes_count; i++) {
-        int layer = _SetNodeLayer(nodes, i);
-        if(layer + 1 > layers) {
-            layers = layer + 1;
-        }
-    }
-
-    int* layer_offsets = new int[layers];
-    for(int i=0; i < layers; i++) layer_offsets[i] = 0;
-    // 4th pass: Calculate layer indices (knowing max layers)
-    max_indices_in_layer = 1;
-    for(int i=0; i < nodes_count; i++) {
-        nodes[i].index_in_layer = layer_offsets[nodes[i].layer]++;
-        if (nodes[i].index_in_layer + 1 > max_indices_in_layer){
-            max_indices_in_layer = nodes[i].index_in_layer + 1;
-        }
-        //INFO("%s: %d, %d", nodes[i].name.GetChar(), nodes[i].layer, nodes[i].index_in_layer)
-    }
-    // 5th pass: Set total in layer
-    for(int i=0; i < nodes_count; i++) {
-        nodes[i].total_in_layer = layer_offsets[nodes[i].layer];
-    }
-    delete[] layer_offsets;
 
     UpdateTechProgress();
 
@@ -659,17 +635,12 @@ void TechTree::UpdateTechProgress() {
     }
 }
 
-Vector2 _GetNodePos(const TechTreeNode* node) {
-    int total_height = ui::Current()->height;
+Vector2 TechTree::GetNodePos(const TechTreeNode* node) const {
+    int mid_pos = ui::Current()->x + (ui::Current()->width - sidebar_width) / 2;
     Vector2 res;
-    res.x = ui::Current()->x + 20 + node->layer * 75;
-    if (node->total_in_layer == 1) {
-        res.y = ui::Current()->y + 20 + (total_height - 90) / 2;
-        res.y += node->layer * 5;
-    } else {
-        res.y = ui::Current()->y + 20 + node->index_in_layer * (total_height - 90) / (node->total_in_layer - 1);
-    }
-    return res;
+    res.x = mid_pos + node->draw_pos.x * 80;
+    res.y = ui::Current()->y + 20 + node->draw_pos.y * 100;
+    return Vector2Subtract(res, ui_camera_offset);
 }
 
 void TechTree::DrawResearchProgressRecursive(int condition_index) const {
@@ -724,40 +695,70 @@ void TechTree::DrawUI() {
     );
     ui::Enclose();
 
+    // Handle Input
+    ui_camera_offset = Vector2Add(ui_camera_offset, Vector2Scale(GetMouseWheelMoveV(), -20));
+
+    // Flavour
+    ui::PushAligned(300, 130, text_alignment::TOP | text_alignment::LEFT);
+    ui::Current()->text_color = Palette::ui_alt;
+    ui::Current()->x += 5;
+    ui::Current()->y += 5;
+    ui::Enclose();
+    ui::WriteEx("Technological\nDevelopment Plan", text_alignment::VCONFORM | text_alignment::HCENTER, false);
+    ui::FillLine(1, Palette::ui_alt, Palette::ui_alt);
+    ui::Write("");  // Linebreak
+    ui::Write("Version N°: 10.b");
+    ui::Write("ID: A486F-9");
+    ui::Write("Author: Ing. Olav Hobbs");
+    ui::Write("Approved by: [Pending]");
+    ui::Pop();  // Aligned
+
     int preview_tech = ui_hovered_tech >= 0 ? ui_hovered_tech : ui_selected_tech;
 
     // Draw Connections
 
-    BeginRenderInUILayer(ui::Current()->z_layer);
-    for(int i=0; i < nodes_count; i++) {
-        if (node_unlocked[i] < min_node_vis) {
+    ui::BeginDirectDraw();
+    for(int i=0; i <= nodes_count; i++) {
+        int node_index = i < nodes_count ? i : preview_tech;  // Re-render preview_tech on top of everything
+
+        if (node_unlocked[node_index] < min_node_vis) {
             continue;
         }
 
         Color connection_color = Palette::ui_dark;
                     
-        if (node_unlocked[i] >= 0) {
+        if (node_unlocked[node_index] >= 0) {
             connection_color = Palette::ui_alt;
         }
 
-        if (i == preview_tech) {
+        if (node_index == preview_tech) {
             connection_color = Palette::interactable_main;
         }
 
-        Vector2 node_pos = _GetNodePos(&nodes[i]);
-        for(int j=0; j < nodes[i].prerequisites.size; j++) {
-            Vector2 prereq_pos = _GetNodePos(&nodes[IdGetIndex(nodes[i].prerequisites[j])]);
-            DrawLine(node_pos.x + 25, node_pos.y + 25, prereq_pos.x + 25, prereq_pos.y + 25, connection_color);
+        Vector2 node_pos = Vector2Add(GetNodePos(&nodes[node_index]), { 25, 0 });
+        for(int j=0; j < nodes[node_index].prerequisites.size; j++) {
+            const int arrow_width = 8;
+            const int arrow_height = 10;
+
+            Vector2 prereq_pos = Vector2Add(GetNodePos(&nodes[IdGetIndex(nodes[node_index].prerequisites[j])]), { 25, 50 });
+            int mid_point_y = prereq_pos.y + 30 + nodes[node_index].draw_pos.x * 4;
+            Vector2 p1 = { prereq_pos.x, mid_point_y };
+            Vector2 p2 = { node_pos.x, mid_point_y };
+            DrawLineV(prereq_pos, p1, connection_color);
+            DrawLineV(p1, p2, connection_color);
+            DrawLineV(p2, node_pos, connection_color);
+            DrawTriangle(node_pos, Vector2Add(node_pos, { -arrow_width/2, -arrow_height }), 
+                         Vector2Add(node_pos, { arrow_width/2, -arrow_height }), connection_color);
         }
     }
-    EndRenderInUILayer();
+    ui::EndDirectDraw();
 
     ui_hovered_tech = -1;
     for(int i=0; i < nodes_count; i++) {
         if (node_unlocked[i] < min_node_vis) {
             continue;
         }
-        Vector2 node_pos = _GetNodePos(&nodes[i]);
+        Vector2 node_pos = GetNodePos(&nodes[i]);
         Color color = Palette::ui_dark;
             
         if (node_unlocked[i] == 1) {
@@ -770,7 +771,7 @@ void TechTree::DrawUI() {
             color = Palette::interactable_main;
         }
 
-        ui::PushGlobal(node_pos.x, node_pos.y, 50, 50, DEFAULT_FONT_SIZE, color, Palette::bg, ui::Current()->z_layer);
+        ui::PushFree(node_pos.x, node_pos.y, 50, 50);
         button_state_flags::T button_state = ui::AsButton();
         HandleButtonSound(button_state);
         if (button_state & button_state_flags::HOVER) {
@@ -778,22 +779,12 @@ void TechTree::DrawUI() {
             ui_hovered_tech = i;
         }
 
-        ui::Enclose();
+        ui::EncloseEx(0, Palette::bg, color, 0);
         ui::Current()->x_cursor = 5;
         ui::Current()->y_cursor = 5;
         ui::DrawIcon(nodes[i].icon_index, color, 40);
         ui::Pop();  // Global
-        /*
-        if (node_progress[i] > 0 && node_progress[i] < nodes[i].research_effort) {
-            ui::FillLineEx(
-                node_pos.x, node_pos.x + 50, node_pos.y + 57, 
-                node_progress[i] / (double)nodes[i].research_effort, 
-                Palette::ui_main, Palette::ui_alt
-            );
-        }*/
     }
-
-    const int sidebar_width = 400;
 
     Rectangle clickable_selection_rect = ui::Current()->GetRect();
     if (preview_tech >= 0) clickable_selection_rect.width -= sidebar_width;  // Exclude side-bar
@@ -808,10 +799,14 @@ void TechTree::DrawUI() {
         ui::PushHSplit(ui::Current()->width - sidebar_width, ui::Current()->width);
         ui::Enclose();
 
+        // Name
+        ui::WriteEx(nodes[preview_tech].name.GetChar(), text_alignment::HCENTER | text_alignment::VCONFORM, true);
+        ui::FillLine(1, Palette::ui_alt, Palette::bg);
+        ui::VSpace(10);
+
         // Prerequisites
-        ui::Write(nodes[preview_tech].name.GetChar());
         if (nodes[preview_tech].prerequisites.size > 0) {
-            ui::Write("Prerequisites: ");
+            ui::WriteEx("Prerequisites: ", text_alignment::HCENTER | text_alignment::VCONFORM, true);
             for (int i=0; i < nodes[preview_tech].prerequisites.size; i++) {
                 int prereq_index = IdGetIndex(nodes[preview_tech].prerequisites[i]);
                 if (node_unlocked[prereq_index] < 1) {
@@ -821,7 +816,10 @@ void TechTree::DrawUI() {
                 ui::Current()->text_color = Palette::ui_main;
             }
         }
+        ui::FillLine(1, Palette::ui_alt, Palette::bg);
+        ui::VSpace(8);
 
+        ui::WriteEx("Unlocks: ", text_alignment::HCENTER | text_alignment::VCONFORM, true);
         ui::HSpace(6);
         int width = ui::Current()->width;
         int columns = nodes[preview_tech].attached_components.size;
@@ -839,9 +837,11 @@ void TechTree::DrawUI() {
             ui::Pop();  // GridCell
         }
         ui::Pop();  // Inset
+        ui::FillLine(1, Palette::ui_alt, Palette::bg);
+        ui::VSpace(8);
         
         // Draw Progress
-        ui::Write("Unlock conditions: ");
+        ui::WriteEx("Unlocks: ", text_alignment::HCENTER | text_alignment::VCONFORM, true);
         ui::VSpace(6);
         if (node_unlocked[preview_tech] < 0) {
             // Gray out if not active
@@ -849,6 +849,11 @@ void TechTree::DrawUI() {
         }
         DrawResearchProgressRecursive(nodes[preview_tech].condition_index);
         ui::Current()->text_color = Palette::ui_main;
+        ui::FillLine(1, Palette::ui_alt, Palette::bg);
+        ui::VSpace(8);
+
+        // Description
+        ui::Write(nodes[preview_tech].description.GetChar());
 
         ui::Pop();  // Side-bar
     }

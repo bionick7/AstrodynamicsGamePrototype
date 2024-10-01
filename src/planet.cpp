@@ -479,8 +479,8 @@ RID Planets::AddPlanet(const DataNode* data) {
     RID id = GetIdByName(data->Get("name", "UNNAMED"));
     if (!IsIdValid(id)) return id;
     planet_array[IdGetIndex(id)].Deserialize(this, data);
-    planet_array[IdGetIndex(id)].Update();
     planet_array[IdGetIndex(id)].id = id;
+    planet_array[IdGetIndex(id)].Update();
     return id;
 }
 

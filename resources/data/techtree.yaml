@@ -15,6 +15,7 @@ techtree:
   - shpmod_water_extractor
   - shpmod_sail_medium
   icon_index: [2, 28]
+  draw_pos: [0, 0]
 
 - name: Metallurgy
   id: tech_metallurgy
@@ -34,6 +35,7 @@ techtree:
   - shpmod_aluminium_smelter
   - shpmod_steel_smelter
   icon_index: [1, 19]
+  draw_pos: [0, 1]
 
 - name: Industrial Modules
   id: tech_industry
@@ -51,6 +53,7 @@ techtree:
   - shpmod_manufacture_offices
   - shpmod_large_storage
   icon_index: [2, 19]
+  draw_pos: [-1, 2]
 
 - name: Shipbuilding
   id: tech_ships
@@ -75,6 +78,7 @@ techtree:
       allegiance: 0
       planet: Tethys
   icon_index: [3, 19]
+  draw_pos: [1, 2]
 
 - name: Construction at scale
   id: tech_heavy_industry
@@ -92,6 +96,7 @@ techtree:
   - shpmod_geothermal
   - shpmod_sail_large
   icon_index: [4, 19]
+  draw_pos: [-3, 3]
 
 - name: System Engineering
   id: tech_advanced_construction
@@ -108,6 +113,7 @@ techtree:
   - shpmod_cleanroom
   - shpmod_workshop
   icon_index: [5, 19]
+  draw_pos: [-2, 3]
 
 - name: Hydrogen Management
   id: tech_cryo
@@ -124,6 +130,7 @@ techtree:
   - shpmod_electrolyser
   - shpmod_fuel_cell
   icon_index: [6, 19]
+  draw_pos: [-1, 3]
 
 - name: Ship Specialization
   id: tech_equipment
@@ -144,6 +151,7 @@ techtree:
   milestone_unlocks:
   - combat
   icon_index: [7, 19]
+  draw_pos: [1, 3]
   
 - name: Surface shuttles
   id: tech_shuttles
@@ -155,6 +163,7 @@ techtree:
   - shpmod_shuttles
   - shpmod_large_shuttles
   icon_index: [8, 19]
+  draw_pos: [2, 3]
   
 - name: Large Shipbuilding Projects
   id: tech_advanced_ship
@@ -168,6 +177,7 @@ techtree:
   unlocks:
   - shp_bulk_transport
   icon_index: [9, 19]
+  draw_pos: [3, 4]
   
 - name: Mega Engineering
   id: tech_mega_engineering
@@ -184,6 +194,7 @@ techtree:
   - shp_spacestation
   - shpmod_launch_structure
   icon_index: [10, 19]
+  draw_pos: [-3, 4]
 
 - name: Resource Extraction at Scale
   id: tech_large_extraction
@@ -206,6 +217,7 @@ techtree:
   - shpmod_rock_extractor
   - shpmod_carbon_extractor
   icon_index: [11, 19]
+  draw_pos: [-2, 4]
 
 - name: Chemical industry
   id: tech_chemical
@@ -225,6 +237,7 @@ techtree:
   - shpmod_carbon_splitter
   - shpmod_industrial_sail
   icon_index: [12, 19]
+  draw_pos: [-1, 4]
 
 - name: Cryogenic tanks
   id: tech_droptank_hydrogen
@@ -244,6 +257,7 @@ techtree:
   unlocks:
   - shpmod_droptank_hydrogen
   icon_index: [13, 19]
+  draw_pos: [0, 4]
   
 - name: Semiconductor Industry
   id: tech_hitech
@@ -265,6 +279,7 @@ techtree:
   unlocks:
   - shpmod_electronics
   icon_index: [14, 19]
+  draw_pos: [-1, 5]
 
 - name: Ship Armor
   id: tech_armor
@@ -279,6 +294,7 @@ techtree:
   - shpmod_light_armor
   - shpmod_armor
   icon_index: [15, 19]
+  draw_pos: [1, 5]
   
 - name: Dedicated Naval Weaponry
   id: tech_naval_weaponry
@@ -301,6 +317,7 @@ techtree:
   - shpmod_pdc
   - shpmod_acs
   icon_index: [0, 20]
+  draw_pos: [2, 6]
   
 - name: Research and Development
   id: tech_rnd
@@ -319,6 +336,7 @@ techtree:
   - shpmod_enrichment_facility
   - shpmod_precision_workshop
   icon_index: [1, 20]
+  draw_pos: [-1, 6]
   
 - name: Aeronautics
   id: tech_aeronautics
@@ -334,6 +352,7 @@ techtree:
   - shpmod_aircraft
   - shpmod_atmos_shuttles
   icon_index: [2, 20]
+  draw_pos: [-3, 7]
   
 - name: Expeditionary Military
   id: tech_expeditionary_military
@@ -351,6 +370,7 @@ techtree:
   - shpmod_invasion_equipment
   - shpmod_armory
   icon_index: [3, 20]
+  draw_pos: [-2, 7]
   
 - name: Bio Industry
   id: tech_bio
@@ -366,6 +386,7 @@ techtree:
   unlocks:
   - shpmod_habitat
   icon_index: [4, 20]
+  draw_pos: [-1, 7]
   
 - name: Nuclear Power
   id: tech_nuclear
@@ -382,6 +403,7 @@ techtree:
   - shpmod_reactor
   - shpmod_reactor_industrial
   icon_index: [5, 20]
+  draw_pos: [0, 7]
 
 - name: Nuclear Rocketengines
   id: tech_ntr
@@ -397,3 +419,4 @@ techtree:
   unlocks:
   - shp_express
   icon_index: [6, 20]
+  draw_pos: [0, 8]

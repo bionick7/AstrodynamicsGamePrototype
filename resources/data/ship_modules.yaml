@@ -580,7 +580,7 @@ shipmodules:
     aluminium: 10
     polymers: 10
   icon_index:
-  - 8
+  - 13
   - 27
   type: small
   construction_requirements:
