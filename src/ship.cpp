@@ -1218,9 +1218,7 @@ void Ships::DrawShipClassUI(RID uuid) const {
             sb.AutoBreak(50);
             ui::SetMouseHint(sb.c_str);
         }
-        ui::VSpace((ui::Current()->height - 40) / 2);
-        ui::HSpace((ui::Current()->width - 40) / 2);
-        ui::DrawIcon(sc->icon_index, Palette::ui_main, 40);
+        ui::DrawIcon(sc->icon_index, text_alignment::CENTER, Palette::ui_main, 40);
     }
 }
 

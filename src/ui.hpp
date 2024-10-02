@@ -44,6 +44,7 @@ namespace text_alignment {
 };
 
 Vector2 ApplyAlignment(Vector2 pos, Vector2 size, text_alignment::T alignment);
+Vector2 ApplyAlignmentInRect(Rectangle pos, Vector2 size, text_alignment::T alignment);
 Rectangle DrawTextAligned(const char* text, Vector2 pos, text_alignment::T alignment, Color c, Color bg, uint8_t z_layer);
 
 namespace button_state_flags {
@@ -114,7 +115,8 @@ struct TextBox {
     void AdvanceLayout(const text::Layout* layout);
     void Decorate(const text::Layout* layout, const TokenList* tokens);
     enum TextureDrawMode { TEXTURE_DRAW_DEFAULT, TEXTURE_DRAW_SDF, TEXTURE_DRAW_RAW };
-    void DrawTexture(Texture2D texture, Rectangle source, int height, Color tint, TextureDrawMode draw_mode);
+    void DrawTexture(Texture2D texture, Rectangle source, int height, Color tint, 
+                     text_alignment::T alignment, TextureDrawMode draw_mode);
     button_state_flags::T WriteButton(const char* text);
     button_state_flags::T AsButton() const;
     Vector2 GetTextCursor() const;
@@ -201,7 +203,7 @@ namespace ui {
     void EncloseDynamic(int shrink, Color background_color, Color line_color, int corner_radius);
     void Shrink(int dx, int dy);
 
-    void DrawIcon(AtlasPos atlas_index, Color tint, int height);
+    void DrawIcon(AtlasPos atlas_index, text_alignment::T alignment, Color tint, int height);
     void Write(const char* text);
     void WriteEx(const char* text, text_alignment::T alignment, bool linebreak);
     button_state_flags::T WriteButton(const char* text);

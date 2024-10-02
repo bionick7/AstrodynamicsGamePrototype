@@ -207,11 +207,8 @@ void ShipModuleSlot::Draw() const {
     ui::EncloseEx(0, Palette::bg, Palette::bg, 5);
     int x_cursor = ui::Current()->x_cursor;
     int y_cursor = ui::Current()->y_cursor;
-    // Center
-    ui::Current()->x_cursor = (ui::Current()->width - 40) / 2;
-    ui::Current()->y_cursor = (ui::Current()->height - 40) / 2;
     
-    ui::DrawIcon(module_types::icons[module_type], Palette::ui_dark, 40);
+    ui::DrawIcon(module_types::icons[module_type], text_alignment::CENTER, Palette::ui_dark, 40);
     ui::Current()->x_cursor = x_cursor;
     ui::Current()->y_cursor = y_cursor;
 
@@ -620,12 +617,10 @@ void ShipModules::DrawShipModule(RID index, bool inactive) const {
         /*if (button_state & ButtonStateFlags::PRESSED) {
             return;
         }*/
-        ui::VSpace((ui::Current()->height - 40) / 2);
-        ui::HSpace((ui::Current()->width - 40) / 2);
         if (inactive) {
-            ui::DrawIcon(smc->icon_index, Palette::red, 40);
+            ui::DrawIcon(smc->icon_index, text_alignment::CENTER, Palette::red, 40);
         } else {
-            ui::DrawIcon(smc->icon_index, Palette::ui_main, 40);
+            ui::DrawIcon(smc->icon_index, text_alignment::CENTER, Palette::ui_main, 40);
         }
         //ui::Write(smc->name);
     }

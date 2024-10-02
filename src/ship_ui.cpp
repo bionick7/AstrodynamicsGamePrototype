@@ -564,10 +564,10 @@ void _UIDrawProduction(Ship* ship) {
         ui::Shrink(4, 4);
         ui::EncloseEx(0, Palette::bg, tab_draw_color, 0);
         if (i < module_types::ANY) {
-            ui::DrawIcon(module_types::icons[i], tab_draw_color, 40);
+            ui::DrawIcon(module_types::icons[i], text_alignment::CENTER, tab_draw_color, 40);
         } else {  // Ship classes
             // Hardcoded to draw transport ship icon
-            ui::DrawIcon(AtlasPos(2, 28), tab_draw_color, 40);
+            ui::DrawIcon(AtlasPos(2, 28), text_alignment::CENTER, tab_draw_color, 40);
         }
         button_state_flags::T button_state = ui::AsButton();
         HandleButtonSound(button_state);
@@ -610,9 +610,9 @@ void _UIDrawProduction(Ship* ship) {
 
         bool constructable = ship->CanProduce(id, false, true);
         if (constructable) {
-            ui::DrawIcon(atlas_pos, Palette::ui_main, ui::Current()->height);
+            ui::DrawIcon(atlas_pos, text_alignment::CENTER, Palette::ui_main, 40);
         } else {
-            ui::DrawIcon(atlas_pos, Palette::ui_alt, ui::Current()->height);
+            ui::DrawIcon(atlas_pos, text_alignment::CENTER, Palette::ui_alt, 40);
         }
         //ui::FillLine(1.0, Palette::ui_main, Palette::bg);
         //ui::Write(ship_class->description);
@@ -657,7 +657,7 @@ void _UIDrawProduction(Ship* ship) {
             ship->production_queue.EraseAt(i);
             i--;
         }
-        ui::DrawIcon(atlas_pos, Palette::ui_main, ui::Current()->height);
+        ui::DrawIcon(atlas_pos, text_alignment::CENTER, Palette::ui_main, 40);
         double progress = ship->production_process / (double) total_construction_time;
         if (i == 0) {
             ui::FillLineEx(

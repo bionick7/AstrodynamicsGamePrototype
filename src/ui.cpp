@@ -21,6 +21,21 @@ Vector2 ApplyAlignment(Vector2 anchorpoint, Vector2 size, text_alignment::T alig
     return anchorpoint;
 }
 
+Vector2 ApplyAlignmentInRect(Rectangle enclosing, Vector2 size, text_alignment::T alignment) {
+    Vector2 anchor = { enclosing.x, enclosing.y };
+    int w2 = enclosing.width;
+    int h2 = enclosing.height;
+    switch(alignment & text_alignment::HFILTER){
+        case text_alignment::HCENTER: anchor.x += w2/2; break;
+        case text_alignment::RIGHT: anchor.x += w2; break;
+    }
+    switch(alignment & text_alignment::VFILTER){
+        case text_alignment::VCENTER: anchor.y += h2/2; break;
+        case text_alignment::BOTTOM: anchor.y += h2; break;
+    }
+    return ApplyAlignment(anchor, size, alignment);
+}
+
 Rectangle DrawTextAligned(const char* text, Vector2 pos, text_alignment::T alignment, Color c, Color bg, uint8_t z_layer) {
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(DEFAULT_FONT_SIZE), text, DEFAULT_FONT_SIZE, 1);
     pos = ApplyAlignment(pos, size, alignment);
@@ -265,10 +280,12 @@ void TextBox::Decorate(const text::Layout* layout, const TokenList* tokens) {
 }
 
 void TextBox::DrawTexture(Texture2D texture, Rectangle source, int texture_height, Color tint, 
-                          TextureDrawMode draw_mode) {
-    Vector2 pos = {x + x_cursor, y + y_cursor};
+                          text_alignment::T alignment, TextureDrawMode draw_mode) {
     int texture_width = texture_height * source.width / source.height;
+    
+    Vector2 pos = ApplyAlignmentInRect(GetRect(), { (float)texture_width, (float)texture_height }, alignment);
     Rectangle destination = { pos.x, pos.y, (float)texture_width, (float)texture_height };
+
     bool outside_render_rect = !CheckCollisionRecs(render_rec, destination);
     bool inside_render_rect = CheckEnclosingRecs(render_rec, destination);
     if (outside_render_rect) {
@@ -629,13 +646,13 @@ void ui::EncloseDynamic(int shrink, Color background_color, Color line_color, in
     ui::Current()->EncloseDynamic(shrink, corner_radius, background_color, line_color);
 }
 
-void ui::DrawIcon(AtlasPos atlas_index, Color tint, int height) {
+void ui::DrawIcon(AtlasPos atlas_index, text_alignment::T alignment, Color tint, int height) {
     if (GetSettingBool("sdf_icons", false)) {
         ui::Current()->DrawTexture(GetUI()->GetIconAtlasSDF(), atlas_index.GetRect(ATLAS_SIZE), 
-                                   height, tint, TextBox::TEXTURE_DRAW_SDF);
+                                   height, tint, alignment, TextBox::TEXTURE_DRAW_SDF);
     } else {
         ui::Current()->DrawTexture(GetUI()->GetIconAtlas(), atlas_index.GetRect(ATLAS_SIZE), 
-                                   height, tint, TextBox::TEXTURE_DRAW_DEFAULT);
+                                   height, tint, alignment, TextBox::TEXTURE_DRAW_DEFAULT);
     }
 }
 
