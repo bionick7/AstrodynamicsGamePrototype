@@ -81,6 +81,18 @@ satellites:
   rotation_period: 45.307  # tidally locked
   mass: 6.17449e+21
 
+- name: Dione
+  body_size: Minor
+  Ecc: 0.002
+  SMA: 377.700e+6
+  Inc: 0.0
+  Ann: 212.0
+  LoA: 40.6
+  AoP: 116.3
+  radius: 561.4e+3
+  rotation_period: 65.686  # tidally locked
+  mass: 1.0955e+21
+
 - name: Rhea
   body_size: Minor
   Ecc: 0.001

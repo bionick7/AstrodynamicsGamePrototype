@@ -94,6 +94,7 @@ shipmodules:
     electronics: 5
   planets_restriction:
   - Rhea
+  - Dione
   - Iaeptus
   icon_index:
   - 9

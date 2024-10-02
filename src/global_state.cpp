@@ -91,7 +91,7 @@ void _UpdateShipsPlanets(GlobalState* gs) {
         }
     }
     bool ship_selected = IsIdValidTyped(gs->hover, EntityType::SHIP);
-    double min_pixel_distance = 15;  // Threshhold
+    double min_pixel_distance = 15;  // Threshold
     for (int planet_id = 0; planet_id < gs->planets.GetPlanetCount(); planet_id++) {
         Planet* planet = GetPlanetByIndex(planet_id);
         planet->Update();
@@ -130,12 +130,12 @@ void GlobalState::UpdateState(double delta_t) {
     panel_management::HandleDeselect(this);
 
     active_transfer_plan.Update();
-    wren_interface.Update();
-    quest_manager.Update();
     techtree.Update();
     _UpdateShipsPlanets(this);
 
     camera.HandleInput();
+    // AI update
+    factions.Update();
 
     if (frame_count == 0 || IsKeyPressed(KEY_Q)) {
         static const char* lorem = 
@@ -164,8 +164,6 @@ void GlobalState::UpdateState(double delta_t) {
         assets::Reload();
     }
 
-    // AI update
-    factions.Update();
 }
 
 // Draw - Called FROM render_server

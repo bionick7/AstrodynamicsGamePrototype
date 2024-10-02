@@ -68,6 +68,10 @@ void MainLoopStep(GlobalState* app) {
 
     BeginDrawing();
     app->render_server.Draw();
+    //float x = GetScreenWidth() / 2;
+    //float y = GetScreenHeight() / 2;
+    //ClearBackground(Palette::bg);
+    //DrawRectanglePro({x - 100, y - 100, 200, 200}, {100, 100}, GetTime() * 50, Palette::red);
     EndDrawing();
 
     app->frame_count++;  // Only update at the very end

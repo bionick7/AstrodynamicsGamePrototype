@@ -128,6 +128,7 @@ void StringBuilder::WriteToFile(const char * filename) const {
 }
 
 void StringBuilder::Clear() {
+    delete[] c_str;
     c_str = new char[1];
     c_str[0] = '\0';
     length = 1;

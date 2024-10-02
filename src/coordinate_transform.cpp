@@ -65,6 +65,7 @@ void Calendar::DrawUI() const {
     //const char* text = TextFormat("%s Time x %.1f", paused ? ICON_PAUSE : ICON_PLAY, time_scale);
     //Vector2 pos = { GetScreenWidth() - MeasureTextEx(font, text, font_size, 1).x - 10, 10 };
     //text::DrawTextEx(font, text, pos, font_size, 1, Palette::ui_main, Palette::bg, GetScreenRect(), 0);
+    
     StringBuilder sb;
     sb.AddDate(GlobalGetNow());
     Vector2 pos = { GetScreenWidth() - MeasureTextEx(font, sb.c_str, font_size, 1).x - 10, 30 };

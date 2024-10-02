@@ -188,7 +188,6 @@ void Planet::RecalculateStats() {
         }
     }
 
-
     independence_delta += delta_from_delivery;
     independence_delta += module_independence_delta;
     independence_delta_log.AddFormat("Base: %+d\n", base_independence_delta);
@@ -356,7 +355,7 @@ void Planet::GetRandomOrbit(int index, Orbit *orbit) const {
         while (orbit->sma >= max_radius || orbit->sma < min_radius);
         break;
     case HIGH:
-        do orbit->sma = randomgen::GetRandomUniform(min_radius * 3, max_radius);
+        do orbit->sma = randomgen::GetRandomUniform(fminf(min_radius * 3, max_radius * 0.5), max_radius);
         while (orbit->sma >= max_radius || orbit->sma < min_radius);
         break;
     case STATIONARY:
@@ -403,6 +402,7 @@ void Planet::Update() {
     position = orbit.GetPosition(now);
     cached_ship_list.Clear();
     GetShips()->GetOnPlanet(&cached_ship_list, id, ship_selection_flags::ALL);
+
     //int index = IdGetIndex(id);
     //position = orbit.FromRightAscension(-PI/2 * index);
     //position = orbit.FromRightAscension(-PI/2);

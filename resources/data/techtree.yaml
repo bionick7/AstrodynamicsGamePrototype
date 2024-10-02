@@ -261,8 +261,12 @@ techtree:
   
 - name: Semiconductor Industry
   id: tech_hitech
-  description: >
-    TBD
+  description: |
+    Semiconductors are simultaneously very hard to manufacture but essential 
+    for most modern technology. Although we can never hope to match the computer
+    technology from Argentina or Mariner, basic electrical components and 
+    low-end integrated circuits are within our reach given enough investment
+    and the expertise of Mimas polytechnic school.
   start_condition: available
   prerequisites: [tech_chemical]
   condition:
@@ -326,8 +330,10 @@ techtree:
   start_condition: available
   prerequisites: [tech_hitech]
   condition:
-    type: achievement
-    id: TBD
+  - type: production_counter
+    rsc: electronics
+    comp: geq
+    value: 20
   unlocks:
   - shpmod_barracks
   - shpmod_windtunnel
@@ -364,7 +370,7 @@ techtree:
     type: stat_achieved
     stat: military_training
     comp: geq
-    value: 2
+    value: 1
   unlocks:
   - shpmod_exp_brigade
   - shpmod_invasion_equipment
@@ -382,7 +388,7 @@ techtree:
     type: stat_achieved
     stat: bio_manufacturing
     comp: geq
-    value: 2
+    value: 1
   unlocks:
   - shpmod_habitat
   icon_index: [4, 20]

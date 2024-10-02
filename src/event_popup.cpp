@@ -147,8 +147,8 @@ void event_popup::EmbeddedSceneFace(RID scene_rid, int height) {
 
     Rectangle source_rect = { 0, 0, scene->render_width, scene->render_height };
     BeginRenderInUILayer(ui::Current()->z_layer);
-    ui::Current()->DrawTexture(scene->render_target.texture, source_rect, 
-                               face_height, WHITE, TextBox::TEXTURE_DRAW_RAW);
+    ui::Current()->DrawTexture(scene->render_target.texture, source_rect, face_height,
+                               WHITE, text_alignment::CENTER, TextBox::TEXTURE_DRAW_RAW);
     EndRenderInUILayer();
 }
 

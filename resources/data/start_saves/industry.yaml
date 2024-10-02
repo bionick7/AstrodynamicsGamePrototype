@@ -64,6 +64,12 @@ planets:
     - shpmod_electrolyser
     - shpmod_reactor
     base_independance_delta: -10
+    
+  - name: Dione
+    trading_accessible: n
+    allegiance: 0
+    resource_stock: {}
+    base_independance_delta: 0
 
   - name: Rhea
     trading_accessible: n
