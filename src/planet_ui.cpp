@@ -90,7 +90,7 @@ void Planet::DrawUI() {
         (GetGlobalState()->focused_planet == id && !IsIdValidTyped(GetGlobalState()->hover, EntityType::PLANET))
     ) {
         y_start = 10;
-        height = GetScreenHeight() - 20;
+        height = GetScreenHeight() / 2 - 20;
     } else {
         return;
     }

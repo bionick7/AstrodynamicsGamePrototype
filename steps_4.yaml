@@ -184,6 +184,12 @@ planets:
   - 3 shpmod_heatpump
   - 4 shpmod_electrolyser
 
+- name: Dione
+  trading_accessible: n
+  allegiance: 0
+  resource_stock: {}
+  base_independance_delta: 0
+
 - allegiance: 0
   base_independence_delta: 0
   id: 16777221
@@ -194,7 +200,7 @@ planets:
   resource_delta:
     rock: 300
     water: 50
-
+  
   resource_stock:
     aluminium: 234
     aluminium_ore: 20
@@ -302,32 +308,32 @@ ships:
 
 
   prepared_plans:
-  - arrival_planet: 16777221
+  - arrival_planet: Rhea
     arrival_time: 28937867.859305
-    departure_planet: 16777222
+    departure_planet: Titan
     departure_time: 28539227.441021
     resource_transfer:
       carbon: 23
 
 
-  - arrival_planet: 16777220
+  - arrival_planet: Tethys
     arrival_time: 29111434.776911
-    departure_planet: 16777221
+    departure_planet: Rhea
     departure_time: 28977099.296397
     resource_transfer:
       iron_ore: 51
 
 
-  - arrival_planet: 16777221
+  - arrival_planet: Rhea
     arrival_time: 29438653.940107
-    departure_planet: 16777220
+    departure_planet: Tethys
     departure_time: 29304318.459593
     resource_transfer:
 
 
-  - arrival_planet: 16777222
+  - arrival_planet: Titan
     arrival_time: 30210749.660829
-    departure_planet: 16777221
+    departure_planet: Rhea
     departure_time: 29830257.963239
     resource_transfer:
 

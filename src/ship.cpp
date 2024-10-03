@@ -8,6 +8,8 @@
 #include "debug_drawing.hpp"
 #include "combat.hpp"
 
+#include <bitset>
+
 double ShipClass::GetPayloadCapacityMass(double dv, int drop_tanks) const {
     //          dv_n = v_e * ln((max_cap + oem + extra_fuel * n) / (max_cap + oem + extra_fuel * (n - 1)))
     //          dv_0 = v_e * ln((max_cap + oem) / (x + eom))
@@ -45,6 +47,26 @@ void ShipClass::MouseHintWrite(StringBuilder* sb) const {
     if (stat_num > 0) {
         sb->Add("Base: ").Add(sb2.c_str).Add("\n");
     }
+}
+
+bool ShipClass::CanUseFuel(resources::T resource) const {
+    return available_fuels & (1 << resource);
+}
+
+resources::T ShipClass::GetNextAvailableFuelType(resources::T resource) const {
+    int i = resource + 1;
+    for (;!(available_fuels & (1 << i)); i++) {
+        if (i >= resources::MAX) {
+            return resources::NONE;
+        }
+    }
+    return (resources::T)i;
+}
+
+int ShipClass::AvailableFuelTypeCount() const {
+    // 'Hamming weight'
+    std::bitset<64> fuels_bitset(available_fuels);
+    return fuels_bitset.count();
 }
 
 Ship::Ship() {
@@ -374,10 +396,12 @@ int Ship::CountModulesOfClass(RID module_class) const {
 
 int Ship::CountWorkingDroptanks() const {
     int res = 0;
-    resources::T rsc = GetShipClassByRID(ship_class)->fuel_resource;
-    for(int i=0; i < SHIP_MAX_MODULES; i++) {
-        if (GetShipModules()->IsDropTank(modules[i], rsc)) res++;
-    }
+    const ShipClass* sc = GetShipClassByRID(ship_class);
+    resources::T rsc = sc->GetNextAvailableFuelType(resources::NONE);
+    for(;rsc != resources::NONE; rsc = sc->GetNextAvailableFuelType(rsc))  // Iterates over fuel types
+    for(int i=0; i < SHIP_MAX_MODULES; i++)  // Iterates over modules
+        if (GetShipModules()->IsDropTank(modules[i], rsc)) 
+            res++;
     return res;
 }
 
@@ -904,7 +928,6 @@ void Ship::_OnDeparture(const TransferPlan* tp) {
     }
 
     PlanetaryEconomy* local_economy = &GetPlanet(tp->departure_planet)->economy;
-    //resources::T fuel_type = GetShipClassByRID(ship_class)->fuel_resource;
 
     resource_count_t fuel_quantity = local_economy->TakeResource(tp->fuel_type, tp->fuel);
     if (fuel_quantity < tp->fuel && IsPlayerControlled()) {
@@ -1031,12 +1054,14 @@ void Ship::_OnArrival(const TransferPlan* tp) {
     }
 
     // Remove drop tanks
-    for(int i=0; i < SHIP_MAX_MODULES; i++) {
-        if (GetShipModules()->IsDropTank(modules[i], GetShipClassByRID(ship_class)->fuel_resource)) {
+    const ShipClass* sc = GetShipClassByRID(ship_class);
+    resources::T rsc = sc->GetNextAvailableFuelType(resources::NONE);
+    for(;rsc != resources::NONE; rsc = sc->GetNextAvailableFuelType(rsc))  // Iterates over fuel types
+    for(int i=0; i < SHIP_MAX_MODULES; i++)  // Iterates over modules
+        if (GetShipModules()->IsDropTank(modules[i], rsc)) {
             RemoveShipModuleAt(i);
             GetTechTree()->ReportAchievement("archvmt_droptank");
         }
-    }
 
     RemoveTransferPlan(0);
 
@@ -1045,8 +1070,7 @@ void Ship::_OnArrival(const TransferPlan* tp) {
     Update();
 }
 
-bool ship_selection_flags::MatchesShip(T selection_flags, const Ship *ship)
-{
+bool ship_selection_flags::MatchesShip(T selection_flags, const Ship *ship) {
     if (((1 << ship->allegiance) & selection_flags) == 0)  return false;
     if (!(selection_flags & ship_selection_flags::MILITARY) && ship->GetCombatStrength() > 0)  return false;
     if (!(selection_flags & ship_selection_flags::CIVILIAN) && ship->GetCombatStrength() == 0)  return false;
@@ -1121,7 +1145,10 @@ int Ships::LoadShipClasses(const DataNode* data) {
         sc.max_capacity = sc_data->GetI("capacity", 0);
         sc.max_dv = sc_data->GetF("dv", 0) * 1000;  // km/s -> m/s
         sc.v_e = sc_data->GetF("Isp", 0) * 1000;    // km/s -> m/s
-        sc.fuel_resource = (resources::T) FindResource(sc_data->Get("fuel", "", true), resources::WATER);
+        sc.available_fuels = 0;
+        for(int i=0; i < sc_data->GetArrayLen("fuel", true); i++) {
+            sc.available_fuels |= 1 << FindResource(sc_data->GetArrayElem("fuel", i, "", true), resources::WATER);
+        }
         sc.construction_time = sc_data->GetI("construction_time", 20);
         sc.oem = ResourceCountsToKG(sc.max_capacity) / (exp(sc.max_dv/sc.v_e) - 1);
         sc.construction_batch_size = sc_data->GetI("batch_size", 1, true);

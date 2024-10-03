@@ -752,7 +752,7 @@ int ui::DrawLimitedSlider(int current, int min, int max, int limit, int width, i
     DrawRectangleRec(fill, bg);
     DrawRectangleLinesEx(primary, 1, fg);
     int x_limit = primary.x + primary.width * (limit - min) / (double) (max - min);
-    DrawLine(x_limit, primary.y - 3, x_limit, primary.y + primary.height + 3, fg);
+    DrawLine(x_limit, primary.y, x_limit, primary.y + primary.height, fg);
     ui::EndDirectDraw();
     Rectangle collision_rec = primary;
     collision_rec.x -= 5;
@@ -827,7 +827,7 @@ void ui::VSpace(int pixels) {
 }
 
 void ui::SetMouseHint(const char* text) {
-    Vector2 mousepos = GetMousePosition();
+    Vector2 mousepos = Vector2Add(GetMousePosition(), {5, 5});
     int max_width = GetScreenWidth() - mousepos.x;
     
     text::Layout layout;

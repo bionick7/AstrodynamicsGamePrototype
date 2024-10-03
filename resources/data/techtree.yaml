@@ -20,8 +20,8 @@ techtree:
 - name: Metallurgy
   id: tech_metallurgy
   description: >
-    All production is based on the primary materials available to us:
-    ALuminium and Steel
+    Most bulk production is based on the primary materials available to us:
+    Aluminium for naval engineering and Steel for industry.
   start_condition: available
   prerequisites: [tech_start]
   condition:
@@ -40,7 +40,9 @@ techtree:
 - name: Industrial Modules
   id: tech_industry
   description: >
-    TBD
+    Industry (n), [...] 4.b) Manufacturing or production, and those involved in it, regarded as 
+    an entity, esp. owners or managers of companies, factories, etc., regarded as 
+    influential figures, esp. with regard to investment in an economy.
   start_condition: available
   prerequisites: [tech_metallurgy]
   condition:
@@ -83,8 +85,9 @@ techtree:
 - name: Construction at scale
   id: tech_heavy_industry
   description: >
-    Heavier industry requires larger facilities. 
-    These large facilities allow for efficiency at scale.
+    Heavier industry requires larger facilities, that can operate
+    more efficiently at scale. Also allows for the construction of
+    Geothermal power plants on Enceladus, a tidally active moon.
   start_condition: available
   prerequisites: [tech_industry]
   condition:
@@ -101,7 +104,16 @@ techtree:
 - name: System Engineering
   id: tech_advanced_construction
   description: >
-    TBD
+    Previous manufacturing efforts relied on the previous experience and intuition of
+    older experts, able to coordinate a small group of people. As we venture into more and
+    more complex technology, this form of nonchalant, informal management will inevitably
+    reach their limits. To deal with these challenges of scale and coordination, we must
+    take a look at our former enemy's playbook.
+
+    Before we can trust our continued existence on ever increasingly fragile and precarious 
+    systems of technology, office environments, bureaucratic hierarchies and responsibility 
+    traces need to be established and we need to dedicate the most experienced people on
+    ensuring the safe and efficient development of new technologies.
   start_condition: available
   prerequisites: [tech_industry]
   condition:
@@ -118,7 +130,13 @@ techtree:
 - name: Hydrogen Management
   id: tech_cryo
   description: >
-    As fuel or ingredient in industrial and chemical processes, hydrogen ...
+    As propellant, energy storage or ingredient in chemical processes, hydrogen is one of most 
+    ubiquitous resources in our modern society. As inhabitants of Saturn and the universe, it
+    is also by far the most ubiquitous resource in our environment. The problem lies in extracting
+    and storing the material. Handling the material often needs cryogenic (very cold) temperatures
+    achieved through cryogenic heatpumps. Hydrogen, alongside with oxygen is primarily produced from
+    water through electrolysis, but can also be extracted directly from Saturn, if you can afford
+    to bring it back up
   start_condition: available
   prerequisites: [tech_industry]
   condition:
@@ -135,8 +153,12 @@ techtree:
 - name: Ship Specialization
   id: tech_equipment
   description: >
-    Modules build for smaller ships allow modifying the function ...
-    TBD
+    Most people are familiar with the concept of modularity in the context of larger stations.
+    The station consists of a main bus providing living space power and a structural framework,
+    where modules can added onto. The modules then provide the actual industrial or civil function
+    of the station. Fewer people are aware that most ships are build with, to some extent, the same
+    philosophy. The idea is that ships can be re-purposed at any time for crisis situations, demand
+    spikes or even war.
   start_condition: available
   prerequisites: [tech_ships]
   condition:
@@ -145,7 +167,6 @@ techtree:
     comp: geq
     value: 1
   unlocks:
-  - shpmod_droptank_water
   - shpmod_sail_small
   - shpmod_gun
   milestone_unlocks:
@@ -156,9 +177,19 @@ techtree:
 - name: Surface shuttles
   id: tech_shuttles
   description: >
-    TBD
+    Generally, most human activity on a planet takes place on the various stations in orbit.
+    Some parts, however, like resource extraction require boots on the ground. The connection
+    between these surface outposts and the stations up above is made by specially designed
+    shuttles. Smaller shuttles only work on smaller bodies with low orbital velocities. Larger
+    bodies like Titan require large shuttles. Most of these shuttles consume 'water' in the form
+    in hydrogen and oxygen in their daily routines.
   start_condition: available
   prerequisites: [tech_ships]
+  condition:
+    type: production_counter
+    rsc: aluminium
+    comp: geq
+    value: 50
   unlocks:
   - shpmod_shuttles
   - shpmod_large_shuttles
@@ -168,12 +199,15 @@ techtree:
 - name: Large Shipbuilding Projects
   id: tech_advanced_ship
   description: >
-    TBD
+    The smaller variety of transport ships serve us well, but some payloads
+    require larger vessels. Be wary of the fuel consumption.
   start_condition: available
   prerequisites: [tech_ships, tech_advanced_construction]
   condition:
-    type: achievement
-    id: archvmt_conveniat
+    type: produce_item
+    item: shp_light_transport
+    comp: geq
+    value: 3
   unlocks:
   - shp_bulk_transport
   icon_index: [9, 19]
@@ -182,7 +216,7 @@ techtree:
 - name: Mega Engineering
   id: tech_mega_engineering
   description: >
-    TBD
+    God gives the biggest engineering projects to his most powerful industries.
   start_condition: available
   prerequisites: [tech_heavy_industry]
   condition:
@@ -199,7 +233,10 @@ techtree:
 - name: Resource Extraction at Scale
   id: tech_large_extraction
   description: >
-    TBD
+    Until now, our resource extraction efforts have been confined to preexisting infrastructure
+    and technology developed for small outposts. This of course only gets us so far. Larger
+    and more versatile surface outposts are available if you can afford to bring their exploits
+    back up into space.
   start_condition: available
   prerequisites: [tech_heavy_industry, tech_shuttles]
   condition:
@@ -222,7 +259,10 @@ techtree:
 - name: Chemical industry
   id: tech_chemical
   description: >
-    TBD
+    Don't ask me any details on the specifics, but with enough energy hydrogen carbon and oxygen
+    can be recombined into almost any compound in organic chemistry. We can use this to produce
+    polymers (rubber, plastic, carbon fiber ...) from industrial waste product and atmospheric gases.
+    [To be edited]
   start_condition: available
   prerequisites: [tech_advanced_construction, tech_cryo]
   condition:
@@ -239,10 +279,16 @@ techtree:
   icon_index: [12, 19]
   draw_pos: [-1, 4]
 
-- name: Cryogenic tanks
+- name: Cryogenic drop-tanks
   id: tech_droptank_hydrogen
   description: >
-    TBD
+    It is possible to give ships temporary tanks with additional fuel.
+    The ships will drain these tanks first and then eject the empty tanks 
+    to save on mass, which allow ships to reach a bit further or carry a bit
+    more then they ordinarily would. Even though the concept of staged
+    rocketry is ancient, redeveloping tanks that fit our ships and can hold
+    cryogenic liquids well enough still requires some experience with
+    cryogenic liquids.
   start_condition: available
   prerequisites: [tech_cryo, tech_equipment]
   condition:
@@ -255,13 +301,14 @@ techtree:
     - type: achievement
       id: archvmt_droptank
   unlocks:
+  - shpmod_droptank_water
   - shpmod_droptank_hydrogen
   icon_index: [13, 19]
   draw_pos: [0, 4]
   
 - name: Semiconductor Industry
   id: tech_hitech
-  description: |
+  description: >
     Semiconductors are simultaneously very hard to manufacture but essential 
     for most modern technology. Although we can never hope to match the computer
     technology from Argentina or Mariner, basic electrical components and 
@@ -288,7 +335,9 @@ techtree:
 - name: Ship Armor
   id: tech_armor
   description: >
-    TBD
+    A protective layer of material that protects ships from hypervelocity projectiles and
+    direct energy weapons. Most vessels have some extend of armor to protect against small
+    debree, but the military variety can keep ships alive longer in an engagement.
   start_condition: available
   prerequisites: [tech_equipment]
   condition:
@@ -303,7 +352,9 @@ techtree:
 - name: Dedicated Naval Weaponry
   id: tech_naval_weaponry
   description: >
-    TBD
+    Dedicated weaponry for space combat applications. Most of these are
+    quite complicated to produce, but easily outperforms any conventional
+    weapon systems.
   start_condition: available
   prerequisites: [tech_hitech, tech_equipment]
   condition:
@@ -411,7 +462,7 @@ techtree:
   icon_index: [5, 20]
   draw_pos: [0, 7]
 
-- name: Nuclear Rocketengines
+- name: Nuclear Rocket engines
   id: tech_ntr
   description: >
     TBD

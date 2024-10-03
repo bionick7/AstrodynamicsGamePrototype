@@ -182,6 +182,12 @@ planets:
   - 7 shpmod_gun
   - 8 shpmod_gun
 
+- name: Dione
+  trading_accessible: n
+  allegiance: 0
+  resource_stock: {}
+  base_independance_delta: 0
+  
 - allegiance: 0
   base_independence_delta: 0
   id: 16777221
@@ -300,32 +306,32 @@ ships:
 
 
   prepared_plans:
-  - arrival_planet: 16777222
+  - arrival_planet: Titan
     arrival_time: 34514634.921407
-    departure_planet: 16777221
+    departure_planet: Rhea
     departure_time: 34181806.530688
     resource_transfer:
 
 
-  - arrival_planet: 16777221
+  - arrival_planet: Rhea
     arrival_time: 34935424.575304
-    departure_planet: 16777222
+    departure_planet: Titan
     departure_time: 34526976.515029
     resource_transfer:
       carbon: 23
 
 
-  - arrival_planet: 16777220
+  - arrival_planet: Tethys
     arrival_time: 35276966.635377
-    departure_planet: 16777221
+    departure_planet: Rhea
     departure_time: 35142631.154863
     resource_transfer:
       iron_ore: 51
 
 
-  - arrival_planet: 16777221
+  - arrival_planet: Rhea
     arrival_time: 35604177.062642
-    departure_planet: 16777220
+    departure_planet: Tethys
     departure_time: 35469841.582127
     resource_transfer:
 

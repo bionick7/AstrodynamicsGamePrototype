@@ -838,8 +838,8 @@ void TechTree::DrawUI() {
         ui::FillLine(1, Palette::ui_alt, Palette::bg);
         ui::VSpace(8);
         
-        // Draw Progress
-        ui::WriteEx("Unlocks: ", text_alignment::HCENTER | text_alignment::VCONFORM, true);
+        // Requirements
+        ui::WriteEx("Requirements: ", text_alignment::HCENTER | text_alignment::VCONFORM, true);
         ui::VSpace(6);
         if (node_unlocked[preview_tech] < 0) {
             // Gray out if not active

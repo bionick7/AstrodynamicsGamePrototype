@@ -379,7 +379,6 @@ void _ProductionQueueMouseHint(RID id, const Ship* ship, bool is_in_production_q
     const int* construction_requirements = NULL;
     int build_time = 0;
     int batch_size = 0;
-    bool is_planet_invalid = false;
     switch (IdGetType(id)) {
         case EntityType::SHIP_CLASS: {
             const ShipClass* ship_class = GetShipClassByRID(id);
@@ -401,7 +400,6 @@ void _ProductionQueueMouseHint(RID id, const Ship* ship, bool is_in_production_q
             construction_requirements =  &module_class->construction_requirements[0];
             build_time = module_class->GetConstructionTime();
             batch_size = module_class->construction_batch_size;
-            is_planet_invalid = module_class->IsPlanetRestricted(planet->id);
             break;
         }
         default: break;
@@ -448,10 +446,23 @@ void _ProductionQueueMouseHint(RID id, const Ship* ship, bool is_in_production_q
 
     ui::Current()->LineBreak();
 
-    if (is_planet_invalid) {
-        ui::Current()->text_color = Palette::red;
-        ui::Write("Not working on this planet");
-        ui::Current()->text_color = Palette::ui_main;
+    // Notify if planet is invalid
+
+    if (IsIdValidTyped(id, EntityType::MODULE_CLASS)) {
+        const ShipModuleClass* module_class = GetModule(id);
+        bool is_planet_invalid = module_class->IsPlanetRestricted(planet->id);
+        if (is_planet_invalid) {
+            sb.Clear();
+            sb.Add("Not working on this planet - Use instead on:\n");
+            for (int i=0; i < GetPlanets()->GetPlanetCount(); i++) {
+                if ((module_class->planets_restriction >> i) & 1) {
+                    sb.AddPerma(GetPlanetByIndex(i)->name).Add(", ");
+                }
+            }
+            ui::Current()->text_color = Palette::red;
+            ui::Write(sb.c_str);
+            ui::Current()->text_color = Palette::ui_main;
+        }
     }
 
     // Stats
@@ -735,7 +746,7 @@ void Ship::DrawUI() {
     // Submenu toggles
 
     const int gap = 5;
-    static const char* labels[] = {"Mods.", "Prod.", "Transf."};
+    static const char* labels[] = {"Mods.", "Prod.", "Transf."};  // TODO: can be icons
 
     bool can_produce = IsParked() && CanProduce();
 

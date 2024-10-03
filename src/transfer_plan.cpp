@@ -303,8 +303,8 @@ void TransferPlanSoonest(TransferPlan* tp, double dv_limit, timemath::Time earli
 void TransferPlan::Serialize(DataNode* data) const {
     data->SerializeBuffer("resource_transfer", resource_transfer, resources::names, resources::MAX);
     //data->SetI("fuel_mass", fuel_mass);
-    data->SetI("departure_planet", departure_planet.AsInt());
-    data->SetI("arrival_planet", arrival_planet.AsInt());
+    data->Set("departure_planet", GetPlanet(departure_planet)->name.GetChar());
+    data->Set("arrival_planet", GetPlanet(arrival_planet)->name.GetChar());
     departure_time.Serialize(data, "departure_time");
     arrival_time.Serialize(data, "arrival_time");
     //data->SetI("primary_solution", primary_solution);
@@ -313,8 +313,8 @@ void TransferPlan::Serialize(DataNode* data) const {
 void TransferPlan::Deserialize(const DataNode* data) {
     data->DeserializeBuffer("resource_transfer", resource_transfer, resources::names, resources::MAX);
     //fuel_mass = data->GetI("fuel_mass", fuel_mass);
-    departure_planet = RID(data->GetI("departure_planet", departure_planet.AsInt()));
-    arrival_planet = RID(data->GetI("arrival_planet", arrival_planet.AsInt()));
+    departure_planet = GetPlanets()->GetIdByName(data->Get("departure_planet"));
+    arrival_planet = GetPlanets()->GetIdByName(data->Get("arrival_planet"));
     departure_time.Deserialize(data, "departure_time");
     arrival_time.Deserialize(data, "arrival_time");
     //primary_solution = data->GetI("primary_solution", primary_solution);
@@ -833,7 +833,10 @@ void TransferPlanUI::SetPlan(TransferPlan* pplan, RID pship, timemath::Time pmin
     if (plan == NULL) {
         return;
     }
-    plan->fuel_type = GetShipClassByRID(GetShip(ship)->ship_class)->fuel_resource;
+    plan->fuel_type = GetShipClassByRID(GetShip(ship)->ship_class)->GetNextAvailableFuelType(resources::NONE);
+    if (plan->fuel_type == resources::NONE) {
+        return;  // No available fuel type
+    }
     /*Ship& ship_comp = GetShip(ship);
     if (ship_comp.confirmed_plans_count > 0) {
         time_bounds[0] = ship_comp.prepared_plans[ship_comp.confirmed_plans_count - 1].arrival_time;

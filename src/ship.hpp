@@ -13,8 +13,6 @@
 #define SHIPCLASS_NAME_MAX_SIZE 64
 #define SHIP_NAME_MAX_SIZE 64
 
-struct WrenHandle;
-
 // Pseudo enum to use flags
 namespace intel_level {
     typedef uint32_t T;
@@ -51,7 +49,7 @@ struct ShipClass {
 
     double max_dv;  // m/s
     double v_e;     // m/s
-    resources::T fuel_resource;
+    uint64_t available_fuels;
     resource_count_t max_capacity;  // counts
 
     ModuleConfiguration module_config;
@@ -73,6 +71,9 @@ struct ShipClass {
     resource_count_t GetFuelRequiredFull(double dv, int drop_tanks) const;
     resource_count_t GetFuelRequiredEmpty(double dv) const;
     void MouseHintWrite(StringBuilder* sb) const;
+    bool CanUseFuel(resources::T resource) const;
+    resources::T GetNextAvailableFuelType(resources::T resource) const;
+    int AvailableFuelTypeCount() const;
 };
 
 struct Ship {

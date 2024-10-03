@@ -86,7 +86,8 @@ void PlanetaryEconomy::Update(RID planet) {
             total_storage += GetShip(ship_list[i])->stats[ship_stats::INDUSTRIAL_STORAGE];
         }
         for (int i=0; i < resources::MAX; i++) {
-            resource_capacity[i] = (1 + total_storage) * (i == resources::WATER ? 500 : 100);
+            bool larger_qtt = i == resources::WATER || i == resources::ROCK;
+            resource_capacity[i] = (1 + total_storage) * (larger_qtt ? 500 : 100);
             resource_stock[i] = Clamp(resource_stock[i] + resource_delta[i], 0, resource_capacity[i]);
             delivered_resources_today[i] = 0;
         }
@@ -132,22 +133,49 @@ void PlanetaryEconomy::UIDrawResources(RID planet) {
     if (global_resource_data[0].resource_index < 0) {
         FAIL("Resources uninitialized")
     }
-    int total_size = (DEFAULT_FONT_SIZE + 4 + 8) * (resources::MAX + 1);
+
+    TransferPlan* plan = NULL;
+    const Ship* ship = NULL;
+    const ShipClass* ship_class = NULL;
+    bool take_input = false;
+    resource_count_t absolute_max = 0;
+
+    bool is_in_transferplan = GetTransferPlanUI()->IsActive();
+
+    if (is_in_transferplan) {
+        plan = GetTransferPlanUI()->plan;
+        ship = GetShip(GetTransferPlanUI()->ship);
+        ship_class = GetShipClassByRID(ship->ship_class);
+
+        take_input = is_in_transferplan && (plan->departure_planet == planet || plan->arrival_planet == planet);
+        absolute_max = ship->GetRemainingPayloadCapacity(plan->tot_dv);
+    }
+    
+    // Collect available resources and fuels
+    int practically_available_fuels = 0;
+    List<int> drawn_resources = List<int>();
+    for (int i=0; i < resources::MAX; i++) {
+        bool skip = true;
+        if (resource_stock[i] != 0 || resource_delta[i] != 0) {
+            skip = false;
+        } else if (take_input && plan->resource_transfer[i] != 0) {
+            skip = false;
+        }
+        if (!skip) {
+            drawn_resources.Append(i);
+            if (is_in_transferplan && ship_class->CanUseFuel((resources::T) i)) 
+                practically_available_fuels++;
+        }
+    }
+    
+    int total_size = (DEFAULT_FONT_SIZE + 4) * (drawn_resources.Count());
     int available_size = ui::Current()->height - ui::Current()->y_cursor;
     if (total_size > available_size) {
         ui::PushScrollInset(0, available_size, total_size, &resources_scroll);
     }
-    TransferPlan* plan = NULL;
-    bool take_input = false;
-    resource_count_t absolute_max = 0;
-    if (GetTransferPlanUI()->IsActive()) {
-        plan = GetTransferPlanUI()->plan;
-        take_input = GetTransferPlanUI()->IsActive() && (plan->departure_planet == planet || plan->arrival_planet == planet);
-        const Ship* ship = GetShip(GetTransferPlanUI()->ship);
-        absolute_max = ship->GetRemainingPayloadCapacity(plan->tot_dv);
-    }
-    for (int i=0; i < resources::MAX; i++) {
-        char buffer[50];
+
+    for (int idx=0; idx < drawn_resources.Count(); idx++) {
+        static char buffer[50];
         //sprintf(buffer, "%-10s %5d/%5d (%+3d)", GetResourceData(i)->name, qtt, cap, delta);
         /*ui::DrawLimitedSlider(
             resource_stock[i], 0, resource_capacity[i], INT32_MIN, 
@@ -155,60 +183,74 @@ void PlanetaryEconomy::UIDrawResources(RID planet) {
         );*/
 
         // Decide when to skip
-        bool skip = true;
-        if (resource_stock[i] != 0 || resource_delta[i] != 0) {
-            skip = false;
-        } else if (take_input && plan->resource_transfer[i] != 0) {
-            skip = false;
-        }
-        if (skip) {
-            continue;
-        }
+        int rsc = drawn_resources[idx];
 
-
-        if (resource_delta[i] == 0) {
-            sprintf(buffer, "%2s %3d       ", GetResourceUIRep(i), resource_stock[i]);
+        if (resource_delta[rsc] == 0 || is_in_transferplan) {
+            char grow_sign = ' ';
+            if (resource_delta[rsc] > 0) grow_sign = '+';
+            else if (resource_delta[rsc] < 0) grow_sign = '-';
+            sprintf(buffer, "%2s %3d %c", GetResourceUIRep(rsc), resource_stock[rsc], grow_sign);
         } else {
-            sprintf(buffer, "%2s %3d : %+2d ", GetResourceUIRep(i), resource_stock[i], resource_delta[i]);
+            sprintf(buffer, "%2s %3d : %+2d ", GetResourceUIRep(rsc), resource_stock[rsc], resource_delta[rsc]);
         }        
 
         ui::PushInset(DEFAULT_FONT_SIZE + 4);
         Vector2 cursor_pos = ui::Current()->GetTextCursor();
-        Rectangle button_rect = {cursor_pos.x, cursor_pos.y, 16, 16};
+        Rectangle button_rect = {cursor_pos.x, cursor_pos.y, 40, 20};
         ui::WriteEx(buffer, text_alignment::CONFORM, false);
         if (CheckCollisionPointRec(GetMousePosition(), button_rect)) {
-            //ui::SetMouseHint(GetUI()->GetConceptDescription(resources::names[i]));
-            ui::SetMouseHint(resources::names[i]);
+            StringBuilder sb;
+            sb.Add(resources::icons[rsc]).Add(resources::names[rsc]);
+            sb.Add("\n").Add(GetUI()->GetConceptDescription(resources::names[rsc]));
+            ui::SetMouseHint(sb.c_str);
         }
         if (take_input) {
             // Slider
-            ui::Current()->x_cursor = 140;
-            if (i == plan->fuel_type && plan->departure_planet == planet) {
-                const Ship* ship = GetShip(GetTransferPlanUI()->ship);
-                resource_count_t current = plan->resource_transfer[i] + plan->fuel;
+            ui::Current()->x_cursor = 100;
+            if (rsc == plan->fuel_type && plan->departure_planet == planet) {
+                resource_count_t current = plan->resource_transfer[rsc] + plan->fuel;
                 resource_count_t absolute_max_fuel = ship->GetRemainingPayloadCapacity(0);
-                resource_count_t relative_max = absolute_max - plan->GetPayloadMass() + plan->resource_transfer[i] + plan->fuel;
+                resource_count_t relative_max = absolute_max - plan->GetPayloadMass() + plan->resource_transfer[rsc] + plan->fuel;
                 resource_count_t new_current = ui::DrawLimitedSlider(
                     current, 0, absolute_max_fuel, relative_max, 
-                    120, 20, Palette::interactable_main, Palette::interactable_alt
+                    150, 20, Palette::interactable_main, Palette::interactable_alt
                 );
                 if (new_current < plan->fuel) new_current = plan->fuel;
-                plan->resource_transfer[i] = new_current - plan->fuel;
+                plan->resource_transfer[rsc] = new_current - plan->fuel;
             } else {
-                resource_count_t relative_max = absolute_max - plan->GetPayloadMass() + plan->resource_transfer[i];
+                resource_count_t relative_max = absolute_max - plan->GetPayloadMass() + plan->resource_transfer[rsc];
                 if (relative_max < 0) relative_max = 0;
-                plan->resource_transfer[i] = ui::DrawLimitedSlider(
-                    plan->resource_transfer[i], 0, absolute_max, relative_max, 
-                    120, 20, Palette::interactable_main, 
-                    i == plan->fuel_type ? Palette::interactable_alt : Palette::ui_alt
+                plan->resource_transfer[rsc] = ui::DrawLimitedSlider(
+                    plan->resource_transfer[rsc], 0, absolute_max, relative_max, 
+                    150, 20, Palette::interactable_main, 
+                    rsc == plan->fuel_type ? Palette::interactable_alt : Palette::ui_alt
                 );
             }
-            ui::Current()->x_cursor += 140;
-        }
+            ui::Current()->x_cursor += 160;
+            
+            // Fuel selection button
+            if (ship_class->CanUseFuel((resources::T) rsc) && practically_available_fuels > 1) {
+                ui::PushInline(20, 20);
+                button_state_flags::T button_state = ui::AsButton();
+                bool is_fuel = plan->fuel_type == rsc;
+                if (button_state & button_state_flags::HOVER || is_fuel) {
+                    ui::EncloseEx(0, ui::Current()->background_color, Palette::interactable_main, 0);
+                } else {
+                    ui::EncloseEx(0, ui::Current()->background_color, Palette::ui_main, 0);
+                }
+                HandleButtonSound(button_state);
+                if (button_state & button_state_flags::PRESSED) {
+                    //plan->fuel_type = i;  Not yet
+                }
+                ui::Pop();  // Inline
+                ui::HSpace(8);
+            } else {
+                ui::HSpace(28);
+            }
 
-        if (take_input) {
-            resource_count_t qtt = plan->resource_transfer[i];
-            if (i == plan->fuel_type && plan->departure_planet == planet) {
+            // Delta text
+            resource_count_t qtt = plan->resource_transfer[rsc];
+            if (rsc == plan->fuel_type && plan->departure_planet == planet) {
                 qtt += plan->fuel;
             }
             if (plan->departure_planet == planet) qtt *= -1;

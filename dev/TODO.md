@@ -26,8 +26,8 @@
 - Unlock modules / ship classes (Done)
 - Production stats (Done)
 - Show inactive modules (Done)
-- 3D preview
-- Name generation
+- 3D preview (Done)
+- Name generation (Done)
 - AI shits :(
 
 ## Known Bugs
@@ -48,6 +48,8 @@
 - SHIPS: carrying capacity can exceed max capacity (Done)
 - ASTRO: Crash when selecting transfer plan
 - SAVING: Crash when loading after queueing production (Done)
+
+- MEMORY: Undetected memory leak
 
 ## Necessary Incomplete features
 - save wren quest state (Done)
@@ -93,6 +95,7 @@ Near-term, realizable only
 - Animation tracker system
 
 - Hot reloading
+- Raylib independance
 
 ## Gameplay wishlist
 Regardless of implementability
@@ -103,6 +106,12 @@ Regardless of implementability
 - tanker fleets (share dv among fleet)
 - aerobreaking (Done)
 - expand to 3D (Done)
+- choose fuels + any fuel module
+- satellite swarms as ship-classes
+- stat: military control
+- stat: ground power
+- timed 'end boss'
+- other planetary regions
 - resources and modules are the same thing
 - gravity assists
 - crew & population morale
