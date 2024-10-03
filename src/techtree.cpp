@@ -370,7 +370,7 @@ int TechTree::LoadResearchCondition(const DataNode* condition_data, int idx, int
     } else {
         research_conditions[idx].cond.leaf.value = condition_data->GetI("value");
         
-        const char* comp_id = condition_data->Get("comp");
+        const char* comp_id = condition_data->Get("comp", "geq", true);
         research_conditions[idx].cond.leaf.comp = (ResearchCondition::Comparison) _FindInArray(
             ResearchCondition::comparison_identifiers, ResearchCondition::COMPARISON_MAX, comp_id);
 

@@ -10,7 +10,7 @@ uniform int useSdf;
 
 uniform sampler2D texture0;
 uniform vec4 colDiffuse;
-//uniform vec4 backgroundColor;
+uniform vec4 backgroundColor;
 
 // Output fragment color
 out vec4 finalColor;
@@ -20,19 +20,18 @@ out vec4 finalColor;
 void main() {
     // Texel color fetching from texture sampler
 	gl_FragDepth = (gl_DepthRange.diff * ndcDepth + gl_DepthRange.far + gl_DepthRange.near) / 2.0;
+    float alpha = 1.0;
     if (useSdf > 0) {
         float outside_distance = texture(texture0, fragTexCoord).a - 0.5;
         float inside_distance = 0.5 - texture(texture0, fragTexCoord).a;
         float d_dist_d_frag = length(vec2(dFdx(outside_distance), dFdy(outside_distance))) * 0.5;
-        float alpha = smoothstep(d_dist_d_frag, -d_dist_d_frag, outside_distance);
-        finalColor = colDiffuse * fragColor;
-        finalColor.a *= alpha;
+        alpha = smoothstep(d_dist_d_frag, -d_dist_d_frag, outside_distance);
     } else {
-        vec4 texel_color = texture(texture0, fragTexCoord);
-        finalColor = texel_color * fragColor;
+        alpha = texture(texture0, fragTexCoord).a;
     }
-    //finalColor = mix(backgroundColor, colDiffuse, finalColor.a);
-    if (finalColor.a < 0.05) {
+    finalColor = mix(backgroundColor, colDiffuse * fragColor, alpha);
+    finalColor.a = fragColor.a;
+    if (fragColor.a < 0.05) {
         discard;
     }
 }

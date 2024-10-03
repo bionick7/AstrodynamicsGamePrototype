@@ -110,7 +110,7 @@ void Planet::_OnClicked() {
         && !IsIdValid(tp_ui->plan->arrival_planet)
     ) {
         tp_ui->SetDestination(id);
-    } else if (GetGlobalState()->focused_planet == id && !IsIdValidTyped(GetGlobalState()->focused_ship, EntityType::SHIP)) {
+    } else if (GetGlobalState()->focused_planet == id) {// && !IsIdValidTyped(GetGlobalState()->focused_ship, EntityType::SHIP)) {
         GetCamera()->focus_object = id;
     } else {
         GetGlobalState()->focused_planet = id;

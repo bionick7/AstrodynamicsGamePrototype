@@ -137,9 +137,11 @@ namespace text3d_shader {
     Shader shader;
     int ndcDepth = -1;
     int useSdf = -1;
+    int backgroundColor = -1;
     
     void Load() {
         LOAD_SHADER(text3d_shader)
+        LOAD_SHADER_UNIFORM(text3d_shader, backgroundColor)
         LOAD_SHADER_UNIFORM(text3d_shader, ndcDepth)
         LOAD_SHADER_UNIFORM(text3d_shader, useSdf)
     }
@@ -149,11 +151,15 @@ void Text3D::Draw() const {
     if (!GetCamera()->IsInView(world_pos)) {
         return;
     }
+    if (color.a == 0) {
+        return;
+    }
 
     Vector3 render_pos = GameCamera::WorldToMacro(world_pos);
 
     Vector4 render_pos4 = { render_pos.x, render_pos.y, render_pos.z, 1.0f };
     Vector4 view_pos = QuaternionTransform(render_pos4, GetCamera()->ViewMatrix());
+    view_pos.z += 0.2;  // Nudge it a tad towards the camera
     Vector4 clip_pos = QuaternionTransform(view_pos, GetCamera()->ProjectionMatrix());
     Vector3 ndcPos = { clip_pos.x/clip_pos.w, -clip_pos.y/clip_pos.w, clip_pos.z/clip_pos.w };
     if (ndcPos.x < -1 || ndcPos.x > 1 || ndcPos.y < -1 || ndcPos.y > 1) {
@@ -171,13 +177,19 @@ void Text3D::Draw() const {
         DrawRectangleLines(screen_pos.x, screen_pos.y, text_size.x, text_size.y, RED);
     }
 
+    float bg_Color[4];
+    ColorToFloatBuffer(bg_Color, Palette::bg);
+
     SetShaderValue(text3d_shader::shader, text3d_shader::ndcDepth, &ndcPos.z, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(text3d_shader::shader, text3d_shader::backgroundColor, bg_Color, SHADER_ATTRIB_VEC4);
     int use_sdf = GetSettingBool("sdf_text", false) ? 1 : 0;
     SetShaderValue(text3d_shader::shader, text3d_shader::useSdf, &use_sdf, SHADER_UNIFORM_INT);
 
     // Cannot render in a single batch, because of the ndcPos.z uniform
     BeginShaderMode(text3d_shader::shader);
-    DrawTextEx(GetCustomDefaultFont(text_h), text, screen_pos, text_h, 1, color);
+        DrawRectangle(screen_pos.x, screen_pos.y, text_size.x, text_size.y, Palette::bg);
+        DrawTextEx(GetCustomDefaultFont(text_h), text, screen_pos, text_h, 1, color);
+        DrawLine(screen_pos.x, screen_pos.y + text_size.y, screen_pos.x + text_size.x, screen_pos.y + text_size.y, color);
     EndShaderMode();
 }
 
@@ -208,9 +220,10 @@ void _UpdateShipIcons() {
 
         Text3D* text3d = GetRenderServer()->text_labels_3d.GetOrAllocate(&planet->text3d);
 
-        float radius_px = GetCamera()->MeasurePixelSize(GameCamera::WorldToMacro(text3d->world_pos));
+        float pixel_size_planet = GetCamera()->MeasurePixelSize(GameCamera::WorldToMacro(text3d->world_pos));
+        float radius_px = GameCamera::WorldToMacro(GetPlanetByIndex(i)->radius) / pixel_size_planet;
         text3d->scale = DEFAULT_FONT_SIZE;
-        text3d->offset = { 0, radius_px + 3 };
+        text3d->offset = { 0, -fmaxf(radius_px + 3, 12) };
         text3d->text = planet->name.GetChar();
         text3d->color = Palette::ui_main;
         text3d->world_pos = planet->position.cartesian;
@@ -218,22 +231,22 @@ void _UpdateShipIcons() {
 
         // Collect ships
 
-        float pixel_size = GetCamera()->MeasurePixelSize(GameCamera::WorldToMacro(GetPlanetByIndex(i)->position.cartesian));
-        float planet_pixel_size = GameCamera::WorldToMacro(GetPlanetByIndex(i)->radius) / pixel_size;
+        float pixel_size_ship = GetCamera()->MeasurePixelSize(GameCamera::WorldToMacro(GetPlanetByIndex(i)->position.cartesian));
+        float shipparent_radius_px = GameCamera::WorldToMacro(GetPlanetByIndex(i)->radius) / pixel_size_ship;
 
         float mouse_distance = Vector2Distance(
             GetCamera()->GetScreenPos(GetPlanetByIndex(i)->position.cartesian),
             GetMousePosition()
         );
-        float grow_factor = Smoothstep(100 + planet_pixel_size, 50 + planet_pixel_size, mouse_distance);
+        float grow_factor = Smoothstep(100 + shipparent_radius_px, 50 + shipparent_radius_px, mouse_distance);
         float stride = Lerp(8.0f, 20.0f, grow_factor);
 
         // clean buffers
         for(int j=0; j < 4; j++) y_offsets[j] = stride / 2;
-        x_offsets[0] = -planet_pixel_size - stride;
-        x_offsets[1] = -planet_pixel_size - stride;
-        x_offsets[2] =  planet_pixel_size + stride;
-        x_offsets[3] =  planet_pixel_size + stride;
+        x_offsets[0] = -shipparent_radius_px - stride;
+        x_offsets[1] = -shipparent_radius_px - stride;
+        x_offsets[2] =  shipparent_radius_px + stride;
+        x_offsets[3] =  shipparent_radius_px + stride;
         
         for (int j=0; j < planet->cached_ship_list.size; j++) {
             Ship* ship = GetShip(planet->cached_ship_list[j]);

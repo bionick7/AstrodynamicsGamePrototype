@@ -363,9 +363,9 @@ techtree:
     - type: achievement
       id: archvmt_battle
     - type: stat_achieved
-      stat: workshop
+      stat: industrial_manufacturing
       comp: geq
-      value: 1
+      value: 2
   unlocks:
   - shpmod_railgun
   - shpmod_missiles
