@@ -612,8 +612,7 @@ shipmodules:
   name: Light armor
   description: A lighter, thinner armor, granting basic protection to ships.
   add:
-    kinetic_hp: 10
-    energy_hp: 5
+    kinetic_hp: 5
   mass: 10
   construction_resources:
     steel: 10
@@ -629,10 +628,9 @@ shipmodules:
   construction_time: 5
 - id: shpmod_armor
   name: Armor
-  description: A full suite of heavy armor for military ships
+  description: A full suite of heavy composite armor for military ships
   add:
-    kinetic_hp: 20
-    energy_hp: 10
+    hp: 10
     kinetic_defense: 1
   construction_requirements:
     industrial_admin: 1
@@ -640,7 +638,8 @@ shipmodules:
     industrial_dock: 1
   mass: 20
   construction_resources:
-    steel: 20
+    steel: 10
+    polymers: 10
   icon_index:
   - 11
   - 27
@@ -656,7 +655,7 @@ shipmodules:
   mass: 5
   batch_size: 2
   construction_resources:
-    steel: 5
+    aluminium: 5
     electronics: 1
   icon_index:
   - 12

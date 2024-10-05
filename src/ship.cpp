@@ -298,9 +298,18 @@ bool Ship::IsTrajectoryKnown(int index) const {
 }
 
 int Ship::GetCombatStrength() const {
+    // Expected damage dealt + expected damage absorbed
+    // = offensive * ttk + defensive * ttk + initiative*emeny_attack
+    // = offensive * ttk + defensive * ttk + initiative*emeny_attack
+    //  | Assuming enemy deals 1 attack in both ordnance and kinetic
+    // = (offensive + defensive) * (enemy_hp/offensive + initiative)
+    // = (offensive² + defensive * offensive)/ + (offensive + defensive)*initiative
+
     int offensive = kinetic_offense() + ordnance_offense();
     int defensive = kinetic_defense() + ordnance_defense();
-    return offensive * (defensive + 1);
+    int hp = kinetic_hp() - damage_taken[ship_variables::HP];
+    float effective_hp = hp * (1 + defensive / 3.0f + initiative() / 3.0f);
+    return (int) (offensive * effective_hp);
 }
 
 int Ship::GetMissingHealth() const {
@@ -312,8 +321,8 @@ int Ship::GetMissingHealth() const {
     //SHOW_I(variables[ship_variables::CREW])
     
     return
-          damage_taken[ship_variables::KINETIC_ARMOR]
-        + damage_taken[ship_variables::ENERGY_ARMOR]
+          damage_taken[ship_variables::HP]
+        //+ damage_taken[ship_variables::ENERGY_ARMOR]
         + damage_taken[ship_variables::CREW]
     ;
 }
@@ -335,12 +344,12 @@ const char *Ship::GetTypeIcon() const {
 bool Ship::CanDragModule(int index) const {
     if (!IsIdValid(modules[index]))
         return true;
-    if (GetModule(modules[index])->delta_stats[ship_stats::KINETIC_HP] > kinetic_hp() - damage_taken[ship_variables::KINETIC_ARMOR]) {
+    if (GetModule(modules[index])->delta_stats[ship_stats::KINETIC_HP] > kinetic_hp() - damage_taken[ship_variables::HP]) {
         return false;
     }
-    if (GetModule(modules[index])->delta_stats[ship_stats::ENERGY_HP] > energy_hp() - damage_taken[ship_variables::ENERGY_ARMOR]) {
-        return false;
-    }
+    //if (GetModule(modules[index])->delta_stats[ship_stats::ENERGY_HP] > energy_hp() - damage_taken[ship_variables::ENERGY_ARMOR]) {
+    //    return false;
+    //}
     if (GetModule(modules[index])->delta_stats[ship_stats::CREW] > crew() - damage_taken[ship_variables::CREW]) {
         return false;
     }
@@ -741,20 +750,20 @@ void Ship::RemoveShipModuleAt(int index) {
 }
 
 void Ship::Repair(int hp) {
-    if (hp > stats[ship_stats::KINETIC_HP] + stats[ship_stats::ENERGY_HP] + stats[ship_stats::CREW]){
+    if (hp > stats[ship_stats::KINETIC_HP] + stats[ship_stats::CREW]){
         // for initialisation
-        damage_taken[ship_variables::KINETIC_ARMOR] = 0;
-        damage_taken[ship_variables::ENERGY_ARMOR] = 0;
+        damage_taken[ship_variables::HP] = 0;
+        //damage_taken[ship_variables::ENERGY_ARMOR] = 0;
         damage_taken[ship_variables::CREW] = 0;
         return;
     }
-    int kinetic_repair = MinInt(hp, damage_taken[ship_variables::KINETIC_ARMOR]);
+    int kinetic_repair = MinInt(hp, damage_taken[ship_variables::HP]);
     hp -= kinetic_repair;
-    int energy_repair = MinInt(hp, damage_taken[ship_variables::ENERGY_ARMOR]);
-    hp -= energy_repair;
+    //int energy_repair = MinInt(hp, damage_taken[ship_variables::ENERGY_ARMOR]);
+    //hp -= energy_repair;
     int crew_repair = MinInt(hp, damage_taken[ship_variables::CREW]);
-    damage_taken[ship_variables::KINETIC_ARMOR] -= kinetic_repair;
-    damage_taken[ship_variables::ENERGY_ARMOR] -= energy_repair;
+    damage_taken[ship_variables::HP] -= kinetic_repair;
+    //damage_taken[ship_variables::ENERGY_ARMOR] -= energy_repair;
     damage_taken[ship_variables::CREW] -= crew_repair;
 }
 
@@ -1072,8 +1081,9 @@ void Ship::_OnArrival(const TransferPlan* tp) {
 
 bool ship_selection_flags::MatchesShip(T selection_flags, const Ship *ship) {
     if (((1 << ship->allegiance) & selection_flags) == 0)  return false;
-    if (!(selection_flags & ship_selection_flags::MILITARY) && ship->GetCombatStrength() > 0)  return false;
-    if (!(selection_flags & ship_selection_flags::CIVILIAN) && ship->GetCombatStrength() == 0)  return false;
+    bool is_mil = ship->kinetic_offense() + ship->ordnance_offense() > 0;
+    if (!(selection_flags & ship_selection_flags::MILITARY) && is_mil)  return false;
+    if (!(selection_flags & ship_selection_flags::CIVILIAN) && !is_mil)  return false;
     return true;
 }
 

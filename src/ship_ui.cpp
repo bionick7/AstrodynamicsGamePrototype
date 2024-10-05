@@ -116,11 +116,23 @@ void _UIDrawStats(const Ship* ship) {
         ui::HelperText(GetUI()->GetConceptDescription("stat"));
         ui::Pop();  // Inset
     } else {
+        sb.Add("Strength >> ").AddI(ship->GetCombatStrength()).Add(" <<");
+
+        ui::PushInset(25);
+        ui::WriteEx(sb.c_str, text_alignment::CENTER, true);
+        if (ui::AsButton() & button_state_flags::HOVER) {
+            ui::SetMouseHint("Strength estimate: Summary of estimated\n"
+                            "combat effectiveness if this ship");
+        }
+        ui::Pop();
+        ui::VSpace(6);
+
         ui::PushInset(combat_stat_block_height);
         //sb.AddFormat(ICON_POWER "%2d" ICON_ACS "%2d\n", ship->power(), ship->initiative());
-        sb.AddFormat(" %2d/%2d" ICON_HEART_KINETIC "  %2d/%2d" ICON_HEART_ENERGY "  %3d/%3d" ICON_HEART_BOARDING "\n", 
-                    ship->kinetic_hp() - ship->damage_taken[ship_variables::KINETIC_ARMOR], ship->kinetic_hp(),
-                    ship->energy_hp()  - ship->damage_taken[ship_variables::ENERGY_ARMOR],  ship->energy_hp(),
+        sb.Clear();
+        sb.AddFormat(" %2d/%2d" ICON_HEART_KINETIC /*"  %2d/%2d" ICON_HEART_ENERGY*/ "  %3d/%3d" ICON_HEART_BOARDING "\n", 
+                    ship->kinetic_hp() - ship->damage_taken[ship_variables::HP], ship->kinetic_hp(),
+                    //ship->energy_hp()  - ship->damage_taken[ship_variables::ENERGY_ARMOR],  ship->energy_hp(),
                     ship->crew()       - ship->damage_taken[ship_variables::CREW],          ship->crew());
         sb.AddFormat("   %2d " ICON_ATTACK_KINETIC "    %2d " ICON_ATTACK_ORDNANCE "     %3d " ICON_ATTACK_BOARDING "\n", 
                     ship->kinetic_offense(), ship->ordnance_offense(), ship->boarding_offense());

@@ -90,13 +90,12 @@ bool ShipBattle(const IDList* ships_aggressor, const IDList* ships_defender, dou
             int ordonance_dammage = actor_ship->ordnance_offense() - actor_ship->ordnance_defense();
             if (ordonance_dammage < 0) ordonance_dammage = 0;
 
-            target_ship->damage_taken[ship_variables::KINETIC_ARMOR] += kinetic_dammage;
-            target_ship->damage_taken[ship_variables::ENERGY_ARMOR] += ordonance_dammage;
+            target_ship->damage_taken[ship_variables::HP] += kinetic_dammage;
+            target_ship->damage_taken[ship_variables::HP] += ordonance_dammage;
 
             output_log->AppendAttackLog(turn_nr, actor_ship, target_ship, is_agressor);
             if(
-                target_ship->damage_taken[ship_variables::KINETIC_ARMOR] > target_ship->stats[ship_stats::KINETIC_HP]
-                || target_ship->damage_taken[ship_variables::ENERGY_ARMOR] > target_ship->stats[ship_stats::ENERGY_HP]
+                target_ship->damage_taken[ship_variables::HP] > target_ship->stats[ship_stats::KINETIC_HP]
             ) {
                 output_log->AppendKillLog(turn_nr, actor_ship, target_ship, is_agressor);
                 killed.Append(target_id);

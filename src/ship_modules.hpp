@@ -19,7 +19,7 @@ struct Ship;
     X(POWER, power)\
     X(INITIATIVE, initiative)\
     X(KINETIC_HP, kinetic_hp)\
-    X(ENERGY_HP, energy_hp)\
+    /*X(ENERGY_HP, energy_hp)*/\
     X(CREW, crew)\
     X(KINETIC_OFFENSE, kinetic_offense)\
     X(ORDNANCE_OFFENSE, ordnance_offense)\
@@ -64,16 +64,16 @@ namespace ship_stats {  // Better enum class, since you can treat the enum as in
 
 namespace ship_variables {
     enum T {
-        KINETIC_ARMOR,
-        ENERGY_ARMOR,
+        HP,
+        //ENERGY_ARMOR,
         CREW,
 
         MAX,
     };
 
     static const char* names[] = {
-        "kinetic_armor",
-        "energy_armor",
+        "health",
+        //"energy_armor",
         "crew",
     };
 };

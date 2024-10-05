@@ -827,15 +827,26 @@ void ui::VSpace(int pixels) {
 }
 
 void ui::SetMouseHint(const char* text) {
-    Vector2 mousepos = Vector2Add(GetMousePosition(), {5, 5});
-    int max_width = GetScreenWidth() - mousepos.x;
-    
+    Vector2 pos = Vector2Add(GetMousePosition(), {5, 5});
     text::Layout layout;
-    text::GetLayout(&layout, 
-        Vector2Add(mousepos, {-4,-4}),
-        GetCustomDefaultFont(DEFAULT_FONT_SIZE), text, 
-        DEFAULT_FONT_SIZE, 1, max_width
-    );
+    if (pos.x < GetScreenWidth() / 2) {
+        int max_width = MinInt(400, GetScreenWidth() - pos.x);
+        text::GetLayout(&layout, 
+            Vector2Add(pos, {-4,-4}),
+            GetCustomDefaultFont(DEFAULT_FONT_SIZE), text, 
+            DEFAULT_FONT_SIZE, 1, max_width
+        );
+    } else {
+        int max_width = MinInt(400, pos.x);
+        pos.x -= max_width + 4;
+        pos.y -= 4;
+        text::GetLayout(&layout, pos,
+            GetCustomDefaultFont(DEFAULT_FONT_SIZE), text, 
+            DEFAULT_FONT_SIZE, 1, max_width
+        );
+    }
+    
+    
 
     Rectangle rect = layout.bounding_box;
     ui::PushMouseHint({rect.x, rect.y}, rect.width, rect.height, 255 - MAX_TOOLTIP_RECURSIONS);
