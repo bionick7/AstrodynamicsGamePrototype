@@ -361,7 +361,8 @@ text::Layout TextBox::GetTextLayout(const char *text, text_alignment::T alignmen
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(text_size), text, text_size, 1);
     Vector2 pos = ApplyAlignment(GetAnchorPointText(alignment), size, alignment);
     text::Layout text_layout;
-    text::GetLayout(&text_layout, pos, GetCustomDefaultFont(text_size), text, text_size, 1, width);
+    int max_text_width = width - x_cursor - 5;
+    text::GetLayout(&text_layout, pos, GetCustomDefaultFont(text_size), text, text_size, 1, max_text_width);
     return text_layout;
 }
 
@@ -374,13 +375,13 @@ Rectangle TextBox::TbMeasureText(const char* text, text_alignment::T alignment) 
 Vector2 TextBox::GetAnchorPoint(text_alignment::T align) const {
     Vector2 res = { (float)x, (float)y };
     switch(align & text_alignment::HFILTER){
-        case text_alignment::HCENTER: res.x += width/2; break;
-        case text_alignment::RIGHT: res.x += width; break;
+        case text_alignment::HCENTER:  res.x += width/2;  break;
+        case text_alignment::RIGHT:    res.x += width;    break;
         case text_alignment::HCONFORM: res.x += x_cursor; break;
     }
     switch(align & text_alignment::VFILTER){
-        case text_alignment::VCENTER: res.y += height/2; break;
-        case text_alignment::BOTTOM: res.y += height; break;
+        case text_alignment::VCENTER:  res.y += height/2; break;
+        case text_alignment::BOTTOM:   res.y += height;   break;
         case text_alignment::VCONFORM: res.y += y_cursor; break;
     }
     return res;
@@ -391,13 +392,13 @@ Vector2 TextBox::GetAnchorPointText(text_alignment::T align) const {
     int w2 = width - 2 * text_margin_x;
     int h2 = height - 2 * text_margin_y;
     switch(align & text_alignment::HFILTER){
-        case text_alignment::HCENTER: res.x += w2/2; break;
-        case text_alignment::RIGHT: res.x += w2; break;
+        case text_alignment::HCENTER:  res.x += w2/2;     break;
+        case text_alignment::RIGHT:    res.x += w2;       break;
         case text_alignment::HCONFORM: res.x += x_cursor; break;
     }
     switch(align & text_alignment::VFILTER){
-        case text_alignment::VCENTER: res.y += h2/2; break;
-        case text_alignment::BOTTOM: res.y += h2; break;
+        case text_alignment::VCENTER:  res.y += h2/2;     break;
+        case text_alignment::BOTTOM:   res.y += h2;       break;
         case text_alignment::VCONFORM: res.y += y_cursor; break;
     }
     return res;
@@ -777,7 +778,6 @@ void ui::HelperText(const char* description) {
     }
     TextBox* tb = ui::Current();
     StringBuilder sb = StringBuilder(description);
-    sb.AutoBreak(100);
     Vector2 button_size = { 24, 24 };
     text_alignment::T button_align = text_alignment::TOP | text_alignment::RIGHT;
     Vector2 button_pos = ApplyAlignment(ui::Current()->GetAnchorPoint(button_align), button_size, button_align);
@@ -838,7 +838,8 @@ void ui::SetMouseHint(const char* text) {
         );
     } else {
         int max_width = MinInt(400, pos.x);
-        pos.x -= max_width + 4;
+        Rectangle text_measure = MeasureTextEx(text, text_alignment::RIGHT);
+        pos.x -= MinInt(max_width, text_measure.width) + 4;
         pos.y -= 4;
         text::GetLayout(&layout, pos,
             GetCustomDefaultFont(DEFAULT_FONT_SIZE), text, 
@@ -846,8 +847,6 @@ void ui::SetMouseHint(const char* text) {
         );
     }
     
-    
-
     Rectangle rect = layout.bounding_box;
     ui::PushMouseHint({rect.x, rect.y}, rect.width, rect.height, 255 - MAX_TOOLTIP_RECURSIONS);
     Rectangle true_rect = ui::Current()->GetRect();
@@ -885,20 +884,26 @@ void UIGlobals::_HandleMouseTips() {
 
         // Text manipulation
         StringBuilder sb = StringBuilder(mousehints.hints[i]);
-        sb.AutoBreak(100);
         TokenList tokens = sb.ExtractTokens("[[", "]]");
         int trailing_newlines = 0;
         for (;sb.c_str[sb.length - trailing_newlines - 2] == '\n'; trailing_newlines++) { }
         StringBuilder sb_substr = sb.GetSubstring(0, sb.length - trailing_newlines - 1);
 
         // Push Textbox
-        Vector2 text_size = MeasureTextEx(GetCustomDefaultFont(DEFAULT_FONT_SIZE), sb_substr.c_str, DEFAULT_FONT_SIZE, 1);
-        mousehints.hint_rects[i].width = text_size.x;
-        mousehints.hint_rects[i].height = text_size.y;
         Vector2 anchor = { mousehints.hint_rects[i].x, mousehints.hint_rects[i].y};
-        ui::PushMouseHint(anchor, text_size.x+8, text_size.y+8, 255 - MAX_TOOLTIP_RECURSIONS + i);
 
-        text::Layout layout = ui::Current()->GetTextLayout(sb_substr.c_str, text_alignment::CONFORM);
+        text::Layout layout;
+        text::GetLayout(&layout, anchor, GetCustomDefaultFont(DEFAULT_FONT_SIZE), sb_substr.c_str, 
+                        DEFAULT_FONT_SIZE, 1, 500);
+        int bb_right = layout.bounding_box.x + layout.bounding_box.width;
+        if (bb_right > GetScreenWidth()) {
+            layout.Offset(GetScreenWidth() - bb_right, 0);
+        }
+        Vector2 pos = { layout.bounding_box.x, layout.bounding_box.y };
+        mousehints.hint_rects[i].width = layout.bounding_box.x;
+        mousehints.hint_rects[i].height = layout.bounding_box.y;
+        ui::PushMouseHint(pos, layout.bounding_box.width+8, layout.bounding_box.height+8, 255 - MAX_TOOLTIP_RECURSIONS + i);
+        //text::Layout layout = ui::Current()->GetTextLayout(sb_substr.c_str, text_alignment::CONFORM);
         mousehints.hint_rects[i] = ui::Current()->render_rec;
         
         int hover_char_index = -1;

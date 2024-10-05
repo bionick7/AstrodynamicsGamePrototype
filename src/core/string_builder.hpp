@@ -37,7 +37,6 @@ struct StringBuilder {
     void WriteToFile(const char* filename) const;
 
     void Clear();
-    void AutoBreak(int max_width);
     TokenList ExtractTokens(const char* start_delim, const char* end_delim);
     StringBuilder GetSubstring(int from, int to);
 

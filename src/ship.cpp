@@ -32,20 +32,21 @@ resource_count_t ShipClass::GetFuelRequiredEmpty(double dv) const {
     return KGToResourceCounts(oem * (exp(dv/v_e) - 1));
 }
 
-void ShipClass::MouseHintWrite(StringBuilder* sb) const {
-    sb->AddPerma(name).Add("\n");
-    sb->AddPerma(description).Add("\n");
+void ShipClass::MouseHintWrite() const {
+    ui::WriteEx(name.GetChar(), text_alignment::HCENTER | text_alignment::VCONFORM, true);
+    ui::Write(description.GetChar());
+    ui::VSpace(5);
 
-    StringBuilder sb2;
+    StringBuilder sb("Base stats: ");
     int stat_num = 0;
     for (int i=0; i < ship_stats::MAX; i++) {
         if (stats[i] > 0) {
-            sb2.AddFormat("%s %3d  ", ship_stats::icons[i], stats[i]);
+            sb.AddFormat("%s %3d  ", ship_stats::icons[i], stats[i]);
             stat_num++;
         }
     }
     if (stat_num > 0) {
-        sb->Add("Base: ").Add(sb2.c_str).Add("\n");
+        ui::Write(sb.c_str);
     }
 }
 
@@ -119,9 +120,10 @@ void Ship::_OnNewPlanClicked() {
     plan_edit_index = prepared_plans_count;
 
     timemath::Time min_time = 0;
-    if (plan_edit_index == 0) {
+    if (plan_edit_index == 0 || prepared_plans_count == 0) {
         prepared_plans[plan_edit_index].departure_planet = parent_obj;
         min_time = GlobalGetNow();
+        plan_edit_index = 0;
     } else {
         prepared_plans[plan_edit_index].departure_planet = prepared_plans[plan_edit_index - 1].arrival_planet;
         min_time = prepared_plans[plan_edit_index - 1].arrival_time;
@@ -994,10 +996,6 @@ void _OnFleetArrival(Ship* leading_ship, const TransferPlan* tp) {
     IDList allied_ships;
     GetShips()->GetFleet(&allied_ships, leading_ship->id);
     allied_ships.Append(leading_ship->id);
-    if (allied_ships.Count() >= 3) {
-        //TODO: this only accounts for fleets
-        GetTechTree()->ReportAchievement("archvmt_conveniat");
-    }
     if (hostile_ships.size > 0) {
         // First, military ships vs. military ships
         bool victory = ShipBattle(&allied_ships, &hostile_ships, tp->arrival_dvs[tp->primary_solution].Length());
@@ -1250,10 +1248,10 @@ void Ships::DrawShipClassUI(RID uuid) const {
         const ShipClass* sc = GetShipClassByRID(uuid);
         button_state_flags::T button_state = ui::AsButton();
         if (button_state & button_state_flags::HOVER) {
-            StringBuilder sb;
-            sc->MouseHintWrite(&sb);
-            sb.AutoBreak(50);
-            ui::SetMouseHint(sb.c_str);
+            ui::PushMouseHint(GetMousePosition(), 400, 400, 255 - MAX_TOOLTIP_RECURSIONS);
+            ui::Enclose();
+            sc->MouseHintWrite();
+            ui::Pop();
         }
         ui::DrawIcon(sc->icon_index, text_alignment::CENTER, Palette::ui_main, 40);
     }

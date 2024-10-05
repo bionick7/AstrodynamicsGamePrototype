@@ -586,7 +586,7 @@ void _DrawSweep(const Orbit* orbit, timemath::Time from, timemath::Time to, Colo
     //OrbitPos from_pos = orbit->GetPosition(from);
     //OrbitPos to_pos = orbit->GetPosition(to);
     //OrbitSegment segment = OrbitSegment(orbit, from_pos, to_pos);
-    //RenderOrbit(&segment, OrbitRenderMode::Solid, color);  // TODO: re-introduce offset
+    //RenderOrbit(&segment, OrbitRenderMode::Solid, color);
 }
 
 void _DrawTransferOrbit(const TransferPlan* plan, int solution, bool is_secondary, timemath::Time t0) {

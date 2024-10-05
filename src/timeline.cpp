@@ -256,7 +256,7 @@ void _DrawShips(TimeLineCoordinateData* tcd, const Ships* ships) {
         int end_point_y = GetTimeCoord(tcd, GlobalGetNow());
 
         if (!ship->IsLeading()) {
-            // TODO
+            // TODO: indicate rest of fleet
             continue;
         }
 

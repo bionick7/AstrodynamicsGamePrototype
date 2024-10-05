@@ -157,7 +157,7 @@ struct ShipModuleClass {
     AtlasPos icon_index;
 
     ShipModuleClass();
-    void MouseHintWrite(StringBuilder* sb) const;
+    void MouseHintWrite() const;
     bool IsPlanetRestricted(RID planet) const;
     void UpdateCustom(Ship* ship) const;
     bool HasStatDependencies() const;

@@ -11,7 +11,6 @@ bool is_in_pause_menu;
 bool is_panel_shown[UIPANEL_COUNT];
 Focusables::T current_focus;
 
-// TODO: Draw Icons
 const char* panel_icons[] = {
     ICON_QUESTMANAGER,
     ICON_TIMELINE,

@@ -135,7 +135,7 @@ struct IDAllocatorList {
         alloc_count--;
         free_index_array[alloc_count] = index;
         verifier_array[index/64] &= ~(UNIT64 << (index % 64));  // set bit to 0
-        array[index] = T();  // To avoid calling the destructor twice 
+        array[index] = T();  // To avoid calling the same destructor twice 
                              // TODO: very inefficient and annoying
                              // Maybe switch back to malloc for this reason
     }

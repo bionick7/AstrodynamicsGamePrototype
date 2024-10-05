@@ -177,23 +177,19 @@ int _UIDrawTransferplans(Ship* ship) {
                 resource_name = resources::names[j];
             }
         }
-        if (IsIdValidTyped(ship->prepared_plans[i].departure_planet, EntityType::PLANET)) {
-            departure_planet_name = GetPlanet(ship->prepared_plans[i].departure_planet)->name.GetChar();
-        } else {
-            departure_planet_name = "NOT SET";
-        }
-        if (IsIdValidTyped(ship->prepared_plans[i].arrival_planet, EntityType::PLANET)) {
-            arrival_planet_name = GetPlanet(ship->prepared_plans[i].arrival_planet)->name.GetChar();
-        } else {
-            arrival_planet_name = "NOT SET";
-        }
+        bool has_departure_planet = IsIdValidTyped(ship->prepared_plans[i].departure_planet, EntityType::PLANET);
+        departure_planet_name = has_departure_planet ? GetPlanet(ship->prepared_plans[i].departure_planet)->name.GetChar() : "NOT SET";
+        bool has_arrival_planet = IsIdValidTyped(ship->prepared_plans[i].arrival_planet, EntityType::PLANET);
+        arrival_planet_name = has_arrival_planet ? GetPlanet(ship->prepared_plans[i].arrival_planet)->name.GetChar() : "NOT SET";
 
         StringBuilder sb;
-        sb.AddFormat(
-            "- %s (%3d D %2d H)\n", resource_name,
-            (int) (ship->prepared_plans[i].arrival_time - now).Seconds() / timemath::SECONDS_IN_DAY,
-            ((int) (ship->prepared_plans[i].arrival_time - now).Seconds() % timemath::SECONDS_IN_DAY) / 3600
-        );
+        if (has_departure_planet && has_arrival_planet) {
+            sb.AddFormat(
+                "- %s (%3d D %2d H)\n", resource_name,
+                (int) (ship->prepared_plans[i].arrival_time - now).Seconds() / timemath::SECONDS_IN_DAY,
+                ((int) (ship->prepared_plans[i].arrival_time - now).Seconds() % timemath::SECONDS_IN_DAY) / 3600
+            );
+        }
         sb.AddFormat("  %s >> %s", departure_planet_name, arrival_planet_name);
 
         // Double Button
@@ -381,12 +377,10 @@ void _UIDrawQuests(Ship* ship) {
 void _ProductionQueueMouseHint(RID id, const Ship* ship, bool is_in_production_queue) {
     if (!IsIdValid(id)) return;
     // Assuming monospace font
-    // TODO: ^ Assumption is no longer true
     
     const Planet* planet = GetPlanet(ship->GetParentPlanet());
 
     int char_width = ui::Current()->GetCharWidth();
-    StringBuilder sb;
     const resource_count_t* construction_resources = NULL;
     const int* construction_requirements = NULL;
     int build_time = 0;
@@ -394,8 +388,7 @@ void _ProductionQueueMouseHint(RID id, const Ship* ship, bool is_in_production_q
     switch (IdGetType(id)) {
         case EntityType::SHIP_CLASS: {
             const ShipClass* ship_class = GetShipClassByRID(id);
-            ship_class->MouseHintWrite(&sb);
-            sb.AutoBreak(ui::Current()->width / char_width - 10);
+            ship_class->MouseHintWrite();
             construction_resources = &ship_class->construction_resources[0];
             construction_requirements =  &ship_class->construction_requirements[0];
             build_time = ship_class->construction_time;
@@ -404,10 +397,7 @@ void _ProductionQueueMouseHint(RID id, const Ship* ship, bool is_in_production_q
         }
         case EntityType::MODULE_CLASS: {
             const ShipModuleClass* module_class = GetModule(id);
-            //sb.Add(module_class->name).Add("\n");
-            //sb.Add(module_class->description);
-            module_class->MouseHintWrite(&sb);
-            sb.AutoBreak(ui::Current()->width / char_width);
+            module_class->MouseHintWrite();
             construction_resources = &module_class->construction_resources[0];
             construction_requirements =  &module_class->construction_requirements[0];
             build_time = module_class->GetConstructionTime();
@@ -417,18 +407,10 @@ void _ProductionQueueMouseHint(RID id, const Ship* ship, bool is_in_production_q
         default: break;
     }
     
-    // Adjust textbox if text doesn't fit
-    text::Layout description_layout = ui::Current()->GetTextLayout(sb.c_str, text_alignment::CONFORM);
-    int overshoot = description_layout.bounding_box.x + description_layout.bounding_box.width - GetScreenWidth();
-    if (overshoot > 0) {
-        description_layout.Offset(-overshoot, 0);
-    }
-    if (ui::Current()->x > description_layout.bounding_box.x) {
-        ui::Current()->x = description_layout.bounding_box.x;
-    }
-    ui::Current()->WriteLayout(&description_layout, true);
-    sb.Clear();
+    StringBuilder sb;
 
+    ui::VSpace(6);
+    ui::FillLine(1, Palette::ui_main, Palette::ui_main);
     ui::Current()->LineBreak();
 
     if (construction_resources == NULL) return;
@@ -437,7 +419,7 @@ void _ProductionQueueMouseHint(RID id, const Ship* ship, bool is_in_production_q
     // Build requirements
 
     ui::VSpace(6);
-    ui::Write("To build:");
+    ui::WriteEx("To build:", text_alignment::HCENTER | text_alignment::VCONFORM, true);
 
     // Resources
     for (int i=0; i < resources::MAX; i++) {
@@ -459,24 +441,7 @@ void _ProductionQueueMouseHint(RID id, const Ship* ship, bool is_in_production_q
     ui::Current()->LineBreak();
 
     // Notify if planet is invalid
-
-    if (IsIdValidTyped(id, EntityType::MODULE_CLASS)) {
-        const ShipModuleClass* module_class = GetModule(id);
-        bool is_planet_invalid = module_class->IsPlanetRestricted(planet->id);
-        if (is_planet_invalid) {
-            sb.Clear();
-            sb.Add("Not working on this planet - Use instead on:\n");
-            for (int i=0; i < GetPlanets()->GetPlanetCount(); i++) {
-                if ((module_class->planets_restriction >> i) & 1) {
-                    sb.AddPerma(GetPlanetByIndex(i)->name).Add(", ");
-                }
-            }
-            ui::Current()->text_color = Palette::red;
-            ui::Write(sb.c_str);
-            ui::Current()->text_color = Palette::ui_main;
-        }
-    }
-
+    
     // Stats
     for (int i=0; i < ship_stats::MAX; i++) {
         if (construction_requirements[i] == 0) {
@@ -492,7 +457,32 @@ void _ProductionQueueMouseHint(RID id, const Ship* ship, bool is_in_production_q
             ui::Current()->text_color = Palette::ui_main;
         }
     }
-    
+
+    if (IsIdValidTyped(id, EntityType::MODULE_CLASS)) {
+        const ShipModuleClass* module_class = GetModule(id);
+        bool is_planet_invalid = module_class->IsPlanetRestricted(planet->id);
+        if (is_planet_invalid) {
+            sb.Clear();
+            sb.Add("Not working on this planet - Use instead on:\n");
+            for (int i=0; i < GetPlanets()->GetPlanetCount(); i++) {
+                if ((module_class->planets_restriction >> i) & 1) {
+                    sb.AddPerma(GetPlanetByIndex(i)->name).Add(", ");
+                }
+            }
+            ui::VSpace(6);
+            ui::PushInset(70);
+            ui::Current()->x += 5;
+            ui::Current()->text_color = Palette::red;
+            ui::EncloseEx(0, Palette::bg, Palette::red, 0);
+            ui::Write(sb.c_str);
+            //ui::FillLine(1, Palette::red, Palette::red);
+            ui::Current()->text_color = Palette::ui_main;
+            ui::Pop();  // Inset
+        }
+    }
+        
+    ui::VSpace(8);
+    ui::FillLine(1, Palette::ui_alt, Palette::ui_alt);
     ui::Current()->LineBreak();
 
     sb.Clear();
@@ -692,11 +682,13 @@ void _UIDrawProduction(Ship* ship) {
         ui::Pop();  // Inset
     }
     if (IsIdValid(hovered_id)) {
-        ui::PushMouseHint(GetMousePosition(), 400, 400, 255 - MAX_TOOLTIP_RECURSIONS);
+        Vector2 pos = { GetScreenWidth() - 420, GetMousePosition().y };
+        ui::PushMouseHint(pos, 400, 400, 255 - MAX_TOOLTIP_RECURSIONS);
         ui::Current()->text_background = Palette::bg;
         ui::Current()->flexible = true;
         Planet* planet = GetPlanet(ship->GetParentPlanet());
         _ProductionQueueMouseHint(hovered_id, ship, hover_over_queue);
+        ui::Current()->extend_x = 400;  // force x-size
         ui::EncloseDynamic(5, Palette::bg, Palette::ui_main, 4);
         ui::Pop();
     }

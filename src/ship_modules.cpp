@@ -61,66 +61,81 @@ int ShipModuleClass::GetConstructionTime() const {
     return construction_time;
 }
 
-void ShipModuleClass::MouseHintWrite(StringBuilder* sb) const {
-    sb->AddPerma(name).Add(" ").Add(module_types::str_icons[type]).Add("\n");
-    sb->AddPerma(description).Add("\n");
+void ShipModuleClass::MouseHintWrite() const {
+    StringBuilder sb;
+    sb.AddPerma(name).Add(" ").Add(module_types::str_icons[type]);
+    ui::WriteEx(sb.c_str, text_alignment::HCENTER | text_alignment::VCONFORM, true);
+    ui::VSpace(5);
+    ui::Write(description.GetChar());
 
     int consumptions_count = 0;
     int production_rsc_count = 0;
-    StringBuilder sb2 = StringBuilder("    ");
+    sb.Clear();
+    sb.Add("    ");
     for (int i=0; i < resources::MAX; i++) {
         if (production[i] < 0) {
             if (consumptions_count != 0)
-            sb2.Add(" + ");
-            sb2.AddFormat("%3d %s", -production[i], GetResourceUIRep(i));
+            sb.Add(" + ");
+            sb.AddFormat("%3d %s", -production[i], GetResourceUIRep(i));
             consumptions_count++;
         }
     }
-    sb2.Add("\n => ");
+    if (consumptions_count == 0) 
+        sb.Add("--");
+    sb.Add("\n => ");
     for (int i=0; i < resources::MAX; i++) {
         if (production[i] > 0) {
             if (production_rsc_count != 0)
-                sb2.Add(" + ");
-            sb2.AddFormat("%3d %s", production[i], GetResourceUIRep(i));
+                sb.Add(" + ");
+            sb.AddFormat("%3d %s", production[i], GetResourceUIRep(i));
             production_rsc_count++;
         }
     }
+    if (production_rsc_count == 0) 
+        sb.Add("--");
     if (consumptions_count + production_rsc_count > 0) {
-        sb->Add(sb2.c_str).Add("\n");
+        ui::VSpace(5);
+        ui::PushInset(42);
+        ui::EncloseEx(0, Palette::bg, Palette::ui_alt, 0);
+        ui::Write(sb.c_str);
+        ui::Pop();  // Inset
     }
+    ui::VSpace(8);
 
-    sb2.Clear();
+    sb.Clear();
     int delta_stats_num = 0;
     for (int i=0; i < ship_stats::MAX; i++) {
         if (delta_stats[i] == 1) {
-            sb2.AddFormat(" %s", ship_stats::icons[i]);
+            sb.AddFormat(" %s", ship_stats::icons[i]);
             delta_stats_num++;
         } else if (delta_stats[i] > 1) {
-            sb2.AddFormat(" %dx%s", delta_stats[i], ship_stats::icons[i]);
+            sb.AddFormat(" %dx%s", delta_stats[i], ship_stats::icons[i]);
             delta_stats_num++;
         }
     }
     if (delta_stats_num > 0) {
-        sb->Add(" Adds").Add(sb2.c_str).Add("\n");
+        ui::WriteEx(" Adds", text_alignment::CONFORM, false);
+        ui::Write(sb.c_str);
     }
     if (independence_delta != 0) 
-        sb->AddFormat("Independence %+3d\n", independence_delta);
+        ui::Write(TextFormat("Independence %+3d\n", independence_delta));
     if (opinion_delta != 0)
-        sb->AddFormat("Opinion %+3d\n", opinion_delta);
+        ui::Write(TextFormat("Opinion %+3d\n", opinion_delta));
 
-    sb2.Clear();
+    sb.Clear();
     int req_stats_num = 0;
     for (int i=0; i < ship_stats::MAX; i++) {
         if (required_stats[i] == 1) {
-            sb2.AddFormat(" %s", ship_stats::icons[i]);
+            sb.AddFormat(" %s", ship_stats::icons[i]);
             req_stats_num++;
         } else if (required_stats[i] > 1) {
-            sb2.AddFormat(" %dx%s", required_stats[i], ship_stats::icons[i]);
+            sb.AddFormat(" %dx%s", required_stats[i], ship_stats::icons[i]);
             req_stats_num++;
         }
     }
     if (req_stats_num > 0) {
-        sb->Add(" Needs ").Add(sb2.c_str).Add("\n");
+        ui::WriteEx(" Needs ", text_alignment::CONFORM, false);
+        ui::Write(sb.c_str);
     }
 }
 
@@ -609,10 +624,10 @@ void ShipModules::DrawShipModule(RID index, bool inactive) const {
         //ui::Enclose();
         button_state_flags::T button_state = ui::AsButton();
         if (button_state & button_state_flags::HOVER) {
-            StringBuilder sb;
-            smc->MouseHintWrite(&sb);
-            sb.AutoBreak(50);
-            ui::SetMouseHint(sb.c_str);
+            ui::PushMouseHint(GetMousePosition(), 400, 400, 255 - MAX_TOOLTIP_RECURSIONS);
+            ui::Enclose();
+            smc->MouseHintWrite();
+            ui::Pop();
         }
         /*if (button_state & ButtonStateFlags::PRESSED) {
             return;

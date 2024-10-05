@@ -225,35 +225,6 @@ void Planet::RemoveShipModuleInInventory(int index) {
     inventory[index] = GetInvalidId();
 }
 
-/*Planet::ProductionOrder Planet::MakeProductionOrder(RID id) const {
-    // TODO: untested
-    int current_order_count = INT32_MAX;
-    ProductionOrder res;
-    res.product = id;
-    res.worker = GetInvalidId();
-    const List<ProductionOrder>* production_orders;
-    if (IsIdValidTyped(id, EntityType::SHIP_CLASS)) {
-        production_orders = &ship_production_queue;
-    } else {
-        production_orders = &module_production_queue;
-    }
-    for (int i=0; i < cached_ship_list.size; i++) {
-        const Ship* ship = GetShip(cached_ship_list[i]);
-        if (!ship->CanProduce(id, true, true)) {
-            continue;
-        }
-        int ship_order_count = 0;
-        for (int j=0; j < production_orders->size; j++) {
-            if (production_orders->Get(j).worker == cached_ship_list[i]) ship_order_count++;
-        }
-        if (ship_order_count < current_order_count) {
-            current_order_count = ship_order_count;
-            res.worker = cached_ship_list[i];
-        }
-    }
-    return res;
-}*/
-
 double Planet::GetMousePixelDistance() const {
     // TODO: proximity approximation is pretty shit at flat angles
 

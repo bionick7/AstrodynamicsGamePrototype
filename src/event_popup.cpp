@@ -105,7 +105,7 @@ void event_popup::MakeEventPopup(int x, int y, int width, int height, const char
         button_state_flags::T button_state_x = ui::AsButton();
         HandleButtonSound(button_state_x & button_state_flags::JUST_PRESSED);
         events->request_close = button_state_x & button_state_flags::JUST_PRESSED;
-        ui::WriteEx("X", text_alignment::CENTER, false);
+        ui::WriteEx(ICON_CROSS, text_alignment::CENTER, false);
     ui::Pop();  // HSplit
 
     ui::Pop();  // Inset

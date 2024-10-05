@@ -26,6 +26,7 @@ namespace Palette {
 }
 
 #define ICON_EMPTY "\u04ff"  // lower-right corner
+#define ICON_CROSS "\u04ee"
 #define ICON_PLANET "\u0300"
 
 #define ICON_QUESTMANAGER   "\u0301"
