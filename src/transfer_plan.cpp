@@ -369,8 +369,7 @@ void TransferPlanCycle::Deserialize(const DataNode *data) {
         const DataNode* cycle_stop_data = data->GetChildArrayElem("cycle", i);
         RID planet_id = GetPlanets()->GetIdByName(cycle_stop_data->Get("planet"));
         if (!IsIdValidTyped(planet_id, EntityType::PLANET)) {
-            planets[i] = GetInvalidId();    
-            // Means planet IDs can be invalid
+            planets[i] = GetInvalidId();            // Means planet IDs can be invalid
             ERROR("No such planet: '%s'", cycle_stop_data->Get("planet"))
             continue;
         }
@@ -724,7 +723,7 @@ void TransferPlanUI::DrawUI() {
 
         // Manually draw mousehint at z-level 0 to avaid interference with mouse cursor
         Vector2 txt_size = MeasureTextEx(GetFontDefault(), sb.c_str, DEFAULT_FONT_SIZE, 1);
-        ui::PushMouseHint(GetMousePosition(), txt_size.x + 8, txt_size.y + 8, 0);
+        ui::PushMouseHint(GetMousePosition(), txt_size.x + 8, txt_size.y + 8);
         ui::Enclose();
         ui::Write(sb.c_str);
         ui::Pop();

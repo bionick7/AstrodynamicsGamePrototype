@@ -149,7 +149,7 @@ struct UIGlobals {
     int text_box_stack_capacity = 0;
     int text_box_stack_index = 0;
 
-    struct BlockingRect {Rectangle rec; uint8_t z;};
+    struct BlockingRect { Rectangle rec; uint8_t z; };
     BlockingRect acc_blocking_rects[MAX_BLOCKING_RECTS];
     BlockingRect blocking_rects[MAX_BLOCKING_RECTS];
     int blocking_rect_index = 0;
@@ -185,7 +185,7 @@ namespace ui {
     void PushTextBox(TextBox tb);
     void PushGlobal(int x, int y, int w, int h, int text_size, Color color, Color background, uint8_t z_layer);
     void CreateNew(int x, int y, int w, int h, int text_size, Color color, Color background, uint8_t z_layer);
-    void PushMouseHint(Vector2 mouse_pos, int width, int height, uint8_t z_layer);
+    void PushMouseHint(Vector2 mouse_pos, int width, int height);
 
     int PushInset(int h);
     int PushScrollInset(int margin, int h, int allocated_height, int* scroll);

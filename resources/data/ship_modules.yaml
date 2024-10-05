@@ -18,7 +18,7 @@ shipmodules:
   construction_time: 10
 - id: shpmod_droptank_hydrogen
   name: Hydrogen Drop-tank
-  description: This expandable tank allows a ship to hold 10 extra counts of hydrogen.  Ejected
+  description: This expandable tank allows a ship to hold 10 extra counts of hydrogen. Ejected
     during flight
   mass: 12
   construction_resources:
@@ -218,7 +218,7 @@ shipmodules:
   construction_time: 30
 - id: shpmod_aluminium_smelter
   name: Aluminium Smelter
-  description: Aluminium alloys are indispensable for high-strength, low-weight  products,
+  description: Aluminium alloys are indispensable for high-strength, low-weight products,
     like ships.
   produce:
     aluminium_ore: -17
@@ -690,7 +690,7 @@ shipmodules:
 - id: shpmod_reactor
   name: Sailed Reactor
   description: While most ship classes have a power regeneration system that can support
-    the most basic ship functions, some modules require a dedicated, 'sailed'  reactor.
+    the most basic ship functions, some modules require a dedicated, 'sailed' reactor.
   add:
     power: 4
   mass: 20
@@ -844,7 +844,7 @@ shipmodules:
   produce: {}
 - id: shpmod_droptank_water
   name: Water Drop-tank
-  description: This expandable tank allows a ship to hold 10 extra counts of water.  Ejected
+  description: This expandable tank allows a ship to hold 10 extra counts of water. Ejected
     during flight
   type: drop_tank
   mass: 12

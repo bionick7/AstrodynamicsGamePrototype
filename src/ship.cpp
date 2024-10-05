@@ -899,8 +899,7 @@ void Ship::AdvanceProductionQueue() {
         GetShips()->GetRandomShipName(product_id, &sb);
         ship_data.Set("name", sb.c_str);
         ship_data.Set("class_id", sc->id);
-        ship_data.SetI("allegiance", allegiance); 
-        ship_data.Set("planet", planet->name.GetChar());
+        ship_data.SetI("allegiance", allegiance);        ship_data.Set("planet", planet->name.GetChar());
         ship_data.CreateArray("tf_plans", 0);
         ship_data.CreateArray("modules", 0);
         GetShips()->AddShip(&ship_data);
@@ -1248,9 +1247,11 @@ void Ships::DrawShipClassUI(RID uuid) const {
         const ShipClass* sc = GetShipClassByRID(uuid);
         button_state_flags::T button_state = ui::AsButton();
         if (button_state & button_state_flags::HOVER) {
-            ui::PushMouseHint(GetMousePosition(), 400, 400, 255 - MAX_TOOLTIP_RECURSIONS);
-            ui::Enclose();
+            ui::PushMouseHint(GetMousePosition(), 400, 400);
+            ui::Current()->flexible = true;
             sc->MouseHintWrite();
+            ui::Current()->extend_x = 400;  // Force width
+            ui::EncloseDynamic(0, Palette::bg, Palette::ui_main, 4);
             ui::Pop();
         }
         ui::DrawIcon(sc->icon_index, text_alignment::CENTER, Palette::ui_main, 40);

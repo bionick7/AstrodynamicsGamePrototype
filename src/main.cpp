@@ -91,6 +91,6 @@ int main(int argc, const char** argv) {
         MainLoopStep(app);
     }
 
-    AppMetaClose();    
+    AppMetaClose();
     return 0;
 }

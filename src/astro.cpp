@@ -269,7 +269,7 @@ OrbitPos Orbit::FromFocal(double focal) const {
         res.time = epoch + res.M / GetMeanMotion();
     }
     double p = sma * (1 - ecc*ecc);
-    res.r = p / (1 + ecc * cos(res.θ));        
+    res.r = p / (1 + ecc * cos(res.θ));
     res.cartesian = res.r * periapsis_dir.Rotated(normal, res.θ);
     return res;
 }

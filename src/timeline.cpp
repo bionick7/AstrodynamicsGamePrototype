@@ -136,7 +136,7 @@ float _SDSegment(Vector2 p, Vector2 a, Vector2 b) {
     return Vector2Distance(pa, Vector2Scale(ba, h));
 }
 
-float  _QuestDrawLine(TimeLineCoordinateData* tcd, const Task* q, bool active) {
+float _QuestDrawLine(TimeLineCoordinateData* tcd, const Task* q, bool active) {
     uint8_t z_layer = ui::Current()->z_layer;
     // returns the mouse distance to the line (in pixels)
     RID from = q->departure_planet;

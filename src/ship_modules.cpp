@@ -624,9 +624,11 @@ void ShipModules::DrawShipModule(RID index, bool inactive) const {
         //ui::Enclose();
         button_state_flags::T button_state = ui::AsButton();
         if (button_state & button_state_flags::HOVER) {
-            ui::PushMouseHint(GetMousePosition(), 400, 400, 255 - MAX_TOOLTIP_RECURSIONS);
-            ui::Enclose();
+            ui::PushMouseHint(GetMousePosition(), 400, 400);
+            ui::Current()->flexible = true;
             smc->MouseHintWrite();
+            ui::Current()->extend_x = 400;  // Force width
+            ui::EncloseDynamic(0, Palette::bg, Palette::ui_main, 4);
             ui::Pop();
         }
         /*if (button_state & ButtonStateFlags::PRESSED) {

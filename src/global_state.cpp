@@ -156,7 +156,7 @@ void GlobalState::UpdateState(double delta_t) {
         scene->Make(2, popup->width, popup->face_height);
         scene->meshes[0] = assets::GetWireframe("resources/meshes/test/ship_contours.obj");
         scene->meshes[1] = assets::GetWireframe("resources/meshes/test/ship_contours.obj");
-        scene->transforms[0] = MatrixTranslate(0, 0,  1);
+        scene->transforms[0] = MatrixTranslate(0, 0, 1);
         scene->transforms[1] = MatrixTranslate(0, 0, -1);
     }
 

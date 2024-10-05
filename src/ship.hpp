@@ -90,8 +90,7 @@ struct Ship {
 
     RID modules[SHIP_MAX_MODULES];
     // Replace with struct in case more stuff has be be tracked
-    bool modules_enabled[SHIP_MAX_MODULES];  
-    // stats are more or less constant for the same amount of modules
+    bool modules_enabled[SHIP_MAX_MODULES];    // stats are more or less constant for the same amount of modules
     int stats[ship_stats::MAX];
     // variables vary
     int damage_taken[ship_variables::MAX];
@@ -104,8 +103,7 @@ struct Ship {
 
     // Transfer plans
     int prepared_plans_count;
-    TransferPlan prepared_plans[SHIP_MAX_PREPARED_PLANS];    
-    int plan_edit_index;
+    TransferPlan prepared_plans[SHIP_MAX_PREPARED_PLANS];    int plan_edit_index;
     int highlighted_plan_index;
     TransferPlanCycle transferplan_cycle;
 
@@ -203,8 +201,7 @@ namespace ship_selection_flags {
 
     constexpr T GetAllegianceFlags(unsigned int index) { 
         if (index > 7) return 0;
-        return 1u << index | ALL_SELECTION;  // By default, includes everything. filter as needed using '&'return 1U << index; 
-    }
+        return 1u << index | ALL_SELECTION;  // By default, includes everything. filter as needed using '&'return 1U << index;    }
     bool MatchesShip(T selection_flags, const Ship* ship);
 }
 

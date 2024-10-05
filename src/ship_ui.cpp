@@ -5,8 +5,7 @@
 #include "utils.hpp"
 
 void _UIDrawHeader(const Ship* ship) {
-    ui::WriteEx(ship->name, text_alignment::CONFORM, false);  
-    ui::WriteEx(ship->GetTypeIcon(), text_alignment::CONFORM, false);
+    ui::WriteEx(ship->name, text_alignment::CONFORM, false);    ui::WriteEx(ship->GetTypeIcon(), text_alignment::CONFORM, false);
     const char* text = ICON_EMPTY " " ICON_EMPTY "  ";  // use ICON_EMPTY instead of space to get the right spacing
     if (!ship->IsParked() && !ship->IsLeading()) text = ICON_EMPTY " " ICON_TRANSPORT_FLEET "  ";
     if (ship->IsParked() && ship->IsLeading()) text = ICON_PLANET " " ICON_EMPTY "  ";
@@ -160,8 +159,7 @@ int _UIDrawTransferplans(Ship* ship) {
         ui::Write("Ship is not the leading ship in fleet. "
                   "Disconnect from fleet before assigning transfers");
         ui::Pop();  // Inset
-        return 0;    
-    }
+        return 0;    }
 
     timemath::Time now = GlobalGetNow();
     for (int i=0; i < ship->prepared_plans_count; i++) {
@@ -683,7 +681,7 @@ void _UIDrawProduction(Ship* ship) {
     }
     if (IsIdValid(hovered_id)) {
         Vector2 pos = { GetScreenWidth() - 420, GetMousePosition().y };
-        ui::PushMouseHint(pos, 400, 400, 255 - MAX_TOOLTIP_RECURSIONS);
+        ui::PushMouseHint(pos, 400, 400);
         ui::Current()->text_background = Palette::bg;
         ui::Current()->flexible = true;
         Planet* planet = GetPlanet(ship->GetParentPlanet());

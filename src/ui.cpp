@@ -436,10 +436,11 @@ void ui::CreateNew(int x, int y, int w, int h, int text_size, Color color, Color
     ui::PushGlobal(x, y, w, h, text_size, color, background, z_layer);
 }
 
-void ui::PushMouseHint(Vector2 mousepos, int width, int height, uint8_t z_layer) {
-    const int border_margin = 2;
+void ui::PushMouseHint(Vector2 mousepos, int width, int height) {
+    const int border_margin = 20;
     int x_pos = ClampInt(mousepos.x, border_margin, GetScreenWidth() - width - border_margin);
     int y_pos = ClampInt(mousepos.y, border_margin, GetScreenHeight() - height - border_margin);
+    int z_layer = 255 - MAX_TOOLTIP_RECURSIONS;
     ui::PushGlobal(x_pos, y_pos, width, height, DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg, z_layer);
 }
 
@@ -827,30 +828,32 @@ void ui::VSpace(int pixels) {
 }
 
 void ui::SetMouseHint(const char* text) {
-    Vector2 pos = Vector2Add(GetMousePosition(), {5, 5});
+    const int margins = 4;
+
     text::Layout layout;
-    if (pos.x < GetScreenWidth() / 2) {
+    if (GetMousePosition().x < GetScreenWidth() / 2) {
+        Vector2 pos = Vector2Add(GetMousePosition(), {5, 5});
         int max_width = MinInt(400, GetScreenWidth() - pos.x);
-        text::GetLayout(&layout, 
-            Vector2Add(pos, {-4,-4}),
-            GetCustomDefaultFont(DEFAULT_FONT_SIZE), text, 
-            DEFAULT_FONT_SIZE, 1, max_width
-        );
-    } else {
-        int max_width = MinInt(400, pos.x);
-        Rectangle text_measure = MeasureTextEx(text, text_alignment::RIGHT);
-        pos.x -= MinInt(max_width, text_measure.width) + 4;
-        pos.y -= 4;
         text::GetLayout(&layout, pos,
             GetCustomDefaultFont(DEFAULT_FONT_SIZE), text, 
             DEFAULT_FONT_SIZE, 1, max_width
         );
+    } else {
+        Vector2 pos = Vector2Add(GetMousePosition(), {-5, 5});
+        int max_width = MinInt(400, pos.x);
+        text::GetLayout(&layout, pos,
+            GetCustomDefaultFont(DEFAULT_FONT_SIZE), text, 
+            DEFAULT_FONT_SIZE, 1, max_width
+        );
+        layout.Offset(-layout.bounding_box.width, 0);
     }
     
     Rectangle rect = layout.bounding_box;
-    ui::PushMouseHint({rect.x, rect.y}, rect.width, rect.height, 255 - MAX_TOOLTIP_RECURSIONS);
+    ui::PushMouseHint({rect.x - margins, rect.y - margins}, 
+                      rect.width + 2*margins, rect.height + 2*margins);
+
     Rectangle true_rect = ui::Current()->GetRect();
-    layout.Offset(true_rect.x - rect.x, true_rect.y - rect.y);
+    layout.Offset(true_rect.x - rect.x + margins, true_rect.y - rect.y + margins);
     ui::Enclose();
     ui::Current()->WriteLayout(&layout, true);
     ui::Pop();
@@ -902,7 +905,10 @@ void UIGlobals::_HandleMouseTips() {
         Vector2 pos = { layout.bounding_box.x, layout.bounding_box.y };
         mousehints.hint_rects[i].width = layout.bounding_box.x;
         mousehints.hint_rects[i].height = layout.bounding_box.y;
-        ui::PushMouseHint(pos, layout.bounding_box.width+8, layout.bounding_box.height+8, 255 - MAX_TOOLTIP_RECURSIONS + i);
+        ui::PushGlobal(layout.bounding_box.x, layout.bounding_box.y,
+                       layout.bounding_box.width, layout.bounding_box.height,
+                       DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg,
+                       255 - MAX_TOOLTIP_RECURSIONS + i);
         //text::Layout layout = ui::Current()->GetTextLayout(sb_substr.c_str, text_alignment::CONFORM);
         mousehints.hint_rects[i] = ui::Current()->render_rec;
         

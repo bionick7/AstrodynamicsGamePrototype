@@ -73,7 +73,7 @@ int _YamlParseFromText(DataNode* node, const char* origin, const char* text, boo
     yaml_parser_set_input_string(&parser, (const unsigned char*) text, strlen(text));
 
     // consume until you reach map_start
-    int status = -1;    
+    int status = -1;
     yaml_event_t event;
     while (true) {
         if (!yaml_parser_parse(&parser, &event)) break;
@@ -203,7 +203,7 @@ int DataNode::FromYaml(DataNode* node, const char* filename, yaml_parser_t* pars
             case YAML_DOCUMENT_END_EVENT:
                 break;  // Ignore
             case YAML_STREAM_END_EVENT:{
-                ERROR("Unexpected end  of stream encountered\n");
+                ERROR("Unexpected end of stream encountered\n");
                 goto error;
             }
             case YAML_SCALAR_EVENT: {
@@ -409,8 +409,7 @@ const char* DataNode::Get(const char* key, const char* def, bool quiet) const {
 
 long DataNode::GetI(const char* key, long def, bool quiet) const {
     const char* str = Get(key, "needs non-empty string", quiet);
-    char *p; 
-    long res = strtol(str, &p, 10);
+    char *p;    long res = strtol(str, &p, 10);
     if (p == str) {  // intentionally comparing pointers because of how strtoX works
         if (!quiet && !GetSettingBool("suppress_datanode_warnings")) WARNING("Could not convert '%s' to int", str)
         return def;
@@ -420,8 +419,7 @@ long DataNode::GetI(const char* key, long def, bool quiet) const {
 
 double DataNode::GetF(const char* key, double def, bool quiet) const {
     const char* str = Get(key, "needs non-empty string", quiet);
-    char *p; 
-    double res = (double) strtod(str, &p);
+    char *p;    double res = (double) strtod(str, &p);
     if (p == str) {  // intentionally comparing pointers because of how strtoX works
         if (!quiet && !GetSettingBool("suppress_datanode_warnings")) WARNING("Could not convert '%s' to double", str)
         return def;
@@ -459,16 +457,12 @@ const char* DataNode::GetArrayElem(const char* key, int index, const char* def, 
 }
 
 long DataNode::GetArrayElemI(const char* key, int index, long def, bool quiet) const {
-    const char *str = GetArrayElem(key, index, "needs non-empty string", quiet); 
-    char *p; 
-    long res = strtol(str, &p, 10);
+    const char *str = GetArrayElem(key, index, "needs non-empty string", quiet);    char *p;    long res = strtol(str, &p, 10);
     return p == str ? def : res;
 }
 
 double DataNode::GetArrayElemF(const char* key, int index, double def, bool quiet) const {
-    const char *str = GetArrayElem(key, index, "needs non-empty string", quiet); 
-    char *p; 
-    double res = strtod(str, &p);
+    const char *str = GetArrayElem(key, index, "needs non-empty string", quiet);    char *p;    double res = strtod(str, &p);
     return p == str ? def : res;
 }
 
