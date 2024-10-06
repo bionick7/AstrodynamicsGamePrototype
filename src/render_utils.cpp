@@ -171,6 +171,10 @@ void RenderWireframeMesh(WireframeMesh mesh, Matrix transform, Color background,
     Matrix matProjection = rlGetMatrixProjection();
     Matrix matModel = MatrixMultiply(transform, rlGetMatrixTransform());
     Matrix matModelView = MatrixMultiply(matModel, matView);
+
+    if (fabs(matModelView.m14) > 1000) 
+        return;  // Distance culling
+
     Matrix matModelViewProjection = MatrixMultiply(matModelView, matProjection);
 
     int render_mode_lines = 0;

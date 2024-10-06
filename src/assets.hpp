@@ -30,8 +30,7 @@ namespace assets {
     Sound GetSound(const char* path);
     const DataNode* GetData(const char* path);
 
-    bool IsTextureLoaded(Texture2D instance);
-    bool IsShaderLoaded(Shader instance);
+    bool IsShaderLoaded(const char* path);
 
     void Reload();
 

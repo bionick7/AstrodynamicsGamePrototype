@@ -1,6 +1,6 @@
 ==== DV TABLE ====
-|          |Low Saturn|     Rings|     Mimas|Encelladus|    Tethys|     Dione|      Rhea|     Titan|   Iaeptus|    Phoebe|
-|Low Saturn|          |    6.428 |    9.770 |   10.657 |   11.295 |   12.328 |   12.577 |    9.573 |   12.008 |   11.812 |
+|          | Low Orbit|     Rings|     Mimas|Encelladus|    Tethys|     Dione|      Rhea|     Titan|   Iaeptus|    Phoebe|
+| Low Orbit|          |    6.428 |    9.770 |   10.657 |   11.295 |   12.328 |   12.577 |    9.573 |   12.008 |   11.812 |
 |     Rings|    2.968 |          |    4.123 |    5.220 |    6.189 |    7.510 |    8.232 |    6.584 |    9.045 |    9.002 |
 |     Mimas|    3.759 |    4.123 |          |    0.933 |    1.748 |    2.934 |    3.980 |    3.673 |    6.126 |    6.257 |
 |Encelladus|    4.024 |    5.220 |    0.933 |          |    0.996 |    1.937 |    3.050 |    3.146 |    5.597 |    5.789 |

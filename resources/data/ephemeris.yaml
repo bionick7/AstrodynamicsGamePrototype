@@ -22,7 +22,7 @@ rings:
   AoP: 0
 
 satellites:
-- name: Low Saturn Orbit
+- name: Low Orbit
   body_size: Minor
   Ecc: 0
   Inc: 0

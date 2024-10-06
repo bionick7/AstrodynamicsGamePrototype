@@ -7,7 +7,7 @@
 void AudioServer::StartMusic() {
     current_ambience = LoadMusicStream("resources/sound/ambient/Electricity, Buzz & Hum, Motor, Electric, Neon, Loop SND5749.wav");
     SetMusicVolume(current_ambience, 0.2);
-    PlayMusicStream(current_ambience);   
+    PlayMusicStream(current_ambience);
 }
 
 void AudioServer::Update(double dt) {

@@ -28,7 +28,7 @@ void RenderDeferred(RenderTexture render_target);
 
 struct AtlasPos;
 
-#define RELOAD_IF_NECESSARY(shader_name) if (!assets::IsShaderLoaded(shader_name::shader)) { shader_name::Load(); }
+#define RELOAD_IF_NECESSARY(shader_name) if (!assets::IsShaderLoaded("resources/shaders/"#shader_name)) { shader_name::Load(); }
 #define LOAD_SHADER(shader_name) shader_name::shader = assets::GetShader("resources/shaders/"#shader_name);
 #define LOAD_SHADER_UNIFORM(shader_name, uniform_name) shader_name::uniform_name = GetShaderLocation(shader_name::shader, #uniform_name);
 #define LOAD_SHADER_ATTRIB(shader_name, uniform_name) shader_name::uniform_name = GetShaderLocationAttrib(shader_name::shader, #uniform_name);

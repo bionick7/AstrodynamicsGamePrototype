@@ -36,7 +36,7 @@ void main() {
 	float delta = 0.002 / dscreen_drad;
 	float r_min = innerRad + delta;
 	float r_max = 1.0 - delta;
-	if (r < r_min - delta || r > r_max + delta) {
+	if (r < r_min + delta || r > r_max - delta) {
 		discard;
 	}
     float mask_outer = smoothstep(r_max + delta, r_max, r) * smoothstep(r_max - delta, r_max, r);

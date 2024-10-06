@@ -50,7 +50,7 @@
 - SAVING: Crash when loading after queueing production (Done)
 
 - CORE: Undetected memory leak
-- CORE: Reloading shaders broken
+- CORE: Reloading shaders broken (Done)
 
 ## Necessary Incomplete features
 - save wren quest state (Done)

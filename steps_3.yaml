@@ -90,7 +90,7 @@ planets:
   base_independence_delta: 0
   id: 16777216
   independence: 0
-  name: Low Saturn Orbit
+  name: Low Orbit
   opinion: 0
   trading_accessible: n
   resource_delta:

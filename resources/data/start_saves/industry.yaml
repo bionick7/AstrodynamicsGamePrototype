@@ -4,7 +4,7 @@ factions:
 - money: 0
 
 planets:
-  - name: Low Saturn Orbit
+  - name: Low Orbit
     trading_accessible: n
     allegiance: 0
     resource_stock:

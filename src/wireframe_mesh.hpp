@@ -4,9 +4,9 @@
 #include "basic.hpp"
 
 struct WireframeMesh {
-    int vertex_count;
-    int triangle_count;
-    int line_count;
+    int vertex_count = 0;
+    int triangle_count = 0;
+    int line_count = 0;
 
     BoundingBox bounding_box;
 
@@ -18,7 +18,7 @@ struct WireframeMesh {
 
 WireframeMesh LoadWireframeMesh(const char* filepath);
 WireframeMesh LoadTestWireframeMesh();
-void UnLoadWireframeMesh(WireframeMesh wireframe_mesh);
+void UnloadWireframeMesh(WireframeMesh wireframe_mesh);
 bool IsWireframeReady(WireframeMesh wireframe_mesh);
 
 #endif  // WIREFRAME_MESH_H

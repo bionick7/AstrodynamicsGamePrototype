@@ -221,9 +221,20 @@ bool IsWireframeReady(WireframeMesh wireframe_mesh) {
     return res;
 }
 
-void UnLoadWireframeMesh(WireframeMesh wireframe_mesh) {
+void UnloadWireframeMesh(WireframeMesh wireframe_mesh) {
     rlUnloadVertexArray(wireframe_mesh.vao_triangles);
     rlUnloadVertexArray(wireframe_mesh.vao_lines);
     rlUnloadVertexBuffer(wireframe_mesh.vbo_triangles);
     rlUnloadVertexBuffer(wireframe_mesh.vbo_lines);
+
+    wireframe_mesh.vao_triangles = -1;
+    wireframe_mesh.vao_lines = -1;
+    wireframe_mesh.vbo_triangles = -1;
+    wireframe_mesh.vbo_lines = -1;
+
+    wireframe_mesh.vertex_count = 0;
+    wireframe_mesh.line_count = 0;
+    wireframe_mesh.triangle_count = 0;
+
+    wireframe_mesh.bounding_box = {0};
 }

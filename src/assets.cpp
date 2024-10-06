@@ -293,50 +293,26 @@ const DataNode* assets::GetData(const char* path) {
     }
 }
 
-bool assets::IsTextureLoaded(Texture2D instance) {
-    for(int i=0; i < texture_table.size; i++) {
-        if (texture_table.data[i].id == instance.id) {
-            return IsTextureReady(instance);
-        }
-    }
-    return false;
+bool assets::IsShaderLoaded(const char* path) {
+    int find = shader_table.Find(HashPath(path));
+    if (find < 0) return false;
+    return IsShaderReady(shader_table.data[find]);
 }
 
-bool assets::IsShaderLoaded(Shader instance) {
-    for(int i=0; i < shader_table.size; i++) {
-        if (shader_table.data[i].id == instance.id) {
-            return IsShaderReady(instance);
-        }
-    }
-    return false;
-}
+#define UNLOAD_TABLE(type, table) \
+for(int i=0; i < table.size; i++) { \
+    Unload##type(table.data[i]); \
+} \
+INFO("Unloaded %d " #type "s", table.size)\
+table.Reset();
 
 void assets::Reload() {
-    for(int i=0; i < texture_table.size; i++) {
-        UnloadTexture(texture_table.data[i]);
-    }
-    for(int i=0; i < image_table.size; i++) {
-        UnloadImage(image_table.data[i]);
-    }
-    for(int i=0; i < font_table.size; i++) {
-        UnloadFont(font_table.data[i]);
-    }
-    for(int i=0; i < mesh_table.size; i++) {
-        UnLoadWireframeMesh(mesh_table.data[i]);
-    }
-    for(int i=0; i < shader_table.size; i++) {
-        UnloadShader(shader_table.data[i]);
-    }
-    for(int i=0; i < sound_table.size; i++) {
-        UnloadSound(sound_table.data[i]);
-    }
-
-    texture_table.Reset();
-    image_table.Reset();
-    font_table.Reset();
-    mesh_table.Reset();
-    shader_table.Reset();
-    sound_table.Reset();
+    UNLOAD_TABLE(Texture, texture_table)
+    UNLOAD_TABLE(Image, image_table)
+    UNLOAD_TABLE(Font, font_table)
+    UNLOAD_TABLE(WireframeMesh, mesh_table)
+    UNLOAD_TABLE(Shader, shader_table)
+    UNLOAD_TABLE(Sound, sound_table)
 
     data_table.Reset();
 }
