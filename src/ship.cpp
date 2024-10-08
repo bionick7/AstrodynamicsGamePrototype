@@ -216,13 +216,6 @@ void Ship::Deserialize(const DataNode* data) {
 double Ship::GetOperationalMass() const {  // Without resources
     double res = 0.0;
 
-    QuestManager* qm = GetQuestManager();
-    for(auto i = qm->active_tasks.GetIter(); i; i++) {
-        if (qm->active_tasks[i]->ship == id) {
-            res += qm->active_tasks[i]->payload_mass;
-        }
-    }
-
     for(int i=0; i < SHIP_MAX_MODULES; i++) {
         if (IsIdValid(modules[i]) && modules[i] != GetShipModules()->expected_modules.droptank_water) {
             res += GetModule(modules[i])->mass;
@@ -276,7 +269,7 @@ double Ship::GetCapableDV() const {
 }
 
 bool Ship::IsPlayerControlled() const {
-    return allegiance == GetFactions()->player_faction;
+    return allegiance == 0;
 }
 
 intel_level::T Ship::GetIntelLevel() const {
@@ -942,35 +935,20 @@ void Ship::_OnDeparture(const TransferPlan* tp) {
     resource_count_t fuel_quantity = local_economy->TakeResource(tp->fuel_type, tp->fuel);
     if (fuel_quantity < tp->fuel && IsPlayerControlled()) {
         resource_count_t remaining_fuel = tp->fuel - fuel_quantity;
-        if (
-            local_economy->trading_accessible && 
-            local_economy->GetPrice(tp->fuel_type, remaining_fuel) < GetFactions()->GetMoney(allegiance)
-        ) {
-            USER_INFO("Automatically purchased %d of water for M§M %d K", remaining_fuel, local_economy->GetPrice(tp->fuel_type, remaining_fuel) / 1e3)
-            local_economy->TryPlayerTransaction(tp->fuel_type, fuel_quantity);
-            local_economy->TakeResource(tp->fuel_type, fuel_quantity);
-        } else {
-            // Abort
-             USER_INFO(
-                "Not enough fuel. Could not afford/access remaining fuel %d cts on %s", 
-                remaining_fuel, GetPlanet(tp->departure_planet)->name.GetChar()
-            )
-            local_economy->GiveResource(tp->fuel_type, fuel_quantity);
-            prepared_plans_count = 0;
-            return;
-        }
+        // Abort
+        USER_INFO(
+            "Not enough fuel. Could not afford/access remaining fuel %d cts on %s", 
+            remaining_fuel, GetPlanet(tp->departure_planet)->name.GetChar()
+        )
+        local_economy->GiveResource(tp->fuel_type, fuel_quantity);
+        prepared_plans_count = 0;
+        return;
     }
 
     for (int i=0; i < resources::MAX; i++) {
         transporting[i] = local_economy->TakeResource((resources::T) i, tp->resource_transfer[i]);
     }
     //INFO("%s: %d", resources::names[transporing.resource_id], transporing.quantity)
-
-    for(auto it = GetQuestManager()->active_tasks.GetIter(); it; it++) {
-        if (GetQuestManager()->active_tasks[it]->ship == id) {
-            GetQuestManager()->TaskDepartedFrom(it.GetId(), parent_obj);
-        }
-    }
 
     if (IsLeading()) {
         parent_obj = GetInvalidId();
@@ -1054,14 +1032,6 @@ void Ship::_OnArrival(const TransferPlan* tp) {
     global_vars::Inc(var_name_sb.c_str, 1);
 
     position = GetPlanet(GetParentPlanet())->position;
-
-    // Complete tasks
-    for(auto it = GetQuestManager()->active_tasks.GetIter(); it; it++) {
-        const Task* quest = GetQuestManager()->active_tasks[it];
-        if (quest->ship == id && quest->arrival_planet == tp->arrival_planet) {
-            GetQuestManager()->TaskArrivedAt(it.GetId(), tp->arrival_planet);
-        }
-    }
 
     // Remove drop tanks
     const ShipClass* sc = GetShipClassByRID(ship_class);
@@ -1235,9 +1205,6 @@ void Ships::GetFleet(IDList *list, RID leading) const {
 void Ships::KillShip(RID uuid, bool notify_callback) {
     if (!IsIdValidTyped(uuid, EntityType::SHIP)) {
         return;
-    }
-    if (notify_callback) {
-        GetWrenInterface()->NotifyShipEvent(uuid, "die");
     }
     GetRenderServer()->icons.EraseAt(GetShip(uuid)->icon3d);  // Destroy it here, since GetRenderServer() may not exist in destructor
     GetRenderServer()->text_labels_3d.EraseAt(GetShip(uuid)->text3d);

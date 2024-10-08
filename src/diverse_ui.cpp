@@ -87,7 +87,7 @@ void panel_management::DrawUIPanels(GlobalState* gs) {
     } else if (is_panel_shown[1]) {
         DrawTimeline();
     } else if (is_panel_shown[0]) {
-        gs->quest_manager.Draw();
+        // Nothing
     }
 
     // Draw Menu

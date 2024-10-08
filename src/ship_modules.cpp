@@ -206,7 +206,7 @@ bool ShipModuleSlot::IsSlotFitting(RID module) const {
 
 bool ShipModuleSlot::IsPlayerAccessible() const {
     if (IsIdValidTyped(entity, EntityType::PLANET)) {
-        return GetPlanet(entity)->allegiance == GetFactions()->player_faction;
+        return GetPlanet(entity)->allegiance == 0;
     }
     if (IsIdValidTyped(entity, EntityType::SHIP)) {
         return GetShip(entity)->IsPlayerControlled();

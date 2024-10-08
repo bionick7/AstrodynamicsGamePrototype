@@ -7,11 +7,8 @@
 #include "transfer_plan.hpp"
 #include "datanode.hpp"
 #include "coordinate_transform.hpp"
-#include "quest_manager.hpp"
 #include "audio_server.hpp"
-#include "wren_interface.hpp"
 #include "combat.hpp"
-#include "factions.hpp"
 #include "render_server.hpp"
 #include "techtree.hpp"
 
@@ -27,8 +24,6 @@ struct GlobalState {
 	Ships ships;
 	Planets planets;
 	ShipModules ship_modules;
-	QuestManager quest_manager;
-	Factions factions;
     TechTree techtree;
 
 	TransferPlanUI active_transfer_plan;
@@ -37,7 +32,6 @@ struct GlobalState {
 	AudioServer audio_server;
 	RenderServer render_server;
 	UIGlobals ui;
-	WrenInterface wren_interface;
 
     std::map<std::string, RID> string_identifiers = std::map<std::string, RID>();
 
@@ -73,8 +67,6 @@ Calendar* GetCalendar();
 Ships* GetShips();
 Planets* GetPlanets();
 ShipModules* GetShipModules();
-QuestManager* GetQuestManager();
-Factions* GetFactions();
 TechTree* GetTechTree();
 
 TransferPlanUI* GetTransferPlanUI();
@@ -82,7 +74,6 @@ BattleLog* GetBattleLog();
 
 AudioServer* GetAudioServer();
 RenderServer* GetRenderServer();
-WrenInterface* GetWrenInterface();
 UIGlobals* GetUI();
 
 #endif // GLOBAL_STATE_H

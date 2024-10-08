@@ -4,7 +4,6 @@
 #include "ui.hpp"
 #include "constants.hpp"
 #include "audio_server.hpp"
-#include "quest.hpp"
 #include "timeline.hpp"
 #include "debug_console.hpp"
 #include "diverse_ui.hpp"
@@ -23,9 +22,6 @@ void GlobalState::Make(timemath::Time p_time) {
 
 void GlobalState::LoadData() {
     string_identifiers.clear();
-
-    wren_interface.MakeVM();
-    wren_interface.LoadWrenQuests();
 
     #define NUM 5
     const char* loading_paths[NUM] = {
@@ -134,8 +130,6 @@ void GlobalState::UpdateState(double delta_t) {
     _UpdateShipsPlanets(this);
 
     camera.HandleInput();
-    // AI update
-    factions.Update();
 
     if (frame_count == 0 || IsKeyPressed(KEY_Q)) {
         static const char* lorem = 
@@ -247,11 +241,8 @@ void GlobalState::Serialize(DataNode* data) const {
 
 
     calendar.Serialize(data->SetChild("calendar"));
-    quest_manager.Serialize(data->SetChild("quests"));
     techtree.Serialize(data->SetChild("tech"));
     global_vars::Serialize(data->SetChild("global_vars"));
-
-    factions.Serialize(data);
 
     // ignore transferplanui for now
     data->SetI("focused_planet", focused_planet.AsInt());
@@ -297,8 +288,6 @@ void GlobalState::Deserialize(const DataNode* data) {
     }
     // ignore transferplanui for now
 
-    factions.Deserialize(data);
-
     ships.Clear();
     planets.Clear();
 
@@ -322,15 +311,6 @@ void GlobalState::Deserialize(const DataNode* data) {
         if (ship_data != NULL)
             ships.AddShip(ship_data);
     }
-
-    // Dependency on planets
-    if (data->HasChild("quests")) {
-        quest_manager.Deserialize(data->GetChild("quests"));
-    } else {
-        quest_manager.Make();
-    }
-
-    factions.InitializeAI();
 }
 
 GlobalState* GetGlobalState() { return &global_state; }
@@ -344,8 +324,6 @@ Calendar*            GetCalendar()            { return &global_state.calendar;  
 Ships*               GetShips()               { return &global_state.ships;                 }
 Planets*             GetPlanets()             { return &global_state.planets;               }
 ShipModules*         GetShipModules()         { return &global_state.ship_modules;          }
-QuestManager*        GetQuestManager()        { return &global_state.quest_manager;         }
-Factions*            GetFactions()            { return &global_state.factions;              }
 TechTree*            GetTechTree()            { return &global_state.techtree;              }
 
 // UI elements
@@ -354,6 +332,5 @@ BattleLog*           GetBattleLog()           { return &global_state.last_battle
 
 // servers
 AudioServer*         GetAudioServer()         { return &global_state.audio_server;          }
-WrenInterface*       GetWrenInterface()       { return &global_state.wren_interface;        }
 RenderServer*        GetRenderServer()        { return &global_state.render_server;         }
 UIGlobals*           GetUI()                  { return &global_state.ui;                    }

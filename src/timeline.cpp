@@ -136,105 +136,6 @@ float _SDSegment(Vector2 p, Vector2 a, Vector2 b) {
     return Vector2Distance(pa, Vector2Scale(ba, h));
 }
 
-float _QuestDrawLine(TimeLineCoordinateData* tcd, const Task* q, bool active) {
-    uint8_t z_layer = ui::Current()->z_layer;
-    // returns the mouse distance to the line (in pixels)
-    RID from = q->departure_planet;
-    RID to = q->arrival_planet;
-    timemath::Time pickup_time = q->pickup_expiration_time;
-    timemath::Time delivery_time = q->delivery_expiration_time;
-
-    Vector2 start_pos = {
-        GetPlanetCoord(tcd, from),
-        GetTimeCoord(tcd, pickup_time)
-    };
-
-    Vector2 end_pos = {
-        GetPlanetCoord(tcd, to),
-        GetTimeCoord(tcd, delivery_time)
-    };
-
-    Color c = Palette::ui_main;
-    if (!active) {
-        c = ColorAlphaBlend(Palette::bg, c, GetColor(0x80808080u));
-    }
-
-    //Vector2 scaled_unit = Vector2Scale(Vector2Normalize(Vector2Subtract(end_pos, start_pos)), 10);
-    Vector2 scaled_unit = {(end_pos.x - start_pos.x) > 0 ? 10 : -10, 0};
-    DrawTextAligned(
-        StringBuilder().AddI(KGToResourceCounts(q->payload_mass)).c_str, 
-        Vector2Lerp(start_pos, end_pos, 0.15), 
-        text_alignment::HCENTER | text_alignment::BOTTOM, 
-        c, Palette::bg, z_layer
-    );
-    start_pos = Vector2Add(start_pos, scaled_unit);
-    end_pos = Vector2Subtract(end_pos, scaled_unit);
-    DrawTriangle(
-        end_pos, 
-        Vector2Add(Vector2Subtract(end_pos, Vector2Scale(scaled_unit, 1.5)), Vector2Scale(Vector2Rotate(scaled_unit, -PI/2), .5)),
-        Vector2Add(Vector2Subtract(end_pos, Vector2Scale(scaled_unit, 1.5)), Vector2Scale(Vector2Rotate(scaled_unit,  PI/2), .5)),
-        c
-    );
-
-    Vector2 helper_start = Vector2Add(start_pos, Vector2Scale(scaled_unit, 4));
-    Vector2 helper_end = Vector2Subtract(end_pos, Vector2Scale(scaled_unit, 4));
-
-    DrawLineV(start_pos, helper_start, c);
-    DrawLineV(helper_start, helper_end, c);
-    DrawLineV(helper_end, end_pos, c);
-
-    return _SDSegment(GetMousePosition(), start_pos, end_pos);
-
-    /*Vector2 start_control = start_pos;
-    start_control.x = (start_pos.x * 2 + end_pos.x) / 3;
-    Vector2 end_control = end_pos;
-    end_control.x = (end_pos.x * 2 + start_pos.x) / 3;
-    DrawLineBezierCubic(start_pos, end_pos,
-        start_control, end_control,
-        1, c
-    );*/
-}
-
-void _DrawQuests(TimeLineCoordinateData* tcd, QuestManager* qm) {
-    float closest_mouse_dist = INFINITY;
-    RID closest_mouse_dist_quest = GetInvalidId();
-    bool closest_mouse_dist_quest_is_active = false;
-    /*for(int i=0; i < qm->GetAvailableQuests(); i++) {
-        const Quest* q = qm->available_quests[i];
-        if (!q->IsValid()) {
-            continue;
-        }
-        float mouse_dist = _QuestDrawLine(tcd, q, false);
-        if (mouse_dist < closest_mouse_dist) {
-            closest_mouse_dist = mouse_dist;
-            closest_mouse_dist_quest = i;
-            closest_mouse_dist_quest_is_active = false;
-        }
-    }*/
-    for(auto it = qm->active_tasks.GetIter(); it; it++) {
-        float mouse_dist = _QuestDrawLine(tcd, qm->active_tasks.Get(it), true);
-        if (mouse_dist < closest_mouse_dist) {
-            closest_mouse_dist = mouse_dist;
-            closest_mouse_dist_quest = it.GetId();
-            closest_mouse_dist_quest_is_active = true;
-        }
-    }
-    if (closest_mouse_dist < 15) {
-        ui::PushAligned(400, 100, text_alignment::TOP | text_alignment::RIGHT);
-        if (closest_mouse_dist_quest_is_active) {
-            qm->active_tasks.Get(closest_mouse_dist_quest)->DrawUI(false, false);
-        } else {
-            qm->available_quests.Get(closest_mouse_dist_quest)->DrawUI(false, false);
-            ui::Write("Press enter to accept quest");
-            if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_ENTER)) {
-                HandleButtonSound(button_state_flags::JUST_PRESSED);
-                qm->AcceptQuest(closest_mouse_dist_quest);
-            }
-        }
-        ui::Pop();
-    }
-}
-
 void _ShipDrawPathLine(const TimeLineCoordinateData* tcd, int* x_pos, int* y_pos, 
                        RID to_planet, timemath::Time to_time, int x_offset, Color color) {
     int new_x = GetPlanetCoord(tcd, to_planet) + x_offset;
@@ -333,7 +234,6 @@ void DrawTimeline() {
     }
 
     _DrawPlanets(&tcd, &gs->planets);
-    _DrawQuests(&tcd, &gs->quest_manager);
     _DrawShips(&tcd, &gs->ships);
 
     delete[] tcd.planet_coords;

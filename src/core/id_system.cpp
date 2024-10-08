@@ -40,14 +40,6 @@ bool IsIdValid(RID id) {
         return index < gs->ships.ship_classes_count;
     case EntityType::MODULE_CLASS:
         return index < gs->ship_modules.shipmodule_count;
-    case EntityType::QUEST:
-        return gs->quest_manager.available_quests.ContainsID(id);
-    case EntityType::ACTIVE_QUEST:
-        return gs->quest_manager.active_quests.ContainsID(id);
-    case EntityType::TASK:
-        return gs->quest_manager.active_tasks.ContainsID(id);
-    case EntityType::DIALOGUE:
-        return gs->quest_manager.dialogues.ContainsID(id);
     case EntityType::ICON3D:
         return gs->render_server.icons.ContainsID(id);
     case EntityType::TEXT3D:

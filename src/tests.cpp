@@ -5,8 +5,6 @@
 #include "ui.hpp"
 #include "id_allocator.hpp"
 #include "string_builder.hpp"
-#include "dialogue.hpp"
-#include "wren_interface.hpp"
 #include "list.hpp"
 #include "assets.hpp"
 
@@ -32,8 +30,6 @@ int UnitTests() {
     RETURN_OR_CONTINUE(DataNodeTests());
     RETURN_OR_CONTINUE(TransferPlanTests());
     RETURN_OR_CONTINUE(StringBuilderTests());
-    RETURN_OR_CONTINUE(DialogueTests());
-    RETURN_OR_CONTINUE(WrenTests());
     RETURN_OR_CONTINUE(AssetTests());
     INFO("All tests Sucessfull\n");
     return 0;

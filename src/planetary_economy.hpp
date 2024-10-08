@@ -47,49 +47,27 @@ namespace resources {
 #undef X
 }
 
-#define PRICE_TREND_SIZE 31
-
-typedef int64_t cost_t;
-
 struct ResourceData {
     int resource_index = -1;
     PermaString description;
-
-    cost_t min_cost;
-    cost_t max_cost;
-    cost_t default_cost;
-    cost_t cost_volatility;  // Deviation of day-to-day change of error
-    cost_t max_noise;        // Allowable amplitude of error
 };
 
 struct PlanetaryEconomy {
     resource_count_t resource_stock[resources::MAX];
     resource_count_t resource_capacity[resources::MAX];
-    resource_count_t native_resource_delta[resources::MAX];
     resource_count_t resource_delta[resources::MAX];
+    resource_count_t native_resource_delta[resources::MAX];
     resource_count_t writable_resource_delta[resources::MAX];
     resource_count_t delivered_resources_today[resources::MAX];
-
-    cost_t resource_price[resources::MAX];
-    cost_t resource_noise[resources::MAX];
-
-    cost_t price_history[resources::MAX*PRICE_TREND_SIZE];
-    bool trading_accessible;
 
     PlanetaryEconomy();
 
     void Update(RID planet);
-    void AdvanceEconomy();
-    void RecalculateEconomy();
     void UIDrawResources(RID planet);
-    void UIDrawEconomy(RID planet);
 
     resource_count_t TakeResource(resources::T resource_id, resource_count_t quantity);
     resource_count_t GiveResource(resources::T resource_id, resource_count_t quantity);
     void AddResourceDelta(resources::T resource_id, resource_count_t quantity);
-    void TryPlayerTransaction(resources::T resource_id, resource_count_t quantity);
-    cost_t GetPrice(resources::T resource_id, resource_count_t quantity) const;
-    resource_count_t GetForPrice(resources::T resource_id, cost_t quantity) const;
 };
 
 int FindResource(const char* name, int default_);

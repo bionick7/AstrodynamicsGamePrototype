@@ -352,26 +352,6 @@ void _UIDrawFleet(Ship* ship) {
     }
 }
 
-void _UIDrawQuests(Ship* ship) {
-    QuestManager* qm = GetQuestManager();
-    double max_mass = ResourceCountsToKG(ship->GetMaxCapacity()) - ship->GetOperationalMass();
-    
-    for(auto it = qm->active_tasks.GetIter(); it; it++) {
-        Task* quest = qm->active_tasks.Get(it);
-        bool is_quest_in_cargo = quest->ship == ship->id;
-        if (quest->current_planet != ship->parent_obj && !is_quest_in_cargo) continue;
-        bool can_accept = quest->payload_mass <= max_mass;
-        button_state_flags::T button_state = quest->DrawUI(true, is_quest_in_cargo);
-        if (button_state & button_state_flags::JUST_PRESSED && can_accept) {
-            if (is_quest_in_cargo) {
-                qm->PutbackTask(ship->id, it.GetId());
-            } else {
-                qm->PickupTask(ship->id, it.GetId());
-            }
-        }
-    }
-}
-
 void _ProductionQueueMouseHint(RID id, const Ship* ship, bool is_in_production_queue) {
     if (!IsIdValid(id)) return;
     // Assuming monospace font
@@ -805,15 +785,4 @@ void Ship::DrawUI() {
         );
         GetGlobalState()->active_transfer_plan.DrawUI();
     }
-    //if (!IsPlayerControlled()) {
-    //    ui::Pop();  // ScrollInset
-    //    return;
-    //}
-    //GetShipClassByRID(ship_class)->module_config.Draw(this);
-    //if (!IsStatic()) {
-    //    _UIDrawTransferplans(this);
-    //    _UIDrawQuests(this);
-    //}
-
-    //ui::Pop();  // ScrollInset
 }

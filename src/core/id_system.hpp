@@ -9,11 +9,6 @@ enum class EntityType: uint8_t {
     SHIP_CLASS,
     MODULE_CLASS,
 
-    QUEST,
-    ACTIVE_QUEST,
-    TASK,
-    DIALOGUE,
-
     ICON3D,
     TEXT3D,
     EMBEDDED_SCENE,

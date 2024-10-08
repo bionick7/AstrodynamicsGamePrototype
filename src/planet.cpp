@@ -22,7 +22,6 @@ Planet::Planet(PermaString p_name, double p_mu, double p_radius) {
 
 void Planet::Serialize(DataNode* data) const {
     data->Set("name", name.GetChar());
-    data->Set("trading_accessible", economy.trading_accessible ? "y" : "n");
     data->SetI("allegiance", allegiance);
     data->SetI("independence", independence);
     data->SetI("base_independence_delta", base_independence_delta);
@@ -64,7 +63,6 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
     has_atmosphere = nature->has_atmosphere;
     rotation_period = nature->rotation_period;
     orbit = nature->orbit;
-    economy.trading_accessible = strcmp(data->Get("trading_accessible", economy.trading_accessible ? "y" : "n", true), "y") == 0;
 
     data->DeserializeBuffer("resource_stock", economy.resource_stock, resources::names, resources::MAX);
     data->DeserializeBuffer("resource_delta", economy.native_resource_delta, resources::names, resources::MAX);
@@ -95,10 +93,6 @@ void Planet::Deserialize(Planets* planets, const DataNode *data) {
     }
     
     RecalculateStats();
-    economy.RecalculateEconomy();
-    for (int i=0; i < PRICE_TREND_SIZE; i++) {
-        economy.AdvanceEconomy();
-    }
 }
 
 void Planet::_OnClicked() {
@@ -147,7 +141,7 @@ double Planet::GetDVFromExcessVelocityPro(double vel, double parking_orbit, bool
 
 Color Planet::GetColor() const {
     return Palette::ui_main;
-    //return allegiance == GetFactions()->player_faction ? Palette::green : Palette::red;
+    //return allegiance == 0 ? Palette::green : Palette::red;
 }
 
 bool Planet::CanProduce(RID id, bool check_resources, bool check_stats) const {
