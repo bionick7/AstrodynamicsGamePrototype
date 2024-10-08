@@ -1020,6 +1020,7 @@ void Ship::_OnArrival(const TransferPlan* tp) {
         }
     }
 
+    // Drop off resources
     int total_resources = 0;
     for (int i=0; i < resources::MAX; i++) {
         GetPlanet(tp->arrival_planet)->economy.GiveResource((resources::T) i, transporting[i]);
@@ -1030,6 +1031,7 @@ void Ship::_OnArrival(const TransferPlan* tp) {
     StringBuilder var_name_sb;
     var_name_sb.Add("visit_").AddPerma(GetPlanet(GetParentPlanet())->name);
     global_vars::Inc(var_name_sb.c_str, 1);
+    global_vars::Inc("acc_delivered_counts", total_resources);
 
     position = GetPlanet(GetParentPlanet())->position;
 

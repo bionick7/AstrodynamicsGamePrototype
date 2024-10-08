@@ -420,7 +420,7 @@ void ModuleConfiguration::Draw(Ship* ship, Vector2 anchor_point, text_alignment:
         //DrawRectangleRec(rectangles[i], WHITE);
         //DrawRectangleLinesEx(module_rect, 1, Palette::ui_alt);
 
-        button_state_flags::T button_state = GetButtonStateRec(module_rect);
+        button_state_flags::T button_state = GetButtonStateRec(module_rect, ui::Current()->z_layer);
         if (button_state & button_state_flags::HOVER) {
             ship->current_slot = ShipModuleSlot(ship->id, i, ShipModuleSlot::DRAGGING_FROM_SHIP, types[i]);
         }
@@ -455,7 +455,7 @@ void ModuleConfiguration::Draw(Ship* ship, Vector2 anchor_point, text_alignment:
         };
 
         // Logic
-        button_state_flags::T button_state = GetButtonStateRec(module_rect);
+        button_state_flags::T button_state = GetButtonStateRec(module_rect, ui::Current()->z_layer);
         if (button_state & button_state_flags::HOVER) {
             ship->current_slot = ShipModuleSlot(ship->id, i, ShipModuleSlot::DRAGGING_FROM_SHIP, module_types::FREE);
         }
@@ -624,7 +624,9 @@ void ShipModules::DrawShipModule(RID index, bool inactive) const {
         //ui::Enclose();
         button_state_flags::T button_state = ui::AsButton();
         if (button_state & button_state_flags::HOVER) {
-            ui::PushMouseHint(GetMousePosition(), 400, 400);
+            Vector2 pos = GetMousePosition();
+            pos.y += 5;
+            ui::PushMouseHint(pos, 400, 400);
             ui::Current()->flexible = true;
             smc->MouseHintWrite();
             ui::Current()->extend_x = 400;  // Force width

@@ -14,18 +14,20 @@
 static inline Vector2 GetScreenCenter() { return { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f }; }
 static inline Rectangle GetScreenRect() { return { 0, 0, (float)GetScreenWidth(), (float)GetScreenHeight() }; }
 
+typedef uint8_t ZLayer;
+
 namespace z_layers {
-    const uint8_t BOTTOM = 0;
-    const uint8_t BASE = 10;
-    const uint8_t MENU_PANELS = 30;
-    const uint8_t POPUPS = 50;
-    const uint8_t MOUSE_HINTS = 200;
-    const uint8_t DEBUG_CONSOLE = 254;
-    const uint8_t TOP = 255;
+    const ZLayer BOTTOM = 0;
+    const ZLayer BASE = 10;
+    const ZLayer MENU_PANELS = 30;
+    const ZLayer POPUPS = 50;
+    const ZLayer MOUSE_HINTS = 200;
+    const ZLayer DEBUG_CONSOLE = 254;
+    const ZLayer TOP = 255;
 }
 
 namespace text_alignment {
-    typedef uint8_t T;
+    typedef ZLayer T;
     const static T LEFT      = 0x00;
     const static T HCENTER   = 0x01;
     const static T RIGHT     = 0x02;
@@ -39,13 +41,13 @@ namespace text_alignment {
     const static T CENTER    = 0x05;
     const static T CONFORM   = 0x0f;
 
-    const static T HFILTER   = 0x03;
-    const static T VFILTER   = 0x0c;
+    const static T HFILTER   = 0b00000011;
+    const static T VFILTER   = 0b00001100;
 };
 
 Vector2 ApplyAlignment(Vector2 pos, Vector2 size, text_alignment::T alignment);
 Vector2 ApplyAlignmentInRect(Rectangle pos, Vector2 size, text_alignment::T alignment);
-Rectangle DrawTextAligned(const char* text, Vector2 pos, text_alignment::T alignment, Color c, Color bg, uint8_t z_layer);
+Rectangle DrawTextAligned(const char* text, Vector2 pos, text_alignment::T alignment, Color c, Color bg, ZLayer z_layer);
 
 namespace button_state_flags {
     typedef uint8_t T;
@@ -57,6 +59,7 @@ namespace button_state_flags {
     const static T JUST_UNPRESSED  = 0x10;
     const static T JUST_HOVER_IN   = 0x20;
     const static T JUST_HOVER_OUT  = 0x40;
+    // Space for one more
 };
 
 namespace direction {
@@ -67,8 +70,8 @@ namespace direction {
     const static T RIGHT = 0x04;
 }
 
-button_state_flags::T GetButtonState(bool is_in_area, bool was_in_area);
-button_state_flags::T GetButtonStateRec(Rectangle rec);
+button_state_flags::T GetButtonState(bool is_in_area, bool was_in_area, ZLayer z_layer);
+button_state_flags::T GetButtonStateRec(Rectangle rec, ZLayer z_layer);
 
 struct TextBox {
     // Rect
@@ -79,7 +82,7 @@ struct TextBox {
     // Render Rect
     Rectangle render_rec;
     bool flexible;
-    int z_layer;
+    ZLayer z_layer;
 
     // Layout
     int text_margin_x;
@@ -99,7 +102,7 @@ struct TextBox {
 
     void (*on_pop_action)(TextBox* parent, TextBox* child) = NULL;
 
-    TextBox(int x, int y, int w, int h, int text_size, Color color, Color background_color, uint8_t z_layer);
+    TextBox(int x, int y, int w, int h, int text_size, Color color, Color background_color, ZLayer z_layer);
     TextBox(const TextBox* parent, int x, int y, int w, int h);
     int GetCharWidth();
     void LineBreak();
@@ -149,7 +152,7 @@ struct UIGlobals {
     int text_box_stack_capacity = 0;
     int text_box_stack_index = 0;
 
-    struct BlockingRect { Rectangle rec; uint8_t z; };
+    struct BlockingRect { Rectangle rec; ZLayer z; };
     BlockingRect acc_blocking_rects[MAX_BLOCKING_RECTS];
     BlockingRect blocking_rects[MAX_BLOCKING_RECTS];
     int blocking_rect_index = 0;
@@ -172,9 +175,9 @@ struct UIGlobals {
 
     void _HandleMouseTips();
 
-    void AddBlockingRect(Rectangle rect, uint8_t z_layer);
+    void AddBlockingRect(Rectangle rect, ZLayer z_layer);
     // Relies on previous's frame information
-    bool IsPointBlocked(Vector2 pos, uint8_t z_layer) const;
+    bool IsPointBlocked(Vector2 pos, ZLayer z_layer) const;
     const char* GetConceptDescription(const char* key);
     
     Texture2D GetIconAtlas();
@@ -183,8 +186,8 @@ struct UIGlobals {
 
 namespace ui {
     void PushTextBox(TextBox tb);
-    void PushGlobal(int x, int y, int w, int h, int text_size, Color color, Color background, uint8_t z_layer);
-    void CreateNew(int x, int y, int w, int h, int text_size, Color color, Color background, uint8_t z_layer);
+    void PushGlobal(int x, int y, int w, int h, int text_size, Color color, Color background, ZLayer z_layer);
+    void CreateNew(int x, int y, int w, int h, int text_size, Color color, Color background, ZLayer z_layer);
     void PushMouseHint(Vector2 mouse_pos, int width, int height);
 
     int PushInset(int h);
@@ -230,7 +233,7 @@ namespace ui {
 void HandleButtonSound(button_state_flags::T button_state_flags);
 Font GetCustomDefaultFont(int size);
 
-button_state_flags::T DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color);
-button_state_flags::T DrawCircleButton(Vector2 midpoint, double radius, Color color);
+button_state_flags::T DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color, ZLayer z_layer);
+button_state_flags::T DrawCircleButton(Vector2 midpoint, double radius, Color color, ZLayer z_layer);
 
 #endif  // UI_H

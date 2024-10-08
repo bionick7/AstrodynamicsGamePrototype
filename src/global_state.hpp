@@ -11,6 +11,7 @@
 #include "combat.hpp"
 #include "render_server.hpp"
 #include "techtree.hpp"
+#include "global_logic.hpp"
 
 struct GlobalState {
 
@@ -32,6 +33,7 @@ struct GlobalState {
 	AudioServer audio_server;
 	RenderServer render_server;
 	UIGlobals ui;
+    GlobalLogic global_logic;
 
     std::map<std::string, RID> string_identifiers = std::map<std::string, RID>();
 
@@ -75,5 +77,6 @@ BattleLog* GetBattleLog();
 AudioServer* GetAudioServer();
 RenderServer* GetRenderServer();
 UIGlobals* GetUI();
+GlobalLogic* GetGlobalLogic();
 
 #endif // GLOBAL_STATE_H

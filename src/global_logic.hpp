@@ -5,6 +5,24 @@
 #include "string_builder.hpp"
 #include "list.hpp"
 
+namespace comparison {
+    enum T {
+        GREATER, LESS,
+        GREATER_OR_EQUAL, LESS_OR_EQUAL,
+        EQUAL, NONEQUAL,
+
+        COMPARISON_MAX
+    };
+
+    static constexpr const char* comparison_identifiers[COMPARISON_MAX] = {
+        ">", "<", ">=", "<=", "=", "=/="
+    };
+
+    static constexpr const char* comparison_repr[COMPARISON_MAX] = {
+        ">", "<", "\u2265", "\u2264", "=", "\u2260"
+    };
+}
+
 struct ResearchCondition {
     enum Type {
         INVALID = -1,
@@ -19,25 +37,9 @@ struct ResearchCondition {
         TYPE_MAX
     };
 
-    enum Comparison {
-        GREATER, LESS,
-        GREATER_OR_EQUAL, LESS_OR_EQUAL,
-        EQUAL, NONEQUAL,
-
-        COMPARISON_MAX
-    };
-
     static constexpr const char* type_identifiers[TYPE_MAX] = {
         "any", "all", "stat_achieved", "production_counter",
         "produce_item", "expression", "free"
-    };
-
-    static constexpr const char* comparison_identifiers[COMPARISON_MAX] = {
-        ">", "<", ">=", "<=", "=", "=/="
-    };
-
-    static constexpr const char* comparison_repr[COMPARISON_MAX] = {
-        ">", "<", "\u2265", "\u2264", "=", "\u2260"
     };
 
     Type type;
@@ -51,7 +53,7 @@ struct ResearchCondition {
         struct {
             int variable;
             int value;
-            Comparison comp;
+            comparison::T comp;
             PermaString description;
         } leaf;
     } cond {0};
@@ -71,6 +73,12 @@ namespace global_vars {
         int value;
     };
 
+    struct Condition {
+        int variable;
+        int value;
+        comparison::T comp;
+    };
+
     struct Effect {
         int var;
         enum { SET, INC } action;
@@ -79,6 +87,8 @@ namespace global_vars {
 
     int GetVarIndex(const char* name);
     bool HasVar(const char *name);
+    int TryGetVar(StrHash name_hash);
+    bool HasVar(StrHash name_hash);
     int GetVarCount();
     GlobalVariable* GetVarAt(int index);
 
@@ -92,9 +102,32 @@ namespace global_vars {
     void Serialize(DataNode* data);
     void Deserialize(const DataNode* data);
 
+    Condition InterpretCondition(const char* condition);
+    bool CheckCondition(Condition condition);
+
     void CompileEffects(const char* cmd, List<Effect>* effect_list);
     void InterpretCompiled(Effect effect);
     void Interpret(const char* cmd);
 };
+
+struct Event {
+    PermaString title;
+    PermaString body;
+    global_vars::Condition condition;
+    List<global_vars::Effect> effect;
+
+    int event_occured_index;
+};
+
+struct GlobalLogic {
+    List<global_vars::GlobalVariable> variables;
+    Event* events;
+    int event_count;
+
+    int Load(const DataNode* data);
+    void Update();
+};
+
+int LoadEvents(const DataNode* dn);
 
 #endif  // GLOBAL_LOGIC_H

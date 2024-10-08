@@ -1,0 +1,24 @@
+events:
+- id: tutorial_combat
+  title: Combat Instructions
+  body: >
+    ---
+  trigger: combat_unlocked > 0
+  
+- id: tutorial_cycle
+  title: Cycle Instructions
+  body: >
+    ---
+  trigger: cycles_unlocked > 0
+  
+- id: tutorial_1
+  title: Basic Instructions
+  body: >
+    ---
+  trigger: tutorial = 0
+  
+- id: tutorial_planet_inventory
+  title: Planet Inventory
+  body: >
+    ---
+  trigger: time_days >= 4

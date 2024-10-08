@@ -3,20 +3,21 @@
 #include "ship.hpp"
 #include "global_state.hpp"
 #include "utils.hpp"
+#include "event_popup.hpp"
 
-float _GetProgressFromComparison(int variable, int reference, ResearchCondition::Comparison comp) {
+float _GetProgressFromComparison(int variable, int reference, comparison::T comp) {
     switch (comp) {
-        case ResearchCondition::GREATER:
+        case comparison::GREATER:
             return Clamp(variable / (float)(reference + 1), 0, 1);
-        case ResearchCondition::GREATER_OR_EQUAL:
+        case comparison::GREATER_OR_EQUAL:
             return Clamp(variable / (float)reference, 0, 1);
-        case ResearchCondition::LESS:
+        case comparison::LESS:
             return variable < reference ? 1:0;
-        case ResearchCondition::LESS_OR_EQUAL:
+        case comparison::LESS_OR_EQUAL:
             return variable <= reference ? 1:0;
-        case ResearchCondition::EQUAL :
+        case comparison::EQUAL :
             return variable == reference ? 1:0;
-        case ResearchCondition::NONEQUAL:
+        case comparison::NONEQUAL:
             return variable != reference ? 1:0;
         default:
             return 0;
@@ -128,8 +129,8 @@ void ResearchCondition::GenLeafFromString(Type p_type, const char *expression) {
     
     cond.leaf.value = value;
     
-    cond.leaf.comp = (ResearchCondition::Comparison) FindInArray(
-        ResearchCondition::comparison_identifiers, ResearchCondition::COMPARISON_MAX, symbol);
+    cond.leaf.comp = (comparison::T) FindInArray(
+        comparison::comparison_identifiers, comparison::COMPARISON_MAX, symbol);
 
     type = p_type;
 
@@ -163,7 +164,6 @@ void ResearchCondition::GenLeafFromString(Type p_type, const char *expression) {
     }
 }
 
-
 void ResearchCondition::GetDescriptiveText(StringBuilder *sb) const {
     if (!IsValid()) {
         sb->Add("INVALID CONDITION");
@@ -182,7 +182,7 @@ void ResearchCondition::GetDescriptiveText(StringBuilder *sb) const {
     case STAT_CONDITION:{
         sb->AddClock(GetProgress());
         sb->AddFormat(" Have a ship with %s %s %d (%3.0f %%)", ship_stats::icons[cond.leaf.variable], 
-                      ResearchCondition::comparison_repr[cond.leaf.comp], cond.leaf.value, GetProgress()*100);
+                      comparison::comparison_repr[cond.leaf.comp], cond.leaf.value, GetProgress()*100);
         break;
     }
     case PRODUCTION_COUNTER:{
@@ -217,38 +217,56 @@ void ResearchCondition::GetDescriptiveText(StringBuilder *sb) const {
     }
 }
 
-namespace global_vars {   
-    List<GlobalVariable> variables;
-}
-
-
 int global_vars::GetVarIndex(const char *name) {
     ASSERT(strlen(name) <= 100)
     StrHash name_hash = HashKey(name);
-    for (int i=0; i < variables.Count(); i++) {
-        if (variables[i].hash == name_hash) {
-            return i;
+    int index = -1;
+    List<GlobalVariable>* variables = &GetGlobalLogic()->variables;
+    for (int i=0; i < variables->Count(); i++) {
+        if (variables->GetPtr(i)->hash == name_hash) {
+            index = i;
         }
     }
-    int index = variables.AllocForAppend();
-    strcpy(variables[index].name, name);
-    variables[index].hash = name_hash;
-    variables[index].value = 0;
+    if (index < 0) {
+        // Create new variable
+        index = variables->AllocForAppend();
+        strcpy(variables->GetPtr(index)->name, name);
+        variables->GetPtr(index)->hash = name_hash;
+        variables->GetPtr(index)->value = 0;
+    }
     return index;
 }
 
 int global_vars::GetByIndex(int index) {
-    if (index < 0 || index >= variables.Count()) {
+    if (index < 0 || index >= GetGlobalLogic()->variables.Count()) {
         return 0;
     }
-    return variables[index].value;
+    return GetGlobalLogic()->variables.GetPtr(index)->value;
 }
 
 bool global_vars::HasVar(const char *name) {
     ASSERT(strlen(name) <= 100)
     StrHash name_hash = HashKey(name);
-    for (int i=0; i < variables.Count(); i++) {
-        if (variables[i].hash == name_hash) {
+    return HasVar(name_hash);
+}
+
+int global_vars::TryGetVar(StrHash name_hash) {
+    // Other than GetVarIndex, this cannot generate new variables
+    // It's faster tho
+    List<GlobalVariable>* variables = &GetGlobalLogic()->variables;
+    int index = -1;
+    for (int i=0; i < variables->Count(); i++) {
+        if (variables->GetPtr(i)->hash == name_hash) {
+            return variables->GetPtr(i)->value;
+        }
+    }
+    return 0;
+}
+
+bool global_vars::HasVar(StrHash name_hash) {
+    List<GlobalVariable>* variables = &GetGlobalLogic()->variables;
+    for (int i=0; i < variables->Count(); i++) {
+        if (variables->GetPtr(i)->hash == name_hash) {
             return true;
         }
     }
@@ -256,11 +274,11 @@ bool global_vars::HasVar(const char *name) {
 }
 
 int global_vars::GetVarCount() {
-    return variables.Count();
+    return GetGlobalLogic()->variables.Count();
 }
 
 global_vars::GlobalVariable* global_vars::GetVarAt(int index) {
-    return &variables[index];
+    return GetGlobalLogic()->variables.GetPtr(index);
 }
 
 int global_vars::Get(const char *name) {
@@ -268,7 +286,7 @@ int global_vars::Get(const char *name) {
 }
 
 void global_vars::SetByIndex(int index, int value) {
-    variables[index].value = value;
+    GetGlobalLogic()->variables.GetPtr(index)->value = value;
 }
 
 void global_vars::Set(const char *name, int value) {
@@ -276,7 +294,7 @@ void global_vars::Set(const char *name, int value) {
 }
 
 void global_vars::IncByIndex(int index, int value) {
-    variables[index].value += value;
+    GetGlobalLogic()->variables.GetPtr(index)->value += value;
 }
 
 void global_vars::Inc(const char *name, int value) {
@@ -284,17 +302,42 @@ void global_vars::Inc(const char *name, int value) {
 }
 
 void global_vars::Serialize(DataNode *data) {
-    for (int i=0; i < variables.Count(); i++) {
-        data->SetI(variables[i].name, variables[i].value);
+    List<GlobalVariable>* variables = &GetGlobalLogic()->variables;
+    for (int i=0; i < variables->Count(); i++) {
+        data->SetI(variables->GetPtr(i)->name, variables->GetPtr(i)->value);
     }
 }
 
 void global_vars::Deserialize(const DataNode *data) {
-    variables.Clear();
+    List<GlobalVariable>* variables = &GetGlobalLogic()->variables;
+    //variables->Clear();
     for (int i=0; i < data->GetFieldCount(); i++) {
         const char* name = data->GetKey(i);
         Set(name, data->GetI(name));
     }
+}
+
+global_vars::Condition global_vars::InterpretCondition(const char *condition) {
+    static char var_name[100];
+    static char condition_sign[100];
+    int value;
+    // TODO: how to make it safe?
+    int sscanf_result = sscanf(condition, "%s %s %d", var_name, condition_sign, &value);
+    if (sscanf_result != 3) {
+        return Condition();
+    }
+    Condition res;
+    res.variable = GetVarIndex(var_name);
+    res.comp = (comparison::T) FindInArray(comparison::comparison_identifiers, 
+                                           comparison::COMPARISON_MAX, condition_sign);
+    res.value = value;
+    return res;
+}
+
+bool global_vars::CheckCondition(Condition condition) {
+    return _GetProgressFromComparison(
+        GetByIndex(condition.variable), condition.value, condition.comp
+    ) >= 1;
 }
 
 void global_vars::CompileEffects(const char *cmd, List<Effect> *effect_list) {
@@ -350,4 +393,48 @@ void global_vars::Interpret(const char *cmd) {
     for (int i=0; i < effects.Count(); i++) {
         InterpretCompiled(effects[i]);
     }
+}
+
+int GlobalLogic::Load(const DataNode* data) {
+    delete[] events;
+    event_count = data->GetChildArrayLen("events");
+    events = new Event[event_count];
+    for (int i=0; i < event_count; i++) {
+        const DataNode* event_dn = data->GetChildArrayElem("events", i);
+        events[i].title = PermaString(event_dn->Get("title"));
+        events[i].body = PermaString(event_dn->Get("description"));
+        events[i].condition = global_vars::InterpretCondition(event_dn->Get("trigger"));
+        if (event_dn->Has("effect")) {
+            global_vars::CompileEffects(event_dn->Get("effect"), &events[i].effect);
+        }
+        events[i].event_occured_index = global_vars::GetVarIndex(
+            TextFormat("effect_%s_occured", event_dn->Get("id")));
+    }
+    return event_count;
+}
+
+void GlobalLogic::Update() {
+    for (int i=0; i < event_count; i++) {
+        Event* event = &events[i];
+        bool is_used = global_vars::GetByIndex(event->event_occured_index);
+        if (is_used || !global_vars::CheckCondition(event->condition)) {
+            continue;
+        }
+
+        global_vars::SetByIndex(event->event_occured_index, 1);
+        
+        // Popup
+        Popup* popup = event_popup::AddPopup(400, 500, 200);
+        strncpy(popup->title, event->title.GetChar(), 100);
+        strncpy(popup->description, event->body.GetChar(), 1024);
+
+        // Take effect
+        for (int j=0; j < event->effect.Count(); j++) {
+            global_vars::InterpretCompiled(event->effect[j]);
+        }
+    }
+}
+
+int LoadEvents(const DataNode* dn) {
+    return GetGlobalLogic()->Load(dn);
 }

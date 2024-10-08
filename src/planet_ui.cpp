@@ -142,51 +142,6 @@ void Planet::DrawUI() {
 
     ui::WriteEx(name.GetChar(), text_alignment::CONFORM, true);
 
-    // Independence slider
-    /*ui::PushInset(30);
-    Vector2 cursor_pos = ui::Current()->GetTextCursor();
-    Rectangle slider_rect = {cursor_pos.x, cursor_pos.y, 300, 20};
-    ui::HelperText(GetUI()->GetConceptDescription("independence"));
-    if (GetButtonStateRec(slider_rect) & button_state_flags::HOVER) {
-        ui::SetMouseHint(independence_delta_log.c_str);
-    }
-    if (independence > 100) {
-        ui::DrawLimitedSlider(independence, 0, 150, 100, 
-            300, 20, Palette::red, Palette::ui_alt
-        );
-    } else {
-        ui::DrawLimitedSlider(independence, 0, 150, 100, 
-            300, 20, Palette::ui_main, Palette::ui_alt
-        );
-    }
-    StringBuilder sb;
-    sb.AddFormat("%3d/%d (%+2d)", independence, 150, independence_delta);
-    ui::WriteEx(sb.c_str, text_alignment::CONFORM, true);
-    ui::Pop();*/
-
-    // Opinion slider
-    /*ui::PushInset(30);
-    cursor_pos = ui::Current()->GetTextCursor();
-    slider_rect = {cursor_pos.x, cursor_pos.y, 300, 20};
-    ui::HelperText(GetUI()->GetConceptDescription("opinion"));
-    if (GetButtonStateRec(slider_rect) & button_state_flags::HOVER) {
-        ui::SetMouseHint(opinion_delta_log.c_str);
-    }
-    if (opinion >= 0) {
-        ui::DrawLimitedSlider(opinion, -100, 100, 0, 
-            300, 20, Palette::red, Palette::ui_alt
-        );
-    } else {
-        ui::DrawLimitedSlider(opinion, -100, 100, 0, 
-            300, 20, Palette::ui_main, Palette::ui_alt
-        );
-    }
-    sb.Clear();
-    sb.AddFormat("%3d (%+2d)", opinion, opinion_delta);
-    ui::WriteEx(sb.c_str, text_alignment::CONFORM, false);
-    ui::FillLine(1, Palette::ui_main, Palette::ui_main);
-    ui::Pop();*/
-
     ui::Current()->EnsureLineBreak();
     ui::VSpace(10);
     switch (current_tab) {

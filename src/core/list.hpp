@@ -88,6 +88,11 @@ struct List {
         return buffer[index];
     }
     
+    T* GetPtr(int index) const {
+        if (index < 0) return &buffer[size + index];
+        return &buffer[index];
+    }
+    
     int Find(T item) const {
         for (int i=0; i < size; i++) {
             if(buffer[i] == item) return i;

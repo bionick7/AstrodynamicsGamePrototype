@@ -1,44 +1,36 @@
 focused_planet: -1
 focused_ship: -1
-player_faction: 0
 calendar:
   paused: y
   time: 4579200.000000
   time_scale: 16384.000000
 
 camera:
-  focus: 33554435
-  focus_point_x: -359418280.809824
+  focus: -1
+  focus_point_x: 0.000000
   focus_point_y: 0.000000
-  focus_point_z: 388325449.424233
-  view_direction_x: -0.033315
-  view_direction_y: -0.999445
-  view_direction_z: -0.000000
+  focus_point_z: 0.000000
+  view_direction_x: -0.695462
+  view_direction_y: -0.708577
+  view_direction_z: 0.119381
   view_distance: 23.762693
 
 global_vars:
+  acc_delivered_counts: 0
   battles: 0
+  combat: 0
   combat_unlocked: 0
+  cycles_unlocked: 0
   droptanks_used: 0
+  effect_tutorial_1_occured: 1
+  effect_tutorial_combat_occured: 0
+  effect_tutorial_cycle_occured: 1
+  effect_tutorial_planet_inventory_occured: 1
+  tutorial: 0
   visit_Mimas: 0
   visit_Rhea: 6
   visit_Tethys: 2
   visit_Titan: 3
-
-quests:
-  active_quests: []
-  available_quests:
-  - active: n
-    await_type: 0
-    id: 83886080
-    template: tutorial
-
-  - active: n
-    await_type: 0
-    id: 83886081
-    template: example
-
-  dialogues: []
 
 tech:
   condition_internals:
@@ -50,6 +42,7 @@ tech:
   - ---
   - 0
   - 0
+  - ---
   - 0
   - 0
   - ---
@@ -78,11 +71,6 @@ tech:
   - tech_metallurgy
   visited_planets: []
 
-factions:
-- money: 0
-
-- money: 0
-
 planets:
 - allegiance: 0
   base_independence_delta: 0
@@ -90,7 +78,6 @@ planets:
   independence: 0
   name: Low Orbit
   opinion: 0
-  trading_accessible: n
   resource_delta:
     hydrogen: 50
     water: 10
@@ -106,7 +93,6 @@ planets:
   independence: 0
   name: Rings
   opinion: 0
-  trading_accessible: n
   resource_delta:
     water: 50
 
@@ -122,7 +108,6 @@ planets:
   independence: 0
   name: Mimas
   opinion: 0
-  trading_accessible: n
   resource_delta:
     water: 10
 
@@ -131,7 +116,7 @@ planets:
     hydrogen: 100
     oxygen: 100
     steel: 20
-    water: 10
+    water: 20
 
   inventory:
   - 0 shpmod_reactor
@@ -143,7 +128,6 @@ planets:
   independence: 0
   name: Encelladus
   opinion: 0
-  trading_accessible: n
   resource_delta:
 
   resource_stock:
@@ -158,7 +142,6 @@ planets:
   independence: 0
   name: Tethys
   opinion: 0
-  trading_accessible: n
   resource_delta:
 
   resource_stock:
@@ -168,7 +151,7 @@ planets:
     iron_ore: 12
     rock: 41
     steel: 10
-    water: 837
+    water: 500
 
   inventory:
   - 0 shpmod_electrolyser
@@ -179,7 +162,6 @@ planets:
   independence: 0
   name: Dione
   opinion: 0
-  trading_accessible: n
   resource_delta:
 
   resource_stock:
@@ -191,7 +173,6 @@ planets:
   independence: 0
   name: Rhea
   opinion: 0
-  trading_accessible: n
   resource_delta:
     rock: 300
     water: 50
@@ -217,7 +198,6 @@ planets:
   independence: 0
   name: Titan
   opinion: 0
-  trading_accessible: n
   resource_delta:
     carbon: 10
     water: 20
@@ -238,7 +218,6 @@ planets:
   independence: 0
   name: Iaeptus
   opinion: 0
-  trading_accessible: n
   resource_delta:
     water: 20
 
@@ -257,7 +236,6 @@ planets:
   independence: 0
   name: Phoebe
   opinion: 0
-  trading_accessible: n
   resource_delta:
 
   resource_stock:
@@ -290,7 +268,7 @@ ships:
   id: 33554433
   name: Anna Kowalsky knot
   planet: Tethys
-  production_process: 3
+  production_process: 1
   damage_taken:
 
   transporting:

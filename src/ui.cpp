@@ -45,7 +45,11 @@ Rectangle DrawTextAligned(const char* text, Vector2 pos, text_alignment::T align
     return rect;
 }
 
-button_state_flags::T GetButtonState(bool is_in_area, bool was_in_area) {
+button_state_flags::T GetButtonState(bool is_in_area, bool was_in_area, ZLayer z_layer) {
+    bool is_blocked = GetUI()->IsPointBlocked(GetMousePosition(), z_layer);
+    if (is_blocked) {
+        return button_state_flags::NONE;
+    }
     button_state_flags::T res = button_state_flags::NONE;
     if (is_in_area) {
         res |= button_state_flags::HOVER;
@@ -60,10 +64,11 @@ button_state_flags::T GetButtonState(bool is_in_area, bool was_in_area) {
     return res;
 }
 
-button_state_flags::T GetButtonStateRec(Rectangle rec) {
+button_state_flags::T GetButtonStateRec(Rectangle rec, ZLayer z_layer) {
     return GetButtonState(
         CheckCollisionPointRec(GetMousePosition(), rec), 
-        CheckCollisionPointRec(Vector2Subtract(GetMousePosition(), GetMouseDelta()), rec)
+        CheckCollisionPointRec(Vector2Subtract(GetMousePosition(), GetMouseDelta()), rec),
+        z_layer
     );
 }
 
@@ -76,7 +81,8 @@ void HandleButtonSound(button_state_flags::T state) {
     }
 }
 
-TextBox::TextBox(int p_x, int p_y, int w, int h, int ptext_size, Color color, Color pbackground_color, uint8_t pz_layer) {
+TextBox::TextBox(int p_x, int p_y, int w, int h, int ptext_size, 
+                 Color color, Color pbackground_color, ZLayer pz_layer) {
     ASSERT(w > 0)
     ASSERT(h >= 0)
     x = p_x;
@@ -338,7 +344,7 @@ button_state_flags::T TextBox::WriteButton(const char* text) {
 }
 
 button_state_flags::T TextBox::AsButton() const {
-    return GetButtonStateRec(GetRect());
+    return GetButtonStateRec(GetRect(), z_layer);
 }
 
 Vector2 TextBox::GetTextCursor() const {
@@ -423,13 +429,13 @@ void ui::PushTextBox(TextBox tb) {
     }
 }
 
-void ui::PushGlobal(int x, int y, int w, int h, int text_size, Color color, Color background, uint8_t z_layer) {
+void ui::PushGlobal(int x, int y, int w, int h, int text_size, Color color, Color background, ZLayer z_layer) {
     TextBox new_text_box = TextBox(x, y, w, h, text_size, color, background, z_layer);
     ui::PushTextBox(new_text_box);
     GetUI()->AddBlockingRect({(float)x, (float)y, (float)w, (float)h}, z_layer);
 }
 
-void ui::CreateNew(int x, int y, int w, int h, int text_size, Color color, Color background, uint8_t z_layer) {
+void ui::CreateNew(int x, int y, int w, int h, int text_size, Color color, Color background, ZLayer z_layer) {
     while (GetUI()->text_box_stack_index > 0) {  // Clear stack
         ui::Pop();
     }
@@ -1016,14 +1022,14 @@ void UIGlobals::_HandleMouseTips() {
     }
 }
 
-void UIGlobals::AddBlockingRect(Rectangle rect, uint8_t z_layer) {
+void UIGlobals::AddBlockingRect(Rectangle rect, ZLayer z_layer) {
     if (acc_blocking_rect_index == MAX_BLOCKING_RECTS-1) return;
     acc_blocking_rects[acc_blocking_rect_index].rec = rect;
     acc_blocking_rects[acc_blocking_rect_index].z = z_layer;
     acc_blocking_rect_index++;
 }
 
-bool UIGlobals::IsPointBlocked(Vector2 pos, uint8_t z_layer) const {
+bool UIGlobals::IsPointBlocked(Vector2 pos, ZLayer z_layer) const {
     for(int i=0; i < blocking_rect_index; i++) {
         if (CheckCollisionPointRec(pos, blocking_rects[i].rec) && blocking_rects[i].z > z_layer) {
             return true;
@@ -1091,32 +1097,38 @@ Font GetCustomDefaultFont(int size) {
     return font;
 }
 
-button_state_flags::T DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color) {
+button_state_flags::T DrawTriangleButton(Vector2 point, Vector2 base, double width, Color color, ZLayer z_layer) {
     Vector2 base_pos = Vector2Add(point, base);
     Vector2 tangent_dir = Vector2Rotate(Vector2Normalize(base), PI/2);
     Vector2 side_1 =  Vector2Add(base_pos, Vector2Scale(tangent_dir, -width));
     Vector2 side_2 =  Vector2Add(base_pos, Vector2Scale(tangent_dir, width));
     bool is_in_area = CheckCollisionPointTriangle(GetMousePosition(), side_1, point, side_2);
+    BeginRenderInUILayer(z_layer);
     if (is_in_area) {
         DrawTriangle(side_1, point, side_2, Palette::interactable_main);
     } else {
         DrawTriangleLines(side_1, point, side_2, Palette::interactable_main);
     }
+    EndRenderInUILayer();
     return GetButtonState(
         is_in_area,
-        CheckCollisionPointTriangle(Vector2Subtract(GetMousePosition(), GetMouseDelta()), side_1, point, side_2)
+        CheckCollisionPointTriangle(Vector2Subtract(GetMousePosition(), GetMouseDelta()), side_1, point, side_2),
+        z_layer
     );
 }
 
-button_state_flags::T DrawCircleButton(Vector2 midpoint, double radius, Color color) {
+button_state_flags::T DrawCircleButton(Vector2 midpoint, double radius, Color color, ZLayer z_layer) {
     bool is_in_area = CheckCollisionPointCircle(GetMousePosition(), midpoint, radius);
+    BeginRenderInUILayer(z_layer);
     if (is_in_area) {
         DrawCircleV(midpoint, radius, Palette::interactable_main);
     } else {
         DrawCircleLines(midpoint.x, midpoint.y, radius, Palette::interactable_main);
     }
+    EndRenderInUILayer();
     return GetButtonState(
         is_in_area,
-        CheckCollisionPointCircle(Vector2Subtract(GetMousePosition(), GetMouseDelta()), midpoint, radius)
+        CheckCollisionPointCircle(Vector2Subtract(GetMousePosition(), GetMouseDelta()), midpoint, radius),
+        z_layer
     );
 } 

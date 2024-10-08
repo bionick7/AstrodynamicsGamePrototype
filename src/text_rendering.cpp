@@ -29,8 +29,9 @@ void text::GetLayout(Layout* layout, Vector2 start, Font font,
         int index = GetGlyphIndex(font, codepoint);
 
         // Handle auto-breaks
-        if (codepoint == ' ' || codepoint == '\t') {
+        if (codepoint == ' ' || codepoint == '\t' || i + codepointByteCount == layout->size) {
             if (text_offset_x - start.x > max_width && !reiterating) {
+                // Force linebreak
                 i = last_wordbreak;
 
                 int max_offset = layout->rects[i].x + layout->rects[i].width;
@@ -42,6 +43,7 @@ void text::GetLayout(Layout* layout, Vector2 start, Font font,
                 text_offset_y += 20;
                 reiterating = true;
             } else {
+                // Can linebreak next word
                 reiterating = false;
             }
             last_wordbreak = i + codepointByteCount;
@@ -194,7 +196,8 @@ void text::Layout::GetTextRects(List<Rectangle>* buffer, const TokenList *tokens
     }
 }
 
-void text::Layout::DrawTextLayout(Font font, float fontSize, Color tint, Color background, Rectangle render_rect, uint8_t z_layer) const {
+void text::Layout::DrawTextLayout(Font font, float fontSize, Color tint, Color background, 
+                                  Rectangle render_rect, ZLayer z_layer) const {
     // Modified Raylib function '(Raylib cmt)' refers to original documentation
 
     if (font.texture.id == 0) font = GetFontDefault();  // (Raylib cmt) Security check in case of not valid font

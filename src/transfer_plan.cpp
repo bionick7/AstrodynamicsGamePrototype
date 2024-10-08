@@ -611,6 +611,8 @@ timemath::Time _DrawHandle(
     Vector2 pos, Vector2 radial_dir, const Orbit* orbit, 
     timemath::Time current, timemath::Time t0, bool* is_dragging
 ) {
+    ZLayer z_layer = z_layers::BASE - 1; 
+
     Color c = Palette::interactable_main;
 
     Vector2 tangent_dir = Vector2Rotate(radial_dir, PI/2);
@@ -627,7 +629,7 @@ timemath::Time _DrawHandle(
         DrawTextAligned(text_content, text_pos, text_alignment::HCENTER | text_alignment::RIGHT, 
                         c, Palette::bg, 0);
     }
-    if (DrawTriangleButton(pos, Vector2Scale(radial_dir, 20), 10, c) & button_state_flags::JUST_PRESSED) {
+    if (DrawTriangleButton(pos, Vector2Scale(radial_dir, 20), 10, c, z_layer) & button_state_flags::JUST_PRESSED) {
         *is_dragging = true;
     }
     const int extend = 5;
@@ -646,8 +648,8 @@ timemath::Time _DrawHandle(
         Vector2Add(plus_pos, {0, extend}),
         c
     );
-    button_state_flags::T button_state_plus  = DrawCircleButton(plus_pos, 10, c);
-    button_state_flags::T button_state_minus = DrawCircleButton(minus_pos, 10, c);
+    button_state_flags::T button_state_plus  = DrawCircleButton(plus_pos, 10, c, z_layer);
+    button_state_flags::T button_state_minus = DrawCircleButton(minus_pos, 10, c, z_layer);
     if (button_state_plus & button_state_flags::JUST_PRESSED)  current = current + period;
     if (button_state_minus & button_state_flags::JUST_PRESSED) current = current - period;
     HandleButtonSound(button_state_plus);

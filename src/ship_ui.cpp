@@ -13,8 +13,8 @@ void _UIDrawHeader(const Ship* ship) {
     text::Layout layout = ui::Current()->GetTextLayout(text, text_alignment::RIGHT | text_alignment::VCONFORM);
     int pos = layout.GetCharacterIndex(GetMousePosition());
     ui::WriteEx(text, text_alignment::RIGHT | text_alignment::VCONFORM, true);
-    button_state_flags::T planet_button_state = GetButtonState(pos >= 0 && pos < 2, false);  // Don't care about hover_in
-    button_state_flags::T fleet_button_state = GetButtonState(pos >= 3 && pos < 5, false);  // Don't care about hover_in
+    button_state_flags::T planet_button_state = GetButtonState(pos >= 0 && pos < 2, false, ui::Current()->z_layer);  // Don't care about hover_in
+    button_state_flags::T fleet_button_state = GetButtonState(pos >= 3 && pos < 5, false, ui::Current()->z_layer);  // Don't care about hover_in
     if (planet_button_state & button_state_flags::JUST_PRESSED && ship->IsParked()) {
         GetGlobalState()->focused_planet = ship->GetParentPlanet();
     }
@@ -248,7 +248,7 @@ int _UIDrawTransferplans(Ship* ship) {
             sb.Add(" >> ");
         }
         sb.AddPerma(GetPlanet(ship->transferplan_cycle.planets[0])->name);
-        ui::WriteEx(sb.c_str, text_alignment::CENTER, false);
+        ui::Write(sb.c_str);
 
         ui::Pop();  // Inset
     }
@@ -262,6 +262,7 @@ int _UIDrawTransferplans(Ship* ship) {
     bool show_cycle_button = 
         ship->transferplan_cycle.stops > 0 || 
         (ship->GetParentPlanet() == last_arrival_planet && ship->plan_edit_index < 0);
+    show_cycle_button = show_cycle_button && global_vars::TryGetVar(HashKey("cycles_unlocked"));
     bool show_add_button = ship->transferplan_cycle.stops == 0;
     int button_tabs = 2;
     bool button_pressed[2];
@@ -275,7 +276,7 @@ int _UIDrawTransferplans(Ship* ship) {
         }
 
         const char* text = "New Transfer";
-        if (i == 1) {
+        if (i == 1) {  // Cycles
             text = ship->transferplan_cycle.stops > 0 ? "Remove Cycle" : "Add Cycle";
         }
 
@@ -660,7 +661,7 @@ void _UIDrawProduction(Ship* ship) {
         ui::Pop();  // Inset
     }
     if (IsIdValid(hovered_id)) {
-        Vector2 pos = { GetScreenWidth() - 420, GetMousePosition().y };
+        Vector2 pos = { GetScreenWidth() - 420, GetMousePosition().y + 10 };
         ui::PushMouseHint(pos, 400, 400);
         ui::Current()->text_background = Palette::bg;
         ui::Current()->flexible = true;

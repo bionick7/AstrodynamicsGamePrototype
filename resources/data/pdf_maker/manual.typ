@@ -1,3 +1,7 @@
+#set text(font: "Monospac821 BT")
+#show heading.where(level: 1): it => align(center, it) + v(5pt)
+#show heading.where(level: 2): it => align(center, it) + v(5pt)
+
 #let get_label = x => x.text.trim("[[").trim("]]").trim(("+"))
 
 #let get_label_name(x) = {

@@ -55,6 +55,8 @@ void Calendar::Update(double delta_t) {
     } else if (!paused) {
         time = time + delta_t * time_scale;
     }
+
+    global_vars::Set("time_days", time.Days());
 }
 
 void Calendar::DrawUI() const {

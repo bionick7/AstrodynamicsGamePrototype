@@ -50,7 +50,7 @@ void event_popup::UpdateAllPopups() {
         }
 
         event_popup::PopupEvents request_close;
-        popup_list[i].Draw(&request_close, i);
+        popup_list[i].Draw(&request_close, i*2);
         if (request_close.request_close && !mouse_blocked) {
             // Delete embedded scene
             if (IsIdValidTyped(scene_id, EntityType::EMBEDDED_SCENE)) {

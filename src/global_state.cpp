@@ -23,13 +23,14 @@ void GlobalState::Make(timemath::Time p_time) {
 void GlobalState::LoadData() {
     string_identifiers.clear();
 
-    #define NUM 5
+    #define NUM 6
     const char* loading_paths[NUM] = {
         "resources/data/ephemeris.yaml",
         "resources/data/resources.yaml",
         "resources/data/ship_modules.yaml",
         "resources/data/ship_classes.yaml",
         "resources/data/techtree.yaml",
+        "resources/data/events.yaml"
     };
 
     int (*load_funcs[NUM])(const DataNode*) = { 
@@ -38,6 +39,7 @@ void GlobalState::LoadData() {
         LoadShipModules,
         LoadShipClasses,
         LoadTechTree,
+        LoadEvents,
     };
 
     const char* declarations[NUM] {
@@ -46,6 +48,7 @@ void GlobalState::LoadData() {
         "ShipModules",
         "ShipClasses",
         "TechTree Nodes",
+        "Events",
     };
 
     int amounts[NUM];
@@ -130,6 +133,7 @@ void GlobalState::UpdateState(double delta_t) {
     _UpdateShipsPlanets(this);
 
     camera.HandleInput();
+    global_logic.Update();
 
     if (frame_count == 0 || IsKeyPressed(KEY_Q)) {
         static const char* lorem = 
@@ -334,3 +338,4 @@ BattleLog*           GetBattleLog()           { return &global_state.last_battle
 AudioServer*         GetAudioServer()         { return &global_state.audio_server;          }
 RenderServer*        GetRenderServer()        { return &global_state.render_server;         }
 UIGlobals*           GetUI()                  { return &global_state.ui;                    }
+GlobalLogic*         GetGlobalLogic()         { return &global_state.global_logic;          }
