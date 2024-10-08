@@ -146,26 +146,30 @@ const char* FetchArg(char* arg, const char* inp) {
     return NULL;
 }
 
-void Help(const char*);
-void SetSetting(const char*);
-void ListSettings(const char*);
-void SaveSettings(const char*);
-void ReloadSettings(const char*);
-void GiveResource(const char*);
-void UnlockTech(const char*);
-void CheckMilestone(const char*);
-void Save(const char*);
-void Load(const char*);
+void Help(const char* );
+void SetSetting(const char* );
+void ListSettings(const char* );
+void SaveSettings(const char* );
+void ReloadSettings(const char* );
+void GiveResource(const char* );
+void UnlockTech(const char* );
+void SetVar(const char* );
+void GetVar(const char* );
+void ListVars(const char* );
+void Save(const char* );
+void Load(const char* );
 
 struct { const char* name; void(*func)(const char*); } commands[] = {
     { "help", Help },
     { "set", SetSetting },
-    { "list", ListSettings },
+    { "list_settings", ListSettings },
     { "save_settings", SaveSettings },
     { "reload", ReloadSettings },
     { "give_rsc", GiveResource },
     { "unlock_tech", UnlockTech },
-    { "check_milestone", CheckMilestone },
+    { "set_var", SetVar },
+    { "get_var", GetVar },
+    { "list_vars", ListVars },
     { "load", Load },
     { "save", Save },
 };
@@ -270,21 +274,41 @@ void UnlockTech(const char* prompt) {
     }
 }
 
-void CheckMilestone(const char* prompt) {
-    static char milestone_name[DEBUG_CONSOLE_MAX_LINE_SIZE];
+void SetVar(const char* prompt) {
+    static char query[DEBUG_CONSOLE_MAX_LINE_SIZE];
     if (*prompt == '\0') {
-        PushLine("Expected argument: milestone_name");
+        PushLine("Expected argument: query");
         return;
     }
-    prompt = FetchArg(milestone_name, prompt);
-    bool is_reached = GetTechTree()->IsMilestoneReached(milestone_name);
-    PushLine(TextFormat("%s: %s", milestone_name, is_reached ? "reached" : "unreached"));
+    prompt = FetchArg(query, prompt);
+    global_vars::Interpret(query);
+}
+
+void GetVar(const char* prompt) {
+    static char var_name[DEBUG_CONSOLE_MAX_LINE_SIZE];
+    if (*prompt == '\0') {
+        PushLine("Expected argument: var_name");
+        return;
+    }
+    prompt = FetchArg(var_name, prompt);
+    if (!global_vars::HasVar(var_name)) {
+        PushLine(TextFormat("No such var '%s'", var_name));
+        return;
+    }
+    PushLine(TextFormat("%s = %d", var_name, global_vars::Get(var_name)));
+}
+
+void ListVars(const char* prompt) {
+    for (int i=0; i < global_vars::GetVarCount(); i++) {
+        const global_vars::GlobalVariable* var = global_vars::GetVarAt(i);
+        PushLine(TextFormat("%s = %d", var->name, var->value));
+    }
 }
 
 void Save(const char* prompt) {
     static char filename[DEBUG_CONSOLE_MAX_LINE_SIZE];
     if (*prompt == '\0') {
-        PushLine("Expected argument: milestone_name");
+        PushLine("Expected argument: filename");
         return;
     }
     prompt = FetchArg(filename, prompt);
@@ -297,7 +321,7 @@ void Save(const char* prompt) {
 void Load(const char* prompt) {
     static char filename[DEBUG_CONSOLE_MAX_LINE_SIZE];
     if (*prompt == '\0') {
-        PushLine("Expected argument: milestone_name");
+        PushLine("Expected argument: filename");
         return;
     }
     prompt = FetchArg(filename, prompt);

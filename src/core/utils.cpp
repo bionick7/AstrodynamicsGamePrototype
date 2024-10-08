@@ -1,4 +1,5 @@
 #include "utils.hpp"
+#include "logging.hpp"
 #include <random>
 
 int MinInt(int a, int b) {
@@ -131,6 +132,20 @@ Matrix MatrixFromColumns(Vector3 col_x, Vector3 col_y, Vector3 col_z, Vector3 or
 
 Matrix MatrixFromColumns(Vector3 col_x, Vector3 col_y, Vector3 col_z) {
     return MatrixFromColumns(col_x, col_y, col_z, Vector3Zero());
+}
+
+int FindInArray(const char* const search[], int search_count, const char* identifier) {
+    int res = -1;
+    for (int i=0; i < search_count; i++){
+        if (strcmp(identifier, search[i]) == 0) {
+            res = i;
+            break;
+        }
+    }
+    if (res < 0) {
+        ERROR("'%s' not found in respective array ('%s', ...)", identifier, search)
+    }
+    return res;
 }
 
 static std::mt19937_64 r_generator = std::mt19937_64(std::random_device{}());

@@ -5,72 +5,8 @@
 #include "id_allocator.hpp"
 #include "ui.hpp"
 #include "planetary_economy.hpp"
+#include "global_logic.hpp"
 
-struct ResearchCondition {
-    enum Type {
-        INVALID = -1,
-        ANY = 0,
-        ALL,
-        STAT_CONDITION,
-        PRODUCTION_COUNTER,
-        VISIT,
-        PRODUCE_ITEM,
-        ACHIEVEMENT,
-        FREE,
-
-        TYPE_MAX
-    };
-
-    enum Comparison {
-        GREATER, LESS,
-        GREATER_OR_EQUAL, LESS_OR_EQUAL,
-        EQUAL, NONEQUAL,
-
-        COMPARISON_MAX
-    };
-
-    static constexpr const char* type_identifiers[TYPE_MAX] = {
-        "any", "all", "stat_achieved", "production_counter",
-        "visit", "produce_item", "achievement", "free"
-    };
-
-    static constexpr const char* comparison_identifiers[COMPARISON_MAX] = {
-        "gt", "lt", "geq", "leq", "eq", "neq"
-    };
-
-    static constexpr const char* comparison_repr[COMPARISON_MAX] = {
-        ">", "<", "\u2265", "\u2264", "=", "\u2260"
-    };
-
-    Type type;
-    int internal_counter = 0;
-
-    union {
-        struct {
-            int index;
-            int count;
-        } branch;
-        
-        struct {
-            int variable;
-            int value;
-            Comparison comp;
-        } leaf;
-    } cond;
-
-    bool IsBranch() const;
-    bool IsValid() const;
-    float GetProgress() const;
-    int GetChildCount(bool include_branches) const;
-    void GetDescriptiveText(StringBuilder* sb) const;
-};
-
-struct Achievement{
-    PermaString description;
-    const char* str_id;  // Not owning. Is stored in the map GlobalState
-
-    Achievement();
-};
 
 struct TechTreeNode {
     // Primary info
@@ -79,6 +15,7 @@ struct TechTreeNode {
     const char* str_id;  // Not owning. Is stored in the map GlobalState
     IDList attached_components;
     IDList prerequisites;
+    List<global_vars::Effect> effects;
     double default_status = -1;
     AtlasPos icon_index;
     int condition_index;
@@ -102,14 +39,6 @@ struct TechTree {
 
     bool* visited_planets = NULL;
 
-    int achievement_count = 0;
-    Achievement* achievements = NULL;
-    bool* achievement_states = NULL;
-
-    struct Milestone { RID node; StrHash value; bool unlocked = false; };
-    int milestone_count = 0;
-    Milestone* milestones = NULL;
-
     Vector2 ui_camera_offset = {0};
 
     int Load(const DataNode* data);
@@ -122,12 +51,9 @@ struct TechTree {
     void Serialize(DataNode* data) const;
     void Deserialize(const DataNode* data);
 
-    void ReportAchievement(const char* achievement_name);
-    void ReportVisit(RID planet);
     void ReportProduction(RID item);
     void ReportResourceProduction(const resource_count_t production[]);
 
-    bool IsMilestoneReached(const char* identifier);
     void GetAttachedConditions(int condition_index, List<int>* condition_indices) const;
 
     Vector2 GetNodePos(const TechTreeNode* node) const;

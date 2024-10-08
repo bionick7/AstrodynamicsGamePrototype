@@ -1,9 +1,9 @@
-focused_planet: 16777221
+focused_planet: -1
 focused_ship: -1
 player_faction: 0
 calendar:
   paused: y
-  time: 9504000.000000
+  time: 12700800.000000
   time_scale: 16384.000000
 
 camera:
@@ -11,18 +11,36 @@ camera:
   focus_point_x: 0.000000
   focus_point_y: 0.000000
   focus_point_z: 0.000000
-  view_direction_x: -0.402354
-  view_direction_y: -0.907576
-  view_direction_z: -0.120068
-  view_distance: 67.889580
+  view_direction_x: -0.033315
+  view_direction_y: -0.999445
+  view_direction_z: -0.000000
+  view_distance: 22.677607
+
+global_vars:
+  battles: 0
+  combat_unlocked: 1
+  droptanks_used: 0
+  visit_Mimas: 0
+  visit_Rhea: 17
+  visit_Tethys: 8
+  visit_Titan: 8
 
 quests:
   active_quests: []
-  available_quests: []
+  available_quests:
+  - active: n
+    await_type: 0
+    id: 83886080
+    template: tutorial
+
+  - active: n
+    await_type: 0
+    id: 83886081
+    template: example
+
   dialogues: []
 
 tech:
-  achievements: []
   condition_internals:
   - ---
   - 42
@@ -31,20 +49,20 @@ tech:
   - ---
   - ---
   - 1
-  - ---
-  - 0
-  - ---
+  - 54
   - 0
   - 0
   - ---
-  - ---
-  - ---
-  - ---
+  - 0
   - 0
   - ---
   - ---
-  - 0
   - ---
+  - ---
+  - 1159
+  - ---
+  - ---
+  - 0
   - ---
   - ---
   - ---
@@ -62,10 +80,8 @@ tech:
   - tech_ships
   - tech_cryo
   - tech_equipment
-  visited_planets:
-  - Tethys
-  - Rhea
-  - Titan
+  - tech_shuttles
+  visited_planets: []
 
 factions:
 - money: 0
@@ -85,8 +101,8 @@ planets:
     water: 10
 
   resource_stock:
-    hydrogen: 1000
-    water: 1000
+    hydrogen: 100
+    water: 500
 
 
 - allegiance: 0
@@ -102,7 +118,7 @@ planets:
   resource_stock:
     electronics: 6
     steel: 20
-    water: 1000
+    water: 500
 
 
 - allegiance: 1
@@ -117,11 +133,14 @@ planets:
 
   resource_stock:
     electronics: 6
-    hydrogen: 215
-    oxygen: 1000
+    hydrogen: 100
+    oxygen: 100
     steel: 20
     water: 10
 
+  inventory:
+  - 0 shpmod_reactor
+  - 1 shpmod_reactor
 
 - allegiance: 0
   base_independence_delta: 0
@@ -135,7 +154,7 @@ planets:
   resource_stock:
     electronics: 6
     steel: 20
-    water: 1000
+    water: 500
 
 
 - allegiance: 0
@@ -148,28 +167,31 @@ planets:
   resource_delta:
 
   resource_stock:
-    aluminium: 5
+    aluminium: 72
     electronics: 3
-    hydrogen: 9
-    iron_ore: 9
+    hydrogen: 47
+    iron_ore: 16
+    oxygen: 200
     rock: 41
-    steel: 74
-    water: 1000
+    steel: 38
+    water: 777
 
-  inventory:
-  - 0 shpmod_electrolyser
-  - 1 shpmod_reactor
-  - 2 shpmod_boost_init
 
-- name: Dione
-  trading_accessible: n
-  allegiance: 0
-  resource_stock: {}
-  base_independance_delta: 0
-  
 - allegiance: 0
   base_independence_delta: 0
   id: 16777221
+  independence: 0
+  name: Dione
+  opinion: 0
+  trading_accessible: n
+  resource_delta:
+
+  resource_stock:
+
+
+- allegiance: 0
+  base_independence_delta: 0
+  id: 16777222
   independence: 0
   name: Rhea
   opinion: 0
@@ -179,13 +201,14 @@ planets:
     water: 50
 
   resource_stock:
-    aluminium: 133
-    aluminium_ore: 10
-    carbon: 61
-    co2: 198
-    electronics: 5
-    iron_ore: 187
-    rock: 1000
+    aluminium: 200
+    aluminium_ore: 18
+    carbon: 59
+    co2: 200
+    electronics: 4
+    iron_ore: 200
+    rock: 100
+    steel: 42
     water: 1000
 
   inventory:
@@ -194,7 +217,7 @@ planets:
 
 - allegiance: 0
   base_independence_delta: 0
-  id: 16777222
+  id: 16777223
   independence: 0
   name: Titan
   opinion: 0
@@ -204,15 +227,18 @@ planets:
     water: 20
 
   resource_stock:
-    carbon: 995
+    carbon: 100
     electronics: 6
     steel: 20
-    water: 1000
+    water: 500
 
+  inventory:
+  - 0 shpmod_droptank_water
+  - 1 shpmod_droptank_water
 
 - allegiance: 0
   base_independence_delta: 0
-  id: 16777223
+  id: 16777224
   independence: 0
   name: Iaeptus
   opinion: 0
@@ -223,7 +249,7 @@ planets:
   resource_stock:
     electronics: 6
     steel: 20
-    water: 1000
+    water: 500
 
   inventory:
   - 0 shpmod_railgun
@@ -231,7 +257,7 @@ planets:
 
 - allegiance: 0
   base_independence_delta: 0
-  id: 16777224
+  id: 16777225
   independence: 0
   name: Phoebe
   opinion: 0
@@ -241,7 +267,7 @@ planets:
   resource_stock:
     electronics: 6
     steel: 20
-    water: 1000
+    water: 500
 
   inventory:
   - 0 shpmod_manufacture_offices
@@ -252,6 +278,7 @@ ships:
   class_id: shp_light_transport
   id: 33554432
   name: Light transport
+  planet: Titan
   production_process: 0
   damage_taken:
 
@@ -259,56 +286,56 @@ ships:
 
   production_queue: []
   cycle:
-  - dv: 2002.791071
-    planet: Rhea
-    resources:
-
-
-  - dv: 3713.859744
+  - dv: 5998.805846
     planet: Titan
     resources:
 
 
-  - dv: 3710.232696
+  - dv: 3711.285160
     planet: Rhea
     resources:
       carbon: 23
 
 
-  - dv: 2002.798944
+  - dv: 2002.258035
     planet: Tethys
     resources:
       iron_ore: 51
 
 
+  - dv: 2002.076322
+    planet: Rhea
+    resources:
+
+
   prepared_plans:
-  - arrival_planet: Titan
-    arrival_time: 9519515.431573
-    departure_planet: Rhea
-    departure_time: 9130224.354253
-    resource_transfer:
-
-
   - arrival_planet: Rhea
-    arrival_time: 10424296.829087
+    arrival_time: 13148491.911783
     departure_planet: Titan
-    departure_time: 10008974.253398
+    departure_time: 12739218.909659
     resource_transfer:
       carbon: 23
 
 
   - arrival_planet: Tethys
-    arrival_time: 10614961.037588
+    arrival_time: 13417469.370528
     departure_planet: Rhea
-    departure_time: 10480625.557073
+    departure_time: 13283133.890013
     resource_transfer:
       iron_ore: 51
 
 
   - arrival_planet: Rhea
-    arrival_time: 10942178.531832
+    arrival_time: 13744661.524721
     departure_planet: Tethys
-    departure_time: 10807843.051318
+    departure_time: 13610326.044206
+    resource_transfer:
+
+
+  - arrival_planet: Titan
+    arrival_time: 14214989.469054
+    departure_planet: Rhea
+    departure_time: 14026296.751519
     resource_transfer:
 
 
@@ -324,14 +351,15 @@ ships:
   transporting:
 
   modules:
-  - 0 shpmod_manufacture_offices
   - 1 shpmod_workshop
   - 2 shpmod_large_storage
   - 3 shpmod_drydock
   - 4 shpmod_water_extractor
-  - 5 shpmod_sail_medium
-  - 6 shpmod_steel_smelter
-  - 7 shpmod_heatpump
+  - 5 shpmod_heatpump
+  - 6 shpmod_reactor
+  - 7 shpmod_sail_medium
+  - 8 shpmod_steel_smelter
+  - 9 shpmod_electrolyser
   production_queue: []
   cycle: []
   prepared_plans: []
@@ -355,7 +383,7 @@ ships:
   id: 33554435
   name: Baghdad knot
   planet: Rhea
-  production_process: 0
+  production_process: 1
   damage_taken:
 
   transporting:
@@ -365,12 +393,14 @@ ships:
   - 1 shpmod_shuttles
   - 2 shpmod_sail_medium
   - 3 shpmod_ore_extractor
-  - 4 shpmod_reactor
-  - 5 shpmod_aluminium_smelter
-  - 6 shpmod_large_storage
+  - 4 shpmod_aluminium_smelter
+  - 5 shpmod_reactor
+  - 6 shpmod_ore_extractor
+  - 7 shpmod_large_storage
+  - 8 shpmod_wetdock
+  - 9 shpmod_manufacture_offices
   production_queue:
   - 67108883
-  - 67108886
   cycle: []
   prepared_plans: []
 
@@ -466,15 +496,24 @@ ships:
 - allegiance: 0
   class_id: shp_light_transport
   id: 33554441
-  name: Hong Kong
-  planet: Tethys
+  name: Odessa
+  planet: Rhea
   production_process: 0
   damage_taken:
 
   transporting:
+    steel: 41
 
   production_queue: []
   cycle: []
-  prepared_plans: []
+  prepared_plans:
+  - arrival_planet: Tethys
+    arrival_time: 12857069.296257
+    departure_planet: Rhea
+    departure_time: 12722733.815742
+    resource_transfer:
+      iron_ore: 51
+
+
 
 

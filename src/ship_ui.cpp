@@ -74,7 +74,7 @@ void _UIDrawStats(const Ship* ship) {
     int width = ui::Current()->width;
     ui::PushInset(25);
     for (int i=0; i < 2; i++) {
-        if (i > 0 && !GetTechTree()->IsMilestoneReached("combat"))
+        if (i > 0 && !global_vars::Get("combat_unlocked"))
             continue;
         if (i == 0) ui::PushHSplit(5, width/2);
         else ui::PushHSplit(width/2, width - 5);

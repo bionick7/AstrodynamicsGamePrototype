@@ -19,7 +19,6 @@ enum class EntityType: uint8_t {
     EMBEDDED_SCENE,
 
     TECHTREE_NODE,
-    ACHIEVEMENT,
 
     TEST = 0xFE,
     INVALID = 0xFF,

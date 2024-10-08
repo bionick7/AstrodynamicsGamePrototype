@@ -249,6 +249,7 @@ void GlobalState::Serialize(DataNode* data) const {
     calendar.Serialize(data->SetChild("calendar"));
     quest_manager.Serialize(data->SetChild("quests"));
     techtree.Serialize(data->SetChild("tech"));
+    global_vars::Serialize(data->SetChild("global_vars"));
 
     factions.Serialize(data);
 
@@ -290,6 +291,9 @@ void GlobalState::Deserialize(const DataNode* data) {
     }
     if (data->HasChild("tech")) {
         techtree.Deserialize(data->GetChild("tech"));
+    }
+    if (data->HasChild("global_vars")) {
+        global_vars::Deserialize(data->GetChild("global_vars"));
     }
     // ignore transferplanui for now
 

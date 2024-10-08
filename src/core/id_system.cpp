@@ -56,8 +56,6 @@ bool IsIdValid(RID id) {
         return gs->render_server.embedded_scenes.ContainsID(id);
     case EntityType::TECHTREE_NODE:
         return index < gs->techtree.nodes_count;
-    case EntityType::ACHIEVEMENT:
-        return index < gs->techtree.achievement_count;
     default:
     case EntityType::INVALID:
         return false;

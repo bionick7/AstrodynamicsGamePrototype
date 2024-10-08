@@ -25,6 +25,8 @@ bool CheckEnclosingRecs(Rectangle outside, Rectangle inside);
 Matrix MatrixFromColumns(Vector3 col_x, Vector3 col_y, Vector3 col_z);
 Matrix MatrixFromColumns(Vector3 col_x, Vector3 col_y, Vector3 col_z, Vector3 origin);
 
+int FindInArray(const char* const search[], int search_count, const char* identifier);
+
 namespace randomgen {
     void SetRandomSeed(uint_fast64_t seed);
     double GetRandomUniform(double from, double to);

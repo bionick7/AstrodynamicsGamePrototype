@@ -49,8 +49,9 @@
 - ASTRO: Crash when selecting transfer plan
 - SAVING: Crash when loading after queueing production (Done)
 
-- CORE: Undetected memory leak
+- CORE: Unaddressed memory leak
 - CORE: Reloading shaders broken (Done)
+- CORE: Crash on audio device change
 
 ## Necessary Incomplete features
 - save wren quest state (Done)

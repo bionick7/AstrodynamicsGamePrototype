@@ -1048,7 +1048,11 @@ void Ship::_OnArrival(const TransferPlan* tp) {
         total_resources += transporting[i];
     }
 
-    GetTechTree()->ReportVisit(GetParentPlanet());
+    // Report visit
+    StringBuilder var_name_sb;
+    var_name_sb.Add("visit_").AddPerma(GetPlanet(GetParentPlanet())->name);
+    global_vars::Inc(var_name_sb.c_str, 1);
+
     position = GetPlanet(GetParentPlanet())->position;
 
     // Complete tasks
@@ -1066,7 +1070,7 @@ void Ship::_OnArrival(const TransferPlan* tp) {
     for(int i=0; i < SHIP_MAX_MODULES; i++)  // Iterates over modules
         if (GetShipModules()->IsDropTank(modules[i], rsc)) {
             RemoveShipModuleAt(i);
-            GetTechTree()->ReportAchievement("archvmt_droptank");
+            global_vars::Inc("droptanks_used", 1);
         }
 
     RemoveTransferPlan(0);

@@ -45,7 +45,7 @@ bool ShipBattle(const IDList* ships_aggressor, const IDList* ships_defender, dou
 
     IDList killed = IDList();
     
-    GetTechTree()->ReportAchievement("archvmt_battle");
+    global_vars::Inc("battles", 1);
 
     bool agressor_won;
     int leading_turns = 0;

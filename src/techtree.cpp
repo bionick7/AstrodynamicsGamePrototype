@@ -1,222 +1,7 @@
 #include "techtree.hpp"
 #include "global_state.hpp"
-#include "logging.hpp"
-#include "debug_drawing.hpp"
-#include "debug_console.hpp"
-#include "global_state.hpp"
 #include "event_popup.hpp"
-
-float _GetProgressFromComparison(int variable, int reference, ResearchCondition::Comparison comp) {
-    switch (comp) {
-        case ResearchCondition::GREATER:
-            return Clamp(variable / (float)(reference + 1), 0, 1);
-        case ResearchCondition::GREATER_OR_EQUAL:
-            return Clamp(variable / (float)reference, 0, 1);
-        case ResearchCondition::LESS:
-            return variable < reference ? 1:0;
-        case ResearchCondition::LESS_OR_EQUAL:
-            return variable <= reference ? 1:0;
-        case ResearchCondition::EQUAL :
-            return variable == reference ? 1:0;
-        case ResearchCondition::NONEQUAL:
-            return variable != reference ? 1:0;
-        default:
-            return 0;
-    }
-}
-
-bool ResearchCondition::IsBranch() const {
-    switch (type) {
-    case ANY:
-    case ALL: return true;
-    default: return false;
-    }
-}
-
-bool ResearchCondition::IsValid() const {
-    if (IsBranch()) return true;
-    int maximum_variable_value = INT32_MAX;
-    if (type == PRODUCE_ITEM) {
-        RID rid = RID(cond.leaf.variable);
-        EntityType rid_type = IdGetType(rid);
-        return IsIdValid(rid) && (rid_type == EntityType::SHIP_CLASS || rid_type == EntityType::MODULE_CLASS);
-    }
-    switch (type) {
-    case STAT_CONDITION:{
-        maximum_variable_value = ship_stats::MAX - 1; break;
-    }
-    case PRODUCTION_COUNTER:{
-        maximum_variable_value = resources::MAX - 1; break;
-    }
-    case VISIT:{
-        maximum_variable_value = GetPlanets()->GetPlanetCount() - 1; break;
-    }
-    case ACHIEVEMENT:{
-        maximum_variable_value = GetTechTree()->achievement_count - 1; break;
-    }
-    default: break;
-    }
-    if (cond.leaf.variable < 0 || cond.leaf.variable > maximum_variable_value) {
-        return false;
-    }
-    return true;
-}
-
-float ResearchCondition::GetProgress() const {
-    if (!IsValid()) return 1;
-    switch (type) {
-    case ANY:{
-        for (int i=0; i < cond.branch.count; i++) {
-            if (GetTechTree()->research_conditions[cond.branch.index + i].GetProgress() >= 1) {
-                return 1;
-            }
-        }
-        return 0;
-    }
-    case ALL:{
-        for (int i=0; i < cond.branch.count; i++) {
-            if (GetTechTree()->research_conditions[cond.branch.index + i].GetProgress() < 1) {
-                return 0;
-            }
-        }
-        return 1;
-    }
-    case STAT_CONDITION:{
-        int max_stat = 0;
-        for (auto it = GetShips()->alloc.GetIter(); it; it++) {
-            const Ship* ship = GetShip(it.GetId());
-            if (ship->stats[cond.leaf.variable] > max_stat) {
-                max_stat = ship->stats[cond.leaf.variable];
-            }
-        }
-        return _GetProgressFromComparison(max_stat, cond.leaf.value, cond.leaf.comp);
-    }
-    case PRODUCTION_COUNTER:{
-        return _GetProgressFromComparison(internal_counter, cond.leaf.value, cond.leaf.comp);
-    }
-    case PRODUCE_ITEM:{
-        return _GetProgressFromComparison(internal_counter, cond.leaf.value, cond.leaf.comp);
-    }
-    case VISIT:{
-        return GetTechTree()->visited_planets[cond.leaf.variable] ? 1 : 0;
-    }
-    case ACHIEVEMENT:{
-        return GetTechTree()->achievement_states[cond.leaf.variable] ? 1 : 0;
-    }
-    case FREE:{
-        return 1;
-    }
-    default: {
-        return 0;
-    }
-    }
-    return 0;
-}
-
-int ResearchCondition::GetChildCount(bool include_branches) const {
-    // Includes self
-    if (!IsBranch()) {
-        return 1;
-    }
-    int res = include_branches ? 1 : 0;
-    for (int i=0; i < cond.branch.count; i++) {
-        res += GetTechTree()->research_conditions[cond.branch.index + i].GetChildCount(include_branches);
-    }
-    return res;
-}
-
-void ResearchCondition::GetDescriptiveText(StringBuilder *sb) const {
-    if (!IsValid()) {
-        sb->Add("INVALID CONDITION");
-        return;
-    }
-    switch (type) {
-    case ANY:
-    case ALL:{
-        break;
-    }
-    case STAT_CONDITION:{
-        if (cond.leaf.variable < 0 || cond.leaf.comp < 0) {
-            sb->Add("Invalid stat condition");
-            break;
-        }
-        sb->AddClock(GetProgress());
-        sb->AddFormat(" Have a ship with %s %s %d (%3.0f %%)", ship_stats::icons[cond.leaf.variable], 
-                      ResearchCondition::comparison_repr[cond.leaf.comp], cond.leaf.value, GetProgress()*100);
-        break;
-    }
-    case PRODUCTION_COUNTER:{
-        if (cond.leaf.variable < 0) {
-            sb->Add("Invalid stat condition");
-            break;
-        }
-        sb->AddClock(GetProgress());
-        sb->AddFormat(" Produce %d counts of %s (%3.1f %%)", cond.leaf.value, 
-                        resources::icons[cond.leaf.variable], GetProgress()*100);
-        break;
-    }
-    case PRODUCE_ITEM:{
-        RID object_id = RID(cond.leaf.variable);
-        const char* name = "UNKNOWN";
-        if (IsIdValidTyped(object_id, EntityType::MODULE_CLASS)) {
-            const ShipModuleClass* smc = GetModule(object_id);
-            name = smc->name.GetChar();
-        } else if (IsIdValidTyped(object_id, EntityType::SHIP_CLASS)) {
-            const ShipClass* sc = GetShipClassByRID(object_id);
-            name = sc->name.GetChar();
-        } else {
-            sb->Add("Invalid stat condition");
-            break;
-        }
-        sb->AddClock(GetProgress());
-        sb->AddFormat(" Produce %dx %s (%3.1f %%)", cond.leaf.value, name, GetProgress()*100);
-        break;
-    }
-    case VISIT:{
-        if (cond.leaf.variable < 0) {
-            sb->Add("Invalid stat condition");
-            break;
-        }
-        const Planet* planet = GetPlanetByIndex(cond.leaf.variable);
-        sb->AddClock(GetProgress());
-        sb->AddFormat("Visit %s", planet->name.GetChar());
-        break;
-    }
-    case ACHIEVEMENT:{
-        if (cond.leaf.variable < 0 || cond.leaf.variable > GetTechTree()->achievement_count) {
-            sb->Add("Invalid stat condition");
-            break;
-        }
-        sb->AddClock(GetProgress());
-        sb->AddPerma(GetTechTree()->achievements[cond.leaf.variable].description);
-        break;
-    }
-    case FREE:{
-        sb->AddClock(GetProgress());
-        sb->Add(" Free Bingo (for testing) :)");
-        break;
-    }
-    default: break;
-    }
-}
-
-Achievement::Achievement() {
-    
-}
-
-/*int _SetNodeLayer(TechTreeNode* nodes, int index) {
-    if (nodes[index].layer >= 0) {
-        return nodes[index].layer;
-    }
-    nodes[index].layer = 0;
-    for (int i=0; i < nodes[index].prerequisites.size; i++) {
-        int prerequisite_index = _SetNodeLayer(nodes, IdGetIndex(nodes[index].prerequisites[i]));
-        if (prerequisite_index + 1 > nodes[index].layer) {
-            nodes[index].layer = prerequisite_index + 1;
-        }
-    }
-    return nodes[index].layer;
-}*/
+#include "utils.hpp"
 
 int _CountResearchConditionsRecursive(const DataNode *condition_data) {
     if (condition_data == NULL || !condition_data->Has("type")) {
@@ -235,36 +20,21 @@ int _CountResearchConditionsRecursive(const DataNode *condition_data) {
 }
 
 int TechTree::Load(const DataNode *data) {
-    achievement_count = data->GetChildArrayLen("achievements");
     nodes_count = data->GetChildArrayLen("techtree");
 
     delete[] nodes;
     delete[] node_unlocked;
     delete[] research_conditions;
-    delete[] milestones;
 
     nodes = new TechTreeNode[nodes_count];
     node_unlocked = new int[nodes_count];
     research_condition_count = 0;
 
     delete[] visited_planets;
-    delete[] achievement_states;
-    delete[] achievements;
 
     visited_planets = new bool[GetPlanets()->GetPlanetCount()];
-    achievement_states = new bool[achievement_count];
-    achievements = new Achievement[achievement_count];
 
     for (int i=0; i < GetPlanets()->GetPlanetCount(); i++) { visited_planets[i] = false; }
-
-    // Load Achievements
-    for (int i=0; i < achievement_count; i++) { 
-        const DataNode* achievement_data = data->GetChildArrayElem("achievements", i);
-        achievement_states[i] = false;
-        achievements[i].description = PermaString(achievement_data->Get("description"));
-        RID rid = RID(i, EntityType::ACHIEVEMENT);
-        achievements[i].str_id = GetGlobalState()->AddStringIdentifier(achievement_data->Get("id"), rid);
-    }
 
     // 1st pass: most data
     for(int i=0; i < nodes_count; i++) {
@@ -294,7 +64,6 @@ int TechTree::Load(const DataNode *data) {
             nodes[i].condition_index = -1;
         }
         research_condition_count += condition_count;
-        milestone_count += node_data->GetArrayLen("milestone_unlocks");
 
         RID rid = RID(i, EntityType::TECHTREE_NODE);
         nodes[i].str_id = GetGlobalState()->AddStringIdentifier(node_data->Get("id"), rid);
@@ -303,13 +72,11 @@ int TechTree::Load(const DataNode *data) {
         nodes[i].draw_pos.y = node_data->GetArrayElemF("draw_pos", 1);
     }
 
-    milestones = new Milestone[milestone_count];
     research_conditions = new ResearchCondition[research_condition_count];
 
-    int milestone_index = 0;
     int research_condition_index = 0;
 
-    // 2nd pass: collect prerequisites, load research conditions and milestones
+    // 2nd pass: collect prerequisites, load research conditions
     for(int i=0; i < nodes_count; i++) {
         const DataNode* node_data = data->GetChildArrayElem("techtree", i);
         int prerequisite_count = node_data->GetArrayLen("prerequisites", true);
@@ -319,11 +86,8 @@ int TechTree::Load(const DataNode *data) {
             nodes[i].prerequisites.Append(prereq);
         }
 
-        for (int j=0; j < node_data->GetArrayLen("milestone_unlocks"); j++) {
-            milestones[milestone_index].node = RID(i, EntityType::TECHTREE_NODE);
-            milestones[milestone_index].value = HashKey(node_data->GetArrayElem("milestone_unlocks", j));
-            milestones[milestone_index].unlocked = node_unlocked[i] > 0;
-            milestone_index++;
+        if (node_data->Has("effect")) {
+            global_vars::CompileEffects(node_data->Get("effect"), &nodes[i].effects);
         }
 
         // Research conditions
@@ -337,27 +101,13 @@ int TechTree::Load(const DataNode *data) {
     return nodes_count;
 }
 
-int _FindInArray(const char* const search[], int search_count, const char* identifier) {
-    int res = -1;
-    for (int i=0; i < search_count; i++){
-        if (strcmp(identifier, search[i]) == 0) {
-            res = i;
-            break;
-        }
-    }
-    if (res < 0) {
-        ERROR("'%s' not found in respective array ('%s', ...)", identifier, search)
-    }
-    return res;
-}
-
 int TechTree::LoadResearchCondition(const DataNode* condition_data, int idx, int child_index) {
     // Returns how many additional conditions are loaded
     if (condition_data == NULL || !condition_data->Has("type")) {
         return -1;
     }
     const char* type_id = condition_data->Get("type");
-    research_conditions[idx].type = (ResearchCondition::Type) _FindInArray(ResearchCondition::type_identifiers, ResearchCondition::TYPE_MAX, type_id);
+    research_conditions[idx].type = (ResearchCondition::Type) FindInArray(ResearchCondition::type_identifiers, ResearchCondition::TYPE_MAX, type_id);
     if (research_conditions[idx].IsBranch()) {
         int elements_count = condition_data->GetChildArrayLen("elements");
         int write_index = child_index + elements_count;
@@ -368,56 +118,9 @@ int TechTree::LoadResearchCondition(const DataNode* condition_data, int idx, int
         research_conditions[idx].cond.branch.count = elements_count;
         return write_index - child_index;
     } else {
-        research_conditions[idx].cond.leaf.value = condition_data->GetI("value");
-        
-        const char* comp_id = condition_data->Get("comp", "geq", true);
-        research_conditions[idx].cond.leaf.comp = (ResearchCondition::Comparison) _FindInArray(
-            ResearchCondition::comparison_identifiers, ResearchCondition::COMPARISON_MAX, comp_id);
-
-        switch (research_conditions[idx].type) {
-        case ResearchCondition::STAT_CONDITION:{
-            const char* var_id = condition_data->Get("stat");
-            research_conditions[idx].cond.leaf.variable = _FindInArray(
-                ship_stats::names, ship_stats::MAX, var_id);
-            break;
-        }
-        case ResearchCondition::PRODUCTION_COUNTER:{
-            const char* var_id = condition_data->Get("rsc");
-            research_conditions[idx].cond.leaf.variable = _FindInArray(
-                resources::names, resources::MAX, var_id);
-            break;
-        }
-        case ResearchCondition::VISIT:{
-            const char* var_id = condition_data->Get("planet");
-            research_conditions[idx].cond.leaf.variable = IdGetIndex(GetPlanets()->GetIdByName(var_id));
-            break;
-        }
-        case ResearchCondition::PRODUCE_ITEM:{
-            const char* var_id = condition_data->Get("item");
-            RID rid = GetGlobalState()->GetFromStringIdentifier(var_id);
-            if (!IsIdValidTyped(rid, EntityType::SHIP_CLASS) && !IsIdValidTyped(rid, EntityType::MODULE_CLASS)) {
-                research_conditions[idx].cond.leaf.variable = GetInvalidId().AsInt();
-                ERROR("No such product '%s'", var_id);
-            } else {
-                research_conditions[idx].cond.leaf.variable = rid.AsInt();
-            }
-            break;
-        }
-        case ResearchCondition::ACHIEVEMENT:{
-            const char* var_id = condition_data->Get("id");
-            RID rid = GetGlobalState()->GetFromStringIdentifier(var_id);
-            if (!IsIdValidTyped(rid, EntityType::ACHIEVEMENT)) {
-                research_conditions[idx].cond.leaf.variable = -1;
-                ERROR("No such achievement '%s'", var_id);
-            } else {
-                research_conditions[idx].cond.leaf.variable = IdGetIndex(rid);
-            }
-            break;
-        }
-        default:{
-            ERROR("Unrecognized research condition type '%s'", type_id)
-            break;
-        }
+        research_conditions[idx].GenLeafFromString(research_conditions[idx].type, condition_data->Get("value"));
+        if (condition_data->Has("description")) {
+            research_conditions[idx].cond.leaf.description = PermaString(condition_data->Get("description"));
         }
         return 0;
     }
@@ -426,14 +129,8 @@ int TechTree::LoadResearchCondition(const DataNode* condition_data, int idx, int
 void TechTree::UnlockTechnology(RID technode_id, bool notify) {
     int node_index = IdGetIndex(technode_id);
     node_unlocked[node_index] = 1;
-    for (int i=0; i < milestone_count; i++) {
-        if (IdGetIndex(milestones[i].node) == node_index) {
-            milestones[i].unlocked = true;
-        }
-    }
+    const TechTreeNode* node = &nodes[node_index];
     if (notify) {  // Popup
-        const TechTreeNode* node = &nodes[node_index];
-
         Popup* popup = event_popup::AddPopup(500, 500, 300);
         StringBuilder sb;
         sb.Add("Unlocked ").Add(node->name.GetChar());
@@ -441,32 +138,18 @@ void TechTree::UnlockTechnology(RID technode_id, bool notify) {
         sb.Clear();
         strcpy(popup->description, node->description.GetChar());
     }
-}
 
-/*
-    tech:
-      visited planets:
-      - Tethys
-      - Rhea
-      achievements:
-      - A
-      - B
-      conditions:
-      - index: 0
-        value: 5
-*/
+    // Run unlock effects
+    for (int i=0; i < node->effects.Count(); i++) {
+        InterpretCompiled(node->effects[i]);
+    }
+}
 
 void TechTree::Serialize(DataNode *data) const {
     data->CreateArray("visited_planets", 0);
     for (int i=0; i < GetPlanets()->GetPlanetCount(); i++) {
         if (visited_planets[i]) {
             data->AppendToArray("visited_planets", GetPlanetByIndex(i)->name.GetChar());
-        }
-    }
-    data->CreateArray("achievements", 0);
-    for (int i=0; i < achievement_count; i++) {
-        if (achievement_states[i]) {
-            data->AppendToArray("achievements", achievements[i].str_id);
         }
     }
     data->CreateArray("condition_internals", research_condition_count);
@@ -493,11 +176,6 @@ void TechTree::Deserialize(const DataNode *data) {
         int planet_index = IdGetIndex(GetPlanets()->GetIdByName(data->GetArrayElem("visited_planets", i)));
         visited_planets[planet_index] = true;
     }
-    for (int i=0; i < achievement_count; i++) { achievement_states[i] = false; }
-    for (int i=0; i < data->GetArrayLen("achievements"); i++) {
-        int achievement_index = IdGetIndex(GetGlobalState()->GetFromStringIdentifier(data->GetArrayElem("achievements", i)));
-        achievement_states[achievement_index] = true;
-    }
     ASSERT_EQUAL_INT(data->GetArrayLen("condition_internals"), research_condition_count);
     for (int i=0; i < research_condition_count; i++) {
         research_conditions[i].internal_counter = data->GetArrayElemI("condition_internals", i, 0, true);
@@ -509,24 +187,6 @@ void TechTree::Deserialize(const DataNode *data) {
             UnlockTechnology(node_index, false);
         }
     }
-}
-
-void TechTree::ReportAchievement(const char* achievement_name) {
-    // Not called
-    RID achievement_id = GetGlobalState()->GetFromStringIdentifier(achievement_name);
-    if (IsIdValidTyped(achievement_id, EntityType::ACHIEVEMENT)) {
-        achievement_states[IdGetIndex(achievement_id)] = true;
-    } else {
-        ERROR("No such achievement found: '%s'", achievement_name)
-    }
-}
-
-void TechTree::ReportVisit(RID planet) {
-    // Not called
-    if (!IsIdValidTyped(planet, EntityType::PLANET)) {
-        return;
-    }
-    visited_planets[IdGetIndex(planet)] = true;
 }
 
 void TechTree::ReportProduction(RID product) {
@@ -573,17 +233,6 @@ void TechTree::ReportResourceProduction(const resource_count_t production[]) {
             research_conditions[condition_index].internal_counter += production[resource_idx];
         }
     }
-}
-
-bool TechTree::IsMilestoneReached(const char *identifier) {
-    uint64_t search_key = HashKey(identifier);
-    for(int i=0; i < milestone_count; i++) {
-        if (milestones[i].value == search_key) {
-            return milestones[i].unlocked;
-        }
-    }
-    WARNING("No such milestone '%s'", identifier)
-    return false;
 }
 
 void TechTree::GetAttachedConditions(int condition_index, List<int> *condition_indices) const {
@@ -721,6 +370,9 @@ void TechTree::DrawUI() {
     for(int i=0; i <= nodes_count; i++) {
         int node_index = i < nodes_count ? i : preview_tech;  // Re-render preview_tech on top of everything
 
+        if (node_index < 0) {  // Possible if preview tech is empty
+            continue;
+        }
         if (node_unlocked[node_index] < min_node_vis) {
             continue;
         }

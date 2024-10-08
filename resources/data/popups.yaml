@@ -1,0 +1,11 @@
+popups:
+- title: ---
+  body: >
+    ---
+  trigger: combat > 0
+  
+- title: ---
+  body: >
+    ---
+  trigger: tutorial = 0
+  effect: tutorial := 0
