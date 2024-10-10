@@ -48,6 +48,15 @@ void Planet::_UIDrawInventory() {
     ui::Pop();  // Inset
 }
 
+void Planet::_UIDrawDescription() {
+    static int scroll = 0;
+    text::Layout layout;
+    ui::Current()->GetTextLayout(&layout, description.GetChar(), text_alignment::CONFORM);
+    ui::PushScrollInset(10, ui::Current()->height, layout.bounding_box.height, &scroll);
+    ui::Write(description.GetChar());  // Needs to recalculate text layout after scroll
+    ui::Pop();  // ScrollInset
+}
+
 // Global variable, I suppose
 static int current_tab = 0;
 
@@ -107,15 +116,12 @@ void Planet::DrawUI() {
 
     ui::PushInset(DEFAULT_FONT_SIZE+4);  // Tab container
     int w = ui::Current()->width;
-    const int n_tabs = 2;
-    const int tab_columns = 2;
+    const int n_tabs = 3;
+    const int tab_columns = 3;
     const char* tab_descriptions[] = {
         "Resources",
         "Inventory",
-        //"Economy",
-        //"~Quests~",
-        //"Ship Production",
-        //"Module Production",
+        "Description"
     };
     static_assert(sizeof(tab_descriptions) / sizeof(tab_descriptions[0]) == n_tabs);
 
@@ -150,6 +156,9 @@ void Planet::DrawUI() {
         break;
     case 1:
         _UIDrawInventory();
+        break;
+    case 2:
+        _UIDrawDescription();
         break;
     }
 

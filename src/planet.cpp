@@ -8,13 +8,7 @@
 #include "string_builder.hpp"
 #include "debug_drawing.hpp"
 
-Planet::Planet(PermaString p_name, double p_mu, double p_radius) {
-    name = p_name;
-    mu = p_mu;
-    radius = p_radius;
-    //ship_production_queue.Clear();
-    //module_production_queue.Clear();
-
+Planet::Planet() {
     for (int i = 0; i < MAX_PLANET_INVENTORY; i++) {
         inventory[i] = GetInvalidId();
     }
@@ -43,26 +37,28 @@ void Planet::Serialize(DataNode* data) const {
 void Planet::Deserialize(Planets* planets, const DataNode *data) {
     //SettingOverridePush("datanode_quite", true);
     //SettingOverridePop("datanode_quite");
-    name = PermaString(data->Get("name", name.GetChar(), true));
-    allegiance = data->GetI("allegiance", 0);
 
-    independence = data->GetI("independence", 0, true);
-    base_independence_delta = data->GetI("base_independence_delta", 0);
-    opinion = data->GetI("opinion", 0, true);
-
-    RID index = planets->GetIdByName(name.GetChar());
+    RID index = planets->GetIdByName(data->Get("name"));
     if (!IsIdValid(index)) {
         return;
     }
-    // Cursed way to do it
-    //*this = *((Planet*) (void*) planets->GetPlanetNature(index));
+
+    // Cursed way to do it >:)
+    //*((PlanetNature*) (void*) this) = *planets->GetPlanetNature(index);
     
     const PlanetNature* nature = planets->GetPlanetNature(index);
+    name = nature->name;
+    description = nature->description;
     mu = nature->mu;
     radius = nature->radius;
     has_atmosphere = nature->has_atmosphere;
     rotation_period = nature->rotation_period;
     orbit = nature->orbit;
+
+    allegiance = data->GetI("allegiance", 0);
+    independence = data->GetI("independence", 0, true);
+    base_independence_delta = data->GetI("base_independence_delta", 0);
+    opinion = data->GetI("opinion", 0, true);
 
     data->DeserializeBuffer("resource_stock", economy.resource_stock, resources::names, resources::MAX);
     data->DeserializeBuffer("resource_delta", economy.native_resource_delta, resources::names, resources::MAX);
@@ -482,40 +478,43 @@ const PlanetNature* Planets::GetParentNature() const {
     return &parent;
 }
 
+void _InitPlanetNature(PlanetNature* nature, const DataNode* planet_data, double parent_mu) {
+    nature->name = PermaString(planet_data->Get("name"));
+    nature->description = PermaString(planet_data->Get("description"));
+    
+    double sma = planet_data->GetF("SMA");
+    double ann = planet_data->GetF("Ann") * DEG2RAD;
+    timemath::Time epoch = timemath::Time(PosMod(ann, 2*PI) / sqrt(parent_mu / (sma*sma*sma)));
+
+    double inc = planet_data->GetF("Inc") * DEG2RAD;
+    inc = inc > PI/2 ? PI : 0;
+
+    nature->mu = planet_data->GetF("mass") * G;
+    nature->radius = planet_data->GetF("radius");
+    nature->orbit = Orbit(
+        sma,
+        planet_data->GetF("Ecc"),
+        inc,
+        planet_data->GetF("LoA") * DEG2RAD,
+        planet_data->GetF("AoP") * DEG2RAD,
+        parent_mu,
+        epoch
+    );
+    nature->has_atmosphere = strcmp(planet_data->Get("has_atmosphere", "n", true), "y") == 0;;
+    nature->rotation_period = planet_data->GetF("rotation_period", 0) * 3600;
+}
+
 int Planets::LoadEphemeris(const DataNode* data) {
     // Init planets
-    parent.radius = data->GetF("radius");
-    parent.mu = data->GetF("mass") * G;
+    _InitPlanetNature(&parent, data, 0);
+
     planet_count = data->GetChildArrayLen("satellites");
     ephemeris = new PlanetNature[planet_count];
     planet_array = new Planet[planet_count];
-    //if (num_planets > 100) num_planets = 100;
-    //RID planets[100];
     for(int i=0; i < planet_count; i++) {
         const DataNode* planet_data = data->GetChildArrayElem("satellites", i);
         PlanetNature* nature = &ephemeris[i];
-        nature->name = PermaString(planet_data->Get("name"));
-        
-        double sma = planet_data->GetF("SMA");
-        double ann = planet_data->GetF("Ann") * DEG2RAD;
-        timemath::Time epoch = timemath::Time(PosMod(ann, 2*PI) / sqrt(parent.mu / (sma*sma*sma)));
-
-        double inc = planet_data->GetF("Inc") * DEG2RAD;
-        inc = inc > PI/2 ? PI : 0;
-
-        nature->mu = planet_data->GetF("mass") * G;
-        nature->radius = planet_data->GetF("radius");
-        nature->orbit = Orbit(
-            sma,
-            planet_data->GetF("Ecc"),
-            inc,
-            planet_data->GetF("LoA") * DEG2RAD,
-            planet_data->GetF("AoP") * DEG2RAD,
-            parent.mu,
-            epoch
-        );
-        nature->has_atmosphere = strcmp(planet_data->Get("has_atmosphere", "n", true), "y") == 0;;
-        nature->rotation_period = planet_data->GetF("rotation_period", 0) * 3600;
+        _InitPlanetNature(nature, planet_data, parent.mu);
     }
     return planet_count;
 }

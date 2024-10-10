@@ -424,7 +424,7 @@ shipmodules:
     clean_room: 1
   planets_restriction:
   - Mimas
-  - Encelladus
+  - Enceladus
   - Iapetus
   icon_index:
   - 10
@@ -727,7 +727,7 @@ shipmodules:
     industrial_admin: 1
     industrial_manufacturing: 1
   planets_restriction:
-  - Encelladus
+  - Enceladus
   icon_index:
   - 11
   - 28
@@ -988,7 +988,7 @@ shipmodules:
   planets_restriction:
   - Rings
   - Mimas
-  - Encelladus
+  - Enceladus
   - Tethys
   - Phoebe
   produce:

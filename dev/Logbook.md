@@ -111,7 +111,7 @@ For offensive action, ship following must be implemented
 The most straightforward way to play the game is as a competition between player and a single AI.
 Each starting on one planet. Different planets can have different boni. + Different planets ^= different Factions
 - Mimas: ???
-- Encelladus: EPE
+- Enceladus: EPE
 - Tethys: THADCON & The merchant fleet
 - Rhea: ???
 - Titan: Monarch larper
@@ -152,7 +152,7 @@ Monarch:
         5 water on rhea
     
 TADCON:
-    Mimas, Encelladus, Thetys
+    Mimas, Enceladus, Thetys
     Mid tech, high infrastructure
     Focuses on logistics (what does that mean practically? Low dv transfers)
     
@@ -164,7 +164,7 @@ TADCON:
         shipyard + workshop in thetys
     Resources:
         1/2 tech on tethys
-        2 metal on encelladus
+        2 metal on Enceladus
         1 metal on mimas
 
 Also, maybe set construction time always to 1 to feel out the game and focus on logistics
@@ -316,13 +316,13 @@ reactor         : 1 uranium                                     => ? energy
 Hydrogen initially must come from saturn directly
 Some places have ice
 Some places have rock => Rhea, Rings
-Some places have (cheap) power => Encelladus from "geo"thermal, Titan bf heatsink
+Some places have (cheap) power => Enceladus from "geo"thermal, Titan bf heatsink
 Low orbit stations make hydrogen
 
 LSO        Hydrogen
 Rings      Rock, Water
 Mimas      Water, can make polymers
-Encelladus Water, Power
+Enceladus Water, Power
 Tethys     Faster production
 Rhea       Rock
 Titan      Water, Power, Carbon

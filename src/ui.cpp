@@ -230,12 +230,14 @@ void TextBox::Shrink(int dx, int dy) {
 }
 
 void TextBox::WriteRaw(const char *text, text_alignment::T align) {
-    text::Layout layout = GetTextLayout(text, align);
+    text::Layout layout;
+    GetTextLayout(&layout, text, align);
     WriteLayout(&layout, false);
 }
 
 void TextBox::Write(const char* text, text_alignment::T align) {
-    text::Layout layout = GetTextLayout(text, align);
+    text::Layout layout;
+    GetTextLayout(&layout, text, align);
     WriteLayout(&layout, true);
 }
 
@@ -363,13 +365,11 @@ int TextBox::GetLineHeight() const {
     return text_size;
 }
 
-text::Layout TextBox::GetTextLayout(const char *text, text_alignment::T alignment) {
+void TextBox::GetTextLayout(text::Layout* text_layout, const char *text, text_alignment::T alignment) {
     Vector2 size = MeasureTextEx(GetCustomDefaultFont(text_size), text, text_size, 1);
     Vector2 pos = ApplyAlignment(GetAnchorPointText(alignment), size, alignment);
-    text::Layout text_layout;
     int max_text_width = width - x_cursor - 5;
-    text::GetLayout(&text_layout, pos, GetCustomDefaultFont(text_size), text, text_size, 1, max_text_width);
-    return text_layout;
+    text::GetLayout(text_layout, pos, GetCustomDefaultFont(text_size), text, text_size, 1, max_text_width);
 }
 
 Rectangle TextBox::TbMeasureText(const char* text, text_alignment::T alignment) const {
@@ -884,10 +884,10 @@ void UIGlobals::UIStart() {  // Called each frame before drawing UI
 }
 
 void UIGlobals::UIEnd() {  // Called each frame after drawing UI
-    _HandleMouseTips();
+    _HandleMouseHints();
 }
 
-void UIGlobals::_HandleMouseTips() {
+void UIGlobals::_HandleMouseHints() {
     for (int i=mousehints.count-1; i >= 0; i--) {  // Avoid overdraw
         bool top_most = i == mousehints.count-1;
 
@@ -915,7 +915,6 @@ void UIGlobals::_HandleMouseTips() {
                        layout.bounding_box.width, layout.bounding_box.height,
                        DEFAULT_FONT_SIZE, Palette::ui_main, Palette::bg,
                        255 - MAX_TOOLTIP_RECURSIONS + i);
-        //text::Layout layout = ui::Current()->GetTextLayout(sb_substr.c_str, text_alignment::CONFORM);
         mousehints.hint_rects[i] = ui::Current()->render_rec;
         
         int hover_char_index = -1;
@@ -1040,8 +1039,8 @@ bool UIGlobals::IsPointBlocked(Vector2 pos, ZLayer z_layer) const {
 
 const char* UIGlobals::GetConceptDescription(const char* key) {
     const DataNode* child = assets::GetData("resources/data/concepts.yaml")->GetChild(key, true);
-    if (child == NULL) return "No descritpion found";
-    return child->Get("description", "No descritpion found", true);
+    if (child == NULL) return "No description found";
+    return child->Get("body", "No description found", true);
 }
 
 Texture2D UIGlobals::GetIconAtlas() {

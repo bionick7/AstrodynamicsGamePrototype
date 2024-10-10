@@ -1,7 +1,4 @@
 player_faction: 0
-factions:
-- money: 0  # Player
-- money: 0
 
 planets:
   - name: Low Orbit
@@ -14,7 +11,7 @@ planets:
       water: 10
     base_independance_delta: 0
 
-  - name: Rings 
+  - name: Encke Gap
     trading_accessible: n
     allegiance: 0
     resource_stock:
@@ -41,7 +38,7 @@ planets:
     - shpmod_reactor
     - shpmod_reactor
 
-  - name: Encelladus
+  - name: Enceladus
     trading_accessible: n
     allegiance: 0
     resource_stock:

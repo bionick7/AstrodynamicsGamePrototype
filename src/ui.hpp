@@ -128,7 +128,7 @@ struct TextBox {
     Vector2 GetAnchorPoint(text_alignment::T align) const;
     Vector2 GetAnchorPointText(text_alignment::T align) const;
     int GetLineHeight() const;
-    text::Layout GetTextLayout(const char *text, text_alignment::T alignment);
+    void GetTextLayout(text::Layout*, const char *text, text_alignment::T alignment);
     //int TbGetCharacterIndex(Vector2 collision_pos, const char* text, TextAlignment::T alignment) const;
     //Rectangle TbGetTextRect(const char* text, TextAlignment::T alignment, int token_start, int token_end, int token_from) const;
     Rectangle TbMeasureText(const char* text, text_alignment::T alignment) const;
@@ -173,7 +173,7 @@ struct UIGlobals {
     void UIStart();
     void UIEnd();
 
-    void _HandleMouseTips();
+    void _HandleMouseHints();
 
     void AddBlockingRect(Rectangle rect, ZLayer z_layer);
     // Relies on previous's frame information

@@ -458,7 +458,7 @@ int TransferPlanTests() {
 
     // build profile
 #if false
-    FILE* f = fopen("dev/encelladus_thetys_landscape.csv", "w");
+    FILE* f = fopen("dev/Enceladus_thetys_landscape.csv", "w");
     fprintf(f, "departure,arrival,dv\n");
     for (tp.departure_time = start; tp.departure_time < opt_departure + 1; tp.departure_time = tp.departure_time + (opt_departure - start) / timemath::Time(30.0)) {
         for (tp.arrival_time = tp.departure_time; tp.arrival_time < opt_arrival + 1; tp.arrival_time = tp.arrival_time + (opt_arrival - start) / timemath::Time(30.0)) {

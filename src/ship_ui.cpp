@@ -10,7 +10,8 @@ void _UIDrawHeader(const Ship* ship) {
     if (!ship->IsParked() && !ship->IsLeading()) text = ICON_EMPTY " " ICON_TRANSPORT_FLEET "  ";
     if (ship->IsParked() && ship->IsLeading()) text = ICON_PLANET " " ICON_EMPTY "  ";
     if (ship->IsParked() && !ship->IsLeading()) text = ICON_PLANET " " ICON_TRANSPORT_FLEET "  ";
-    text::Layout layout = ui::Current()->GetTextLayout(text, text_alignment::RIGHT | text_alignment::VCONFORM);
+    text::Layout layout;
+    ui::Current()->GetTextLayout(&layout, text, text_alignment::RIGHT | text_alignment::VCONFORM);
     int pos = layout.GetCharacterIndex(GetMousePosition());
     ui::WriteEx(text, text_alignment::RIGHT | text_alignment::VCONFORM, true);
     button_state_flags::T planet_button_state = GetButtonState(pos >= 0 && pos < 2, false, ui::Current()->z_layer);  // Don't care about hover_in
@@ -102,7 +103,8 @@ void _UIDrawStats(const Ship* ship) {
         for(int i=ship_stats::GROUND_CONNECTION; i < ship_stats::MAX; i++) {
             if (ship->stats[i] != 0) {
                 const char* text = TextFormat("%s %d ", ship_stats::icons[i], ship->stats[i]);
-                text::Layout layout = ui::Current()->GetTextLayout(text, text_alignment::CONFORM);
+                text::Layout layout;
+                ui::Current()->GetTextLayout(&layout, text, text_alignment::CONFORM);
                 ui::Current()->WriteLayout(&layout, true);
                 if (count++ % 6 == 5) ui::Current()->LineBreak();
                 int char_index = layout.GetCharacterIndex(GetMousePosition());

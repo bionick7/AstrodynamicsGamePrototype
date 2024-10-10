@@ -9,7 +9,7 @@ planets:
       food: 0
     buildings: 
     - mod_water_extractor
-  - name: Encelladus
+  - name: Enceladus
     trading_accessible: n
     resource_stock: {}
   - name: Tethys
@@ -45,7 +45,7 @@ ships:
 - name: Extractor
   class_id: shp_light_transport
   allegiance: 0
-  planet: Encelladus
+  planet: Enceladus
   tf_plans: []
   modules:
   - shpmod_water_extractor

@@ -13,6 +13,7 @@ struct Planets;
 
 struct PlanetNature {
     PermaString name;
+    PermaString description;
     double mu;
     double radius;
     double rotation_period;
@@ -22,6 +23,7 @@ struct PlanetNature {
 
 struct Planet {
     PermaString name;
+    PermaString description;
     double mu;
     double radius;
     double rotation_period;
@@ -56,8 +58,7 @@ struct Planet {
 
     ShipModuleSlot current_slot;
 
-    Planet() : Planet(PermaString(), 0, 0) {};
-    Planet(PermaString p_name, double mu, double radius);
+    Planet();
     void Serialize(DataNode* data) const;
     void Deserialize(Planets* planets,const DataNode* data);
 
@@ -85,9 +86,10 @@ struct Planet {
     //void AdvanceModuleProductionQueue();
     void Draw3D() const;
     void DrawUI();
+    void _UIDrawInventory();
+    void _UIDrawDescription();
     void _UIDrawModuleProduction();
     void _UIDrawShipProduction();
-    void _UIDrawInventory();
 };
 
 struct Planets {

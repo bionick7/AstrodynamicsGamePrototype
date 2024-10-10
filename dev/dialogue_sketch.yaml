@@ -21,25 +21,25 @@ reference_book:
 
 # TUTORIAL:
 # Rough outline:
-# - Obj: ship simple quest from Thetys to Encelladus using the light transport
+# - Obj: ship simple quest from Thetys to Enceladus using the light transport
 # - Obj: return light transport to Thetys
-# - Obj: put water miner on Encelladus
+# - Obj: put water miner on Enceladus
 
 tutorial:
 - type: dialog_rx
   text: >
-    Alright, so THADCON recently reached out to some survivors on Encelladus. 
+    Alright, so THADCON recently reached out to some survivors on Enceladus. 
     They are in need of a great many things, THADCON could somehow afford to bundle
     together an entire count worth of emergency supplies. So that's our first real
     jo. No formal time limit, but hurry up, there's not a lot else to do anyway.
 
     BR {{advisor}}
 - type: quest
-  flavour: Deliver 100 t of emergency supplies to Encelladus witht the 'light transport'
+  flavour: Deliver 100 t of emergency supplies to Enceladus witht the 'light transport'
   expires: never
   payload: 100
   departure: [Iapetus]
-  destination: [Mimas, Encelladus, Tethys, Rhea, Titan]
+  destination: [Mimas, Enceladus, Tethys, Rhea, Titan]
   ship_accesibilty: [shp_express]
   payout: 1.e+5
 - type: tutorial_highlight
@@ -50,16 +50,16 @@ tutorial:
 - type: dialog_rx
   text: >
     I understand that we needed to deliver the supply in a hurry, but surely you
-    thought about how to get the ship back ? Encelladus is nowhere near maintaining its
+    thought about how to get the ship back ? Enceladus is nowhere near maintaining its
     own port and refuling at its current state. Only us and titan really are.
 
     BR {{advisor}}
 - type: quest
-  flavour: Deliver 100 t of emergency medical supplies to Encelladus witht the 'light transport'
+  flavour: Deliver 100 t of emergency medical supplies to Enceladus witht the 'light transport'
   expires: never
   payload: 100
   departure: [Iapetus]
-  destination: [Mimas, Encelladus, Tethys, Rhea, Titan]
+  destination: [Mimas, Enceladus, Tethys, Rhea, Titan]
   ship_accesibilty: [shp_express]
   payout: 1.e+5
 - type: tutorial_highlight

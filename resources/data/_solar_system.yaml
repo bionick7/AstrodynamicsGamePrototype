@@ -194,7 +194,7 @@ satellites:
     radius: 198.0e+3
     mass: 1.8022e+21
 
-  - name: Encelladus
+  - name: Enceladus
     body_size: Minor
     Ecc: 0.005
     SMA: 237.905e+6

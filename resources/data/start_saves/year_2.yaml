@@ -62,7 +62,7 @@ planets:
       water: 50
     base_independance_delta: 0
 
-  - name: Encelladus
+  - name: Enceladus
     trading_accessible: n
     allegiance: 0
     resource_stock:
@@ -157,7 +157,7 @@ ships:
 - name: Extractor
   class_id: shp_light_transport
   allegiance: 0
-  planet: Encelladus
+  planet: Enceladus
   tf_plans: []
   modules:
   - shpmod_water_extractor

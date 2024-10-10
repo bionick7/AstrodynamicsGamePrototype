@@ -13,7 +13,7 @@ planets:
     resource_delta:
       water: 50
       metal: 1
-  - name: Encelladus
+  - name: Enceladus
     trading_accessible: n
     allegiance: 0
     resource_stock:
@@ -81,7 +81,7 @@ ships:
 - name: Extractor
   class_id: shp_light_transport
   allegiance: 0
-  planet: Encelladus
+  planet: Enceladus
   tf_plans: []
   modules:
   - shpmod_water_extractor
@@ -130,14 +130,14 @@ ships:
 - name: Heavy Transport 1
   class_id: shp_bulk_transport
   allegiance: 0
-  planet: Encelladus
+  planet: Enceladus
   tf_plans: []
   modules: []
   
 - name: Heavy Transport 2
   class_id: shp_bulk_transport
   allegiance: 0
-  planet: Encelladus
+  planet: Enceladus
   tf_plans: []
   modules: []
   
