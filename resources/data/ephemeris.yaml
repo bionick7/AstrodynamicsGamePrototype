@@ -1,8 +1,14 @@
 name: Saturn
+description: >
+  The 6th 'proper' planet around the Sun. Most people born here will never
+  live outside it's gravitational and social sphere of influence. The monolithic
+  ringed sphere is an ever-present background to all mundane and extraordinary
+  activity that takes place on its Moons.
+manual_dominant_org: Formerly GK
 body_size: Giant
 Ecc: 0.05386179
-Inc: 2.48599187
 SMA: 1.426666e+12
+Inc: 2.48599187
 LoA: 113.66242448
 AoP: -21.06
 Ann: -42.64463408
@@ -23,10 +29,18 @@ rings:
 
 satellites:
 - name: Low Orbit
-  body_size: Minor
+  description: >
+    Not a planetary body, but more of an abstract location. Several stations are set up here,
+    grazing the atmosphere to collect hydrogen and helium from Saturn. There used to be more,
+    but the collapse of GK lead to abandonment of a lot of station de-orbiting in a matter
+    of days.
+
+    Low orbit is easy to get to with proper heat shielding, but much trickier to leave.
+  manual_dominant_org: Independent Traders
+  body_size: Virtual
   Ecc: 0
-  Inc: 0
   SMA: 60.0e+6
+  Inc: 0
   Ann: 275
   LoA: 40.6
   AoP: 160
@@ -34,22 +48,43 @@ satellites:
   mass: 0
   has_atmosphere: y
   
-- name: Rings
-  body_size: Minor
+- name: Encke Gap
+  description: >
+    Another location. The Encke Gap started a popular launching destination for
+    retrieving various resources (mostly water) from the A-ring. Over time, a
+    sizable quasi-independent community accumulated around a certain cluster in 
+    the Encke gap. This community mostly survived to this day and is willing to
+    let us build our own stations here, as long as we pay them a small fee.
+  manual_dominant_org: Encke Community
+  body_size: Virtual
   Ecc: 0
+  SMA: 133.589e+6
   Inc: 0.5
-  SMA: 110.0e+6
   Ann: 275
-  LoA: 40.6
-  AoP: 160
+  LoA: 0
+  AoP: 0
   radius: 0
   mass: 0
 
 - name: Mimas
+  description: >
+    As host of one of the first science outposts, Mimas is home to the 
+    'Politeknika Universitato Mimas' or PUM. PUM was the sole higher education
+    and therefore responsible to train all medical, engineering, and administrative
+    staff born on Saturn. As this monopoly within a monopoly, PUMs influence is
+    enormous. As the only major institution left on Mimas after the abandonment
+    of GK, PUM quickly took over the planet and established an improvised government
+    out of its existing university administration. Research previously dedicated
+    to scientific questions of Saturn and theoretical engineering research has
+    been halted to ensure long-term supply of life support and medical equipment.
+
+    There is still a lot of knowledge and skill on Mimas, which is essential to
+    building more advanced technologies.
+  manual_dominant_org: PU Mimas
   body_size: Minor
   Ecc: 0.02
-  Inc: 1.6
   SMA: 198.2e+6
+  Inc: 1.6
   Ann: 275
   LoA: 40.6
   AoP: 160
@@ -57,7 +92,13 @@ satellites:
   rotation_period: 22.648  # tidally locked
   mass: 1.8022e+21
 
-- name: Encelladus
+- name: Enceladus
+  description: >
+    Enceladus used to be home of a larger shipyard. The docks are still visible form orbit.
+    5 Large holes in the ice, surrounded by some small surface buildings. The majority of the
+    complex is subterranean: workshops, storage, offices, residential areas. All powered by
+    Enceladus's large tidal heating.
+  manual_dominant_org: Abandoned
   body_size: Minor
   Ecc: 0.005
   SMA: 237.905e+6
@@ -70,6 +111,14 @@ satellites:
   mass: 1.8022e+21
 
 - name: Tethys
+  description: >
+    As the sole destination of interplanetary shipping, Tethys quickly became the de-facto 
+    centerpoint for Saturn-based logistics. Due to its central location and cheap access to,
+    surrounding moons, Generala Kosmonautiko set up their local offices around Tethys and 
+    made and central to all logistics and trade in the system. For this reason, even after
+    their abandonment, the population remaining had enough resources and infrastructure to
+    not only survive, but expand and break the isolation to other planets.
+  manual_dominant_org: THADCON
   body_size: Minor
   Ecc: 0.001
   SMA: 294.619e+6
@@ -82,6 +131,11 @@ satellites:
   mass: 6.17449e+21
 
 - name: Dione
+  description: >
+    Despite being one of the major moons, Dione was never really settled.
+    The exact decisions were never fully disclosed. Maybe the upfront costs
+    of another colony weren't worth it?
+  manual_dominant_org: Unsettled
   body_size: Minor
   Ecc: 0.002
   SMA: 377.700e+6
@@ -94,6 +148,13 @@ satellites:
   mass: 1.0955e+21
 
 - name: Rhea
+  description: >
+    Rhea has always been the resource well of the System, as a significant part of the surface
+    is composed of rocks instead of being purely ice. Large queries span the rock-rich environment
+    of Rhea to extract large amounts of rock that can be used for either surface construction or 
+    to gain metal ores. There are still some people around that can run these facilities and agreed
+    to sell us a good amount of rock.
+  manual_dominant_org: THADCON
   body_size: Minor
   Ecc: 0.001
   SMA: 527.108e+6
@@ -106,6 +167,17 @@ satellites:
   mass: 6.17449e+21
 
 - name: Titan
+  description: >
+    By far the largest of Saturn's Moons and the arguably the most exotic place in
+    the solar system. Titan has a lot of physical particularities: its thick nitrogen
+    atmosphere, its active weather, but was initially surprisingly unimportant in the 
+    development of the colony. When people started to strive for self-sufficiency in
+    light of GKs imminent abandonment, the so-called Brotherhood, lead by a rich iranian
+    family hoping to build their own empire on the frontier. Their current leader is
+    an eccentric young man believing himself to be an ancient persian king and not much
+    is known about their actual society. They are, however, generally hospitable to us
+    and open to trade carbon.
+  manual_dominant_org: The Brotherhood
   body_size: Minor
   Ecc: 0.029
   SMA: 1221.93e+6
@@ -118,7 +190,16 @@ satellites:
   rotation_period: 382.690  # tidally locked
   has_atmosphere: y
 
-- name: Iaeptus
+- name: Iapetus
+  description: >
+    The Martian Government (or KROMZZAKA SSUZOΠKUXA) needs no introduction. It is 
+    known that their long-term goal is to control the outer planets and make them 
+    profitable vassals for resource extraction. They have held onto Iapetus since
+    the early days of the GK colony and turned it into a sizable outpost. It can
+    service and refuel a small fleet and has a small military complement of its
+    own. After the abandonment, they are still seeking diplomatic means to gain 
+    power and influence, but who knows when they will resort to more direct means.
+  manual_dominant_org: KROMZZAKA SSUZOΠKUXA
   body_size: Minor
   Ecc: 0.028
   SMA: 3560.82e+6
@@ -131,6 +212,13 @@ satellites:
   mass: 14.686e+21
 
 - name: Phoebe
+  description: >
+    Most likely a captured asteroid, this small moonlet has its own odd orbit far
+    away from the human activity in the rest of the System. There used to be a
+    telescope complex here, used for both scientific and military intelligence 
+    purposes. The place has been abandoned when official support for the rest of
+    the colony waned.
+  manual_dominant_org: Abandoned
   body_size: Minor
   Ecc: 0.164
   SMA: 12929.4e+6

@@ -103,7 +103,7 @@ planets:
     - shpmod_droptank_water
     base_independance_delta: 8
 
-  - name: Iaeptus
+  - name: Iapetus
     trading_accessible: n
     allegiance: 0
     resource_stock:
@@ -185,7 +185,7 @@ ships:
 - name: Enclave
   class_id: shp_spacestation
   allegiance: 2
-  planet: Iaeptus
+  planet: Iapetus
   tf_plans: []
   modules:
   - shpmod_workshop
@@ -193,7 +193,7 @@ ships:
 - name: Military ship 1
   class_id: shp_express
   allegiance: 2
-  planet: Iaeptus
+  planet: Iapetus
   tf_plans: []
   modules:
   - shpmod_missiles
@@ -204,7 +204,7 @@ ships:
 - name: Military ship 2
   class_id: shp_express
   allegiance: 2
-  planet: Iaeptus
+  planet: Iapetus
   tf_plans: []
   modules:
   - shpmod_missiles

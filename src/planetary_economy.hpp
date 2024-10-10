@@ -49,6 +49,7 @@ namespace resources {
 
 struct ResourceData {
     int resource_index = -1;
+    PermaString display_name;
     PermaString description;
 };
 

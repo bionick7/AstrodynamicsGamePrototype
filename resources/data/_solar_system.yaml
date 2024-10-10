@@ -238,7 +238,7 @@ satellites:
     radius: 2574.0e+3
     mass: 1345.2e+21
 
-  - name: Iaeptus
+  - name: Iapetus
     body_size: Minor
     Ecc: 0.028
     SMA: 3560.82e+6

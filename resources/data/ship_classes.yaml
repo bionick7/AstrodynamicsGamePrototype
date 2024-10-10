@@ -88,7 +88,7 @@ ship_classes:
 - id: shp_bulk_transport
   name: C3G-022 'Spermwhale'
   naming_convention: cargo
-  description: |
+  description: >
     A larger variant that carries triple the fuel and triple the engines pf the Hedgehog.
     Notably, it has the capacity to transport module usually reserved for large stations, 
     like shipyard docks.
@@ -114,7 +114,7 @@ ship_classes:
 - id: shp_light_transport
   name: C1G-998 'Hedgehog'
   naming_convention: cargo
-  description: |
+  description: >
     Despite being nowadays classified as a light freightship, the C1K was
     the largest cargo ship at the time of its construction. With
     simple hydrogen-oxygen combustion engines, this design was ideal to haul large
@@ -144,7 +144,7 @@ ship_classes:
 - id: shp_spacestation
   name: Station 10M
   naming_convention: station
-  description: |
+  description: >
     General Cosmonautics space station bus is a structural, thermal and power
     framework that can hold 10 metric kilotonns of cargo. It is often used for 
     medium sized habitats, shipyards and logistics points. 
@@ -175,7 +175,7 @@ ship_classes:
 - id: shp_express
   name: N1Q-034 'Hawk'
   naming_convention: cargo
-  description: |
+  description: >
     One of the earliest truly commercially successful nuclear thermal cargo spacecraft, 
     the Hawk played a large role in making some interplanetary colonies financially successful.
     The vessel is still useful today and its comparably low-complexity cheap nuclear engine makes its 

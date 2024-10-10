@@ -150,9 +150,10 @@ void PlanetaryEconomy::UIDrawResources(RID planet) {
         Rectangle button_rect = {cursor_pos.x, cursor_pos.y, 40, 20};
         ui::WriteEx(buffer, text_alignment::CONFORM, false);
         if (CheckCollisionPointRec(GetMousePosition(), button_rect)) {
+            const ResourceData* rsc_data = GetResourceData(rsc);
             StringBuilder sb;
-            sb.Add(resources::icons[rsc]).Add(resources::names[rsc]);
-            sb.Add("\n").Add(GetUI()->GetConceptDescription(resources::names[rsc]));
+            sb.Add(resources::icons[rsc]).AddPerma(rsc_data->display_name);
+            sb.Add("\n").AddPerma(rsc_data->description);
             ui::SetMouseHint(sb.c_str);
         }
         if (take_input) {
@@ -225,6 +226,9 @@ int LoadResources(const DataNode* data) {
         const DataNode* dn = data->GetChild(resources::names[i]);
         if (dn == NULL) {
             continue;
+        }
+        if (dn->Has("display_name")) {
+            GetResourceData(i)->display_name = PermaString(dn->Get("display_name"));
         }
         GetResourceData(i)->description = PermaString(dn->Get("description", "[DESCRIPTION MISSING]"));
     }

@@ -1039,7 +1039,9 @@ bool UIGlobals::IsPointBlocked(Vector2 pos, ZLayer z_layer) const {
 }
 
 const char* UIGlobals::GetConceptDescription(const char* key) {
-    return assets::GetData("resources/data/concepts.yaml")->Get(key, "No descritpion found", true);
+    const DataNode* child = assets::GetData("resources/data/concepts.yaml")->GetChild(key, true);
+    if (child == NULL) return "No descritpion found";
+    return child->Get("description", "No descritpion found", true);
 }
 
 Texture2D UIGlobals::GetIconAtlas() {

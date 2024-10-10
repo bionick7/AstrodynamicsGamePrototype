@@ -38,7 +38,7 @@ tutorial:
   flavour: Deliver 100 t of emergency supplies to Encelladus witht the 'light transport'
   expires: never
   payload: 100
-  departure: [Iaeptus]
+  departure: [Iapetus]
   destination: [Mimas, Encelladus, Tethys, Rhea, Titan]
   ship_accesibilty: [shp_express]
   payout: 1.e+5
@@ -58,7 +58,7 @@ tutorial:
   flavour: Deliver 100 t of emergency medical supplies to Encelladus witht the 'light transport'
   expires: never
   payload: 100
-  departure: [Iaeptus]
+  departure: [Iapetus]
   destination: [Mimas, Encelladus, Tethys, Rhea, Titan]
   ship_accesibilty: [shp_express]
   payout: 1.e+5

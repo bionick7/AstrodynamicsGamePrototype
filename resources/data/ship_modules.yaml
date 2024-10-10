@@ -71,7 +71,7 @@ shipmodules:
     rock: 30
   planets_restriction:
   - Rhea
-  - Iaeptus
+  - Iapetus
   icon_index:
   - 9
   - 24
@@ -95,7 +95,7 @@ shipmodules:
   planets_restriction:
   - Rhea
   - Dione
-  - Iaeptus
+  - Iapetus
   icon_index:
   - 9
   - 24
@@ -296,6 +296,7 @@ shipmodules:
     waste: 20
     co2: 10
   mass: 80
+  hidden: y
   construction_resources:
     steel: 20
     polymers: 30
@@ -303,7 +304,6 @@ shipmodules:
   icon_index:
   - 8
   - 23
-  hidden: y
   type: large
   construction_requirements:
     industrial_admin: 1
@@ -334,10 +334,10 @@ shipmodules:
   description: Part of the life support system, cleaning and re-purposing water from
     habitats
   produce:
-    water: 10
-    oxygen: -10
-    biomass: 10
     waste: -10
+    oxygen: -10
+    water: 10
+    biomass: 10
   mass: 30
   construction_resources:
     steel: 20
@@ -425,7 +425,7 @@ shipmodules:
   planets_restriction:
   - Mimas
   - Encelladus
-  - Iaeptus
+  - Iapetus
   icon_index:
   - 10
   - 23
@@ -817,6 +817,7 @@ shipmodules:
   description: '---'
   add: {}
   mass: 20
+  hidden: y
   construction_resources:
     steel: 10
     polymers: 10
@@ -1106,8 +1107,7 @@ shipmodules:
   construction_requirements:
     industrial_admin: 2
     industrial_manufacturing: 1
-  produce:
-    biomass: -2
+  produce: {}
   construction_resources: {}
   add:
     power: -1
@@ -1125,7 +1125,8 @@ shipmodules:
   construction_requirements:
     industrial_admin: 2
     industrial_manufacturing: 1
-  produce: {}
+  produce:
+    biomass: -2
   construction_resources: {}
   add:
     power: -1

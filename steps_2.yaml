@@ -240,7 +240,7 @@ planets:
   base_independence_delta: 0
   id: 16777224
   independence: 0
-  name: Iaeptus
+  name: Iapetus
   opinion: 0
   trading_accessible: n
   resource_delta:
@@ -443,7 +443,7 @@ ships:
   class_id: shp_spacestation
   id: 33554438
   name: Enclave
-  planet: Iaeptus
+  planet: Iapetus
   production_process: 0
   damage_taken:
 
@@ -459,7 +459,7 @@ ships:
   class_id: shp_express
   id: 33554439
   name: Military ship 1
-  planet: Iaeptus
+  planet: Iapetus
   production_process: 0
   damage_taken:
 
@@ -478,7 +478,7 @@ ships:
   class_id: shp_express
   id: 33554440
   name: Military ship 2
-  planet: Iaeptus
+  planet: Iapetus
   production_process: 0
   damage_taken:
 

@@ -1,67 +1,65 @@
 water:
-  description: Stay hydrated! :)
-  min_cost: 1.e+4
-  max_cost: 2.e+4
-  default_cost : 1.e+4
-  cost_volatility: 0.1e+4  # Frequency of "noise"
-  max_noise: 0.5.e+4  # Amplitude of "noise"
+  display_name: Water (H-O-H)
+  description: >
+    The basis of known life. The universal solvent. Water needs no introduction
 
 food:
-  description: ...
-  min_cost: 2.e+5
-  max_cost: 10.e+5
-  default_cost : 3.e+5
-  cost_volatility: 0.5
-  max_noise: 2
+  display_name: Food
+  description: >
+    Mostly consists of beans, fungus, vegetables and concentrated nutriments.
+    Prepared on-site
 
 steel:
-  description: ...
-  min_cost: 5.e+5
-  max_cost: 8.e+5
-  default_cost : 7.e+5
-  cost_volatility: 0.5e+5
-  max_noise: 8.e+5
+  display_name: Steel
+  description: A very strong iron alloy fundamental to industrial construction projects
 
 electronics:
-  description: ...
-  min_cost: 10.e+5
-  max_cost: 30.e+5
-  default_cost : 15.e+5
-  cost_volatility: 5.e+5
-  max_noise: 10.e+5
-
-# Not yet implemented
+  display_name: Electronics
+  description: Resistors, Capacitors, Diodes, Transistors and Integrated Circuits
 
 hydrogen:
-  description: ...
+  display_name: Hydrogen (H-H)
+  description: High-performance fuel and chemical reagent.
 
 oxygen:
-  description: ...
+  display_name: Oxygen (O=O)
+  description: Fundamental for human life and common byproduct in industrial processes
 
 co2:
-  description: ...
+  display_name: Carbon Dioxyde (C=O=C)
+  description: Common byproduct that can be recycled into Carbon and Oxygen
 
 carbon:
-  description: ...
+  display_name: Carbon (C)
+  description: >
+    Defining atom for organic chemistry and foundational 
+    for much of chemical engineering. Transported as Coal
 
 iron_ore:
-  description: ...
+  display_name: Iron Ores
+  description: Iron oxide extracted from rock. Can be smelted into steel
 
 aluminium_ore:
-  description: It's called 'Bauxite' actually
+  display_name: Aluminium Ores
+  description: Aluminium oxide extracted from rock. Can be smelted into aluminium
 
 aluminium:
-  description: ...
+  display_name: Aluminium
+  description: Crucial metal for high-specific-strength alloys used in shipbuilding
 
 rock:
-  description: ...
+  display_name: Rock
+  description: Collection of minerals and ores, as they are found in nature
 
 biomass:
-  description: ...
+  display_name: Biomass
+  description: Biological matter that can be used by plants to grow into food
   
 waste:
-  description: ...
+  display_name: Waste
+  description: Generally impure, unusable water. Result of both biological and industrial processes
 
 polymers:
-  description: ...
+  display_name: Polymers
+  description: Plastics, Rubber, Resins, Carbon fiber etc.
   

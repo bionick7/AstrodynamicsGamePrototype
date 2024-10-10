@@ -120,7 +120,7 @@ planets:
     - shpmod_droptank
     base_independance_delta: 8
 
-  - name: Iaeptus
+  - name: Iapetus
     trading_accessible: n
     allegiance: 1
     resource_stock:
@@ -238,9 +238,9 @@ ships:
   - shpmod_rock_extractor
   - shpmod_rock_extractor
   
-- name: Iaeptus Shipyard
+- name: Iapetus Shipyard
   class_id: shp_spacestation
   allegiance: 0
-  planet: Iaeptus
+  planet: Iapetus
   tf_plans: []
   modules: []

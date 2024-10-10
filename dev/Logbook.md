@@ -115,24 +115,24 @@ Each starting on one planet. Different planets can have different boni. + Differ
 - Tethys: THADCON & The merchant fleet
 - Rhea: ???
 - Titan: Monarch larper
-- Iaeptus: The Enclave
+- Iapetus: The Enclave
 - Phoebe: ???
 
 ## Status 24 Jan 24
 Let's start with 3 factions:
 The enclave:
-    Iaeptus, Phoebe
+    Iapetus, Phoebe
     High tech, high discipline
     Focuses on military (Access to better shipclasses/modules)
     
     Ships:
         2 express
         2 express (military)
-        shipyard on Iaeptus (+repair)
+        shipyard on Iapetus (+repair)
     Resources:
-        1 tech on Iaeptus
-        1 metal on Iaeptus
-        4 water on Iaeptus
+        1 tech on Iapetus
+        1 metal on Iapetus
+        4 water on Iapetus
 
 Monarch:
     Titan, Rhea
@@ -326,7 +326,7 @@ Encelladus Water, Power
 Tethys     Faster production
 Rhea       Rock
 Titan      Water, Power, Carbon
-Iaeptus    can make Semiconductors
+Iapetus    can make Semiconductors
 Phoebe     ???
 
 There should be both an inconvenient and convenient way to make food, 

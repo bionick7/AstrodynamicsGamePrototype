@@ -24,7 +24,7 @@ planets:
   - name: Titan
     trading_accessible: y
     resource_stock: {}
-  - name: Iaeptus
+  - name: Iapetus
     trading_accessible: n
     resource_stock: {}
   - name: Phoebe

@@ -49,7 +49,7 @@ planets:
     inventory:
     - shpmod_droptank
     - shpmod_droptank
-  - name: Iaeptus
+  - name: Iapetus
     trading_accessible: n
     allegiance: 2
     resource_stock:
@@ -223,7 +223,7 @@ ships:
 - name: Military ship 1
   class_id: shp_express
   allegiance: 2
-  planet: Iaeptus
+  planet: Iapetus
   tf_plans: []
   modules:
   - shpmod_missiles
@@ -234,7 +234,7 @@ ships:
 - name: Military ship 2
   class_id: shp_express
   allegiance: 2
-  planet: Iaeptus
+  planet: Iapetus
   tf_plans: []
   modules:
   - shpmod_missiles
@@ -245,7 +245,7 @@ ships:
 - name: Transport ship 1
   class_id: shp_express
   allegiance: 2
-  planet: Iaeptus
+  planet: Iapetus
   tf_plans: []
   modules:
   - shpmod_missiles
@@ -264,10 +264,10 @@ ships:
   - shpmod_light_armor
   - shpmod_acs
   
-- name: Iaeptus Shipyard
+- name: Iapetus Shipyard
   class_id: shp_spacestation
   allegiance: 2
-  planet: Iaeptus
+  planet: Iapetus
   tf_plans: []
   modules:
   - shpmod_manufacture_offices

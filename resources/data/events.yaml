@@ -22,3 +22,9 @@ events:
   body: >
     ---
   trigger: time_days >= 4
+  
+- id: mimas_capture
+  title: The acquisition of Mimas
+  body: >
+    ---
+  trigger: visit_Mimas > 0  # First visit to Mimas
