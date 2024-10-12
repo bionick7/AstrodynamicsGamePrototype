@@ -1,20 +1,23 @@
 events:
 - id: tutorial_combat
   title: Combat Instructions
+  manual_tutorial: y
   body: >
     ---
   trigger: combat_unlocked > 0
   
 - id: tutorial_cycle
   title: Cycle Instructions
+  manual_tutorial: y
   body: >
-    ---
+    Cycles allow you to repeat transfers 
   trigger: cycles_unlocked > 0
   
 - id: tutorial_1
   title: Basic Instructions
+  manual_tutorial: y
   body: >
-    ---
+    TBD
   trigger: tutorial = 0
   
 - id: tutorial_planet_inventory

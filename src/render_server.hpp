@@ -26,6 +26,9 @@ struct EmbeddedScene {
     WireframeMesh* meshes = NULL;
     RenderTexture render_target;
 
+    float camera_distance = 5;
+    float camera_elevation_rad = 30 * DEG2RAD;
+
     Camera camera;
     int render_width = 0, render_height = 0;
 
@@ -33,7 +36,7 @@ struct EmbeddedScene {
     ~EmbeddedScene();
 
     void Make(int p_mesh_count, int p_render_width, int p_render_height);
-    void UpdateTurntableCamera(float yaw_rate, float pitch);
+    void UpdateTurntableCamera(float yaw_rate);
     void Render();
 };
 

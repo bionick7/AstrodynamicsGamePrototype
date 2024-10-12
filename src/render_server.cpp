@@ -28,13 +28,12 @@ void EmbeddedScene::Make(int p_mesh_count, int p_render_width, int p_render_heig
     camera.projection = CAMERA_PERSPECTIVE;
 }
 
-void EmbeddedScene::UpdateTurntableCamera(float yaw_rate, float pitch) {
+void EmbeddedScene::UpdateTurntableCamera(float yaw_rate) {
     float yaw = GetTime() * yaw_rate;
-    const float distance = 5;
     camera.position = {
-        cosf(yaw) * cosf(pitch) * distance,
-        -sinf(pitch) * distance,
-        sinf(yaw) * cosf(pitch) * distance,
+        cosf(yaw) * cosf(camera_elevation_rad) * camera_distance,
+        sinf(camera_elevation_rad) * camera_distance,
+        sinf(yaw) * cosf(camera_elevation_rad) * camera_distance,
     };
     camera.target = Vector3Zero();
     camera.up = { 0, 1, 0 };

@@ -105,7 +105,10 @@ WireframeMesh LoadWireframeMesh(const char* filepath) {
         line++;
         if (text[text_cursor] == 'v') {
             float x, y, z;
-            sscanf(&text[text_cursor], "v %f %f %f", &x, &y, &z);
+            int scanfres = sscanf(&text[text_cursor], "v %f %f %f", &x, &y, &z);
+            if (scanfres != 3) {
+                ERROR("Could not read vertex at %s:%d", filepath, line)
+            }
             vertices[3*vertex_cursor] = x;
             vertices[3*vertex_cursor+1] = y;
             vertices[3*vertex_cursor+2] = z;
@@ -132,23 +135,20 @@ WireframeMesh LoadWireframeMesh(const char* filepath) {
         }
         else if (text[text_cursor] == 'l') {
             int l1, l2;
-            sscanf(&text[text_cursor], "l %d %d", &l1, &l2);
+            int scanfres = sscanf(&text[text_cursor], "l %d %d", &l1, &l2);
+            if (scanfres != 2) {
+                ERROR("Could not read line-segment at %s:%d", filepath, line)
+            }
             lines[2*line_cursor] = l1;
             lines[2*line_cursor+1] = l2;
             line_cursor++;
         }
         else if (text[text_cursor] == 'f') {
-            /*int fs[9];
-            sscanf(&text[text_cursor], "f %d/%d/%d %d/%d/%d %d/%d/%d", 
-                &fs[0], &fs[1], &fs[2],
-                &fs[3], &fs[4], &fs[5],
-                &fs[6], &fs[7], &fs[8]
-            );
-            triangles[triangle_cursor] = fs[0];
-            triangles[triangle_cursor+1] = fs[3];
-            triangles[triangle_cursor+2] = fs[6];*/
             int fs1, fs2, fs3;
-            sscanf(&text[text_cursor], "f %d %d %d", &fs1, &fs2, &fs3);
+            int scanfres = sscanf(&text[text_cursor], "f %d %d %d", &fs1, &fs2, &fs3);
+            if (scanfres != 3) {
+                ERROR("Could not read face at %s:%d", filepath, line)
+            }
             triangles[3*triangle_cursor] = fs1;
             triangles[3*triangle_cursor+1] = fs2;
             triangles[3*triangle_cursor+2] = fs3;

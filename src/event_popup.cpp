@@ -46,7 +46,7 @@ void event_popup::UpdateAllPopups() {
     for(int i=popup_list.Count()-1; i >= 0; i--) {
         RID scene_id = popup_list[i].embedded_scene;
         if (IsIdValidTyped(scene_id, EntityType::EMBEDDED_SCENE)) {
-            GetRenderServer()->embedded_scenes.Get(scene_id)->UpdateTurntableCamera(1, 0.5);
+            GetRenderServer()->embedded_scenes.Get(scene_id)->UpdateTurntableCamera(1);
         }
 
         event_popup::PopupEvents request_close;
@@ -145,11 +145,9 @@ void event_popup::EmbeddedSceneFace(RID scene_rid, int height) {
     scene->render_width = ui::Current()->width;
     scene->render_height = ui::Current()->height;
 
-    Rectangle source_rect = { 0, 0, scene->render_width, scene->render_height };
-    BeginRenderInUILayer(ui::Current()->z_layer);
+    Rectangle source_rect = { 0, 0, scene->render_width, -scene->render_height };  // Render texture is inverted
     ui::Current()->DrawTexture(scene->render_target.texture, source_rect, face_height,
                                WHITE, text_alignment::CENTER, TextBox::TEXTURE_DRAW_RAW);
-    EndRenderInUILayer();
 }
 
 void event_popup::BeginBody() {

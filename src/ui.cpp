@@ -289,7 +289,7 @@ void TextBox::Decorate(const text::Layout* layout, const TokenList* tokens) {
 
 void TextBox::DrawTexture(Texture2D texture, Rectangle source, int texture_height, Color tint, 
                           text_alignment::T alignment, TextureDrawMode draw_mode) {
-    int texture_width = texture_height * source.width / source.height;
+    int texture_width = texture_height * fabsf(source.width / source.height);
     
     Vector2 pos = ApplyAlignmentInRect(GetRect(), { (float)texture_width, (float)texture_height }, alignment);
     Rectangle destination = { pos.x, pos.y, (float)texture_width, (float)texture_height };

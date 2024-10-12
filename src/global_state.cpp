@@ -136,7 +136,7 @@ void GlobalState::UpdateState(double delta_t) {
     global_logic.Update();
 
     if (frame_count == 0 || IsKeyPressed(KEY_Q)) {
-        static const char* lorem = 
+        static const char lorem[] = 
             "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean nec blandit ante."
             "Nam in mi nibh. Donec nec urna ac ligula faucibus malesuada eget rhoncus eros."
             "Duis id elit vitae neque blandit blandit mollis vel nisl. Vivamus in elit vitae"
@@ -151,11 +151,19 @@ void GlobalState::UpdateState(double delta_t) {
         strcpy(popup->description + 81, lorem);
         EmbeddedScene* scene;
         popup->embedded_scene = GetRenderServer()->embedded_scenes.Allocate(&scene);
-        scene->Make(2, popup->width, popup->face_height);
-        scene->meshes[0] = assets::GetWireframe("resources/meshes/test/ship_contours.obj");
-        scene->meshes[1] = assets::GetWireframe("resources/meshes/test/ship_contours.obj");
-        scene->transforms[0] = MatrixTranslate(0, 0, 1);
-        scene->transforms[1] = MatrixTranslate(0, 0, -1);
+        scene->Make(5, popup->width, popup->face_height);
+
+        scene->camera_distance = 40;
+        scene->meshes[0] = assets::GetWireframe("resources/meshes/ships3D/shp_light_transport.obj");
+        scene->meshes[1] = assets::GetWireframe("resources/meshes/ships3D/shp_bulk_transport.obj");
+        scene->meshes[2] = assets::GetWireframe("resources/meshes/ships3D/shp_cruiser.obj");
+        scene->meshes[3] = assets::GetWireframe("resources/meshes/ships3D/shp_express.obj");
+        scene->meshes[4] = assets::GetWireframe("resources/meshes/ships3D/shp_spacestation.obj");
+        scene->transforms[0] = MatrixMultiply(MatrixTranslate(20, 0, 0), MatrixRotateY(DEG2RAD *   0));
+        scene->transforms[1] = MatrixMultiply(MatrixTranslate(20, 0, 0), MatrixRotateY(DEG2RAD *  90));
+        scene->transforms[2] = MatrixMultiply(MatrixTranslate(20, 0, 0), MatrixRotateY(DEG2RAD * 180));
+        scene->transforms[3] = MatrixMultiply(MatrixTranslate(20, 0, 0), MatrixRotateY(DEG2RAD * 270));
+        scene->transforms[4] = MatrixIdentity();
     }
 
     if (!GetGlobalState()->IsKeyBoardFocused() && IsKeyPressed(KEY_F5)) {

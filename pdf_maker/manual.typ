@@ -4,7 +4,12 @@
 
 #let DATA_FOLDER = "../resources/data/"
 
-#show heading.where(): it => align(center, underline(it)) + v(5pt)
+//#show heading.where(): it => align(center, text(font: "Berlin Sans FB", underline(it))) + v(5pt)
+#show heading.where(level: 1): it => align(center, text(
+  font: "Trebuchet MS", 
+  size: 24pt,
+  it)) + v(5pt) + line(length: 100%)
+#show heading.where(level: 2): it => align(center, underline(it)) + v(5pt)
 
 // Display library
 
@@ -87,11 +92,14 @@
   if class.at("hidden", default: "n") != "y" {entry[
     == #class.at("name") #label(class.at("id"))
     #class.at("description")
-
-    #align(center, table(columns: 3, align: right,
-      [Capacity], link("Δv")[Δv], [$I_(s p)$],
-      str(class.at("capacity")), str(class.at("dv")), str(class.at("Isp")), 
-    ))
+    #grid(columns: (70%, auto),
+      image("images/ships/" + class.id + ".png"),
+      h(5em) + align(center, table(columns: 2, align: right,
+        [Capacity], $class.at("capacity") "Counts"$,
+        link("Δv")[Δv], $class.at("dv") "km/s"$,
+        [$I_(s p)$], $class.at("Isp") "km/s"$, 
+      ))
+    )
   ]}
 }
 
