@@ -2,15 +2,14 @@
 #include "rlgl.h"
 #include "logging.hpp"
 
-WireframeMesh MakeWireframeMeshFromBuffers(int p_vertex_count, int p_triangle_count, int p_line_count,
-    float* vertex_buffer, unsigned short* triangle_buffer, unsigned short* line_buffer
+WireframeMesh _MakeWireframeMeshFromBuffers(int p_vertex_count, int p_triangle_count, int p_line_count,
+    float* vertex_buffer, float* color_buffer, unsigned short* triangle_buffer, unsigned short* line_buffer
 ) {
     WireframeMesh mesh = WireframeMesh {0};
 
     mesh.vertex_count = p_vertex_count;
     mesh.triangle_count = p_triangle_count;
     mesh.line_count = p_line_count;
-
 
     // Triangles
     mesh.vao_triangles = rlLoadVertexArray();
@@ -19,6 +18,10 @@ WireframeMesh MakeWireframeMeshFromBuffers(int p_vertex_count, int p_triangle_co
     mesh.vbo_triangles = rlLoadVertexBuffer(vertex_buffer, p_vertex_count*3*sizeof(float), false);
     rlSetVertexAttribute(0, 3, RL_FLOAT, 0, 0, 0);
     rlEnableVertexAttribute(0);
+    
+    mesh.vbo_triangle_colors = rlLoadVertexBuffer(color_buffer, p_vertex_count*3*sizeof(float), false);
+    rlSetVertexAttribute(2, 3, RL_FLOAT, 0, 0, 0);
+    rlEnableVertexAttribute(2);
 
     int triangle_elements = rlLoadVertexBufferElement(triangle_buffer, p_triangle_count*3*sizeof(unsigned short), false);
     rlDisableVertexArray();
@@ -70,6 +73,7 @@ WireframeMesh LoadWireframeMesh(const char* filepath) {
     do {
         line++;
         char c = text[text_cursor];
+        char c1 = text_cursor < text_size - 1 ? text[text_cursor + 1] : '\0';
         while (c <= 32 && c != '\n' && c != '\0') {
             c = text[++text_cursor];
         }
@@ -77,16 +81,19 @@ WireframeMesh LoadWireframeMesh(const char* filepath) {
         if (c == '\n' || c == '\0') continue;
         
         if (c == '#') continue;
-        else if (c == 'v') vertex_count++;
-        else if (c == 'l') line_count++;
-        else if (c == 'f') triangle_count++;
-        else if (c == 'o') continue;  // Ignore object name
-        else if (c == 's') continue;  // Ignore surfaces
+        else if (c == 'v' && c1 == ' ') vertex_count++;
+        else if (c == 'l' && c1 == ' ') line_count++;
+        else if (c == 'f' && c1 == ' ') triangle_count++;
+        else if (c == 'v' && c1 == 't') continue;  // Ignore tangents
+        else if (c == 'v' && c1 == 'n') continue;  // Ignore normals
+        else if (c == 'o' && c1 == ' ') continue;  // Ignore object name
+        else if (c == 's' && c1 == ' ') continue;  // Ignore surfaces
         else if (text_size - text_cursor >= 6 && strncmp("mtllib", &text[text_cursor], 6) == 0) ;  // Ignore material library
         else ERROR("Unexpected character ('%c'%u) when reading at %s:%d:0", c, c, filepath, line)
     } while (_GetNextLine(text, &text_cursor));
 
     float* vertices = new float[vertex_count*3];
+    float* colors = new float[vertex_count*3];
     float* vertex_distances = new float[vertex_count];
     unsigned short* lines = new unsigned short[line_count*2];
     unsigned short* triangles = new unsigned short[triangle_count*3];
@@ -103,15 +110,23 @@ WireframeMesh LoadWireframeMesh(const char* filepath) {
     line = 0;
     do {
         line++;
-        if (text[text_cursor] == 'v') {
+        if (text[text_cursor] == 'v' && text[text_cursor + 1] == ' ') {
             float x, y, z;
-            int scanfres = sscanf(&text[text_cursor], "v %f %f %f", &x, &y, &z);
-            if (scanfres != 3) {
-                ERROR("Could not read vertex at %s:%d", filepath, line)
+            float nx, ny, nz;
+            int scanfres = sscanf(&text[text_cursor], "v %f %f %f %f %f %f", &x, &y, &z, &nx, &ny, &nz);
+            if (scanfres != 6) {
+                scanfres = sscanf(&text[text_cursor], "v %f %f %f", &x, &y, &z);
+                nx = 0; ny = 1; nz = 0;
+                if (scanfres != 3) {
+                    ERROR("Could not read vertex at %s:%d", filepath, line)
+                }
             }
             vertices[3*vertex_cursor] = x;
             vertices[3*vertex_cursor+1] = y;
             vertices[3*vertex_cursor+2] = z;
+            colors[3*vertex_cursor] = nx;
+            colors[3*vertex_cursor+1] = ny;
+            colors[3*vertex_cursor+2] = nz;
 
             if (x > bounding_box.max.x) bounding_box.max.x = x;
             if (x < bounding_box.min.x) bounding_box.min.x = x;
@@ -123,9 +138,9 @@ WireframeMesh LoadWireframeMesh(const char* filepath) {
             if (vertex_cursor == 0) {
                 vertex_distances[vertex_cursor] = 0;
             } else {
-                float dx = x - vertices[3*vertex_cursor - 3];
-                float dy = y - vertices[3*vertex_cursor - 2];
-                float dz = z - vertices[3*vertex_cursor - 1];
+                float dx = x - vertices[3 * vertex_cursor - 3];
+                float dy = y - vertices[3 * vertex_cursor - 2];
+                float dz = z - vertices[3 * vertex_cursor - 1];
                 float distance_to_previous = sqrtf(dx*dx + dy*dy + dz*dz);
                 vertex_distances[vertex_cursor] = vertex_distances[vertex_cursor-1] + distance_to_previous;
             }
@@ -133,7 +148,7 @@ WireframeMesh LoadWireframeMesh(const char* filepath) {
 
             vertex_cursor++;
         }
-        else if (text[text_cursor] == 'l') {
+        else if (text[text_cursor] == 'l' && text[text_cursor + 1] == ' ') {
             int l1, l2;
             int scanfres = sscanf(&text[text_cursor], "l %d %d", &l1, &l2);
             if (scanfres != 2) {
@@ -143,7 +158,7 @@ WireframeMesh LoadWireframeMesh(const char* filepath) {
             lines[2*line_cursor+1] = l2;
             line_cursor++;
         }
-        else if (text[text_cursor] == 'f') {
+        else if (text[text_cursor] == 'f' && text[text_cursor + 1] == ' ') {
             int fs1, fs2, fs3;
             int scanfres = sscanf(&text[text_cursor], "f %d %d %d", &fs1, &fs2, &fs3);
             if (scanfres != 3) {
@@ -163,7 +178,7 @@ WireframeMesh LoadWireframeMesh(const char* filepath) {
 
     UnloadFileText(text);
 
-    // Normalize vertex distances
+    // Colorize vertex distances
     float total_distance = vertex_distances[vertex_count-1];
     for(int i=0; i < vertex_count; i++) {
         vertex_distances[i] = vertex_distances[i] / total_distance;
@@ -173,12 +188,13 @@ WireframeMesh LoadWireframeMesh(const char* filepath) {
     for(int i=0; i < line_count*2; i++) lines[i]--;
     for(int i=0; i < triangle_count*3; i++) triangles[i]--;
 
-    WireframeMesh mesh = MakeWireframeMeshFromBuffers(
+    WireframeMesh mesh = _MakeWireframeMeshFromBuffers(
         vertex_count, triangle_count, line_count,
-        vertices, triangles, lines
+        vertices, colors, triangles, lines
     );
 
     delete[] vertices;
+    delete[] colors;
     delete[] vertex_distances;
     delete[] lines;
     delete[] triangles;
@@ -189,24 +205,25 @@ WireframeMesh LoadWireframeMesh(const char* filepath) {
 }
 
 WireframeMesh LoadTestWireframeMesh() {
-    static float vertexBuffer[4*3] = {
+    static float vertex_buffer[4*3] = {
         0.0f, 0.0f, 1.0f,
         1.0f, 0.0f, 0.0f,
         0.0f, 0.0f, 0.0f,
         1.0f, 0.0f, 1.0f,
     };
 
-    static float uvBuffer[4*2] = {
-        0.0f, 1.0f,
-        1.0f, 0.0f,
-        0.0f, 0.0f,
-        1.0f, 1.0f,
+    static float color_buffer[4*3] = {
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f
     };
 
-    static unsigned short triangleIndexBuffer[6] = {0, 1, 2, 3, 1, 0};
-    static unsigned short lineIndexBuffer[8] = {0, 3, 3, 1, 1, 2, 2, 0};
+    static unsigned short triangle_index_buffer[6] = {0, 1, 2, 3, 1, 0};
+    static unsigned short line_index_buffer[8] = {0, 3, 3, 1, 1, 2, 2, 0};
 
-    WireframeMesh mesh = MakeWireframeMeshFromBuffers(4, 4, 2, vertexBuffer, triangleIndexBuffer, lineIndexBuffer);
+    WireframeMesh mesh = _MakeWireframeMeshFromBuffers(4, 4, 2, vertex_buffer, 
+        color_buffer, triangle_index_buffer, line_index_buffer);
     mesh.bounding_box.min = {0,0,0};
     mesh.bounding_box.max = {1,0,1};
     return mesh;

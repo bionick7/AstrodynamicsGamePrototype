@@ -141,7 +141,7 @@ void event_popup::EmbeddedSceneFace(RID scene_rid, int height) {
     draw_state = 2;
 
     EmbeddedScene* scene = GetRenderServer()->embedded_scenes.Get(scene_rid);
-    // Only applies the next frame, but still largely forces into complience
+    // Only applies the next frame, but still largely forces into compliance
     scene->render_width = ui::Current()->width;
     scene->render_height = ui::Current()->height;
 

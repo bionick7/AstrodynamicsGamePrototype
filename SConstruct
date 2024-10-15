@@ -7,7 +7,7 @@ platform = "win"
 build = "debug"
 
 # Define variables
-src_dirs = ['src', 'src/core', 'src/quests']
+src_dirs = ['src', 'src/core']
 include_dirs = ['include']
 
 # Platform specific libraries

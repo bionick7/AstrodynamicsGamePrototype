@@ -148,6 +148,7 @@ namespace wireframe_shader {
     int mvp = -1;
     int time = -1;
     int depth = -1;
+    int depth_offset = -1;
 
     void Load() {
         LOAD_SHADER(wireframe_shader)
@@ -156,6 +157,7 @@ namespace wireframe_shader {
         LOAD_SHADER_UNIFORM(wireframe_shader, mvp)
         LOAD_SHADER_UNIFORM(wireframe_shader, time)
         LOAD_SHADER_UNIFORM(wireframe_shader, depth)
+        LOAD_SHADER_UNIFORM(wireframe_shader, depth_offset)
     }
 }
 
@@ -177,27 +179,51 @@ void RenderWireframeMesh(WireframeMesh mesh, Matrix transform, Color background,
 
     Matrix matModelViewProjection = MatrixMultiply(matModelView, matProjection);
 
-    int render_mode_lines = 0;
-    int render_mode_faces = 3;
-    float default_depth = -1.0;
+    static int render_mode_lines = 0;
+    static int render_mode_faces = 3;
+    static float default_depth = -1.0;
+    static float outline_offset = 1.0;
+    static float zero_f = 0.0;
 
     rlEnableShader(wireframe_shader::shader.id);
+    rlSetLineWidth(2.0f);
+    //rlEnableSmoothLines();
+
+    // Draw outline triangles
     rlSetUniformMatrix(wireframe_shader::mvp, matModelViewProjection);
     rlSetUniform(wireframe_shader::depth, &default_depth, RL_SHADER_UNIFORM_FLOAT, 1);
-
+    rlSetUniform(wireframe_shader::depth_offset, &outline_offset, RL_SHADER_UNIFORM_FLOAT, 1);
     rlSetUniform(wireframe_shader::render_mode, &render_mode_faces, RL_SHADER_UNIFORM_INT, 1);
-    rlSetUniform(wireframe_shader::color, bg_color, RL_SHADER_UNIFORM_VEC4, 1);
-    rlDisableBackfaceCulling();
-
-    rlEnableVertexArray(mesh.vao_triangles);
-    rlDrawVertexArrayElements(0, mesh.triangle_count*3, 0);
-    rlDisableVertexArray();
-
-    rlSetUniform(wireframe_shader::render_mode, &render_mode_lines, RL_SHADER_UNIFORM_INT, 1);
     rlSetUniform(wireframe_shader::color, fg_color, RL_SHADER_UNIFORM_VEC4, 1);
 
+    rlEnableVertexArray(mesh.vao_triangles);
+    rlEnableWireMode();
+
+    rlDrawVertexArrayElements(0, mesh.triangle_count * 3, 0);
+
+    rlDisableWireMode();
+    rlDisableVertexArray();
+
+    // Draw blockout triangles
+    rlSetUniformMatrix(wireframe_shader::mvp, matModelViewProjection);
+    rlSetUniform(wireframe_shader::depth, &default_depth, RL_SHADER_UNIFORM_FLOAT, 1);
+    rlSetUniform(wireframe_shader::depth_offset, &zero_f, RL_SHADER_UNIFORM_FLOAT, 1);
+    rlSetUniform(wireframe_shader::render_mode, &render_mode_faces, RL_SHADER_UNIFORM_INT, 1);
+    rlSetUniform(wireframe_shader::color, bg_color, RL_SHADER_UNIFORM_VEC4, 1);
+
+    rlEnableVertexArray(mesh.vao_triangles);
+    rlDrawVertexArrayElements(0, mesh.triangle_count * 3, 0);
+    rlDisableVertexArray();
+
+    // Draw lines
+    rlSetUniform(wireframe_shader::render_mode, &render_mode_lines, RL_SHADER_UNIFORM_INT, 1);
+    rlSetUniform(wireframe_shader::color, fg_color, RL_SHADER_UNIFORM_VEC4, 1);
+    rlSetUniform(wireframe_shader::depth, &default_depth, RL_SHADER_UNIFORM_FLOAT, 1);
+    rlSetUniform(wireframe_shader::depth_offset, &zero_f, RL_SHADER_UNIFORM_FLOAT, 1);
+
+    rlSetLineWidth(1.0f);
     rlEnableVertexArray(mesh.vao_lines);
-    rlDrawVertexPrimitiveArrayElements(RL_LINES, 0, mesh.line_count*2, 0);
+    rlDrawVertexPrimitiveArrayElements(RL_LINES, 0, mesh.line_count * 2, 0);
     rlDisableVertexArray();
     
     rlDisableShader();
@@ -226,6 +252,7 @@ void RenderWireframeMesh2DEx(WireframeMesh mesh, Vector2 origin, float scale,
     int render_mode_lines = 0;
     int render_mode_faces = 3;
     int render_mode = 0;
+    float zero_f = 0.0f;
     float time = GetTime();
     float z_layer_f = 1.0f - z_layer / 256.0f;
     float z_layer_f_lines = 1.0f - (z_layer + 1) / 256.0f;
@@ -236,6 +263,7 @@ void RenderWireframeMesh2DEx(WireframeMesh mesh, Vector2 origin, float scale,
     rlSetUniformMatrix(wireframe_shader::mvp, model2ndc_matrix);
 
     rlSetUniform(wireframe_shader::depth, &z_layer_f, SHADER_UNIFORM_FLOAT, 1);
+    rlSetUniform(wireframe_shader::depth_offset, &zero_f, SHADER_UNIFORM_FLOAT, 1);
     rlSetUniform(wireframe_shader::render_mode, &render_mode_faces, RL_SHADER_UNIFORM_INT, 1);
     rlSetUniform(wireframe_shader::color, bg_color, RL_SHADER_UNIFORM_VEC4, 1);
     rlDisableBackfaceCulling();
@@ -244,7 +272,7 @@ void RenderWireframeMesh2DEx(WireframeMesh mesh, Vector2 origin, float scale,
     rlDrawVertexArrayElements(0, mesh.triangle_count*3, 0);
     rlDisableVertexArray();
 
-    rlSetUniform(wireframe_shader::depth, &z_layer_f_lines, SHADER_UNIFORM_FLOAT, 1);
+    rlSetUniform(wireframe_shader::depth_offset, &z_layer_f_lines, SHADER_UNIFORM_FLOAT, 1);
     rlSetUniform(wireframe_shader::render_mode, &render_mode_lines, RL_SHADER_UNIFORM_INT, 1);
     rlSetUniform(wireframe_shader::color, fg_color, RL_SHADER_UNIFORM_VEC4, 1);
 

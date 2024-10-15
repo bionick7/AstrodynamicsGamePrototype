@@ -12,7 +12,9 @@ struct WireframeMesh {
 
     int vao_triangles = -1;
     int vao_lines = -1;
+
     int vbo_triangles = -1;
+    int vbo_triangle_colors = -1;
     int vbo_lines = -1;
 };
 

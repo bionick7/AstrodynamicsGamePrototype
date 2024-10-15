@@ -142,7 +142,7 @@ shipmodules:
   - 24
   planets_restriction:
   - Titan
-  type: large
+  type: medium
   add:
     power: -1
     ground_connection: -1
@@ -368,7 +368,7 @@ shipmodules:
   icon_index:
   - 9
   - 23
-  type: medium
+  type: large
   add:
     power: -2
   construction_requirements:
@@ -544,7 +544,7 @@ shipmodules:
   icon_index:
   - 12
   - 30
-  type: large
+  type: medium
   construction_requirements:
     thermal_control: 1
     industrial_admin: 1

@@ -1,15 +1,16 @@
 #version 330
 
+
 // Input uniform values
 uniform int render_mode;
 uniform vec4 color;
 uniform float time;
 uniform float depth;
+uniform float depth_offset;
 
 // Output fragment color
 out vec4 finalColor;
-smooth in vec4 path;
-in vec4 clipPos;
+smooth in vec3 normal;
 
 // NOTE: Add here your custom variables
 
@@ -24,11 +25,9 @@ void main() {
     finalColor.rgb = color.rgb;
     finalColor.a = 1.0;
 
-    //float anim_time = fract(time*.01);
-    //finalColor.a = sin(path.a*100.0 - time*0.1) * .5 + .5;
     if (depth >= 0.0) {
         gl_FragDepth = depth;
     } else {
-        gl_FragDepth = gl_FragCoord.z;
+        gl_FragDepth = gl_FragCoord.z + depth_offset / 256.0f;
     }
 }
