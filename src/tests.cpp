@@ -24,10 +24,10 @@ void OnTestFail(const char* identifier) {
 
 int UnitTests() {
     INFO("Running Tests");
+    RETURN_OR_CONTINUE(ListTests());
     RETURN_OR_CONTINUE(DataNodeTests());
     RETURN_OR_CONTINUE(TimeTests());
     RETURN_OR_CONTINUE(IDAllocatorListTests());
-    RETURN_OR_CONTINUE(ListTests());
     RETURN_OR_CONTINUE(TransferPlanTests());
     RETURN_OR_CONTINUE(StringBuilderTests());
     RETURN_OR_CONTINUE(AssetTests());

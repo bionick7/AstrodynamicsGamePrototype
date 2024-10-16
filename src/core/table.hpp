@@ -20,11 +20,18 @@ struct Table {
     int size = 0;
     int capacity = 0;
 
-    Table() { Init(); }
+    Table() {
+        Init();
+    }
+
     Table(const Table<T>& other) { 
+        Init();
         CopyTable(other, this);
     }
-    ~Table() { Clear(); }
+
+    ~Table() { 
+        Clear(); 
+    }
 
     int Find(TableKey key) const {
         // TODO: Faster as binary search tree ig
@@ -47,17 +54,15 @@ struct Table {
     }
 
     void Resize(int new_capacity) {
-        uint64_t* new_hashes = new uint64_t[new_capacity];
-        T* new_data = new T[new_capacity];
-        for(int i=0; i < size; i++) {
-            new_hashes[i] = hashes[i];
-            new_data[i] = data[i];
+        if (new_capacity == 0) {
+            Clear();
+        } else {
+            hashes = (hashes == NULL) ? (uint64_t*) malloc(sizeof(uint64_t) * new_capacity)
+                                      : (uint64_t*) realloc(hashes, sizeof(uint64_t) * new_capacity);
+            data   = (data   == NULL) ? (T*) malloc(sizeof(T) * new_capacity)
+                                      : (T*) realloc(data, sizeof(T) * new_capacity);
+            capacity = new_capacity;
         }
-        delete[] hashes;
-        delete[] data;
-        hashes = new_hashes;
-        data = new_data;
-        capacity = new_capacity;
     }
 
     int Insert(TableKey key, T value) {
@@ -68,20 +73,12 @@ struct Table {
 
     int AllocForInsertion(TableKey key) {
         if (size + 1 > capacity) {
-            Resize(capacity + 10);            
+            Resize(capacity + 10);
         }
         hashes[size] = key.h;
+        new (&data[size]) T();
         size++;
         return size - 1;
-    }
-
-    void Clear() {
-        delete[] hashes;
-        delete[] data;
-        hashes = NULL;
-        data = NULL;
-        size = 0;
-        capacity = 0;
     }
 
     void Init() {
@@ -89,6 +86,35 @@ struct Table {
         capacity = 0;
         hashes = NULL;
         data = NULL;
+    }
+
+    void Clear() {
+        for(int i=0; i < size; i++) {
+            data[i].~T();
+        }
+        free(hashes);
+        free(data);
+        hashes = NULL;
+        data = NULL;
+        size = 0;
+        capacity = 0;
+    }
+
+    T& operator[](TableKey key) {
+        int find = Find(key);
+        if (find < 0) {
+            return T();
+        }
+        return data[find];
+    }
+
+    T operator[](TableKey key) const {
+        return (*this)[key];
+    }
+
+    Table& operator=(const Table<T>& other) {
+        CopyTable(&other, this);
+        return *this;
     }
 };
 

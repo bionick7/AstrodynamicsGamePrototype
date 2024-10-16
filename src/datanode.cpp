@@ -29,7 +29,7 @@ DataNode::DataNode(const DataNode& other) {
     children = Table<Child>();
     field_arrays = Table<FieldArray>();
     child_arrays = Table<ChildArray>();
-    CopyTo(&other, this);
+    CopyDataNode(&other, this);
 }
 
 DataNode::~DataNode() {
@@ -39,17 +39,6 @@ DataNode::~DataNode() {
     for (int i=0; i < children.size; i++) {
         delete children.data[i].value;
     }
-}
-
-void DataNode::CopyTo(const DataNode* from, DataNode* to) {
-    if (to == NULL) return;
-    if (from == NULL) return;
-    CopyTable(&from->fields, &to->fields);
-    CopyTable(&from->children, &to->children);
-    CopyTable(&from->field_arrays, &to->field_arrays);
-    CopyTable(&from->child_arrays, &to->child_arrays);
-    to->text_buffer = from->text_buffer.c_str;
-    to->is_read_only = from->is_read_only;
 }
 
 int _YamlParseFromText(DataNode* node, const char* origin, const char* text, bool quiet) {
@@ -590,7 +579,7 @@ void DataNode::SetDate(TableKey key, timemath::Time value) {
 
 DataNode* DataNode::SetChild(TableKey key) {
     // Adds a copy to the DataNode to the map and returns pointer to it
-    //CopyTo(val, child);
+    //CopyDataNode(val, child);
     if (is_read_only) {
         WARNING("Trying to set child on a readonly datanode at '%s'\n", key);
         return NULL;
@@ -613,7 +602,9 @@ void DataNode::CreateArray(TableKey key, size_t size) {
         field_arrays.data[find].key = FlexString(key.txt, this);
     }
     field_arrays.data[find].strings.Resize(size);  // Set Capacity
-    field_arrays.data[find].strings.size = size;   // Set Size
+    for (int i=0; i < size; i++) {                 // Set Size and initialize
+        field_arrays.data[find].strings.AllocForAppend();
+    }
 }
 
 void DataNode::InsertIntoArray(TableKey key, int index, const char* value) {
@@ -644,7 +635,9 @@ void DataNode::CreatChildArray(TableKey key, size_t size) {
         child_arrays.data[find].key = FlexString(key.txt, this);
     } 
     child_arrays.data[find].nodes.Resize(size);  // Set Capacity
-    child_arrays.data[find].nodes.size = size;   // Set Size
+    for (int i=0; i < size; i++) {               // Set Size and initialize
+        child_arrays.data[find].nodes.AllocForAppend();
+    }
 }
 
 void DataNode::InsertIntoArrayI(TableKey key, int index, int value) {
@@ -736,6 +729,11 @@ void RemoveAt(TableKey key, int index) {
     NOT_IMPLEMENTED
 }
 
+DataNode& DataNode::operator=(const DataNode& other) {
+    CopyDataNode(&other, this);
+    return *this;
+}
+
 //bool DataNode::FieldEquals(std::string lhs, std::string rhs) {
 //    if (lhs == rhs)
 //        return true;
@@ -751,6 +749,17 @@ void RemoveAt(TableKey key, int index) {
 //bool DataNode::operator!=(const DataNode& other) const {
 //    return !(*this == other);
 //}
+
+void DataNode::CopyDataNode(const DataNode* from, DataNode* to) {
+    if (to == NULL) return;
+    if (from == NULL) return;
+    CopyTable(&from->fields, &to->fields);
+    CopyTable(&from->children, &to->children);
+    CopyTable(&from->field_arrays, &to->field_arrays);
+    CopyTable(&from->child_arrays, &to->child_arrays);
+    to->text_buffer = StringBuffer(from->text_buffer);
+    to->is_read_only = from->is_read_only;
+}
 
 #define DN_TEST_FAIL(msg, exit_code) {ERROR("DataNodeTest failed with: %s\n", msg); return exit_code;}
 #define DN_TEST_ASSERTKV(node, key, value) if(strcmp(node.Get(key), value) != 0){ \
@@ -835,15 +844,14 @@ int DataNodeTests() {
     node.AppendToArray("array3", "b");
     if(node.GetArrayLen("array3") != 2) DN_TEST_FAIL("Array not properly initialized for appending", 1);
     if(strcmp(node.GetArrayElem("array3", 0), "a") != 0) DN_TEST_FAIL("Array element 0 not properly appended", 1);
-    if(strcmp(node.GetArrayElem("array3", 0), "b") != 0) DN_TEST_FAIL("Array element 1 not properly appended", 1);
-
+    if(strcmp(node.GetArrayElem("array3", 1), "b") != 0) DN_TEST_FAIL("Array element 1 not properly appended", 1);
 
     // Test Child Setters
     DataNode* child2 = node.SetChild("child2");
     child2->Set("x", "y");
     node.CreatChildArray("child_arr", 2);
     DataNode* arr0_child = node.InsertIntoChildArray("child_arr", 0);
-    DataNode::CopyTo(child2, arr0_child);
+    DataNode::CopyDataNode(child2, arr0_child);
     child2->Set("x2", "y2");
     arr0_child->Set("x2", "z2");
     DataNode* child2_tst = node.GetChild("child2");

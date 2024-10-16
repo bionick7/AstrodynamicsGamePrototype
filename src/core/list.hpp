@@ -18,41 +18,29 @@ struct List {
     T* buffer;
         
     List() {
-        capacity = 0;
-        size = 0;
-        buffer = NULL;
+        Init();
     }
 
-    List(int initial_capacity){
+    List(int initial_capacity) {
         capacity = initial_capacity;
         size = 0;
-        buffer = new T[capacity];
+        buffer = (T*) malloc(sizeof(T) * capacity);
     }
 
     List(const List& other) {
-        capacity = other.capacity;
-        size = other.size;
-        buffer = new T[capacity];
-        for(int i=0; i < size; i++) {
-            buffer[i] = other[i];
-        }
+        CopyList(&other, this);
     }
 
     ~List() {
-        delete[] buffer;
+        Clear();
     }
 
     void Resize(int new_capacity) {
         if (new_capacity == 0) {
-            delete[] buffer;
-            buffer = NULL;
+            Clear();
         } else {
-            T* buffer2 = new T[new_capacity];
-            for(int i=0; i < size; i++) {
-                buffer2[i] = buffer[i];
-            }
-            delete[] buffer;
-            buffer = buffer2;
+            buffer = (buffer == NULL) ? (T*) malloc(new_capacity * sizeof(T))
+                                      : (T*) realloc(buffer, new_capacity * sizeof(T));
         }
         capacity = new_capacity;
     }
@@ -69,6 +57,7 @@ struct List {
             Resize(capacity + extension);
         }
         int res = size;
+        new (&buffer[res]) T();  // Size of array must always be constructed
         size++;
         return res;
     }
@@ -103,25 +92,25 @@ struct List {
         return size;
     }
 
+    void Init() {
+        capacity = 0;
+        size = 0;
+        buffer = NULL;
+    }
+
     void Clear() {
-        delete[] buffer;
+        for (int i=0; i < size; i++) {
+            buffer[i].~T();  // Manually call constructor only if the whole buffer is freed
+        }
+
+        free(buffer);
         buffer = NULL;
         capacity = 0;
         size = 0;
     }
 
-    List& operator=(const List& other) {
-        capacity = other.size;
-        size = other.size;
-        if (capacity == 0) {
-            delete[] buffer;
-            buffer = NULL;    
-        } else {
-            Resize(other.capacity);
-            for(int i=0; i < size; i++) {
-                buffer[i] = other[i];
-            }
-        }
+    List& operator=(const List<T>& other) {
+        CopyList(&other, this);
         return *this;
     }
 
@@ -149,6 +138,15 @@ struct List {
         return ((SortFn*)_current_fn::_current_fn)(*(T*)a, *(T*)b);
     }
 };
+
+template<typename T>
+void CopyList(const List<T>* from, List<T>* to) {
+    to->Resize(from->size);
+    to->size = from->size;
+    for (int i=0; i < from->size; i++) {
+        to->buffer[i] = from->buffer[i];
+    }
+}
 
 int ListTests();
 

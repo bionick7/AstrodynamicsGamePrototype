@@ -28,8 +28,6 @@ struct DataNode {
         const char* GetChar(const DataNode* dn);
     };
 
-    int __destructor_calls = 0;
-
     struct Field      { FlexString key; FlexString value; };
     struct Child      { FlexString key; DataNode* value; };
     struct FieldArray { FlexString key; List<FlexString> strings; };
@@ -46,9 +44,8 @@ struct DataNode {
     DataNode();
     ~DataNode();
     DataNode(const DataNode& other);
-    DataNode(DataNode&& other) = default;
 
-    static void CopyTo(const DataNode* from, DataNode* to);
+    static void CopyDataNode(const DataNode* from, DataNode* to);
 
     static int FromMemory(DataNode* out, const char* origin, const char* text,
                           file_format::T fmt = file_format::AUTO, bool isReadonly = false, bool quiet = false);
@@ -132,6 +129,8 @@ struct DataNode {
     //static bool FieldEquals(std::string lhs, std::string rhs);
 
     void Inspect() const;
+
+    DataNode& operator=(const DataNode&);
 };
 
 int DataNodeTests();
