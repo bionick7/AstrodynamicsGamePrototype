@@ -44,7 +44,7 @@ struct ShipClass {
     PermaString name;
     PermaString description;
     char naming_convention[SHIPCLASS_NAME_MAX_SIZE];
-    const char* id = "INVALID ID - SHIP CLASS LOADING ERROR";
+    char id[100] = "INVALID ID - SHIP CLASS LOADING ERROR";
 
     double max_dv;  // m/s
     double v_e;     // m/s

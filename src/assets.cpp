@@ -19,7 +19,7 @@ namespace assets {
 }
 
 // Makes sure the same path is spelled the same
-uint64_t assets::HashPath(const char* path) {
+StrHash assets::HashPath(const char* path) {
     ASSERT(strlen(path) < ASSET_PATH_MAX_LENGTH)  // Excluded in final build
     if (path[0] == '.' && path[1] == '/')
         return HashKey(&path[2]);
@@ -80,15 +80,14 @@ char* _LoadTextFromBaked(assets::BakedResource rsc, int* byte_size) {
 }
 #endif  // INCLUDE_BAKED
 
-const bool always_use_embedded_resources = false;  // Debugging setting (cannot make it a 'setting' to avoid recursivity)
-bool _HasResource(const char* filepath, bool _is_text) {
+const bool always_use_embedded_resources = false;  // Debugging setting (cannot make it a 'setting' to avoid recursion)
+bool _HasResource(TableKey filepath, bool _is_text) {
     #ifdef INCLUDE_BAKED
-    if (FileExists(filepath) && !always_use_embedded_resources) {
+    if (FileExists(filepath.txt) && !always_use_embedded_resources) {
         return true;
     }
-    uint64_t hash = assets::HashPath(filepath);
     for (int i=0; i < BAKED_RESOURCE_COUNT; i++) {
-        if (!baked::resources[i].is_text^_is_text && baked::resources[i].path_hash == hash) {
+        if (!baked::resources[i].is_text^_is_text && baked::resources[i].path_hash == filepath.h) {
             return true;
         }
     }
@@ -98,16 +97,16 @@ bool _HasResource(const char* filepath, bool _is_text) {
     #endif // INCLUDE_BAKED
 }
 
-bool assets::HasTextResource(const char* filepath) {
+bool assets::HasTextResource(TableKey filepath) {
     return _HasResource(filepath, true);
 }
 
-bool assets::HasDataResource(const char* filepath) {
+bool assets::HasDataResource(TableKey filepath) {
     return _HasResource(filepath, false);
 }
 
-char* _LoadTextFromFileImpl(const char *filepath, int *byte_size) {
-    FILE* file = fopen(filepath, "rt");
+char* _LoadTextFromFileImpl(TableKey filepath, int *byte_size) {
+    FILE* file = fopen(filepath.txt, "rt");
     if (file == NULL) {
         ERROR("Could not open file '%s'", filepath)
         return NULL;
@@ -129,12 +128,12 @@ char* _LoadTextFromFileImpl(const char *filepath, int *byte_size) {
     return data;
 }
 
-unsigned char* assets::GetResourceBytes(const char *filepath, int *byte_size) {
+unsigned char* assets::GetResourceBytes(const char* filepath, int *byte_size) {
     #ifdef INCLUDE_BAKED
     if (FileExists(filepath) && !always_use_embedded_resources) {
         return _LoadBytesFromFileImpl(filepath, byte_size);
     }
-    uint64_t hash = HashPath(filepath);
+    StrHash hash = HashPath(filepath);
     for (int i=0; i < BAKED_RESOURCE_COUNT; i++) {
         if (!baked::resources[i].is_text && baked::resources[i].path_hash == hash) {
             return _LoadBytesFromBaked(baked::resources[i], byte_size);
@@ -148,13 +147,13 @@ unsigned char* assets::GetResourceBytes(const char *filepath, int *byte_size) {
     #endif // INCLUDE_BAKED
 }
 
-char* assets::GetResourceText(const char *filepath) {
+char* assets::GetResourceText(const char* filepath) {
     int size;
     #ifdef INCLUDE_BAKED
     if (FileExists(filepath) && !always_use_embedded_resources) {
         return _LoadTextFromFileImpl(filepath, &size);
     }
-    uint64_t hash = HashPath(filepath);
+    StrHash hash = HashPath(filepath);
     for (int i=0; i < BAKED_RESOURCE_COUNT; i++) {
         if (baked::resources[i].is_text && baked::resources[i].path_hash == hash) {
             return _LoadTextFromBaked(baked::resources[i], &size);
@@ -167,104 +166,98 @@ char* assets::GetResourceText(const char *filepath) {
     #endif // INCLUDE_BAKED
 }
 
-template<> assets::Table<Texture2D>*     assets::GetTable<Texture2D>()     { return &assets::texture_table; }
-template<> assets::Table<Image>*         assets::GetTable<Image>()         { return &assets::image_table;   }
-template<> assets::Table<Font>*          assets::GetTable<Font>()          { return &assets::font_table;    }
-template<> assets::Table<WireframeMesh>* assets::GetTable<WireframeMesh>() { return &assets::mesh_table;    }
-template<> assets::Table<Shader>*        assets::GetTable<Shader>()        { return &assets::shader_table;  }
-template<> assets::Table<Sound>*         assets::GetTable<Sound>()         { return &assets::sound_table;   }
-template<> assets::Table<DataNode>*      assets::GetTable<DataNode>()      { return &assets::data_table;    }
+template<> Table<Texture2D>*     assets::GetTable<Texture2D>()     { return &assets::texture_table; }
+template<> Table<Image>*         assets::GetTable<Image>()         { return &assets::image_table;   }
+template<> Table<Font>*          assets::GetTable<Font>()          { return &assets::font_table;    }
+template<> Table<WireframeMesh>* assets::GetTable<WireframeMesh>() { return &assets::mesh_table;    }
+template<> Table<Shader>*        assets::GetTable<Shader>()        { return &assets::shader_table;  }
+template<> Table<Sound>*         assets::GetTable<Sound>()         { return &assets::sound_table;   }
+template<> Table<DataNode>*      assets::GetTable<DataNode>()      { return &assets::data_table;    }
 
-Texture2D assets::GetTexture(const char *path) {
+Texture2D assets::GetTexture(TableKey path) {
     if (!IsWindowReady()) {
         ERROR("Trying to load shader, yet no window initialized")
         return { 0 };
     }
-    uint64_t path_hash = HashPath(path);
-    int find = texture_table.Find(path_hash);
+    int find = texture_table.Find(path);
     if (find >= 0) {
         return texture_table.data[find];
     } else {
-        Texture2D texture = LoadTexture(path);
-        texture_table.Insert(path_hash, texture);
+        Texture2D texture = LoadTexture(path.txt);
+        texture_table.Insert(path, texture);
         return texture;
     }
 }
 
-WireframeMesh assets::GetWireframe(const char *path) {
-    uint64_t path_hash = HashPath(path);
-    int find = mesh_table.Find(path_hash);
+WireframeMesh assets::GetWireframe(TableKey path) {
+    int find = mesh_table.Find(path);
     if (find >= 0) {
         return mesh_table.data[find];
     } else {
-        WireframeMesh mesh = LoadWireframeMesh(path);
-        mesh_table.Insert(path_hash, mesh);
+        WireframeMesh mesh = LoadWireframeMesh(path.txt);
+        mesh_table.Insert(path, mesh);
         return mesh;
     }
 }
 
-Image assets::GetImage(const char *path) {
+Image assets::GetImage(TableKey path) {
     if (!IsWindowReady()) {
         ERROR("Trying to load image, yet no window initialized")
         return { 0 };
     }
-    uint64_t path_hash = HashPath(path);
-    int find = image_table.Find(path_hash);
+    int find = image_table.Find(path);
     if (find >= 0) {
         return image_table.data[find];
     } else {
-        Image image = LoadImage(path);
-        image_table.Insert(path_hash, image);
+        Image image = LoadImage(path.txt);
+        image_table.Insert(path, image);
         return image;
     }
 }
 
-Font assets::GetFont(const char *path) {
+Font assets::GetFont(TableKey path) {
     if (!IsWindowReady()) {
         ERROR("Trying to load font, yet no window initialized")
         return { 0 };
     }
-    uint64_t path_hash = HashPath(path);
-    int find = font_table.Find(path_hash);
+    int find = font_table.Find(path);
     if (find >= 0) {
         return font_table.data[find];
     } else {
-        Font font = LoadFont(path);
-        font_table.Insert(path_hash, font);
+        Font font = LoadFont(path.txt);
+        font_table.Insert(path, font);
         return font;
     }
 }
 
-Sound assets::GetSound(const char* path) {
+Sound assets::GetSound(TableKey path) {
     if (!IsAudioDeviceReady()) {
         ERROR("Trying to load sound, yet no audio device initialized")
         return { 0 };
     }
-    uint64_t path_hash = HashPath(path);
-    int find = sound_table.Find(path_hash);
+    int find = sound_table.Find(path);
     if (find >= 0) {
         return sound_table.data[find];
     } else {
-        Sound sound = LoadSound(path);
-        sound_table.Insert(path_hash, sound);
+        Sound sound = LoadSound(path.txt);
+        sound_table.Insert(path, sound);
         return sound;
     }
 }
 
-Shader assets::GetShader(const char* path) {
+Shader assets::GetShader(TableKey path) {
     if (!IsWindowReady()) {
         ERROR("Trying to load shader, yet no window initialized")
         return { 0 };
     }
-    uint64_t path_hash = HashPath(path);
-    int find = shader_table.Find(path_hash);
+    int find = shader_table.Find(path);
     if (find >= 0) {
         return shader_table.data[find];
     } else {
         StringBuilder path_fs;
         StringBuilder path_vs;
-        path_fs.Add(path).Add(".fs");
-        path_vs.Add(path).Add(".vs");
+        path_fs.Add(path.txt).Add(".fs");
+        path_vs.Add(path.txt).Add(".vs");
         char *file_data_fs = NULL;
         char *file_data_vs = NULL;
         if (assets::HasTextResource(path_fs.c_str)) {
@@ -276,25 +269,24 @@ Shader assets::GetShader(const char* path) {
         Shader shader = LoadShaderFromMemory(file_data_vs, file_data_fs);
         free(file_data_fs);
         free(file_data_vs);
-        shader_table.Insert(path_hash, shader);
+        shader_table.Insert(path, shader);
         return shader;
     }
 }
 
-const DataNode* assets::GetData(const char* path) {
-    uint64_t path_hash = HashPath(path);
-    int find = data_table.Find(path_hash);
+const DataNode* assets::GetData(TableKey path) {
+    int find = data_table.Find(path);
     if (find >= 0) {
         return &data_table.data[find];
     } else {
-        int index = data_table.Insert(path_hash, DataNode());
-        DataNode::FromFile(&data_table.data[index], path);
+        int index = data_table.Insert(path, DataNode());
+        DataNode::FromFile(&data_table.data[index], path.txt);
         return &data_table.data[index];
     }
 }
 
-bool assets::IsShaderLoaded(const char* path) {
-    int find = shader_table.Find(HashPath(path));
+bool assets::IsShaderLoaded(TableKey path) {
+    int find = shader_table.Find(path);
     if (find < 0) return false;
     return IsShaderReady(shader_table.data[find]);
 }
@@ -304,7 +296,7 @@ for(int i=0; i < table.size; i++) { \
     Unload##type(table.data[i]); \
 } \
 INFO("Unloaded %d " #type "s", table.size)\
-table.Reset();
+table.Clear();
 
 void assets::Reload() {
     UNLOAD_TABLE(Texture, texture_table)
@@ -314,7 +306,7 @@ void assets::Reload() {
     UNLOAD_TABLE(Shader, shader_table)
     UNLOAD_TABLE(Sound, sound_table)
 
-    data_table.Reset();
+    data_table.Clear();
 }
 
 bool _IsDataFile(const char* path) {

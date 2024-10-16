@@ -162,7 +162,7 @@ struct ShipModuleClass {
     void UpdateCustom(Ship* ship) const;
     bool HasStatDependencies() const;
     int GetConstructionTime() const;
-    const char* id;
+    char id[100];
 };
 
 struct ShipModuleSlot {

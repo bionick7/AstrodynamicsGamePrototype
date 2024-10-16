@@ -1,11 +1,8 @@
 #ifndef LIST_H
 #define LIST_H
 
-#include <cstring>
-#include <stdlib.h>
 #include "logging.hpp"
-
-// Reinventing the wheel, since I find stdlib stuff virtually impossible to debug
+#include "basic.hpp"
 
 namespace _current_fn {
     extern void* _current_fn;
@@ -21,9 +18,9 @@ struct List {
     T* buffer;
         
     List() {
-        capacity = 5;
+        capacity = 0;
         size = 0;
-        buffer = new T[capacity];
+        buffer = NULL;
     }
 
     List(int initial_capacity){
@@ -51,7 +48,9 @@ struct List {
             buffer = NULL;
         } else {
             T* buffer2 = new T[new_capacity];
-            memcpy(buffer2, buffer, sizeof(T) * size);
+            for(int i=0; i < size; i++) {
+                buffer2[i] = buffer[i];
+            }
             delete[] buffer;
             buffer = buffer2;
         }
@@ -105,18 +104,20 @@ struct List {
     }
 
     void Clear() {
-        capacity = 5;
+        delete[] buffer;
+        buffer = NULL;
+        capacity = 0;
         size = 0;
-        Resize(5);
     }
 
     List& operator=(const List& other) {
         capacity = other.size;
         size = other.size;
         if (capacity == 0) {
+            delete[] buffer;
             buffer = NULL;    
         } else {
-            buffer = new T[capacity];
+            Resize(other.capacity);
             for(int i=0; i < size; i++) {
                 buffer[i] = other[i];
             }

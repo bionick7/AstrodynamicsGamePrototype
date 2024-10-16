@@ -4,6 +4,7 @@
 #include "basic.hpp"
 #include "datanode.hpp"
 #include "wireframe_mesh.hpp"
+#include "table.hpp"
 
 #define ASSET_PATH_MAX_LENGTH 256
 
@@ -16,21 +17,22 @@ namespace assets {
     };
     StrHash HashPath(const char* path);
 
-    bool HasTextResource(const char* path);
-    bool HasDataResource(const char* path);
+    bool HasTextResource(TableKey path);
+    bool HasDataResource(TableKey path);
 
+    // Must be const char*, since its called from raylib
     unsigned char* GetResourceBytes(const char* filepath, int* size);
     char* GetResourceText(const char* filepath);
 
-    Texture2D GetTexture(const char* path);
-    WireframeMesh GetWireframe(const char* path);
-    Image GetImage(const char* path);
-    Font GetFont(const char* path);
-    Shader GetShader(const char* path);
-    Sound GetSound(const char* path);
-    const DataNode* GetData(const char* path);
+    Texture2D GetTexture(TableKey path);
+    WireframeMesh GetWireframe(TableKey path);
+    Image GetImage(TableKey path);
+    Font GetFont(TableKey path);
+    Shader GetShader(TableKey path);
+    Sound GetSound(TableKey path);
+    const DataNode* GetData(TableKey path);
 
-    bool IsShaderLoaded(const char* path);
+    bool IsShaderLoaded(TableKey path);
 
     void Reload();
 
@@ -39,74 +41,11 @@ namespace assets {
     // Used by user to unpack user folder for modding/troubleshooting purposes
     void UnBakeAllResources();
 
-    template<typename T>
-    struct Table { 
-        StrHash* hashes = NULL;
-        T* data = NULL;
-
-        int size = 0;
-        int capacity = 0;
-
-        Table() { Init(); }
-        ~Table() { Clear(); }
-
-        int Find(StrHash hash) const {
-            // TODO: Faster as binary search tree ig
-            for (int i=0; i < size; i++) {
-                if (hash == hashes[i]) {
-                    return i;
-                }
-            }
-            return -1;
-        }
-
-        int Insert(StrHash hash, T value) {
-            size++;
-            if (size > capacity) {
-                capacity += 10;
-                uint64_t* new_hashes = new uint64_t[capacity];
-                T* new_data = new T[capacity];
-                for(int i=0; i < size; i++) {
-                    new_hashes[i] = hashes[i];
-                    new_data[i] = data[i];
-                }
-                delete[] hashes;
-                delete[] data;
-                hashes = new_hashes;
-                data = new_data;
-            }
-            hashes[size-1] = hash;
-            data[size-1] = value;
-            return size-1;
-        }
-
-        void Clear() {
-            delete[] hashes;
-            delete[] data;
-            hashes = NULL;
-            data = NULL;
-            size = 0;
-            capacity = 0;
-        }
-
-        void Init() {
-            size = 0;
-            capacity = 10;
-            hashes = new StrHash[capacity];
-            data = new T[capacity];
-        }
-
-        void Reset() {
-            Clear();
-            Init();
-        }
-    };
-
     template<typename T> Table<T>* GetTable();
 
     template <typename T>
-    bool Has(const char* path) {
-        return GetTable<T>()->Find(HashKey(path)) >= 0;
+    bool Has(TableKey path) {
+        return GetTable<T>()->Find(path) >= 0;
     }
 }
 

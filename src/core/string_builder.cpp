@@ -37,48 +37,50 @@ void TokenList::AddToken(int start, int end) {
     length++;
 }
 
-
-// Cannot re-use StringBuilder because of terminators within buffer
-static char* perma_string = NULL;
-static int perma_string_length = 0;
-
-void _PermaStringStaticInit() {
-    const char* DEFAULT = "[UNNAMED]";
-    perma_string_length = strlen(DEFAULT) + 1;
-    perma_string = new char[perma_string_length];
-    strcpy(perma_string, DEFAULT);
-    perma_string[perma_string_length - 1] = '\0';
+StringBuffer::StringBuffer(const char* default_string) {
+    length = strlen(default_string) + 1;
+    c_str = new char[length];
+    strcpy(c_str, default_string);
+    c_str[length - 1] = '\0';
 }
 
+StringBuffer::StringBuffer(const StringBuffer& other) {
+    length = other.length;
+    c_str = new char[length];
+    memcpy(c_str, other.c_str, length);
+}
+
+void StringBuffer::Add(const char *add_str) {
+    // Reallocate
+    int new_length = length + strlen(add_str) + 1;
+    char* c_str2 = new char[new_length];
+    memcpy(c_str2, c_str, length);
+    delete[] c_str;
+    c_str = c_str2;
+
+    // Add new string
+    strcpy(c_str + length, add_str);
+    length = new_length;
+    c_str[length - 1] = '\0';
+}
+
+static StringBuffer perma_string;
+
 PermaString::PermaString() {
-    if (perma_string_length == 0) {
-        _PermaStringStaticInit();
-    }
     offset = 0;
 }
 
+PermaString::PermaString(int p_offset) {
+    offset = p_offset;
+}
+
 PermaString::PermaString(const char *string) {
-    if (perma_string_length == 0) {
-        _PermaStringStaticInit();
-    }
-
-    offset = perma_string_length;
-
-    // Reallocate
-    int new_length = perma_string_length + strlen(string) + 1;
-    char* c_str2 = new char[new_length];
-    memcpy(c_str2, perma_string, perma_string_length);
-    perma_string_length = new_length;
-    delete[] perma_string;
-    perma_string = c_str2;
-
-    // Add new string
-    strcpy(perma_string + offset, string);
-    perma_string[perma_string_length - 1] = '\0';
+    offset = perma_string.length;
+    perma_string.Add(string);
 }
 
 const char *PermaString::GetChar() const {
-    return perma_string + offset;
+    return perma_string.c_str + offset;
 }
 
 StringBuilder::StringBuilder() {
@@ -182,14 +184,6 @@ StringBuilder StringBuilder::GetSubstring(int from, int to) {
 StringBuilder& StringBuilder::Add(const char* add_str) {
     int write_offset = length - 1;
     _ReSize(length + strlen(add_str));
-    strcpy(c_str + write_offset, add_str);
-    c_str[length - 1] = '\0';
-    return *this;
-}
-
-StringBuilder& StringBuilder::_AddWithTerminator(const char* add_str) {
-    int write_offset = length;
-    _ReSize(length + strlen(add_str) + 1);
     strcpy(c_str + write_offset, add_str);
     c_str[length - 1] = '\0';
     return *this;
@@ -309,3 +303,4 @@ int StringBuilderTests() {
 
     return 0;
 }
+

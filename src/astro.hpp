@@ -23,10 +23,10 @@ struct Orbit {
     timemath::Time epoch;
 
     Orbit();
-    Orbit(double semi_major_axis, double eccenetricity, double longuitude_of_periapsis, 
+    Orbit(double semi_major_axis, double eccentricity, double longitude_of_periapsis, 
           double mu, timemath::Time epoch, bool is_prograde);  // 2D
-    Orbit(double semi_major_axis, double eccenetricity, double inclination, 
-          double longuitude_of_periapsis, double right_ascention_of_ascending_node, 
+    Orbit(double semi_major_axis, double eccentricity, double inclination, 
+          double longitude_of_periapsis, double right_ascension_of_ascending_node, 
           double mu, timemath::Time epoch);  // 3D
     //Orbit(DVector3 pos, DVector3 vel, timemath::Time t, double mu);
     Orbit(OrbitPos pos1, OrbitPos pos2, timemath::Time time_at_pos1, 
@@ -46,7 +46,7 @@ struct Orbit {
     DVector3 RadialToGlobal(DVector3 inp, DVector3 z) const;
     timemath::Time GetTimeUntilFocalAnomaly(double θ, timemath::Time start_time) const;
 
-    Vector2 GetMousPosOnPlane() const;
+    Vector2 GetMousePosOnPlane() const;
 
     /*void Sample(DVector3* buffer, int buffer_size) const;
     void SampleWithOffset(DVector3* buffer, int buffer_size, double offset) const;*/
@@ -75,6 +75,6 @@ void HohmannTransfer(
     timemath::Time* departure, timemath::Time* arrival, 
     double* dv1, double* dv2
 );
-void GetDVTable(StringBuilder* sb, bool include_arobreaks);
+void GetDVTable(StringBuilder* sb, bool include_aerobreaks);
 
 #endif // ASTRO_H

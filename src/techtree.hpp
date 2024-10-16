@@ -12,7 +12,7 @@ struct TechTreeNode {
     // Primary info
     PermaString name;
     PermaString description;
-    const char* str_id;  // Not owning. Is stored in the map GlobalState
+    char str_id[100];
     IDList attached_components;
     IDList prerequisites;
     List<global_vars::Effect> effects;

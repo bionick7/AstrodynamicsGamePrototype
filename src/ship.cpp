@@ -134,6 +134,7 @@ void Ship::_OnNewPlanClicked() {
     prepared_plans_count++;
 }
 
+
 void Ship::Serialize(DataNode *data) const {
     data->Set("name", name);
     data->SetI("allegiance", allegiance);
@@ -143,7 +144,10 @@ void Ship::Serialize(DataNode *data) const {
     data->SerializeBuffer("damage_taken", damage_taken, ship_variables::names, ship_variables::MAX);
     
     data->SetI("production_process", production_process);
-    production_queue.SerializeTo(data, "production_queue");
+    data->CreateArray("production_process", production_queue.size);
+    for(int i=0; i < production_queue.size; i++) {
+        data->InsertIntoArrayI("production_process", i, production_queue[i].AsInt());
+    }
 
     for(int i=0; i < SHIP_MAX_MODULES; i++) {
         if (IsIdValid(modules[i])) {
@@ -170,7 +174,13 @@ void Ship::Deserialize(const DataNode* data) {
     data->DeserializeBuffer("damage_taken", damage_taken, ship_variables::names, ship_variables::MAX);
     
     production_process = data->GetI("ship_production_process", 0, true);
-    production_queue.DeserializeFrom(data, "production_queue", true);
+
+    int p_size = data->GetArrayLen("production_process");
+    production_queue.Resize(p_size);
+    production_queue.size = p_size;
+    for(int i=0; i < production_queue.size; i++) {
+        production_queue.buffer[i] = RID(data->GetArrayElemI("production_process", i));
+    }
 
     data->DeserializeBuffer("transporting", transporting, resources::names, resources::MAX);
 
@@ -1123,7 +1133,7 @@ int Ships::LoadShipClasses(const DataNode* data) {
 
         sc.name = PermaString(sc_data->Get("name", "[NAME MISSING]"));
         sc.description = PermaString(sc_data->Get("description", "[DESCRITION MISSING]"));
-        const char* ship_id = sc_data->Get("id", "_");
+        strcpy(sc.id, sc_data->Get("id", "_"));
 
         sc.max_capacity = sc_data->GetI("capacity", 0);
         sc.max_dv = sc_data->GetF("dv", 0) * 1000;  // km/s -> m/s
@@ -1139,7 +1149,7 @@ int Ships::LoadShipClasses(const DataNode* data) {
         sc.icon_index = AtlasPos(
             sc_data->GetArrayElemI("icon_index", 0, 31),
             sc_data->GetArrayElemI("icon_index", 1, 31));
-        sc.module_config.Load(module_configurations, ship_id);
+        sc.module_config.Load(module_configurations, sc.id);
         strcpy(sc.naming_convention, sc_data->Get("naming_convention", "cargo"));
 
         if (sc_data->HasChild("construction_requirements")) {
@@ -1161,7 +1171,8 @@ int Ships::LoadShipClasses(const DataNode* data) {
 
         ship_classes[index] = sc;
         RID rid = RID(index, EntityType::SHIP_CLASS);
-        ship_classes[index].id = GetGlobalState()->AddStringIdentifier(ship_id, rid);
+
+        GetGlobalState()->AddStringIdentifier(ship_classes[index].id, rid);
     }
     return ship_classes_count;
 }

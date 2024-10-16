@@ -61,6 +61,7 @@ bool IsIdValidTyped(RID id, EntityType type) {
     return IsIdValid(id);
 }
 
+/*
 IDList::IDList() {
     capacity = 5;
     size = 0;
@@ -198,3 +199,4 @@ void IDList::Inspect() {
         INFO("%d: type %d, id %d\n", i, (int) IdGetType(buffer[i]), IdGetIndex(buffer[i]));
     }
 }
+*/

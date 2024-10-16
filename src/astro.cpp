@@ -91,32 +91,32 @@ double _Mean2TrueHyp(double M, double e) {
 
 Orbit::Orbit() : Orbit(1, 0, 0, 1, 0, false) { }
 
-Orbit::Orbit(double semi_major_axis, double eccenetricity, double longuitude_of_periapsis, 
+Orbit::Orbit(double semi_major_axis, double eccentricity, double longitude_of_periapsis, 
              double mu, timemath::Time epoch, bool is_prograde) {
     this->mu = mu;
     sma = semi_major_axis;
-    ecc = eccenetricity;
+    ecc = eccentricity;
     periapsis_dir = DVector3(
-        cos(longuitude_of_periapsis), 0,
-        sin(longuitude_of_periapsis)
+        cos(longitude_of_periapsis), 0,
+        sin(longitude_of_periapsis)
     );
     normal = is_prograde ? DVector3::Up() : DVector3::Down();
     this->epoch = epoch;
 }
 
-Orbit::Orbit(double semi_major_axis, double eccenetricity, double inclination, 
-             double longuitude_of_periapsis, double right_ascention_of_ascending_node, 
+Orbit::Orbit(double semi_major_axis, double eccentricity, double inclination, 
+             double longitude_of_periapsis, double right_ascension_of_ascending_node, 
              double mu, timemath::Time epoch) {
     this->mu = mu;
     sma = semi_major_axis;
-    ecc = eccenetricity;
+    ecc = eccentricity;
 
     DVector3 ascending_node = DVector3(
-        cos(right_ascention_of_ascending_node), 0,
-        sin(right_ascention_of_ascending_node)
+        cos(right_ascension_of_ascending_node), 0,
+        sin(right_ascension_of_ascending_node)
     );
     normal = DVector3::Up().Rotated(ascending_node, inclination);
-    periapsis_dir = ascending_node.Rotated(normal, longuitude_of_periapsis);
+    periapsis_dir = ascending_node.Rotated(normal, longitude_of_periapsis);
     this->epoch = epoch;
 }
 
@@ -128,17 +128,17 @@ Orbit::Orbit(OrbitPos pos1, OrbitPos pos2, timemath::Time time_at_pos1,
 
     DVector3 r1_r2_cross = pos1.cartesian.Cross(pos2.cartesian);
     bool neg_cross = r1_r2_cross.y < 0;
-    bool selction = lcase >= 2;
-    if (lcase >= 4) selction = lcase == 5;  // different definition for hyperbola
-    bool indirect_soution = lcase % 2 == 1;
+    bool selection = lcase >= 2;
+    if (lcase >= 4) selection = lcase == 5;  // different definition for hyperbola
+    bool indirect_solution = lcase % 2 == 1;
 
     //DEBUG_SHOW_I(lcase)
-    //DEBUG_SHOW_I(selction)
-    //DEBUG_SHOW_I(indirect_soution)
+    //DEBUG_SHOW_I(selection)
+    //DEBUG_SHOW_I(indirect_solution)
     //DEBUG_SHOW_I(neg_cross)
 
-    bool swap_yf = selction ^ indirect_soution ^ (lcase == 4);
-    bool swap_normal = selction;
+    bool swap_yf = selection ^ indirect_solution ^ (lcase == 4);
+    bool swap_normal = selection;
 
     double d = (pos1.cartesian - pos2.cartesian).Length() / 2.0;
     double A = (pos2.r - pos1.r) / 2;
@@ -229,7 +229,7 @@ timemath::Time Orbit::GetTimeUntilFocalAnomaly(double θ, timemath::Time start_t
     return diff;
 }
 
-Vector2 Orbit::GetMousPosOnPlane() const {
+Vector2 Orbit::GetMousePosOnPlane() const {
     Ray mouse_ray = GetMouseRay(GetMousePosition(), GetCamera()->macro_camera);
     Matrix orbit_transform = MatrixFromColumns((Vector3) periapsis_dir, (Vector3) normal, (Vector3) periapsis_dir.Cross(normal));
     Matrix inv_orbit_transform = MatrixInvert(orbit_transform);
@@ -347,7 +347,7 @@ Vector2 OrbitSegment::ClosestApprox(Vector2 p, bool letExtrude) const {
 }
 
 Vector2 OrbitSegment::AdjustmentToClosest(Vector2 p) const {
-    // Approximate Unsigned distance field that is good at small distances, but breaks fast at alrger ones
+    // Approximate Unsigned distance field that is good at small distances, but breaks fast at larger ones
     // Does this by approximating the tangent at the closest anomaly
     // Takes in *local* position and returns deviation from closest point on conic section
 
@@ -355,7 +355,7 @@ Vector2 OrbitSegment::AdjustmentToClosest(Vector2 p) const {
 
     Vector2 closest;
     if (orbit->ecc >= 1) {
-        p = Vector2Invert(p);  // need to invert for hyperbol for unknown reasons
+        p = Vector2Invert(p);  // need to invert for hyperbole for unknown reasons
         // requires prestep
         closest = ClosestApprox(p, true);
         Vector2 startPoint = _ConicEval2D(orbit, (float) bound1.θ);
@@ -425,7 +425,7 @@ void HohmannTransfer(const Orbit* from, const Orbit* to,
     if (dv2       != NULL) *dv2 = fabs(to_circ_vel - sqrt(mu * (2 / to->sma - 1 / hohmann_a)));
 }
 
-void GetDVTable(StringBuilder* sb, bool include_arobreaks) {
+void GetDVTable(StringBuilder* sb, bool include_aerobreaks) {
     sb->Add("|          ");
     for(int j=0; j < GetPlanets()->GetPlanetCount(); j++) {
         sb->AddFormat("|%10.10s", GetPlanetByIndex(j)->name.GetChar());
@@ -444,7 +444,7 @@ void GetDVTable(StringBuilder* sb, bool include_arobreaks) {
                 GlobalGetNow(), NULL, NULL, &dv1, &dv2
             );
             double tot_dv = GetPlanetByIndex(i)->GetDVFromExcessVelocity(dv1);
-            if (!include_arobreaks || !GetPlanetByIndex(j)->has_atmosphere) {
+            if (!include_aerobreaks || !GetPlanetByIndex(j)->has_atmosphere) {
                 tot_dv += GetPlanetByIndex(j)->GetDVFromExcessVelocity(dv2);
             }
             sb->AddFormat("| %8.3f ", tot_dv * 1e-3);

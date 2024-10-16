@@ -3,7 +3,6 @@
 #include <basic.hpp>
 #include "logging.hpp"
 #include "id_system.hpp"
-#include "datanode.hpp"
 
 #define UNIT64 ((uint64_t)1ull)  // make sure it's always exactly 64-bit
 template<typename T, EntityType E>
@@ -201,29 +200,6 @@ struct IDAllocatorList {
         delete[] free_index_array;
         delete[] verifier_array;
     }
-
-    typedef void SerializationFn(DataNode*, const T*);
-    typedef void DeserializationFn(const DataNode*, T*);
-
-    void DeserializeFrom(const DataNode* dn, const char* key, DeserializationFn* fn) {
-        Clear();
-        for(int i=0; i < dn->GetChildArrayLen(key); i++) {
-            DataNode* child = dn->GetChildArrayElem(key, i);
-            T* d;
-            AllocateAtID(RID(child->GetI("id")), &d);
-            fn(child, d);
-        }
-    }
-    
-    void SerializeInto(DataNode* dn, const char* key, SerializationFn* fn) const {
-        dn->CreatChildArray(key, alloc_count);
-        for(auto it = GetIter(); it; it++) {
-            DataNode* child = dn->InsertIntoChildArray(key, it.counter);
-            child->SetI("id", it.GetId().AsInt());
-            fn(child, Get(it));
-        }        
-    }
-
 };
 #undef UNIT64
 int IDAllocatorListTests();

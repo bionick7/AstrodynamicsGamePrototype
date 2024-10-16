@@ -26,7 +26,7 @@ namespace settings {
 
     void Init() {
         DataNode dn;
-        DataNode::FromFile(&dn, SETTINGS_FILE_PATH, FileFormat::Auto, true);
+        DataNode::FromFile(&dn, SETTINGS_FILE_PATH, file_format::AUTO, true);
         size = dn.GetFieldCount();
         list = new Setting[size];
         for(int i=0; i < size; i++) {
@@ -221,7 +221,7 @@ void SaveSettings(const char* prompt) {
     for(int i=0; i < settings::size; i++) {
         dn.Set(settings::list[i].name, settings::list[i].Get());  // Applies any overrides
     }
-    dn.WriteToFile(SETTINGS_FILE_PATH, FileFormat::YAML);
+    dn.WriteToFile(SETTINGS_FILE_PATH, file_format::YAML);
 }
 
 void ReloadSettings(const char* prompt) {

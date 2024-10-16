@@ -1,6 +1,7 @@
 #ifndef ID_SYSTEM_H
 #define ID_SYSTEM_H
 #include "basic.hpp"
+#include "list.hpp"
 
 enum class EntityType: uint8_t {
     UNINITIALIZED = 0,
@@ -46,9 +47,8 @@ inline uint32_t IdGetIndex(RID id) {  return id.AsInt() & 0x00fffffful; }
 bool IsIdValid(RID id);
 bool IsIdValidTyped(RID id, EntityType type);
 
-struct DataNode;
-
-struct IDList {
+typedef List<RID> IDList;
+/*struct IDList {
     int capacity;
     int size;
 
@@ -77,6 +77,6 @@ struct IDList {
     void Sort(SortFn* fn);
 
     void Inspect();
-};
+};*/
 
 #endif  // ID_SYSTEM_H

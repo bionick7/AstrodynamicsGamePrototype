@@ -66,7 +66,8 @@ int TechTree::Load(const DataNode *data) {
         research_condition_count += condition_count;
 
         RID rid = RID(i, EntityType::TECHTREE_NODE);
-        nodes[i].str_id = GetGlobalState()->AddStringIdentifier(node_data->Get("id"), rid);
+        strcpy(nodes[i].str_id, node_data->Get("id"));
+        GetGlobalState()->AddStringIdentifier(nodes[i].str_id, rid);
         
         nodes[i].draw_pos.x = node_data->GetArrayElemF("draw_pos", 0);
         nodes[i].draw_pos.y = node_data->GetArrayElemF("draw_pos", 1);

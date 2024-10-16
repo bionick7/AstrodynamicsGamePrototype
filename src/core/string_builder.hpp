@@ -14,15 +14,27 @@ struct TokenList {
     void AddToken(int start, int end);
 };
 
+struct StringBuffer {
+    // Like StringBuilder, but includes terminators
+
+    char* c_str;
+    int length;
+    
+    StringBuffer() : StringBuffer("[UNNAMED]") {}
+    StringBuffer(const char* default_string);
+    StringBuffer(const StringBuffer& );
+    void Add(const char* add_str);
+};
+
 
 struct PermaString {
     int offset;
 
     PermaString();
+    PermaString(int p_offset);
     PermaString(const char* string);
     const char* GetChar() const;
 };
-
 struct StringBuilder {
     char* c_str;
     int length;  // size of buffer, not of string
@@ -41,7 +53,6 @@ struct StringBuilder {
     StringBuilder GetSubstring(int from, int to);
 
     StringBuilder& Add(const char* add_str);
-    StringBuilder& _AddWithTerminator(const char* add_str);
     StringBuilder& AddPerma(PermaString perma_str);
     StringBuilder& AddFormat(const char* fmt, ...);
     StringBuilder& AddLine(const char* add_str);

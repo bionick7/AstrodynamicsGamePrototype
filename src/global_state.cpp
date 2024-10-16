@@ -21,7 +21,7 @@ void GlobalState::Make(timemath::Time p_time) {
 }
 
 void GlobalState::LoadData() {
-    string_identifiers.clear();
+    string_identifiers.Clear();
 
     #define NUM 6
     const char* loading_paths[NUM] = {
@@ -211,17 +211,21 @@ bool GlobalState::IsKeyBoardFocused() const {
     return IsInDebugConsole();
 }
 
-const char *GlobalState::AddStringIdentifier(const char *string_id, RID rid) {
-    auto pair = string_identifiers.insert_or_assign(std::string(string_id), rid);
-    return pair.first->first.c_str();  // points to string in dictionary
+void GlobalState::AddStringIdentifier(TableKey string_id, RID rid) {
+    int find = string_identifiers.Find(string_id);
+    if (find < 0) {
+        int index = string_identifiers.Insert(string_id, rid);
+    } else {
+        string_identifiers.data[find] = rid;
+    }
 }
 
-RID GlobalState::GetFromStringIdentifier(const char *string_id) {
-    auto find = string_identifiers.find(std::string(string_id));
-    if (find == string_identifiers.end()) {
+RID GlobalState::GetFromStringIdentifier(TableKey string_id) {
+    int find = string_identifiers.Find(string_id);
+    if (find < 0) {
         return GetInvalidId();
     }
-    return find->second;
+    return string_identifiers.data[find];
 }
 
 void GlobalState::LoadGame(const char* file_path) {
@@ -242,7 +246,7 @@ void GlobalState::SaveGame(const char* file_path) const {
     DataNode game_data = DataNode();
 
     Serialize(&game_data);
-    game_data.WriteToFile(file_path, FileFormat::YAML);
+    game_data.WriteToFile(file_path, file_format::YAML);
 }
 
 void GlobalState::Serialize(DataNode* data) const {
@@ -305,7 +309,7 @@ void GlobalState::Deserialize(const DataNode* data) {
 
     DataNode ephem_data;
     const char* ephemerides_path = "resources/data/ephemeris.yaml";
-    if (DataNode::FromFile(&ephem_data, ephemerides_path, FileFormat::YAML, true) != 0) {
+    if (DataNode::FromFile(&ephem_data, ephemerides_path, file_format::YAML, true) != 0) {
         FAIL("Could not load save %s", ephemerides_path);
     }
     planets.LoadEphemeris(&ephem_data);  // if necessary

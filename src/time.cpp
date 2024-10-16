@@ -62,11 +62,11 @@ double Time::Days() const {
     return __t / SECONDS_IN_DAY;
 }
 
-void Time::Serialize(DataNode* data, const char* key) const {
+void Time::Serialize(DataNode* data, TableKey key) const {
     data->SetF(key, __t);
 }
 
-void Time::Deserialize(const DataNode* data, const char* key) {
+void Time::Deserialize(const DataNode* data, TableKey key) {
     __t = data->GetF(key, __t);
 }
 

@@ -9,7 +9,7 @@
 #include "assets.hpp"
 
 void OnTestFail(const char* identifier) {
-    // Seperated, so you can put a breakpoint in here
+    // Separated, so you can put a breakpoint in here
     ERROR("Failed test at '%s'", identifier)
 }
 
@@ -24,13 +24,13 @@ void OnTestFail(const char* identifier) {
 
 int UnitTests() {
     INFO("Running Tests");
+    RETURN_OR_CONTINUE(DataNodeTests());
     RETURN_OR_CONTINUE(TimeTests());
     RETURN_OR_CONTINUE(IDAllocatorListTests());
     RETURN_OR_CONTINUE(ListTests());
-    RETURN_OR_CONTINUE(DataNodeTests());
     RETURN_OR_CONTINUE(TransferPlanTests());
     RETURN_OR_CONTINUE(StringBuilderTests());
     RETURN_OR_CONTINUE(AssetTests());
-    INFO("All tests Sucessfull\n");
+    INFO("All tests Successful\n");
     return 0;
 }

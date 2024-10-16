@@ -659,7 +659,7 @@ timemath::Time _DrawHandle(
     }
     if (*is_dragging) {
         timemath::Time t0_2 = t0 + full_orbits * period.Seconds();
-        Vector2 local_mouse_pos = orbit->GetMousPosOnPlane();
+        Vector2 local_mouse_pos = orbit->GetMousePosOnPlane();
         float focal_anomaly = -atan2f(local_mouse_pos.y, local_mouse_pos.x);
         current = t0_2 + orbit->GetTimeUntilFocalAnomaly(focal_anomaly, t0_2);
         ASSERT(t0 < current);

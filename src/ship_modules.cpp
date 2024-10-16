@@ -580,11 +580,11 @@ int ShipModules::Load(const DataNode* data) {
             ship_modules[i].icon_index = AtlasPos(15, 31);
         }
 
-        const char* string_id = module_data->Get("id", "_");
         RID rid = RID(i, EntityType::MODULE_CLASS);
-        ship_modules[i].id = GetGlobalState()->AddStringIdentifier(string_id, rid);
+        strcpy(ship_modules[i].id, module_data->Get("id", "_"));
+        GetGlobalState()->AddStringIdentifier(ship_modules[i].id, rid);
 
-        #define CHECK_FOR_ID(name) else if (strcmp(string_id, "shpmod_"#name) == 0) { expected_modules.name = rid; }
+        #define CHECK_FOR_ID(name) else if (strcmp(ship_modules[i].id, "shpmod_"#name) == 0) { expected_modules.name = rid; }
         if(false) {}
         //CHECK_FOR_ID(small_yard_1)
         //CHECK_FOR_ID(small_yard_2)

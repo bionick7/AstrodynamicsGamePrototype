@@ -35,7 +35,7 @@ struct GlobalState {
 	UIGlobals ui;
     GlobalLogic global_logic;
 
-    std::map<std::string, RID> string_identifiers = std::map<std::string, RID>();
+    Table<RID> string_identifiers = Table<RID>();
 
     uint64_t frame_count = 0;  // Usefull for e.g. only spawning stuff on frame 1
 
@@ -49,8 +49,8 @@ struct GlobalState {
 
     bool IsKeyBoardFocused() const;
 
-    const char* AddStringIdentifier(const char* string_id, RID rid);
-    RID GetFromStringIdentifier(const char* string_id);
+    void AddStringIdentifier(TableKey string_id, RID rid);
+    RID GetFromStringIdentifier(TableKey string_id);
 
 
     // Serialization

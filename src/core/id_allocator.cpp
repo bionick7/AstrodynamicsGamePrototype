@@ -2,7 +2,7 @@
 #include "basic.hpp"
 #include "logging.hpp"
 #include "tests.hpp"
-
+#include "datanode.hpp"
 
 struct TestStruct {
     int m0 = 0;
@@ -39,9 +39,9 @@ int IDAllocatorListTests() {
     list.Allocate(NULL);
 
     DataNode dn;
-    list.SerializeInto(&dn, "key", _SerializeTestStruct);
+    dn.SerializeAllocList(&list, "key", _SerializeTestStruct);
     list.Clear();
-    list.DeserializeFrom(&dn, "key", _DeserializeTestStruct);
+    dn.DeserializeAllocList(&list, "key", _DeserializeTestStruct);
 
     TEST_ASSERT(list.ContainsID(TSTID(15)))
     TEST_ASSERT(!list.ContainsID(TSTID(17)))

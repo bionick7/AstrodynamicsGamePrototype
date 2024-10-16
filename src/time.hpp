@@ -3,6 +3,7 @@
 #include "basic.hpp"
 
 struct DataNode;
+struct TableKey;
 
 namespace timemath {
     const int SECONDS_IN_DAY = 86400;
@@ -27,8 +28,8 @@ namespace timemath {
         double Seconds() const;
         double Days() const;
 
-        void Serialize(DataNode* data, const char* key) const;
-        void Deserialize(const DataNode* data, const char* key);
+        void Serialize(DataNode* data, TableKey key) const;
+        void Deserialize(const DataNode* data, TableKey key);
 
         bool IsInvalid() const;
 
